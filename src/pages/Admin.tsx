@@ -392,30 +392,56 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
             <div className="space-y-2">
               {filteredAgendamentos.map(a => (
                 <div key={a.id} className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-                  <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-start justify-between mb-1">
                     <div className="flex-1 min-w-0">
                       <p className="font-body text-[14px] font-medium text-primary-foreground truncate">{getClientName(a.user_id)}</p>
                       <p className="font-body text-[12px] text-primary-foreground/40 truncate">{a.servico}{a.variacao ? ` (${a.variacao})` : ""}</p>
                     </div>
-                    {statusBadge(a.status)}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <p className="font-body text-[11px] text-primary-foreground/30">{formatDate(a.data_agendamento)} · {a.horario}</p>
-                      <p className="font-body text-[12px] text-gold font-semibold">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</p>
+                    <div className="flex flex-col items-end gap-1">
+                      {statusBadge(a.status)}
+                      {pagamentoBadge(a)}
                     </div>
+                  </div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <p className="font-body text-[11px] text-primary-foreground/30">{formatDate(a.data_agendamento)} · {a.horario}</p>
+                    <p className="font-body text-[12px] text-gold font-semibold">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</p>
+                    {Number(a.valor_pago || 0) > 0 && Number(a.valor_pago || 0) < Number(a.valor) && (
+                      <p className="font-body text-[10px] text-primary-foreground/30">Pago: R$ {Number(a.valor_pago).toFixed(2).replace(".", ",")}</p>
+                    )}
+                  </div>
+                  {/* Actions */}
+                  <div className="flex items-center justify-between border-t border-primary-foreground/[0.04] pt-2 mt-1">
+                    {/* Payment buttons */}
+                    <div className="flex items-center gap-1">
+                      {a.status !== "cancelado" && a.status !== "falta" && (
+                        <>
+                          <button onClick={() => updatePayment(a.id, "sinal")} title="Marcar sinal (50%)"
+                            className={`px-2 py-1 rounded-lg font-body text-[10px] font-medium transition-all ${Number(a.valor_pago || 0) > 0 && Number(a.valor_pago || 0) < Number(a.valor) ? "bg-gold/10 text-gold" : "bg-primary-foreground/[0.03] text-primary-foreground/30 hover:text-gold hover:bg-gold/10"}`}>
+                            Sinal
+                          </button>
+                          <button onClick={() => updatePayment(a.id, "completo")} title="Marcar pago completo"
+                            className={`px-2 py-1 rounded-lg font-body text-[10px] font-medium transition-all ${Number(a.valor_pago || 0) >= Number(a.valor) ? "bg-green-500/10 text-green-500" : "bg-primary-foreground/[0.03] text-primary-foreground/30 hover:text-green-500 hover:bg-green-500/10"}`}>
+                            Pago
+                          </button>
+                        </>
+                      )}
+                    </div>
+                    {/* Status buttons */}
                     <div className="flex items-center gap-1">
                       {a.status === "confirmado" && (
                         <>
-                          <button onClick={() => updateStatus(a.id, "concluido")} className="p-1.5 rounded-lg hover:bg-green-500/10 text-green-500/50 hover:text-green-500 transition-all">
+                          <button onClick={() => updateStatus(a.id, "concluido")} className="p-1.5 rounded-lg hover:bg-green-500/10 text-green-500/50 hover:text-green-500 transition-all" title="Concluir">
                             <CheckCircle className="w-4 h-4" />
                           </button>
-                          <button onClick={() => updateStatus(a.id, "cancelado")} className="p-1.5 rounded-lg hover:bg-rose/10 text-rose/50 hover:text-rose transition-all">
+                          <button onClick={() => updateStatus(a.id, "falta")} className="p-1.5 rounded-lg hover:bg-orange-500/10 text-orange-500/50 hover:text-orange-500 transition-all" title="Marcar falta">
+                            <UserX className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => updateStatus(a.id, "cancelado")} className="p-1.5 rounded-lg hover:bg-rose/10 text-rose/50 hover:text-rose transition-all" title="Cancelar">
                             <X className="w-4 h-4" />
                           </button>
                         </>
                       )}
-                      <button onClick={() => deleteAgendamento(a.id)} className="p-1.5 rounded-lg hover:bg-rose/10 text-primary-foreground/20 hover:text-rose transition-all">
+                      <button onClick={() => deleteAgendamento(a.id)} className="p-1.5 rounded-lg hover:bg-rose/10 text-primary-foreground/20 hover:text-rose transition-all" title="Excluir">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
