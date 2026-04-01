@@ -8,6 +8,7 @@ import {
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription
 } from "@/components/ui/sheet";
+import FinanceiroTab from "@/components/FinanceiroTab";
 
 // ─── Types ───
 interface Agendamento {
@@ -18,7 +19,7 @@ interface Agendamento {
 interface Profile { id: string; nome: string; whatsapp: string; created_at: string; }
 interface LembreteConfig { id: string; tipo: string; ativo: boolean; mensagem: string; horas_antes: number; }
 
-type Tab = "dashboard" | "agendamentos" | "clientes" | "horarios" | "servicos";
+type Tab = "dashboard" | "agendamentos" | "clientes" | "horarios" | "servicos" | "financeiro";
 
 const ADMIN_PASSWORD = "dyoliadmin";
 
@@ -244,6 +245,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const tabs: { id: Tab; label: string; icon: typeof BarChart3 }[] = [
     { id: "dashboard", label: "Início", icon: BarChart3 },
     { id: "agendamentos", label: "Agenda", icon: Calendar },
+    { id: "financeiro", label: "Financeiro", icon: DollarSign },
     { id: "clientes", label: "Clientes", icon: Users },
     { id: "horarios", label: "Horários", icon: Clock },
     { id: "servicos", label: "Serviços", icon: Settings },
@@ -481,6 +483,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
           </div>
         )}
 
+        {tab === "financeiro" && <FinanceiroTab agendamentos={agendamentos} getClientName={getClientName} />}
         {tab === "horarios" && <HorariosTab />}
         {tab === "servicos" && <ServicosTab />}
       </div>
