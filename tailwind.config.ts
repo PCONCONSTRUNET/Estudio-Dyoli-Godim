@@ -119,6 +119,10 @@ export default {
           "0%, 100%": { opacity: "0.1" },
           "50%": { opacity: "0.4" },
         },
+        "flicker": {
+          "0%, 50%, 52%, 56%, 90%, 94%, 98%, 100%": { opacity: "1" },
+          "54%, 92%, 96%, 99%": { opacity: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -132,6 +136,7 @@ export default {
         "float-particle-slow": "float-particle-slow 10s ease-in-out infinite 3s",
         "line-fade": "line-fade 5s ease-in-out infinite",
         "line-fade-alt": "line-fade-alt 7s ease-in-out infinite 2s",
+        "flicker": "flicker 2s linear infinite",
       },
     },
   },
