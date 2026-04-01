@@ -126,6 +126,15 @@
   .font-body {
     font-family: -apple-system, 'SF Pro Text', 'Inter', 'Helvetica Neue', sans-serif;
   }
+  .admin-mobile-shell {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    touch-action: manipulation;
+  }
+  .admin-mobile-shell * {
+    min-width: 0;
+  }
 
   /* iOS-style scrollbar */
   .scrollbar-hide::-webkit-scrollbar {
