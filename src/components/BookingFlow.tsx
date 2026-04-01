@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ArrowLeft, Calendar, Clock, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, CheckCircle2, Copy, Check, QrCode } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
 interface BookingFlowProps {
   service: string;
