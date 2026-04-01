@@ -169,7 +169,7 @@ const AuthScreen = ({ onSuccess, onBack }: AuthScreenProps) => {
               value={whatsapp}
               onChange={(e) => setWhatsapp(formatWhatsapp(e.target.value))}
               placeholder="(00) 00000-0000"
-              className="w-full px-4 py-3.5 rounded-xl bg-primary-foreground/[0.06] border border-primary-foreground/[0.08] text-primary-foreground font-body text-sm placeholder:text-primary-foreground/25 focus:outline-none focus:border-gold/40 focus:bg-primary-foreground/[0.08] transition-all"
+              className="w-full px-4 py-3 rounded-xl bg-primary-foreground/[0.06] border border-primary-foreground/[0.08] text-primary-foreground font-body text-sm placeholder:text-primary-foreground/25 focus:outline-none focus:border-gold/40 focus:bg-primary-foreground/[0.08] transition-all"
             />
           </div>
 
