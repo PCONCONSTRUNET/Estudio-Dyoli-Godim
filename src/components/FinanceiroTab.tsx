@@ -44,7 +44,9 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
       if (period === "semana") {
         const weekAgo = new Date(now);
         weekAgo.setDate(weekAgo.getDate() - 7);
-        return d >= weekAgo.toISOString().split("T")[0] && d <= today;
+        const weekAhead = new Date(now);
+        weekAhead.setDate(weekAhead.getDate() + 7);
+        return d >= weekAgo.toISOString().split("T")[0] && d <= weekAhead.toISOString().split("T")[0];
       }
       if (period === "mes") {
         const year = now.getFullYear();
