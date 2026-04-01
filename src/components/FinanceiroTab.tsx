@@ -242,42 +242,48 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
       </div>
 
       {/* Area Chart - Receita por dia */}
-      {dailyData.length > 0 && (
-        <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-          <p className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest mb-3">Receita por dia</p>
-          <div className="h-[200px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={dailyData}>
-                <defs>
-                  <linearGradient id="gradReceita" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(40 40% 55%)" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="hsl(40 40% 55%)" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="gradRecebido" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(142 71% 45%)" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="hsl(142 71% 45%)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsla(0 0% 100% / 0.04)" />
-                <XAxis dataKey="diaLabel" tick={{ fill: "hsla(0 0% 100% / 0.3)", fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: "hsla(0 0% 100% / 0.3)", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}`} width={40} />
-                <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="receita" name="Receita" stroke="hsl(40 40% 55%)" fill="url(#gradReceita)" strokeWidth={2} />
-                <Area type="monotone" dataKey="recebido" name="Recebido" stroke="hsl(142 71% 45%)" fill="url(#gradRecebido)" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
+      <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+        <p className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest mb-3">Receita por dia</p>
+        {dailyData.length > 0 ? (
+          <>
+            <div className="h-[200px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={dailyData}>
+                  <defs>
+                    <linearGradient id="gradReceita" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(40 40% 55%)" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="hsl(40 40% 55%)" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="gradRecebido" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(142 71% 45%)" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="hsl(142 71% 45%)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsla(0 0% 100% / 0.04)" />
+                  <XAxis dataKey="diaLabel" tick={{ fill: "hsla(0 0% 100% / 0.3)", fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: "hsla(0 0% 100% / 0.3)", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}`} width={40} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area type="monotone" dataKey="receita" name="Receita" stroke="hsl(40 40% 55%)" fill="url(#gradReceita)" strokeWidth={2} />
+                  <Area type="monotone" dataKey="recebido" name="Recebido" stroke="hsl(142 71% 45%)" fill="url(#gradRecebido)" strokeWidth={2} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex items-center justify-center gap-4 mt-2">
+              <span className="flex items-center gap-1.5 font-body text-[10px] text-primary-foreground/40"><span className="w-2.5 h-2.5 rounded-full bg-gold" /> Receita</span>
+              <span className="flex items-center gap-1.5 font-body text-[10px] text-primary-foreground/40"><span className="w-2.5 h-2.5 rounded-full bg-green-500" /> Recebido</span>
+            </div>
+          </>
+        ) : (
+          <div className="h-[120px] flex items-center justify-center">
+            <p className="font-body text-[12px] text-primary-foreground/20">Sem dados no período</p>
           </div>
-          <div className="flex items-center justify-center gap-4 mt-2">
-            <span className="flex items-center gap-1.5 font-body text-[10px] text-primary-foreground/40"><span className="w-2.5 h-2.5 rounded-full bg-gold" /> Receita</span>
-            <span className="flex items-center gap-1.5 font-body text-[10px] text-primary-foreground/40"><span className="w-2.5 h-2.5 rounded-full bg-green-500" /> Recebido</span>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Bar Chart - Receita por serviço */}
-      {serviceData.length > 0 && (
-        <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-          <p className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest mb-3">Por serviço</p>
+      <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+        <p className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest mb-3">Por serviço</p>
+        {serviceData.length > 0 ? (
           <div className="h-[200px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={serviceData} layout="vertical" margin={{ left: 0 }}>
@@ -301,40 +307,50 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="h-[120px] flex items-center justify-center">
+            <p className="font-body text-[12px] text-primary-foreground/20">Sem dados no período</p>
+          </div>
+        )}
+      </div>
 
       {/* Pie Chart - Status pagamento */}
-      {paymentStatus.length > 0 && (
-        <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-          <p className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest mb-3">Status de pagamento</p>
-          <div className="h-[180px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={paymentStatus} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={4} dataKey="value" stroke="none">
-                  {paymentStatus.map((d, i) => <Cell key={i} fill={d.color} />)}
-                </Pie>
-                <Tooltip content={({ active, payload }) => {
-                  if (!active || !payload?.length) return null;
-                  const d = payload[0].payload;
-                  return (
-                    <div className="bg-charcoal/95 border border-primary-foreground/[0.1] rounded-xl px-3 py-2 shadow-xl">
-                      <p className="font-body text-[11px] font-semibold" style={{ color: d.color }}>{d.name}: {d.value}</p>
-                    </div>
-                  );
-                }} />
-              </PieChart>
-            </ResponsiveContainer>
+      <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+        <p className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest mb-3">Status de pagamento</p>
+        {paymentStatus.length > 0 ? (
+          <>
+            <div className="h-[180px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={paymentStatus} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={4} dataKey="value" stroke="none">
+                    {paymentStatus.map((d, i) => <Cell key={i} fill={d.color} />)}
+                  </Pie>
+                  <Tooltip content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null;
+                    const d = payload[0].payload;
+                    return (
+                      <div className="bg-charcoal/95 border border-primary-foreground/[0.1] rounded-xl px-3 py-2 shadow-xl">
+                        <p className="font-body text-[11px] font-semibold" style={{ color: d.color }}>{d.name}: {d.value}</p>
+                      </div>
+                    );
+                  }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex items-center justify-center gap-4">
+              {paymentStatus.map(d => (
+                <span key={d.name} className="flex items-center gap-1.5 font-body text-[10px] text-primary-foreground/40">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: d.color }} /> {d.name} ({d.value})
+                </span>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="h-[120px] flex items-center justify-center">
+            <p className="font-body text-[12px] text-primary-foreground/20">Sem dados no período</p>
           </div>
-          <div className="flex items-center justify-center gap-4">
-            {paymentStatus.map(d => (
-              <span key={d.name} className="flex items-center gap-1.5 font-body text-[10px] text-primary-foreground/40">
-                <span className="w-2.5 h-2.5 rounded-full" style={{ background: d.color }} /> {d.name} ({d.value})
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Fechamento de caixa */}
       <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
