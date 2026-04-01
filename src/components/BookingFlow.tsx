@@ -388,7 +388,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   }
 
   return (
-    <section className="min-h-screen bg-background px-6 py-8">
+    <section className="min-h-screen bg-background px-6 py-8 lg:flex lg:flex-col lg:items-center lg:px-8">
       <button
         onClick={onBack}
         className="ios-press flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
