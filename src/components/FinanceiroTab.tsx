@@ -32,6 +32,12 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const [customEnd, setCustomEnd] = useState("");
   const [showCaixa, setShowCaixa] = useState(false);
   const [caixaDate, setCaixaDate] = useState(new Date().toISOString().split("T")[0]);
+  const [comissaoPct, setComissaoPct] = useState(() => {
+    const saved = localStorage.getItem("dyoli_comissao_pct");
+    return saved ? Number(saved) : 40;
+  });
+  const [showComissaoConfig, setShowComissaoConfig] = useState(false);
+  const [tempComissao, setTempComissao] = useState(comissaoPct.toString());
 
   // Filter agendamentos by period
   const filtered = useMemo(() => {
