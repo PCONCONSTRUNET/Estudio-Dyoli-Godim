@@ -43,7 +43,7 @@ const HeroSection = ({ onSchedule, onLogin }: HeroSectionProps) => {
           <div className="flex items-center justify-center gap-3">
             <div className="w-8 h-px bg-gold/40" />
             <p className="font-body text-xs text-gold/70 tracking-[0.25em] uppercase">
-              Micropigmentação · Tatoo · Piercing
+              Agende seu procedimento com segurança e resultado profissional
             </p>
             <div className="w-8 h-px bg-gold/40" />
           </div>
@@ -73,11 +73,6 @@ const HeroSection = ({ onSchedule, onLogin }: HeroSectionProps) => {
             <span>Cadastrar</span>
           </button>
         </div>
-
-        {/* 4. TEXTO (apoio) */}
-        <p className="font-body text-sm text-primary-foreground/50 leading-relaxed mt-6 text-center max-w-xs animate-fade-in" style={{ animationDelay: '0.45s', animationFillMode: 'both' }}>
-          Agende seu procedimento com segurança e resultado profissional
-        </p>
       </div>
     </section>
   );
