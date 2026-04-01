@@ -25,6 +25,7 @@ const Home = () => {
         onSchedule={() => isAuthenticated ? navigate("/agendar") : navigate("/auth?mode=signup")}
         onLogin={() => navigate("/auth?mode=login")}
         onProfile={() => setShowProfile(true)}
+        onProdutos={() => navigate("/produtos")}
         isAuthenticated={isAuthenticated}
       />
       {showProfile && (
