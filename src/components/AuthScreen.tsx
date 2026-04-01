@@ -203,7 +203,7 @@ const AuthScreen = ({ onSuccess, onBack }: AuthScreenProps) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 rounded-xl bg-rose text-primary-foreground font-body font-medium text-sm tracking-wide uppercase transition-all duration-300 hover:brightness-110 active:scale-[0.98] shadow-lg shadow-rose/20 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+            className="w-full py-3.5 rounded-xl bg-rose text-primary-foreground font-body font-medium text-sm tracking-wide uppercase transition-all duration-300 hover:brightness-110 active:scale-[0.98] shadow-lg shadow-rose/20 disabled:opacity-50 disabled:cursor-not-allowed mt-1"
           >
             {loading
               ? "Aguarde..."
