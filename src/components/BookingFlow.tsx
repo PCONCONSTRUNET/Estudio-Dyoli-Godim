@@ -121,11 +121,12 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   const depositAmount = requiresDeposit ? `R$ ${Math.round(numericPrice * 0.3)}` : null;
 
   const getPaymentAmount = () => {
-    if (requiresDeposit) return Math.round(numericPrice * 0.3);
-    return numericPrice;
+    if (!requiresDeposit) return numericPrice;
+    return paymentMode === "deposit" ? Math.round(numericPrice * 0.3) : numericPrice;
   };
 
-  const pixPayload = generatePixPayload(getPaymentAmount());
+  const paymentAmount = getPaymentAmount();
+  const pixPayload = generatePixPayload(paymentAmount);
 
   const handleCopyPix = async () => {
     await navigator.clipboard.writeText(pixPayload);
