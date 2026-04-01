@@ -9,7 +9,7 @@ interface GuidedFlowProps {
 
 type Step = "initial" | "sobrancelhas" | "perfuracao-confirm";
 
-const GuidedFlow = ({ onSelectService, onBack }: GuidedFlowProps) => {
+const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => {
   const [step, setStep] = useState<Step>("initial");
 
   const OptionCard = ({
