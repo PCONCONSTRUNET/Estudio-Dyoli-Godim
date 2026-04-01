@@ -1,4 +1,4 @@
-import { User } from "lucide-react";
+import { User, ShoppingBag } from "lucide-react";
 import professionalImg from "@/assets/professional.png";
 
 interface HeroSectionProps {
