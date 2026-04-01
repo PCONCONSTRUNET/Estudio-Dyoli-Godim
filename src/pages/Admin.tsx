@@ -274,13 +274,31 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
       confirmado: "bg-gold/10 text-gold border-gold/20",
       cancelado: "bg-rose/10 text-rose border-rose/20",
       concluido: "bg-green-500/10 text-green-500 border-green-500/20",
+      falta: "bg-orange-500/10 text-orange-500 border-orange-500/20",
     };
-    const labels: Record<string, string> = { confirmado: "Confirmado", cancelado: "Cancelado", concluido: "Concluído" };
+    const labels: Record<string, string> = { confirmado: "Confirmado", cancelado: "Cancelado", concluido: "Concluído", falta: "Falta" };
     return (
       <span className={`px-2 py-0.5 rounded-full text-[10px] font-body font-medium border ${map[s] || "bg-secondary text-muted-foreground border-border"}`}>
         {labels[s] || s}
       </span>
     );
+  };
+
+  const pagamentoBadge = (a: Agendamento) => {
+    const pago = Number(a.valor_pago || 0);
+    const total = Number(a.valor);
+    if (pago >= total) return <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-medium border bg-green-500/10 text-green-500 border-green-500/20">Pago</span>;
+    if (pago > 0) return <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-medium border bg-gold/10 text-gold border-gold/20">Sinal</span>;
+    return <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-medium border bg-primary-foreground/5 text-primary-foreground/30 border-primary-foreground/[0.06]">Pendente</span>;
+  };
+
+  const updatePayment = async (id: string, type: "sinal" | "completo") => {
+    const a = agendamentos.find(a => a.id === id);
+    if (!a) return;
+    const valor = Number(a.valor);
+    const newPago = type === "completo" ? valor : valor * 0.5;
+    await supabase.from("agendamentos").update({ valor_pago: newPago }).eq("id", id);
+    setAgendamentos(prev => prev.map(a => a.id === id ? { ...a, valor_pago: newPago } : a));
   };
 
   return (
