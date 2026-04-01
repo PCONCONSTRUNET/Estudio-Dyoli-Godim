@@ -183,7 +183,7 @@ const AuthScreen = ({ onSuccess, onBack }: AuthScreenProps) => {
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
                 placeholder="Mínimo 6 caracteres"
-                className="w-full px-4 py-3.5 rounded-xl bg-primary-foreground/[0.06] border border-primary-foreground/[0.08] text-primary-foreground font-body text-sm placeholder:text-primary-foreground/25 focus:outline-none focus:border-gold/40 focus:bg-primary-foreground/[0.08] transition-all pr-12"
+                className="w-full px-4 py-3 rounded-xl bg-primary-foreground/[0.06] border border-primary-foreground/[0.08] text-primary-foreground font-body text-sm placeholder:text-primary-foreground/25 focus:outline-none focus:border-gold/40 focus:bg-primary-foreground/[0.08] transition-all pr-12"
                 maxLength={72}
               />
               <button
