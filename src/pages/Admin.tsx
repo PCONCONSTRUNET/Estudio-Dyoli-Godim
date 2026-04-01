@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   BarChart3, Calendar, Users, Clock, Settings, LogOut, Search,
   X, Edit2, Trash2, Plus, Save, CheckCircle, Bell, MessageSquare,
-  UserX, DollarSign, CreditCard, ShoppingBag, Download
+  UserX, DollarSign, CreditCard, ShoppingBag, Download, ChevronLeft, ChevronRight
 } from "lucide-react";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription
@@ -38,6 +38,12 @@ const getDateKey = (date: Date) => {
 const parseDateKey = (dateKey: string) => {
   const [year, month, day] = dateKey.split("-").map(Number);
   return new Date(year, month - 1, day, 12, 0, 0);
+};
+
+const shiftDate = (dateKey: string, days: number) => {
+  const d = parseDateKey(dateKey);
+  d.setDate(d.getDate() + days);
+  return getDateKey(d);
 };
 
 // ─── Lembretes Hub (Sheet lateral) ───
@@ -563,7 +569,21 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-primary-foreground/[0.06] px-4 py-4 lg:px-5">
                   <div className="min-w-0">
                     <p className="font-body text-[11px] uppercase tracking-[0.22em] text-primary-foreground/25">Agenda do dia</p>
-                    <h3 className="mt-1 font-heading text-[22px] font-semibold capitalize text-primary-foreground">{selectedAgendaLabel}</h3>
+                    <div className="mt-1 flex items-center gap-2">
+                      <button
+                        onClick={() => setSelectedAgendaDate(shiftDate(selectedAgendaDate, -1))}
+                        className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-foreground/[0.06] text-primary-foreground/50 transition-all hover:bg-primary-foreground/[0.12] hover:text-primary-foreground"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                      <h3 className="font-heading text-[22px] font-semibold capitalize text-primary-foreground">{selectedAgendaLabel}</h3>
+                      <button
+                        onClick={() => setSelectedAgendaDate(shiftDate(selectedAgendaDate, 1))}
+                        className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-foreground/[0.06] text-primary-foreground/50 transition-all hover:bg-primary-foreground/[0.12] hover:text-primary-foreground"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
                     <p className="mt-1 font-body text-[11px] text-primary-foreground/35">
                       {selectedAgendaDateObj.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })}
                     </p>
