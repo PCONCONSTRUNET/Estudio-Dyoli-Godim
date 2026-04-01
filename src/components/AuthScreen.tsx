@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
+import professionalImg from "@/assets/professional.png";
 
 interface AuthScreenProps {
   onSuccess: () => void;
@@ -122,8 +123,15 @@ const AuthScreen = ({ onSuccess, onBack }: AuthScreenProps) => {
           <ArrowLeft className="w-5 h-5" />
         </button>
 
+        {/* Photo */}
+        <div className="flex justify-center">
+          <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gold/20 shadow-lg shadow-gold/10">
+            <img src={professionalImg} alt="Dyoli Godim" className="w-full h-full object-cover object-top" />
+          </div>
+        </div>
+
         {/* Title */}
-        <div className="text-center space-y-2 pt-2">
+        <div className="text-center space-y-2">
           <h1 className="font-heading text-2xl font-semibold text-primary-foreground tracking-wide">
             {mode === "signup" ? "Criar Conta" : "Entrar"}
           </h1>
