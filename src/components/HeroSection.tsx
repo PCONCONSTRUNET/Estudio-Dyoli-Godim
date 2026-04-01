@@ -55,15 +55,24 @@ const HeroSection = ({ onSchedule, onLogin }: HeroSectionProps) => {
         <div className="w-full max-w-sm mt-10 space-y-3 px-4 animate-fade-in" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
           <button
             onClick={onSchedule}
-            className="w-full py-4 rounded-lg bg-rose text-primary-foreground font-body font-medium text-sm tracking-wide uppercase transition-all duration-300 hover:brightness-110 active:scale-[0.98] shadow-lg shadow-rose/20"
+            className="group flex items-center justify-center gap-2 w-full py-3 rounded-full bg-rose text-primary-foreground font-body font-medium text-[17px] tracking-wider transition-all duration-300 hover:brightness-110 active:scale-[0.98] shadow-lg shadow-rose/20"
           >
-            Agendar Procedimento
+            <svg xmlns="http://www.w3.org/2000/svg" width={22} viewBox="0 0 24 24" height={22} fill="none" className="group-hover:animate-flicker">
+              <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
+              <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
+            </svg>
+            <span>Agendar Procedimento</span>
           </button>
           <button
             onClick={onLogin}
-            className="w-full py-3.5 rounded-lg border border-primary-foreground/15 text-primary-foreground/60 font-body text-sm tracking-wide transition-all duration-300 hover:border-gold/40 hover:text-gold"
+            className="group flex items-center justify-center gap-2 w-full py-3 rounded-full border border-primary-foreground/20 text-primary-foreground/70 font-body text-[17px] tracking-wider transition-all duration-300 hover:border-gold/50 hover:text-gold"
           >
-            Já tenho cadastro
+            <svg xmlns="http://www.w3.org/2000/svg" width={22} viewBox="0 0 24 24" height={22} fill="none" className="group-hover:animate-flicker">
+              <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2"/>
+              <path d="M5 20c0-3.3137 3.134-6 7-6s7 2.6863 7 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+            <span>Já tenho cadastro</span>
           </button>
         </div>
 
