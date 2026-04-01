@@ -284,7 +284,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       ? (paymentMode === "deposit" ? `Sinal: ${depositAmount}` : `Total: ${price}`)
       : `Total: ${price}`;
     return (
-      <section className="min-h-screen bg-background px-6 py-8 flex flex-col">
+      <section className="min-h-screen bg-background px-6 py-8 flex flex-col lg:items-center lg:px-8">
         <button
           onClick={() => setStep("confirm")}
           className="ios-press flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
