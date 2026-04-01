@@ -8,7 +8,7 @@ const Sucesso = () => {
   const [showProfile, setShowProfile] = useState(false);
 
   return (
-    <div className="max-w-md mx-auto min-h-screen">
+    <div className="mx-auto min-h-screen">
       <SuccessScreen
         onHome={() => navigate("/")}
         onProfile={() => setShowProfile(true)}

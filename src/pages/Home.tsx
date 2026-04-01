@@ -20,7 +20,7 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="max-w-md mx-auto min-h-screen">
+    <div className="mx-auto min-h-screen">
       <HeroSection
         onSchedule={() => isAuthenticated ? navigate("/agendar") : navigate("/auth?mode=signup")}
         onLogin={() => navigate("/auth?mode=login")}

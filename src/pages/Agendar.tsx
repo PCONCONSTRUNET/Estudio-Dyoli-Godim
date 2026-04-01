@@ -12,7 +12,7 @@ const Agendar = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto min-h-screen">
+    <div className="mx-auto min-h-screen max-w-md lg:max-w-3xl">
       <GuidedFlow
         onSelectService={handleSelectService}
         onBack={() => navigate("/")}

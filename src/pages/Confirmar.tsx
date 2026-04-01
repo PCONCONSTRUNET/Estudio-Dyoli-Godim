@@ -30,7 +30,7 @@ const Confirmar = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto min-h-screen">
+    <div className="mx-auto min-h-screen max-w-md lg:max-w-2xl">
       <BookingFlow
         service={servico}
         variation={variacao}
