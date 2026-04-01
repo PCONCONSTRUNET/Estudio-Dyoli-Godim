@@ -200,7 +200,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
             onClick={() => setStep("pix")}
             className="ios-press w-full py-4 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all duration-200 flex items-center justify-center gap-2.5"
           >
-            <QrCode className="w-5 h-5" />
+            <img src={pixIcon} alt="PIX" className="w-5 h-5" />
             Pagar com PIX
           </button>
         </div>
