@@ -382,7 +382,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                 <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Buscar cliente ou serviço..."
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
               </div>
-              <div className="flex gap-2 overflow-x-auto pb-1">
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
                 {[{ value: "todos", label: "Todos" }, { value: "confirmado", label: "Confirmados" }, { value: "concluido", label: "Concluídos" }, { value: "cancelado", label: "Cancelados" }, { value: "falta", label: "Faltas" }].map(f => (
                   <button key={f.value} onClick={() => setStatusFilter(f.value)}
                     className={`px-3 py-1.5 rounded-full font-body text-[11px] font-medium whitespace-nowrap border transition-all ${statusFilter === f.value ? "bg-gold/10 text-gold border-gold/20" : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06]"}`}>
@@ -490,12 +490,12 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
       {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 bg-charcoal/95 backdrop-blur-xl border-t border-primary-foreground/[0.06]">
-        <div className="max-w-md mx-auto flex">
+        <div className="max-w-md mx-auto flex overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
           {tabs.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 transition-all ${tab === t.id ? "text-gold" : "text-primary-foreground/30"}`}>
-              <t.icon className="w-5 h-5" />
-              <span className="font-body text-[9px] font-medium">{t.label}</span>
+              className={`min-w-[60px] flex-1 flex flex-col items-center gap-0.5 py-2.5 transition-all ${tab === t.id ? "text-gold" : "text-primary-foreground/30"}`}>
+              <t.icon className="w-4 h-4" />
+              <span className="font-body text-[8px] font-medium">{t.label}</span>
             </button>
           ))}
         </div>
