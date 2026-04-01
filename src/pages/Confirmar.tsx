@@ -8,7 +8,7 @@ const Confirmar = () => {
   const servico = searchParams.get("servico") || "";
   const variacao = searchParams.get("variacao") || undefined;
 
-  const handleConfirm = async (bookingData?: { date: string; time: string; price: number; paidAmount: number }) => {
+  const handleConfirm = async (bookingData?: { date: string; time: string; price: number; paidAmount: number; durationMinutes: number }) => {
     if (bookingData) {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -22,6 +22,7 @@ const Confirmar = () => {
           valor_pago: bookingData.paidAmount,
           forma_pagamento: "pix",
           status: "confirmado",
+          duracao_minutos: bookingData.durationMinutes,
         });
       }
     }
