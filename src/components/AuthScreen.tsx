@@ -106,10 +106,17 @@ const AuthScreen = ({ onSuccess, onBack }: AuthScreenProps) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 animate-fade-in">
-      {/* Backdrop */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 animate-fade-in overflow-hidden">
+      {/* Full background matching HeroSection */}
+      <div className="absolute inset-0 animate-bg-drift" style={{
+        background: 'linear-gradient(135deg, hsl(0 0% 8%) 0%, hsl(30 15% 12%) 25%, hsl(20 10% 10%) 50%, hsl(0 0% 9%) 75%, hsl(30 20% 11%) 100%)',
+        backgroundSize: '400% 400%',
+      }} />
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-gold/[0.025] blur-[150px] animate-hero-glow" />
+      <div className="absolute bottom-1/4 right-1/4 w-[350px] h-[350px] rounded-full bg-nude/[0.03] blur-[130px] animate-hero-glow-alt" />
+      {/* Dark overlay for modal contrast */}
       <div
-        className="absolute inset-0 bg-charcoal/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/40"
         onClick={onBack}
       />
 
