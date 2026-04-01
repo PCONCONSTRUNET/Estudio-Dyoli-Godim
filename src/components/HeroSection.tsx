@@ -82,6 +82,7 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, onProdutos, isAuthenticat
                 >
                   <ShoppingBag className="w-5 h-5" />
                   <span>Produtos</span>
+                </button>
               </>
             ) : (
               <>
