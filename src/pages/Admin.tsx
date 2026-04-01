@@ -730,18 +730,18 @@ const HorariosTab = () => {
       {/* Funcionamento semanal */}
       <div className="space-y-2">
         {hours.map(h => (
-          <div key={h.day} className="p-3 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-            <div className="flex items-center justify-between mb-2">
+          <div key={h.day} className="p-3 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06] overflow-x-hidden">
+            <div className="flex items-center justify-between gap-3 mb-2">
               <span className="font-body text-[13px] text-primary-foreground">{dayNames[h.day]}</span>
-              <button onClick={() => toggle(h.day)} className={`w-10 h-6 rounded-full relative transition-all duration-200 ${h.open ? "bg-gold" : "bg-primary-foreground/10"}`}>
+              <button onClick={() => toggle(h.day)} className={`shrink-0 w-10 h-6 rounded-full relative transition-all duration-200 ${h.open ? "bg-gold" : "bg-primary-foreground/10"}`}>
                 <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200 ${h.open ? "left-4" : "left-0.5"}`} />
               </button>
             </div>
             {h.open ? (
-              <div className="flex items-center gap-2">
-                <input type="time" value={h.start} onChange={e => updateTime(h.day, "start", e.target.value)} className="flex-1 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
-                <span className="text-primary-foreground/30 text-[12px]">até</span>
-                <input type="time" value={h.end} onChange={e => updateTime(h.day, "end", e.target.value)} className="flex-1 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto_1fr] items-center min-w-0">
+                <input type="time" value={h.start} onChange={e => updateTime(h.day, "start", e.target.value)} className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                <span className="text-primary-foreground/30 text-[12px] text-center">até</span>
+                <input type="time" value={h.end} onChange={e => updateTime(h.day, "end", e.target.value)} className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
               </div>
             ) : <p className="font-body text-[12px] text-primary-foreground/25">Fechado</p>}
           </div>
@@ -749,17 +749,17 @@ const HorariosTab = () => {
       </div>
 
       {/* Bloqueio manual de horários */}
-      <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-rose/10">
+      <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-rose/10 overflow-x-hidden">
         <h3 className="font-body text-[13px] font-medium text-primary-foreground flex items-center gap-2 mb-3">
           🔒 Bloqueio manual de horários
         </h3>
         <p className="font-body text-[10px] text-primary-foreground/30 mb-3">Selecione uma data e bloqueie/desbloqueie horários individualmente</p>
 
-        <div className="flex items-center gap-2 mb-3">
+        <div className="grid grid-cols-1 gap-2 mb-3 sm:grid-cols-[1fr_auto] min-w-0">
           <input type="date" value={blockDate} onChange={e => setBlockDate(e.target.value)}
-            className="flex-1 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+            className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
           <button onClick={blockAllDay}
-            className={`px-3 py-2.5 rounded-xl font-body text-[11px] font-medium transition-all whitespace-nowrap ${allBlocked ? "bg-green-500/10 text-green-500 hover:bg-green-500/20" : "bg-rose/10 text-rose hover:bg-rose/20"}`}>
+            className={`w-full sm:w-auto px-3 py-2.5 rounded-xl font-body text-[11px] font-medium transition-all whitespace-nowrap ${allBlocked ? "bg-green-500/10 text-green-500 hover:bg-green-500/20" : "bg-rose/10 text-rose hover:bg-rose/20"}`}>
             {allBlocked ? "Liberar dia" : "Bloquear dia"}
           </button>
         </div>
@@ -769,7 +769,7 @@ const HorariosTab = () => {
         ) : slots.length === 0 ? (
           <p className="font-body text-[12px] text-primary-foreground/20 text-center py-4">Dia fechado — sem horários disponíveis</p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {slots.map(slot => {
               const isBlocked = !!blockedSlots.find(b => b.horario === slot);
               return (
@@ -787,14 +787,14 @@ const HorariosTab = () => {
                       toggleBlock(slot);
                     }
                   }}
-                  className={`w-full min-h-[44px] touch-manipulation select-none px-3 py-3 rounded-xl font-body text-[13px] font-medium transition-all border ${
+                  className={`w-full min-h-[46px] touch-manipulation select-none px-2 py-3 rounded-xl font-body text-[13px] font-medium transition-all border overflow-hidden ${
                     isBlocked
                       ? "bg-rose/10 text-rose border-rose/20 line-through"
                       : "bg-primary-foreground/[0.03] text-primary-foreground/60 border-primary-foreground/[0.06] hover:bg-gold/10 hover:text-gold hover:border-gold/20"
                   }`}
                 >
-                  {slot}
-                  {isBlocked && <span className="block text-[8px] mt-0.5 no-underline">🔒 Bloqueado</span>}
+                  <span className="block truncate">{slot}</span>
+                  {isBlocked && <span className="block text-[8px] mt-0.5 no-underline truncate">🔒 Bloqueado</span>}
                 </button>
               );
             })}
@@ -862,58 +862,58 @@ const ServicosTab = () => {
   if (loading) return <p className="font-body text-[13px] text-primary-foreground/30 text-center py-8">Carregando...</p>;
 
   return (
-    <div className="space-y-4 animate-fade-in">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 animate-fade-in overflow-x-hidden">
+      <div className="flex items-center justify-between gap-3">
         <h2 className="font-heading text-lg font-semibold text-primary-foreground">Serviços</h2>
-        <button onClick={() => setShowAdd(!showAdd)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all">
+        <button onClick={() => setShowAdd(!showAdd)} className="flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all">
           <Plus className="w-3.5 h-3.5" />Adicionar
         </button>
       </div>
       <Dialog open={showAdd} onOpenChange={setShowAdd}>
-        <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-md max-h-[85dvh] overflow-y-auto overflow-x-hidden bg-[hsl(0,0%,11%)] border border-gold/20 rounded-2xl p-4 sm:p-5">
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-md max-h-[85dvh] overflow-y-auto overflow-x-hidden bg-charcoal border border-gold/20 rounded-2xl p-4 sm:p-5">
           <DialogHeader>
             <DialogTitle className="font-body text-[14px] font-medium text-primary-foreground">Novo Serviço</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 w-full min-w-0 overflow-x-hidden">
             <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Nome do serviço" className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
-            <div className="flex gap-2 min-w-0">
-              <input value={newPrice} onChange={e => setNewPrice(e.target.value)} placeholder="Preço" type="number" className="flex-1 min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
-              <input value={newCategory} onChange={e => setNewCategory(e.target.value)} placeholder="Categoria" className="flex-1 min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
+            <div className="grid grid-cols-1 gap-2 min-w-0 sm:grid-cols-2">
+              <input value={newPrice} onChange={e => setNewPrice(e.target.value)} placeholder="Preço" type="number" className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
+              <input value={newCategory} onChange={e => setNewCategory(e.target.value)} placeholder="Categoria" className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
             </div>
             <div className="min-w-0">
               <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Duração (minutos)</label>
               <input value={newDuration} onChange={e => setNewDuration(e.target.value)} placeholder="60" type="number" className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
             </div>
-            <div className="flex gap-2 min-w-0">
-              <button onClick={addService} className="flex-1 min-w-0 py-2.5 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all">Salvar</button>
-              <button onClick={() => setShowAdd(false)} className="flex-1 min-w-0 py-2.5 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/40 font-body text-[12px] hover:text-primary-foreground/60 transition-all">Cancelar</button>
+            <div className="grid grid-cols-2 gap-2 min-w-0">
+              <button onClick={addService} className="w-full min-w-0 py-2.5 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all">Salvar</button>
+              <button onClick={() => setShowAdd(false)} className="w-full min-w-0 py-2.5 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/40 font-body text-[12px] hover:text-primary-foreground/60 transition-all">Cancelar</button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
       <div className="space-y-2">
         {services.map(s => (
-          <div key={s.id} className={`p-4 rounded-2xl border transition-all ${s.active ? "bg-primary-foreground/[0.03] border-primary-foreground/[0.06]" : "bg-primary-foreground/[0.01] border-primary-foreground/[0.03] opacity-50"}`}>
+          <div key={s.id} className={`p-4 rounded-2xl border transition-all overflow-x-hidden ${s.active ? "bg-primary-foreground/[0.03] border-primary-foreground/[0.06]" : "bg-primary-foreground/[0.01] border-primary-foreground/[0.03] opacity-50"}`}>
             {editing === s.id ? (
-              <div className="space-y-2">
-                <input value={editName} onChange={e => setEditName(e.target.value)} className="w-full px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
-                <div className="flex gap-2">
-                  <input value={editPrice} onChange={e => setEditPrice(e.target.value)} type="number" placeholder="Preço" className="flex-1 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
-                  <input value={editDuration} onChange={e => setEditDuration(e.target.value)} type="number" placeholder="Min" className="w-20 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+              <div className="space-y-2 min-w-0">
+                <input value={editName} onChange={e => setEditName(e.target.value)} className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                <div className="grid grid-cols-[1fr_96px] gap-2 min-w-0">
+                  <input value={editPrice} onChange={e => setEditPrice(e.target.value)} type="number" placeholder="Preço" className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                  <input value={editDuration} onChange={e => setEditDuration(e.target.value)} type="number" placeholder="Min" className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={() => saveEdit(s.id)} className="flex-1 px-3 py-2 rounded-xl bg-gold/10 text-gold hover:bg-gold/20 transition-all font-body text-[12px]"><Save className="w-4 h-4 inline mr-1" />Salvar</button>
+                <div className="grid grid-cols-[1fr_auto] gap-2">
+                  <button onClick={() => saveEdit(s.id)} className="min-w-0 px-3 py-2 rounded-xl bg-gold/10 text-gold hover:bg-gold/20 transition-all font-body text-[12px]"><Save className="w-4 h-4 inline mr-1" />Salvar</button>
                   <button onClick={() => setEditing(null)} className="px-3 py-2 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/30 hover:text-primary-foreground/50 transition-all"><X className="w-4 h-4" /></button>
                 </div>
               </div>
             ) : (
               <>
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <p className="font-body text-[14px] font-medium text-primary-foreground truncate">{s.name}</p>
-                    <p className="font-body text-[10px] text-primary-foreground/30">{s.category} · {s.duration}min</p>
+                    <p className="font-body text-[10px] text-primary-foreground/30 truncate">{s.category} · {s.duration}min</p>
                   </div>
-                  <p className="font-body text-[14px] font-semibold text-gold ml-2">R$ {s.price.toFixed(2).replace(".", ",")}</p>
+                  <p className="font-body text-[14px] font-semibold text-gold ml-2 shrink-0">R$ {s.price.toFixed(2).replace(".", ",")}</p>
                 </div>
                 <div className="flex items-center justify-end gap-2 mt-2">
                   <button onClick={() => toggleActive(s.id)} className={`w-10 h-6 rounded-full relative transition-all duration-200 ${s.active ? "bg-gold" : "bg-primary-foreground/10"}`}>
