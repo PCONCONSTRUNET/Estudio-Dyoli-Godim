@@ -5,6 +5,7 @@ interface HeroSectionProps {
   onSchedule: () => void;
   onLogin: () => void;
   onProfile?: () => void;
+  onProdutos?: () => void;
   isAuthenticated?: boolean;
 }
 
