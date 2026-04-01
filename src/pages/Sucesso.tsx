@@ -1,12 +1,24 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SuccessScreen from "@/components/SuccessScreen";
+import ProfileScreen from "@/components/ProfileScreen";
 
 const Sucesso = () => {
   const navigate = useNavigate();
+  const [showProfile, setShowProfile] = useState(false);
 
   return (
     <div className="max-w-md mx-auto min-h-screen">
-      <SuccessScreen onHome={() => navigate("/")} />
+      <SuccessScreen
+        onHome={() => navigate("/")}
+        onProfile={() => setShowProfile(true)}
+      />
+      {showProfile && (
+        <ProfileScreen
+          onBack={() => setShowProfile(false)}
+          onLogout={() => navigate("/")}
+        />
+      )}
     </div>
   );
 };
