@@ -73,11 +73,6 @@ const HeroSection = ({ onSchedule, onLogin }: HeroSectionProps) => {
             <span>Cadastrar</span>
           </button>
         </div>
-
-        {/* 4. TEXTO (apoio) */}
-        <p className="font-body text-sm text-primary-foreground/50 leading-relaxed mt-6 text-center max-w-xs animate-fade-in" style={{ animationDelay: '0.45s', animationFillMode: 'both' }}>
-          Agende seu procedimento com segurança e resultado profissional
-        </p>
       </div>
     </section>
   );
