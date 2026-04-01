@@ -6,12 +6,13 @@ import professionalImg from "@/assets/professional.png";
 interface AuthScreenProps {
   onSuccess: () => void;
   onBack: () => void;
+  initialMode?: "login" | "signup";
 }
 
 type AuthMode = "login" | "signup";
 
-const AuthScreen = ({ onSuccess, onBack }: AuthScreenProps) => {
-  const [mode, setMode] = useState<AuthMode>("signup");
+const AuthScreen = ({ onSuccess, onBack, initialMode = "signup" }: AuthScreenProps) => {
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [nome, setNome] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [senha, setSenha] = useState("");

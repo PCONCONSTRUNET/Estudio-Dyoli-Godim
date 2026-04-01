@@ -21,7 +21,7 @@ const Home = () => {
     if (isAuthenticated) {
       navigate("/agendar");
     } else {
-      navigate("/auth");
+      navigate("/auth?mode=signup");
     }
   };
 
@@ -29,7 +29,7 @@ const Home = () => {
     if (isAuthenticated) {
       navigate("/agendar");
     } else {
-      navigate("/auth");
+      navigate("/auth?mode=login");
     }
   };
 
