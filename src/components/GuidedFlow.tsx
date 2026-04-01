@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronRight } from "lucide-react";
 
 interface GuidedFlowProps {
   onSelectService: (serviceId: string) => void;
@@ -22,12 +22,15 @@ const GuidedFlow = ({ onSelectService, onBack }: GuidedFlowProps) => {
   }) => (
     <button
       onClick={onClick}
-      className="w-full text-left p-5 rounded-xl border border-border bg-card hover:border-gold/50 hover:shadow-md transition-all duration-300 group"
+      className="ios-press w-full flex items-center justify-between p-5 rounded-2xl border border-border/80 bg-card/80 backdrop-blur-sm hover:border-gold/40 hover:bg-card transition-all duration-200 group"
     >
-      <h3 className="font-heading text-xl font-semibold text-foreground group-hover:text-rose transition-colors">
-        {title}
-      </h3>
-      <p className="font-body text-sm text-muted-foreground mt-1">{description}</p>
+      <div className="text-left">
+        <h3 className="font-heading text-xl font-semibold text-foreground group-hover:text-rose transition-colors duration-200">
+          {title}
+        </h3>
+        <p className="font-body text-[13px] text-muted-foreground mt-0.5">{description}</p>
+      </div>
+      <ChevronRight className="w-5 h-5 text-muted-foreground/40 group-hover:text-gold/60 group-hover:translate-x-0.5 transition-all duration-200 flex-shrink-0 ml-3" />
     </button>
   );
 
@@ -35,22 +38,22 @@ const GuidedFlow = ({ onSelectService, onBack }: GuidedFlowProps) => {
     <section className="min-h-screen bg-background px-6 py-8">
       <button
         onClick={step === "initial" ? onBack : () => setStep("initial")}
-        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
+        className="ios-press flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
       >
         <ArrowLeft className="w-4 h-4" />
-        <span className="font-body text-sm">Voltar</span>
+        <span className="font-body text-[14px]">Voltar</span>
       </button>
 
       <div className="animate-fade-in">
         {step === "initial" && (
           <div className="space-y-6">
             <div className="space-y-2">
-              <p className="font-body text-xs tracking-widest uppercase text-gold">Passo 1</p>
+              <p className="font-body text-[11px] tracking-widest uppercase text-gold font-medium">Passo 1</p>
               <h2 className="font-heading text-3xl font-semibold text-foreground">
                 O que você deseja melhorar?
               </h2>
             </div>
-            <div className="space-y-3 pt-4">
+            <div className="space-y-3 pt-2">
               <OptionCard
                 title="Sobrancelhas"
                 description="Micropigmentação para realçar o olhar"
@@ -73,12 +76,12 @@ const GuidedFlow = ({ onSelectService, onBack }: GuidedFlowProps) => {
         {step === "sobrancelhas" && (
           <div className="space-y-6">
             <div className="space-y-2">
-              <p className="font-body text-xs tracking-widest uppercase text-gold">Passo 2</p>
+              <p className="font-body text-[11px] tracking-widest uppercase text-gold font-medium">Passo 2</p>
               <h2 className="font-heading text-3xl font-semibold text-foreground">
                 Qual resultado você deseja?
               </h2>
             </div>
-            <div className="space-y-3 pt-4">
+            <div className="space-y-3 pt-2">
               <OptionCard
                 title="Natural (Fio a Fio)"
                 description="Fios delicados e naturais que harmonizam com o rosto"
@@ -91,12 +94,12 @@ const GuidedFlow = ({ onSelectService, onBack }: GuidedFlowProps) => {
         {step === "perfuracao-confirm" && (
           <div className="space-y-6">
             <div className="space-y-2">
-              <p className="font-body text-xs tracking-widest uppercase text-gold">Passo 2</p>
+              <p className="font-body text-[11px] tracking-widest uppercase text-gold font-medium">Passo 2</p>
               <h2 className="font-heading text-3xl font-semibold text-foreground">
                 Você já sabe qual tipo deseja?
               </h2>
             </div>
-            <div className="space-y-3 pt-4">
+            <div className="space-y-3 pt-2">
               <OptionCard
                 title="Sim, quero escolher"
                 description="Ver opções de perfuração disponíveis"
@@ -108,8 +111,8 @@ const GuidedFlow = ({ onSelectService, onBack }: GuidedFlowProps) => {
                 onClick={() => onSelectService("perfuracao")}
               />
             </div>
-            <div className="mt-6 p-4 rounded-xl bg-secondary/50 border border-border">
-              <p className="font-body text-sm text-muted-foreground leading-relaxed">
+            <div className="mt-4 p-4 rounded-2xl bg-secondary/40 backdrop-blur-sm border border-border/50">
+              <p className="font-body text-[13px] text-muted-foreground leading-relaxed">
                 Todas as perfurações são realizadas com material esterilizado e joias em titânio grau implante, garantindo segurança e biocompatibilidade.
               </p>
             </div>

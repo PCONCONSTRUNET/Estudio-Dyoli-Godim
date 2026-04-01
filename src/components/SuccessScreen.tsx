@@ -16,7 +16,7 @@ const SuccessScreen = ({ onHome }: SuccessScreenProps) => {
           <h2 className="font-heading text-3xl font-semibold text-foreground">
             Agendamento Confirmado!
           </h2>
-          <p className="font-body text-sm text-muted-foreground max-w-xs mx-auto leading-relaxed">
+          <p className="font-body text-[13px] text-muted-foreground max-w-xs mx-auto leading-relaxed">
             Você receberá uma confirmação via WhatsApp e um lembrete 24h antes do procedimento.
           </p>
         </div>
@@ -26,14 +26,14 @@ const SuccessScreen = ({ onHome }: SuccessScreenProps) => {
             href="https://wa.me/5500000000000"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full py-4 rounded-lg bg-charcoal text-primary-foreground font-body font-medium text-sm tracking-wide flex items-center justify-center gap-2 transition-all duration-300 hover:brightness-110"
+            className="ios-press w-full py-3.5 rounded-2xl bg-charcoal text-primary-foreground font-body font-semibold text-[15px] tracking-wide flex items-center justify-center gap-2.5 shadow-[0_4px_16px_-4px_rgba(0,0,0,0.3)] transition-all duration-200"
           >
-            <MessageCircle className="w-4 h-4" />
+            <MessageCircle className="w-5 h-5" />
             Falar pelo WhatsApp
           </a>
           <button
             onClick={onHome}
-            className="w-full py-3.5 rounded-lg border border-border text-muted-foreground font-body text-sm tracking-wide transition-all duration-300 hover:border-gold/50 hover:text-foreground"
+            className="ios-press w-full py-3.5 rounded-2xl border border-border/60 bg-card/60 backdrop-blur-sm text-muted-foreground font-body text-[14px] font-medium tracking-wide transition-all duration-200 hover:border-gold/40 hover:text-foreground"
           >
             Voltar ao início
           </button>

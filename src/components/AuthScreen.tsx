@@ -114,25 +114,22 @@ const AuthScreen = ({ onSuccess, onBack }: AuthScreenProps) => {
       }} />
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-gold/[0.025] blur-[150px] animate-hero-glow" />
       <div className="absolute bottom-1/4 right-1/4 w-[350px] h-[350px] rounded-full bg-nude/[0.03] blur-[130px] animate-hero-glow-alt" />
-      {/* Dark overlay for modal contrast */}
-      <div
-        className="absolute inset-0 bg-black/40"
-        onClick={onBack}
-      />
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-black/40" onClick={onBack} />
 
-      {/* Glass modal */}
-      <div className="relative w-full max-w-sm rounded-2xl border border-primary-foreground/10 bg-charcoal/60 backdrop-blur-xl shadow-2xl shadow-black/40 px-7 py-6 space-y-4 animate-scale-in">
+      {/* iOS-style glass modal */}
+      <div className="relative w-full max-w-sm rounded-3xl border border-primary-foreground/[0.08] bg-charcoal/70 backdrop-blur-2xl shadow-[0_25px_60px_-12px_rgba(0,0,0,0.6)] px-7 py-6 space-y-4 animate-scale-in">
         {/* Close */}
         <button
           onClick={onBack}
-          className="absolute top-3 right-3 p-1 text-primary-foreground/40 hover:text-primary-foreground transition-colors"
+          className="ios-press absolute top-4 right-4 w-8 h-8 rounded-full bg-primary-foreground/[0.08] flex items-center justify-center text-primary-foreground/40 hover:text-primary-foreground/70 hover:bg-primary-foreground/[0.12] transition-all"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-4 h-4" />
         </button>
 
         {/* Photo */}
         <div className="flex justify-center">
-          <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-gold/20 shadow-lg shadow-gold/10">
+          <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-gold/15 shadow-[0_8px_30px_-8px_hsl(40_40%_55%/0.15)]">
             <img src={professionalImg} alt="Dyoli Godim" className="w-full h-full object-cover object-top" />
           </div>
         </div>
@@ -142,7 +139,7 @@ const AuthScreen = ({ onSuccess, onBack }: AuthScreenProps) => {
           <h1 className="font-heading text-2xl font-semibold text-primary-foreground tracking-wide">
             {mode === "signup" ? "Criar Conta" : "Entrar"}
           </h1>
-          <p className="font-body text-sm text-primary-foreground/50">
+          <p className="font-body text-[13px] text-primary-foreground/45 font-light">
             {mode === "signup"
               ? "Cadastre-se para agendar seu procedimento"
               : "Acesse sua conta para agendar"}
@@ -152,8 +149,8 @@ const AuthScreen = ({ onSuccess, onBack }: AuthScreenProps) => {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-3">
           {mode === "signup" && (
-            <div className="space-y-1">
-              <label className="font-body text-xs text-primary-foreground/50 uppercase tracking-wider">
+            <div className="space-y-1.5">
+              <label className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest font-medium">
                 Nome
               </label>
               <input
@@ -161,14 +158,14 @@ const AuthScreen = ({ onSuccess, onBack }: AuthScreenProps) => {
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 placeholder="Seu nome completo"
-                className="w-full px-4 py-3 rounded-xl bg-primary-foreground/[0.06] border border-primary-foreground/[0.08] text-primary-foreground font-body text-sm placeholder:text-primary-foreground/25 focus:outline-none focus:border-gold/40 focus:bg-primary-foreground/[0.08] transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[15px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-transparent focus:bg-primary-foreground/[0.07] transition-all duration-200"
                 maxLength={100}
               />
             </div>
           )}
 
-          <div className="space-y-1">
-            <label className="font-body text-xs text-primary-foreground/50 uppercase tracking-wider">
+          <div className="space-y-1.5">
+            <label className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest font-medium">
               WhatsApp
             </label>
             <input
@@ -176,12 +173,12 @@ const AuthScreen = ({ onSuccess, onBack }: AuthScreenProps) => {
               value={whatsapp}
               onChange={(e) => setWhatsapp(formatWhatsapp(e.target.value))}
               placeholder="(00) 00000-0000"
-              className="w-full px-4 py-3 rounded-xl bg-primary-foreground/[0.06] border border-primary-foreground/[0.08] text-primary-foreground font-body text-sm placeholder:text-primary-foreground/25 focus:outline-none focus:border-gold/40 focus:bg-primary-foreground/[0.08] transition-all"
+              className="w-full px-4 py-3 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[15px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-transparent focus:bg-primary-foreground/[0.07] transition-all duration-200"
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="font-body text-xs text-primary-foreground/50 uppercase tracking-wider">
+          <div className="space-y-1.5">
+            <label className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest font-medium">
               Senha
             </label>
             <div className="relative">
@@ -190,13 +187,13 @@ const AuthScreen = ({ onSuccess, onBack }: AuthScreenProps) => {
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
                 placeholder="Mínimo 6 caracteres"
-                className="w-full px-4 py-3 rounded-xl bg-primary-foreground/[0.06] border border-primary-foreground/[0.08] text-primary-foreground font-body text-sm placeholder:text-primary-foreground/25 focus:outline-none focus:border-gold/40 focus:bg-primary-foreground/[0.08] transition-all pr-12"
+                className="w-full px-4 py-3 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[15px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-transparent focus:bg-primary-foreground/[0.07] transition-all duration-200 pr-12"
                 maxLength={72}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-foreground/30 hover:text-primary-foreground/60 transition-colors"
+                className="ios-press absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-primary-foreground/25 hover:text-primary-foreground/50 hover:bg-primary-foreground/[0.06] transition-all"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -204,13 +201,15 @@ const AuthScreen = ({ onSuccess, onBack }: AuthScreenProps) => {
           </div>
 
           {error && (
-            <p className="font-body text-xs text-rose text-center">{error}</p>
+            <div className="px-3 py-2 rounded-xl bg-rose/10 border border-rose/20">
+              <p className="font-body text-[12px] text-rose text-center">{error}</p>
+            </div>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 rounded-xl bg-rose text-primary-foreground font-body font-medium text-sm tracking-wide uppercase transition-all duration-300 hover:brightness-110 active:scale-[0.98] shadow-lg shadow-rose/20 disabled:opacity-50 disabled:cursor-not-allowed mt-1"
+            className="ios-press w-full py-3.5 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] disabled:opacity-40 disabled:cursor-not-allowed mt-2 transition-all duration-200"
           >
             {loading
               ? "Aguarde..."
@@ -221,13 +220,13 @@ const AuthScreen = ({ onSuccess, onBack }: AuthScreenProps) => {
         </form>
 
         {/* Toggle mode */}
-        <div className="text-center">
+        <div className="text-center pb-1">
           <button
             onClick={() => {
               setMode(mode === "signup" ? "login" : "signup");
               setError("");
             }}
-            className="font-body text-sm text-primary-foreground/40 hover:text-gold transition-colors"
+            className="font-body text-[13px] text-primary-foreground/35 hover:text-gold transition-colors duration-200"
           >
             {mode === "signup"
               ? "Já tenho conta · Entrar"
