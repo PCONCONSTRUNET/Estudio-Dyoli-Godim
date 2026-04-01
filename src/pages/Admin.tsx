@@ -659,7 +659,7 @@ const ServicosTab = () => {
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <p className="font-body text-[14px] font-medium text-primary-foreground truncate">{s.name}</p>
-                    <p className="font-body text-[10px] text-primary-foreground/30">{s.category}</p>
+                    <p className="font-body text-[10px] text-primary-foreground/30">{s.category} · {s.duration}min</p>
                   </div>
                   <p className="font-body text-[14px] font-semibold text-gold ml-2">R$ {s.price.toFixed(2).replace(".", ",")}</p>
                 </div>
