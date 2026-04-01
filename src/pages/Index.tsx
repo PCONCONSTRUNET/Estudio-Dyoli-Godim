@@ -86,6 +86,8 @@ const Index = () => {
         <HeroSection
           onSchedule={handleScheduleClick}
           onLogin={handleLoginClick}
+          onProfile={() => setScreen("profile")}
+          isAuthenticated={isAuthenticated}
         />
       )}
       {screen === "auth" && (
