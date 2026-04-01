@@ -461,6 +461,15 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
               </div>
             </div>
 
+            {/* Comissão do dia */}
+            <div className="p-3 rounded-xl bg-purple-500/5 border border-purple-500/10">
+              <div className="flex items-center justify-between">
+                <p className="font-body text-[10px] text-purple-400/60 uppercase tracking-widest">Sua comissão ({comissaoPct}%)</p>
+                <p className="font-heading text-lg font-bold text-purple-400">{formatCurrency(caixaData.recebido * (comissaoPct / 100))}</p>
+              </div>
+              <p className="font-body text-[10px] text-purple-400/40 mt-0.5">Valor a retirar sobre o recebido do dia</p>
+            </div>
+
             {caixaData.pendente > 0 && (
               <div className="p-3 rounded-xl bg-rose/5 border border-rose/10">
                 <p className="font-body text-[11px] text-rose">Pendente: {formatCurrency(caixaData.pendente)}</p>
