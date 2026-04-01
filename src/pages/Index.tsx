@@ -6,8 +6,9 @@ import GuidedFlow from "@/components/GuidedFlow";
 import ServiceList from "@/components/ServiceList";
 import BookingFlow from "@/components/BookingFlow";
 import SuccessScreen from "@/components/SuccessScreen";
+import ProfileScreen from "@/components/ProfileScreen";
 
-type Screen = "home" | "auth" | "guided" | "services" | "booking" | "success";
+type Screen = "home" | "auth" | "guided" | "services" | "booking" | "success" | "profile";
 
 const Index = () => {
   const [screen, setScreen] = useState<Screen>("home");
@@ -59,12 +60,34 @@ const Index = () => {
     setScreen("booking");
   };
 
+  const handleConfirm = async (bookingData?: { date: string; time: string; price: number; paidAmount: number }) => {
+    if (bookingData) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("agendamentos").insert({
+          user_id: user.id,
+          servico: selectedService,
+          variacao: selectedVariation || null,
+          data_agendamento: bookingData.date,
+          horario: bookingData.time,
+          valor: bookingData.price,
+          valor_pago: bookingData.paidAmount,
+          forma_pagamento: "pix",
+          status: "confirmado",
+        });
+      }
+    }
+    setScreen("success");
+  };
+
   return (
     <div className="max-w-md mx-auto min-h-screen">
-      {(screen === "home" || screen === "auth" || screen === "success") && (
+      {(screen === "home" || screen === "auth" || screen === "success" || screen === "profile") && (
         <HeroSection
           onSchedule={handleScheduleClick}
           onLogin={handleLoginClick}
+          onProfile={() => setScreen("profile")}
+          isAuthenticated={isAuthenticated}
         />
       )}
       {screen === "auth" && (
@@ -91,11 +114,20 @@ const Index = () => {
           service={selectedService}
           variation={selectedVariation}
           onBack={() => setScreen("services")}
-          onConfirm={() => setScreen("success")}
+          onConfirm={handleConfirm}
         />
       )}
       {screen === "success" && (
-        <SuccessScreen onHome={() => setScreen("home")} />
+        <SuccessScreen
+          onHome={() => setScreen("home")}
+          onProfile={() => setScreen("profile")}
+        />
+      )}
+      {screen === "profile" && (
+        <ProfileScreen
+          onBack={() => setScreen("home")}
+          onLogout={() => setScreen("home")}
+        />
       )}
     </div>
   );

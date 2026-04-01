@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      agendamentos: {
+        Row: {
+          created_at: string
+          data_agendamento: string
+          forma_pagamento: string | null
+          horario: string
+          id: string
+          servico: string
+          status: string
+          updated_at: string
+          user_id: string
+          valor: number
+          valor_pago: number | null
+          variacao: string | null
+        }
+        Insert: {
+          created_at?: string
+          data_agendamento: string
+          forma_pagamento?: string | null
+          horario: string
+          id?: string
+          servico: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          valor: number
+          valor_pago?: number | null
+          variacao?: string | null
+        }
+        Update: {
+          created_at?: string
+          data_agendamento?: string
+          forma_pagamento?: string | null
+          horario?: string
+          id?: string
+          servico?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          valor?: number
+          valor_pago?: number | null
+          variacao?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
