@@ -119,7 +119,7 @@ const AuthScreen = ({ onSuccess, onBack, initialMode = "signup" }: AuthScreenPro
       <div className="absolute inset-0 bg-black/40" onClick={onBack} />
 
       {/* iOS-style glass modal */}
-      <div className="relative w-full max-w-sm rounded-3xl border border-primary-foreground/[0.08] bg-charcoal/70 backdrop-blur-2xl shadow-[0_25px_60px_-12px_rgba(0,0,0,0.6)] px-7 py-6 space-y-4 animate-scale-in">
+      <div className="relative w-full max-w-sm lg:max-w-md rounded-3xl border border-primary-foreground/[0.08] bg-charcoal/70 backdrop-blur-2xl shadow-[0_25px_60px_-12px_rgba(0,0,0,0.6)] px-7 py-6 space-y-4 animate-scale-in">
         {/* Close */}
         <button
           onClick={onBack}

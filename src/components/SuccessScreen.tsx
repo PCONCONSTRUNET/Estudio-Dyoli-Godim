@@ -46,7 +46,7 @@ const SuccessScreen = ({ onHome, onProfile }: SuccessScreenProps) => {
       <div className="absolute inset-0 bg-black/40" />
 
       {/* Glass modal */}
-      <div className="relative w-full max-w-sm rounded-3xl border border-primary-foreground/[0.08] bg-charcoal/70 backdrop-blur-2xl shadow-[0_25px_60px_-12px_rgba(0,0,0,0.6)] px-7 py-8 animate-scale-in">
+      <div className="relative w-full max-w-sm lg:max-w-md rounded-3xl border border-primary-foreground/[0.08] bg-charcoal/70 backdrop-blur-2xl shadow-[0_25px_60px_-12px_rgba(0,0,0,0.6)] px-7 py-8 animate-scale-in">
         {/* Photo */}
         <div className="flex justify-center mb-5">
           <div className="relative">
