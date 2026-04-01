@@ -114,24 +114,24 @@ const AuthScreen = ({ onSuccess, onBack }: AuthScreenProps) => {
       />
 
       {/* Glass modal */}
-      <div className="relative w-full max-w-sm rounded-2xl border border-primary-foreground/10 bg-charcoal/60 backdrop-blur-xl shadow-2xl shadow-black/40 p-8 space-y-6 animate-scale-in">
+      <div className="relative w-full max-w-sm rounded-2xl border border-primary-foreground/10 bg-charcoal/60 backdrop-blur-xl shadow-2xl shadow-black/40 px-7 py-6 space-y-4 animate-scale-in">
         {/* Close */}
         <button
           onClick={onBack}
-          className="absolute top-4 right-4 p-1 text-primary-foreground/40 hover:text-primary-foreground transition-colors"
+          className="absolute top-3 right-3 p-1 text-primary-foreground/40 hover:text-primary-foreground transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
 
         {/* Photo */}
         <div className="flex justify-center">
-          <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gold/20 shadow-lg shadow-gold/10">
+          <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-gold/20 shadow-lg shadow-gold/10">
             <img src={professionalImg} alt="Dyoli Godim" className="w-full h-full object-cover object-top" />
           </div>
         </div>
 
         {/* Title */}
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-1">
           <h1 className="font-heading text-2xl font-semibold text-primary-foreground tracking-wide">
             {mode === "signup" ? "Criar Conta" : "Entrar"}
           </h1>
