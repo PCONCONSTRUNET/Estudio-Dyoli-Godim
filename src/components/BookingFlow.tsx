@@ -13,6 +13,27 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [step, setStep] = useState<"date" | "confirm">("date");
 
+  // Horário de atendimento por dia da semana (0=Dom, 1=Seg, ..., 6=Sáb)
+  const businessHours: Record<number, { open: string; close: string } | null> = {
+    0: null,                          // Domingo — Fechada
+    1: null,                          // Segunda — Fechada
+    2: { open: "09:00", close: "19:00" }, // Terça
+    3: null,                          // Quarta — Fechada
+    4: { open: "09:00", close: "19:00" }, // Quinta
+    5: { open: "09:00", close: "19:00" }, // Sexta
+    6: null,                          // Sábado — Fechada
+  };
+
+  const generateTimes = (open: string, close: string) => {
+    const result: string[] = [];
+    const [oh, om] = open.split(":").map(Number);
+    const [ch] = close.split(":").map(Number);
+    for (let h = oh; h < ch; h++) {
+      result.push(`${String(h).padStart(2, "0")}:${String(om).padStart(2, "0")}`);
+    }
+    return result;
+  };
+
   const today = new Date();
   const dates = Array.from({ length: 14 }, (_, i) => {
     const d = new Date(today);
@@ -20,7 +41,16 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     return d;
   });
 
-  const times = ["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00"];
+  const isDayOpen = (d: Date) => businessHours[d.getDay()] !== null;
+
+  const getTimesForDate = (dateStr: string) => {
+    const d = new Date(dateStr + "T12:00:00");
+    const hours = businessHours[d.getDay()];
+    if (!hours) return [];
+    return generateTimes(hours.open, hours.close);
+  };
+
+  const times = selectedDate ? getTimesForDate(selectedDate) : [];
 
   const formatDate = (d: Date) => {
     const days = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -146,8 +176,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
         <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide">
           {dates.map((d) => {
             const info = formatDate(d);
-            const isWeekend = d.getDay() === 0;
-            if (isWeekend) return null;
+            if (!isDayOpen(d)) return null;
             return (
               <button
                 key={info.full}
