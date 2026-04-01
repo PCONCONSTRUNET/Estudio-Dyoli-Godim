@@ -512,12 +512,28 @@ const HorariosTab = () => {
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Bloqueio manual
+  const [blockDate, setBlockDate] = useState(new Date().toISOString().split("T")[0]);
+  const [blockedSlots, setBlockedSlots] = useState<{ id: string; data: string; horario: string; motivo: string }[]>([]);
+  const [loadingBlocks, setLoadingBlocks] = useState(false);
+
   useEffect(() => {
     supabase.from("horarios_funcionamento").select("*").order("dia_semana").then(({ data }) => {
       if (data) setHours(data.map(d => ({ id: d.id, day: d.dia_semana, open: d.aberto, start: d.hora_inicio, end: d.hora_fim })));
       setLoading(false);
     });
   }, []);
+
+  useEffect(() => {
+    loadBlocks();
+  }, [blockDate]);
+
+  const loadBlocks = async () => {
+    setLoadingBlocks(true);
+    const { data } = await supabase.from("horarios_bloqueados").select("*").eq("data", blockDate);
+    setBlockedSlots(data?.map(d => ({ id: d.id, data: d.data, horario: d.horario, motivo: d.motivo || "" })) || []);
+    setLoadingBlocks(false);
+  };
 
   const toggle = (day: number) => setHours(prev => prev.map(h => h.day === day ? { ...h, open: !h.open } : h));
   const updateTime = (day: number, field: "start" | "end", val: string) => setHours(prev => prev.map(h => h.day === day ? { ...h, [field]: val } : h));
@@ -530,6 +546,52 @@ const HorariosTab = () => {
     setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000);
   };
 
+  // Get time slots for the selected block date
+  const getBlockDateSlots = () => {
+    const d = new Date(blockDate + "T12:00:00");
+    const dayHours = hours.find(h => h.day === d.getDay());
+    if (!dayHours || !dayHours.open) return [];
+    const result: string[] = [];
+    const [oh] = dayHours.start.split(":").map(Number);
+    const [ch] = dayHours.end.split(":").map(Number);
+    for (let h = oh; h < ch; h++) {
+      result.push(`${String(h).padStart(2, "0")}:00`);
+    }
+    return result;
+  };
+
+  const toggleBlock = async (horario: string) => {
+    const existing = blockedSlots.find(b => b.horario === horario);
+    if (existing) {
+      await supabase.from("horarios_bloqueados").delete().eq("id", existing.id);
+      setBlockedSlots(prev => prev.filter(b => b.id !== existing.id));
+    } else {
+      const { data } = await supabase.from("horarios_bloqueados").insert({ data: blockDate, horario, motivo: "" }).select().single();
+      if (data) setBlockedSlots(prev => [...prev, { id: data.id, data: data.data, horario: data.horario, motivo: data.motivo || "" }]);
+    }
+  };
+
+  const blockAllDay = async () => {
+    const slots = getBlockDateSlots();
+    const unblockedSlots = slots.filter(s => !blockedSlots.find(b => b.horario === s));
+    if (unblockedSlots.length === 0) {
+      // Unblock all
+      for (const b of blockedSlots) {
+        await supabase.from("horarios_bloqueados").delete().eq("id", b.id);
+      }
+      setBlockedSlots([]);
+    } else {
+      // Block all remaining
+      for (const s of unblockedSlots) {
+        const { data } = await supabase.from("horarios_bloqueados").insert({ data: blockDate, horario: s, motivo: "" }).select().single();
+        if (data) setBlockedSlots(prev => [...prev, { id: data.id, data: data.data, horario: data.horario, motivo: data.motivo || "" }]);
+      }
+    }
+  };
+
+  const slots = getBlockDateSlots();
+  const allBlocked = slots.length > 0 && slots.every(s => blockedSlots.find(b => b.horario === s));
+
   if (loading) return <p className="font-body text-[13px] text-primary-foreground/30 text-center py-8">Carregando...</p>;
 
   return (
@@ -541,6 +603,8 @@ const HorariosTab = () => {
           {saving ? "Salvando..." : saved ? "Salvo!" : "Salvar"}
         </button>
       </div>
+
+      {/* Funcionamento semanal */}
       <div className="space-y-2">
         {hours.map(h => (
           <div key={h.day} className="p-3 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
@@ -560,8 +624,55 @@ const HorariosTab = () => {
           </div>
         ))}
       </div>
+
+      {/* Bloqueio manual de horários */}
+      <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-rose/10">
+        <h3 className="font-body text-[13px] font-medium text-primary-foreground flex items-center gap-2 mb-3">
+          🔒 Bloqueio manual de horários
+        </h3>
+        <p className="font-body text-[10px] text-primary-foreground/30 mb-3">Selecione uma data e bloqueie/desbloqueie horários individualmente</p>
+
+        <div className="flex items-center gap-2 mb-3">
+          <input type="date" value={blockDate} onChange={e => setBlockDate(e.target.value)}
+            className="flex-1 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+          <button onClick={blockAllDay}
+            className={`px-3 py-2.5 rounded-xl font-body text-[11px] font-medium transition-all whitespace-nowrap ${allBlocked ? "bg-green-500/10 text-green-500 hover:bg-green-500/20" : "bg-rose/10 text-rose hover:bg-rose/20"}`}>
+            {allBlocked ? "Liberar dia" : "Bloquear dia"}
+          </button>
+        </div>
+
+        {loadingBlocks ? (
+          <p className="font-body text-[12px] text-primary-foreground/20 text-center py-4">Carregando...</p>
+        ) : slots.length === 0 ? (
+          <p className="font-body text-[12px] text-primary-foreground/20 text-center py-4">Dia fechado — sem horários disponíveis</p>
+        ) : (
+          <div className="grid grid-cols-3 gap-2">
+            {slots.map(slot => {
+              const isBlocked = !!blockedSlots.find(b => b.horario === slot);
+              return (
+                <button key={slot} onClick={() => toggleBlock(slot)}
+                  className={`px-3 py-2.5 rounded-xl font-body text-[13px] font-medium transition-all border ${
+                    isBlocked
+                      ? "bg-rose/10 text-rose border-rose/20 line-through"
+                      : "bg-primary-foreground/[0.03] text-primary-foreground/60 border-primary-foreground/[0.06] hover:bg-gold/10 hover:text-gold hover:border-gold/20"
+                  }`}>
+                  {slot}
+                  {isBlocked && <span className="block text-[8px] mt-0.5 no-underline">🔒 Bloqueado</span>}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {blockedSlots.length > 0 && (
+          <p className="font-body text-[10px] text-rose/60 mt-3 text-center">
+            {blockedSlots.length} horário{blockedSlots.length > 1 ? "s" : ""} bloqueado{blockedSlots.length > 1 ? "s" : ""} neste dia
+          </p>
+        )}
+      </div>
+
       <div className="p-3 rounded-2xl bg-gold/5 border border-gold/10">
-        <p className="font-body text-[11px] text-gold/70 leading-relaxed">⚠ Alterações nos horários afetam apenas novos agendamentos.</p>
+        <p className="font-body text-[11px] text-gold/70 leading-relaxed">⚠ Alterações nos horários afetam apenas novos agendamentos. Bloqueios manuais impedem clientes de agendar nesses horários.</p>
       </div>
     </div>
   );
