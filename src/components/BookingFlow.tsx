@@ -119,6 +119,19 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   const requiresDeposit = numericPrice > 300;
   const depositAmount = requiresDeposit ? `R$ ${Math.round(numericPrice * 0.3)}` : null;
 
+  const getPaymentAmount = () => {
+    if (requiresDeposit) return Math.round(numericPrice * 0.3);
+    return numericPrice;
+  };
+
+  const pixPayload = generatePixPayload(getPaymentAmount());
+
+  const handleCopyPix = async () => {
+    await navigator.clipboard.writeText(pixPayload);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
   if (step === "confirm") {
     return (
       <section className="min-h-screen bg-background px-6 py-8 flex flex-col">
