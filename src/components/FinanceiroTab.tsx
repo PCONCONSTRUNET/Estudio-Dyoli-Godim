@@ -325,7 +325,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
         <p className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest mb-3">Status de pagamento</p>
         {paymentStatus.length > 0 ? (
           <>
-            <div className="h-[180px]">
+            <div className="h-[180px] [&_.recharts-wrapper]:!bg-transparent [&_.recharts-surface]:!bg-transparent [&_svg]:!bg-transparent">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie data={paymentStatus} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={4} dataKey="value" stroke="none">
