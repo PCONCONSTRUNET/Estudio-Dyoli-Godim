@@ -40,13 +40,9 @@ const HeroSection = ({ onSchedule, onLogin }: HeroSectionProps) => {
           <h1 className="font-heading text-3xl font-semibold text-primary-foreground tracking-wide">
             Estudio Dyoli Godim
           </h1>
-          <div className="flex items-center justify-center gap-3">
-            <div className="w-8 h-px bg-gold/40" />
-            <p className="font-body text-xs text-gold/70 tracking-[0.25em] uppercase">
-              Agende seu procedimento com segurança e resultado profissional
-            </p>
-            <div className="w-8 h-px bg-gold/40" />
-          </div>
+          <p className="font-body text-xs text-gold/70 tracking-[0.25em] uppercase">
+            Agende seu procedimento com segurança e resultado profissional
+          </p>
         </div>
 
         {/* 3. BOTÃO (ação) */}
