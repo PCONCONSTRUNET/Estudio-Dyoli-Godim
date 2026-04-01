@@ -455,13 +455,8 @@ const HorariosTab = () => {
 
 // ─── Serviços Tab ───
 const ServicosTab = () => {
-  const [services, setServices] = useState([
-    { id: "1", name: "Micropigmentação Fio a Fio", price: 550, category: "Sobrancelhas", active: true },
-    { id: "2", name: "Micropigmentação Labial", price: 480, category: "Lábios", active: true },
-    { id: "3", name: "Perfuração Básica", price: 170, category: "Perfuração", active: true },
-    { id: "4", name: "Perfuração Padrão", price: 180, category: "Perfuração", active: true },
-    { id: "5", name: "Perfuração Premium", price: 300, category: "Perfuração", active: true },
-  ]);
+  const [services, setServices] = useState<{ id: string; name: string; price: number; category: string; active: boolean }[]>([]);
+  const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editPrice, setEditPrice] = useState("");
@@ -470,39 +465,55 @@ const ServicosTab = () => {
   const [newPrice, setNewPrice] = useState("");
   const [newCategory, setNewCategory] = useState("");
 
+  useEffect(() => {
+    supabase.from("servicos").select("*").order("ordem").then(({ data }) => {
+      if (data) {
+        setServices(data.map(s => ({ id: s.id, name: s.nome, price: Number(s.preco), category: s.categoria, active: s.ativo })));
+      }
+      setLoading(false);
+    });
+  }, []);
+
   const startEdit = (s: typeof services[0]) => {
     setEditing(s.id);
     setEditName(s.name);
     setEditPrice(s.price.toString());
   };
 
-  const saveEdit = (id: string) => {
+  const saveEdit = async (id: string) => {
+    await supabase.from("servicos").update({ nome: editName, preco: Number(editPrice), updated_at: new Date().toISOString() }).eq("id", id);
     setServices(prev => prev.map(s => s.id === id ? { ...s, name: editName, price: Number(editPrice) } : s));
     setEditing(null);
   };
 
-  const addService = () => {
+  const addService = async () => {
     if (!newName || !newPrice) return;
-    setServices(prev => [...prev, {
-      id: Date.now().toString(),
-      name: newName,
-      price: Number(newPrice),
-      category: newCategory || "Outros",
-      active: true,
-    }]);
-    setNewName("");
-    setNewPrice("");
-    setNewCategory("");
-    setShowAdd(false);
+    const { data } = await supabase.from("servicos").insert({
+      nome: newName,
+      preco: Number(newPrice),
+      categoria: newCategory || "Outros",
+      ativo: true,
+      ordem: services.length + 1,
+    }).select().single();
+    if (data) {
+      setServices(prev => [...prev, { id: data.id, name: data.nome, price: Number(data.preco), category: data.categoria, active: data.ativo }]);
+    }
+    setNewName(""); setNewPrice(""); setNewCategory(""); setShowAdd(false);
   };
 
-  const toggleActive = (id: string) => {
+  const toggleActive = async (id: string) => {
+    const s = services.find(s => s.id === id);
+    if (!s) return;
+    await supabase.from("servicos").update({ ativo: !s.active, updated_at: new Date().toISOString() }).eq("id", id);
     setServices(prev => prev.map(s => s.id === id ? { ...s, active: !s.active } : s));
   };
 
-  const removeService = (id: string) => {
+  const removeService = async (id: string) => {
+    await supabase.from("servicos").delete().eq("id", id);
     setServices(prev => prev.filter(s => s.id !== id));
   };
+
+  if (loading) return <p className="font-body text-[13px] text-primary-foreground/30 text-center py-8">Carregando...</p>;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -536,12 +547,8 @@ const ServicosTab = () => {
               <div className="flex items-center gap-3 flex-1">
                 <input value={editName} onChange={e => setEditName(e.target.value)} className="flex-1 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
                 <input value={editPrice} onChange={e => setEditPrice(e.target.value)} type="number" className="w-24 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
-                <button onClick={() => saveEdit(s.id)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20 transition-all">
-                  <Save className="w-4 h-4" />
-                </button>
-                <button onClick={() => setEditing(null)} className="p-2 rounded-lg bg-primary-foreground/[0.05] text-primary-foreground/30 hover:text-primary-foreground/50 transition-all">
-                  <X className="w-4 h-4" />
-                </button>
+                <button onClick={() => saveEdit(s.id)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20 transition-all"><Save className="w-4 h-4" /></button>
+                <button onClick={() => setEditing(null)} className="p-2 rounded-lg bg-primary-foreground/[0.05] text-primary-foreground/30 hover:text-primary-foreground/50 transition-all"><X className="w-4 h-4" /></button>
               </div>
             ) : (
               <>
@@ -553,14 +560,10 @@ const ServicosTab = () => {
                   <p className="font-body text-[14px] font-semibold text-gold">R$ {s.price.toFixed(2).replace(".", ",")}</p>
                   <div className="flex items-center gap-1">
                     <button onClick={() => toggleActive(s.id)} className={`w-10 h-6 rounded-full relative transition-all duration-200 ${s.active ? "bg-gold" : "bg-primary-foreground/10"}`}>
-                      <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200 ${s.active ? "left-4.5" : "left-0.5"}`} />
+                      <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200 ${s.active ? "left-4" : "left-0.5"}`} />
                     </button>
-                    <button onClick={() => startEdit(s)} className="p-1.5 rounded-lg hover:bg-primary-foreground/[0.06] text-primary-foreground/30 hover:text-primary-foreground/60 transition-all">
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </button>
-                    <button onClick={() => removeService(s.id)} className="p-1.5 rounded-lg hover:bg-rose/10 text-primary-foreground/20 hover:text-rose transition-all">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <button onClick={() => startEdit(s)} className="p-1.5 rounded-lg hover:bg-primary-foreground/[0.06] text-primary-foreground/30 hover:text-primary-foreground/60 transition-all"><Edit2 className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => removeService(s.id)} className="p-1.5 rounded-lg hover:bg-rose/10 text-primary-foreground/20 hover:text-rose transition-all"><Trash2 className="w-3.5 h-3.5" /></button>
                   </div>
                 </div>
               </>
