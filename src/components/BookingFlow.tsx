@@ -225,7 +225,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
 
         <div className="flex-1 flex flex-col items-center text-center animate-fade-in">
           <div className="w-14 h-14 rounded-full bg-gold/10 flex items-center justify-center mb-4">
-            <QrCode className="w-7 h-7 text-gold" />
+            <img src={pixIcon} alt="PIX" className="w-7 h-7" />
           </div>
           <h2 className="font-heading text-2xl font-semibold text-foreground mb-1">
             Pagamento PIX
