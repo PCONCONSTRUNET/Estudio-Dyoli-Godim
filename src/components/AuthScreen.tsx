@@ -143,7 +143,7 @@ const AuthScreen = ({ onSuccess, onBack }: AuthScreenProps) => {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           {mode === "signup" && (
             <div className="space-y-1.5">
               <label className="font-body text-xs text-primary-foreground/50 uppercase tracking-wider">
