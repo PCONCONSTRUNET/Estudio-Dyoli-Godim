@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
+import professionalImg from "@/assets/professional.png";
 
 interface AuthScreenProps {
   onSuccess: () => void;
