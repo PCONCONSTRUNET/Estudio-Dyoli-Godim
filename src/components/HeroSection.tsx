@@ -75,6 +75,17 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, isAuthenticated }: HeroSe
             </svg>
             <span>Cadastrar</span>
           </button>
+          <button
+            onClick={onSchedule}
+            className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-2xl bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[16px] tracking-wide hover:bg-primary-foreground/[0.12] hover:border-primary-foreground/[0.18]"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width={20} viewBox="0 0 24 24" height={20} fill="none" strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <path d="M16 2v4M8 2v4M3 10h18"/>
+              <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
+            </svg>
+            <span>Cadastrar</span>
+          </button>
         </div>
       </div>
     </section>
