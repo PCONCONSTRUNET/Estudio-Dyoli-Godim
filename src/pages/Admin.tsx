@@ -726,8 +726,8 @@ const HorariosTab = () => {
             {slots.map(slot => {
               const isBlocked = !!blockedSlots.find(b => b.horario === slot);
               return (
-                <button key={slot} onClick={() => toggleBlock(slot)}
-                  className={`px-3 py-2.5 rounded-xl font-body text-[13px] font-medium transition-all border ${
+                <button key={slot} type="button" onPointerUp={() => toggleBlock(slot)}
+                  className={`touch-manipulation px-3 py-2.5 rounded-xl font-body text-[13px] font-medium transition-all border select-none ${
                     isBlocked
                       ? "bg-rose/10 text-rose border-rose/20 line-through"
                       : "bg-primary-foreground/[0.03] text-primary-foreground/60 border-primary-foreground/[0.06] hover:bg-gold/10 hover:text-gold hover:border-gold/20"
