@@ -54,27 +54,52 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, isAuthenticated }: HeroSe
 
         {/* 3. BOTÕES (ação) — estilo iOS */}
         <div className="w-full max-w-sm mt-10 space-y-3 px-4 animate-fade-in" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
-          <button
-            onClick={onLogin}
-            className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[16px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] backdrop-blur-sm"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width={20} viewBox="0 0 24 24" height={20} fill="none" strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="8" r="4"/>
-              <path d="M5 20c0-3.3137 3.134-6 7-6s7 2.6863 7 6"/>
-            </svg>
-            <span>Entrar</span>
-          </button>
-          <button
-            onClick={onSchedule}
-            className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-2xl bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[16px] tracking-wide hover:bg-primary-foreground/[0.12] hover:border-primary-foreground/[0.18]"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width={20} viewBox="0 0 24 24" height={20} fill="none" strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2"/>
-              <path d="M16 2v4M8 2v4M3 10h18"/>
-              <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
-            </svg>
-            <span>Cadastrar</span>
-          </button>
+          {isAuthenticated ? (
+            <>
+              <button
+                onClick={onSchedule}
+                className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[16px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] backdrop-blur-sm"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width={20} viewBox="0 0 24 24" height={20} fill="none" strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2"/>
+                  <path d="M16 2v4M8 2v4M3 10h18"/>
+                  <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
+                </svg>
+                <span>Agendar</span>
+              </button>
+              <button
+                onClick={onProfile}
+                className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-2xl bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[16px] tracking-wide hover:bg-primary-foreground/[0.12] hover:border-primary-foreground/[0.18]"
+              >
+                <User className="w-5 h-5" />
+                <span>Meu Perfil</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={onLogin}
+                className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[16px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] backdrop-blur-sm"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width={20} viewBox="0 0 24 24" height={20} fill="none" strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="8" r="4"/>
+                  <path d="M5 20c0-3.3137 3.134-6 7-6s7 2.6863 7 6"/>
+                </svg>
+                <span>Entrar</span>
+              </button>
+              <button
+                onClick={onSchedule}
+                className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-2xl bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[16px] tracking-wide hover:bg-primary-foreground/[0.12] hover:border-primary-foreground/[0.18]"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width={20} viewBox="0 0 24 24" height={20} fill="none" strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2"/>
+                  <path d="M16 2v4M8 2v4M3 10h18"/>
+                  <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
+                </svg>
+                <span>Cadastrar</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
     </section>
