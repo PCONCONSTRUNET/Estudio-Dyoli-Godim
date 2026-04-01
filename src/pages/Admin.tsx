@@ -662,6 +662,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
             })()}
 
           {tab === "financeiro" && <FinanceiroTab agendamentos={agendamentos} getClientName={getClientName} />}
+          {tab === "produtos" && <ProdutosTab />}
           {tab === "horarios" && <HorariosTab />}
           {tab === "servicos" && <ServicosTab />}
         </div>
