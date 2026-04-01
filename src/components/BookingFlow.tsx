@@ -12,7 +12,61 @@ interface BookingFlowProps {
 const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps) => {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<string>("");
-  const [step, setStep] = useState<"date" | "confirm">("date");
+  const [step, setStep] = useState<"date" | "confirm" | "pix">("date");
+  const [copied, setCopied] = useState(false);
+
+  const PIX_KEY = "48999779829";
+  const PIX_NAME = "DYOLI GODIM";
+  const PIX_CITY = "BRASIL";
+
+  const generatePixPayload = (amount: number) => {
+    const pad = (id: string, val: string) => {
+      const len = val.length.toString().padStart(2, "0");
+      return `${id}${len}${val}`;
+    };
+
+    const gui = pad("00", "br.gov.bcb.pix");
+    const key = pad("01", PIX_KEY);
+    const merchantAccount = pad("26", gui + key);
+    const mcc = pad("52", "0000");
+    const currency = pad("53", "986");
+    const amountStr = pad("54", amount.toFixed(2));
+    const country = pad("58", "BR");
+    const name = pad("59", PIX_NAME);
+    const city = pad("60", PIX_CITY);
+    const txid = pad("05", "***");
+    const additionalData = pad("62", txid);
+
+    const payloadWithoutCRC = pad("00", "01") + merchantAccount + mcc + currency + amountStr + country + name + city + additionalData + "6304";
+
+    // CRC16-CCITT
+    let crc = 0xFFFF;
+    for (let i = 0; i < payloadWithoutCRC.length; i++) {
+      crc ^= payloadWithoutCRC.charCodeAt(i) << 8;
+      for (let j = 0; j < 8; j++) {
+        if (crc & 0x8000) {
+          crc = (crc << 1) ^ 0x1021;
+        } else {
+          crc <<= 1;
+        }
+        crc &= 0xFFFF;
+      }
+    }
+    return payloadWithoutCRC + crc.toString(16).toUpperCase().padStart(4, "0");
+  };
+
+  const getPaymentAmount = () => {
+    if (requiresDeposit) return Math.round(numericPrice * 0.3);
+    return numericPrice;
+  };
+
+  const pixPayload = generatePixPayload(getPaymentAmount());
+
+  const handleCopyPix = async () => {
+    await navigator.clipboard.writeText(pixPayload);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
 
   const businessHours: Record<number, { open: string; close: string } | null> = {
     0: null,
