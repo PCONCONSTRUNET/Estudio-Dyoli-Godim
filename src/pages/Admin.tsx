@@ -2,34 +2,179 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   BarChart3, Calendar, Users, Clock, Settings, LogOut, Search,
-  X, Edit2, Trash2, Plus, Save, Eye, CheckCircle
+  X, Edit2, Trash2, Plus, Save, CheckCircle, Bell, MessageSquare
 } from "lucide-react";
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription
+} from "@/components/ui/sheet";
 
 // ─── Types ───
 interface Agendamento {
-  id: string;
-  servico: string;
-  variacao: string | null;
-  data_agendamento: string;
-  horario: string;
-  valor: number;
-  valor_pago: number | null;
-  status: string;
-  created_at: string;
-  user_id: string;
+  id: string; servico: string; variacao: string | null; data_agendamento: string;
+  horario: string; valor: number; valor_pago: number | null; status: string;
+  created_at: string; user_id: string;
 }
-
-interface Profile {
-  id: string;
-  nome: string;
-  whatsapp: string;
-  created_at: string;
-}
+interface Profile { id: string; nome: string; whatsapp: string; created_at: string; }
+interface LembreteConfig { id: string; tipo: string; ativo: boolean; mensagem: string; horas_antes: number; }
 
 type Tab = "dashboard" | "agendamentos" | "clientes" | "horarios" | "servicos";
 
 const ADMIN_PASSWORD = "dyoliadmin";
 
+// ─── Lembretes Hub (Sheet lateral) ───
+const LembretesHub = () => {
+  const [configs, setConfigs] = useState<LembreteConfig[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editMsg, setEditMsg] = useState("");
+  const [editHoras, setEditHoras] = useState("");
+
+  const tipoLabels: Record<string, { label: string; icon: string; desc: string }> = {
+    confirmacao: { label: "Confirmação", icon: "✅", desc: "Enviado ao confirmar agendamento" },
+    lembrete: { label: "Lembrete", icon: "⏰", desc: "Enviado antes do atendimento" },
+    cancelamento: { label: "Cancelamento", icon: "❌", desc: "Enviado ao cancelar agendamento" },
+    comparecimento: { label: "Comparecimento", icon: "💖", desc: "Enviado após o atendimento" },
+    pos_atendimento: { label: "Pós-Atendimento", icon: "⭐", desc: "Feedback após atendimento" },
+  };
+
+  useEffect(() => {
+    supabase.from("configuracoes_lembretes").select("*").order("created_at").then(({ data }) => {
+      if (data) setConfigs(data.map(d => ({ id: d.id, tipo: d.tipo, ativo: d.ativo, mensagem: d.mensagem, horas_antes: d.horas_antes })));
+      setLoading(false);
+    });
+  }, []);
+
+  const toggleAtivo = async (id: string) => {
+    const c = configs.find(c => c.id === id);
+    if (!c) return;
+    await supabase.from("configuracoes_lembretes").update({ ativo: !c.ativo, updated_at: new Date().toISOString() }).eq("id", id);
+    setConfigs(prev => prev.map(c => c.id === id ? { ...c, ativo: !c.ativo } : c));
+  };
+
+  const startEdit = (c: LembreteConfig) => {
+    setEditingId(c.id);
+    setEditMsg(c.mensagem);
+    setEditHoras(c.horas_antes.toString());
+  };
+
+  const saveEdit = async () => {
+    if (!editingId) return;
+    setSaving(true);
+    await supabase.from("configuracoes_lembretes").update({
+      mensagem: editMsg, horas_antes: Number(editHoras), updated_at: new Date().toISOString(),
+    }).eq("id", editingId);
+    setConfigs(prev => prev.map(c => c.id === editingId ? { ...c, mensagem: editMsg, horas_antes: Number(editHoras) } : c));
+    setEditingId(null);
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  if (loading) return <p className="font-body text-[13px] text-primary-foreground/30 text-center py-12">Carregando...</p>;
+
+  return (
+    <div className="flex flex-col h-full">
+      <SheetHeader className="px-5 pt-5 pb-4 border-b border-primary-foreground/[0.06]">
+        <SheetTitle className="font-heading text-[16px] font-semibold text-primary-foreground flex items-center gap-2">
+          <Bell className="w-4 h-4 text-gold" />
+          Configurações de Lembretes
+        </SheetTitle>
+        <SheetDescription className="font-body text-[11px] text-primary-foreground/35">
+          Configure mensagens automáticas para cada etapa do agendamento
+        </SheetDescription>
+      </SheetHeader>
+
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+        {configs.map(c => {
+          const info = tipoLabels[c.tipo] || { label: c.tipo, icon: "📌", desc: "" };
+          return (
+            <div key={c.id} className={`rounded-2xl border transition-all ${c.ativo ? "bg-primary-foreground/[0.03] border-primary-foreground/[0.08]" : "bg-primary-foreground/[0.01] border-primary-foreground/[0.04] opacity-60"}`}>
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[16px]">{info.icon}</span>
+                    <span className="font-body text-[13px] font-medium text-primary-foreground">{info.label}</span>
+                  </div>
+                  <button
+                    onClick={() => toggleAtivo(c.id)}
+                    className={`w-10 h-6 rounded-full relative transition-all duration-200 ${c.ativo ? "bg-gold" : "bg-primary-foreground/10"}`}
+                  >
+                    <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200 ${c.ativo ? "left-4" : "left-0.5"}`} />
+                  </button>
+                </div>
+                <p className="font-body text-[10px] text-primary-foreground/30 mb-2">{info.desc}</p>
+
+                {editingId === c.id ? (
+                  <div className="space-y-2 mt-2">
+                    <textarea
+                      value={editMsg}
+                      onChange={e => setEditMsg(e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.08] text-primary-foreground font-body text-[12px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20 resize-none"
+                    />
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1">
+                        <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Horas antes</label>
+                        <input
+                          type="number"
+                          value={editHoras}
+                          onChange={e => setEditHoras(e.target.value)}
+                          min="0"
+                          className="w-full px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.08] text-primary-foreground font-body text-[12px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                        />
+                      </div>
+                      <div className="flex gap-1 pt-4">
+                        <button onClick={saveEdit} disabled={saving} className="p-2 rounded-xl bg-gold/10 text-gold hover:bg-gold/20 transition-all">
+                          <Save className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => setEditingId(null)} className="p-2 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/30 hover:text-primary-foreground/50 transition-all">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-2">
+                    <div className="flex items-start gap-2 p-2.5 rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.04]">
+                      <MessageSquare className="w-3 h-3 text-primary-foreground/20 mt-0.5 shrink-0" />
+                      <p className="font-body text-[11px] text-primary-foreground/50 leading-relaxed">{c.mensagem}</p>
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      {c.horas_antes > 0 ? (
+                        <span className="font-body text-[10px] text-gold/60">{c.horas_antes}h antes</span>
+                      ) : (
+                        <span className="font-body text-[10px] text-primary-foreground/25">Imediato</span>
+                      )}
+                      <button onClick={() => startEdit(c)} className="p-1.5 rounded-lg hover:bg-primary-foreground/[0.06] text-primary-foreground/25 hover:text-primary-foreground/50 transition-all">
+                        <Edit2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {saved && (
+        <div className="px-4 py-3 border-t border-primary-foreground/[0.06]">
+          <p className="font-body text-[11px] text-green-500 text-center">✓ Configuração salva com sucesso</p>
+        </div>
+      )}
+
+      <div className="px-4 py-3 border-t border-primary-foreground/[0.06]">
+        <p className="font-body text-[10px] text-primary-foreground/25 leading-relaxed text-center">
+          💡 Os lembretes serão enviados via WhatsApp automaticamente conforme a configuração.
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// ─── Password Gate ───
 const Admin = () => {
   const [authenticated, setAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
@@ -48,30 +193,18 @@ const Admin = () => {
           </div>
           <form onSubmit={(e) => {
             e.preventDefault();
-            if (password === ADMIN_PASSWORD) {
-              setAuthenticated(true);
-              setError("");
-            } else {
-              setError("Senha incorreta");
-            }
+            if (password === ADMIN_PASSWORD) { setAuthenticated(true); setError(""); }
+            else { setError("Senha incorreta"); }
           }} className="space-y-4">
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Senha de acesso"
-              className="w-full px-4 py-3 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[15px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
-            />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Senha de acesso"
+              className="w-full px-4 py-3 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[15px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
             {error && <p className="font-body text-[12px] text-rose text-center">{error}</p>}
-            <button type="submit" className="w-full py-3.5 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)]">
-              Entrar
-            </button>
+            <button type="submit" className="w-full py-3.5 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)]">Entrar</button>
           </form>
         </div>
       </div>
     );
   }
-
   return <AdminPanel onLogout={() => setAuthenticated(false)} />;
 };
 
@@ -156,14 +289,26 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
           <h1 className="font-heading text-[16px] font-semibold text-primary-foreground">Admin</h1>
           <p className="font-body text-[10px] text-primary-foreground/30">Estúdio Dyoli Godim</p>
         </div>
-        <button onClick={onLogout} className="p-2 rounded-xl hover:bg-rose/10 text-rose/60 hover:text-rose transition-all">
-          <LogOut className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          <Sheet>
+            <SheetTrigger asChild>
+              <button className="p-2 rounded-xl hover:bg-gold/10 text-primary-foreground/40 hover:text-gold transition-all">
+                <Bell className="w-4 h-4" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="right" className="bg-charcoal border-primary-foreground/[0.06] w-[340px] p-0 overflow-y-auto">
+              <LembretesHub />
+            </SheetContent>
+          </Sheet>
+          <button onClick={onLogout} className="p-2 rounded-xl hover:bg-rose/10 text-rose/60 hover:text-rose transition-all">
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Content */}
       <div className="px-4 py-4">
-        {/* ── Dashboard ── */}
+        {/* Dashboard */}
         {tab === "dashboard" && (
           <div className="space-y-4 animate-fade-in">
             <div className="grid grid-cols-2 gap-3">
@@ -189,7 +334,6 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                 <p className="font-heading text-xl font-bold text-primary-foreground mt-1">{clientes.length}</p>
               </div>
             </div>
-
             <div>
               <h3 className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest mb-3">Últimos agendamentos</h3>
               <div className="space-y-2">
@@ -205,51 +349,31 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                     <p className="font-body text-[11px] text-primary-foreground/30 mt-1">{formatDate(a.data_agendamento)} · {a.horario}</p>
                   </div>
                 ))}
-                {agendamentos.length === 0 && (
-                  <p className="font-body text-[13px] text-primary-foreground/30 text-center py-6">Nenhum agendamento ainda</p>
-                )}
+                {agendamentos.length === 0 && <p className="font-body text-[13px] text-primary-foreground/30 text-center py-6">Nenhum agendamento ainda</p>}
               </div>
             </div>
           </div>
         )}
 
-        {/* ── Agendamentos ── */}
+        {/* Agendamentos */}
         {tab === "agendamentos" && (
           <div className="space-y-4 animate-fade-in">
             <h2 className="font-heading text-lg font-semibold text-primary-foreground">Agendamentos</h2>
-            {/* Filters */}
             <div className="space-y-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/25" />
-                <input
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  placeholder="Buscar cliente ou serviço..."
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
-                />
+                <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Buscar cliente ou serviço..."
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
               </div>
               <div className="flex gap-2 overflow-x-auto pb-1">
-                {[
-                  { value: "todos", label: "Todos" },
-                  { value: "confirmado", label: "Confirmados" },
-                  { value: "concluido", label: "Concluídos" },
-                  { value: "cancelado", label: "Cancelados" },
-                ].map(f => (
-                  <button
-                    key={f.value}
-                    onClick={() => setStatusFilter(f.value)}
-                    className={`px-3 py-1.5 rounded-full font-body text-[11px] font-medium whitespace-nowrap border transition-all ${
-                      statusFilter === f.value
-                        ? "bg-gold/10 text-gold border-gold/20"
-                        : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06]"
-                    }`}
-                  >
+                {[{ value: "todos", label: "Todos" }, { value: "confirmado", label: "Confirmados" }, { value: "concluido", label: "Concluídos" }, { value: "cancelado", label: "Cancelados" }].map(f => (
+                  <button key={f.value} onClick={() => setStatusFilter(f.value)}
+                    className={`px-3 py-1.5 rounded-full font-body text-[11px] font-medium whitespace-nowrap border transition-all ${statusFilter === f.value ? "bg-gold/10 text-gold border-gold/20" : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06]"}`}>
                     {f.label}
                   </button>
                 ))}
               </div>
             </div>
-            {/* Cards */}
             <div className="space-y-2">
               {filteredAgendamentos.map(a => (
                 <div key={a.id} className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
@@ -283,14 +407,12 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                   </div>
                 </div>
               ))}
-              {filteredAgendamentos.length === 0 && (
-                <p className="font-body text-[13px] text-primary-foreground/30 text-center py-6">Nenhum agendamento encontrado</p>
-              )}
+              {filteredAgendamentos.length === 0 && <p className="font-body text-[13px] text-primary-foreground/30 text-center py-6">Nenhum agendamento encontrado</p>}
             </div>
           </div>
         )}
 
-        {/* ── Clientes ── */}
+        {/* Clientes */}
         {tab === "clientes" && (
           <div className="space-y-4 animate-fade-in">
             <h2 className="font-heading text-lg font-semibold text-primary-foreground">Clientes</h2>
@@ -313,17 +435,12 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                   </div>
                 );
               })}
-              {clientes.length === 0 && (
-                <p className="font-body text-[13px] text-primary-foreground/30 text-center py-6">Nenhum cliente cadastrado</p>
-              )}
+              {clientes.length === 0 && <p className="font-body text-[13px] text-primary-foreground/30 text-center py-6">Nenhum cliente cadastrado</p>}
             </div>
           </div>
         )}
 
-        {/* ── Horários ── */}
         {tab === "horarios" && <HorariosTab />}
-
-        {/* ── Serviços ── */}
         {tab === "servicos" && <ServicosTab />}
       </div>
 
@@ -331,13 +448,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
       <nav className="fixed bottom-0 left-0 right-0 z-30 bg-charcoal/95 backdrop-blur-xl border-t border-primary-foreground/[0.06]">
         <div className="max-w-md mx-auto flex">
           {tabs.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 transition-all ${
-                tab === t.id ? "text-gold" : "text-primary-foreground/30"
-              }`}
-            >
+            <button key={t.id} onClick={() => setTab(t.id)}
+              className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 transition-all ${tab === t.id ? "text-gold" : "text-primary-foreground/30"}`}>
               <t.icon className="w-5 h-5" />
               <span className="font-body text-[9px] font-medium">{t.label}</span>
             </button>
@@ -348,7 +460,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   );
 };
 
-// ─── Horários Tab (Mobile) ───
+// ─── Horários Tab ───
 const HorariosTab = () => {
   const dayNames = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
   const [hours, setHours] = useState<{ id: string; day: number; open: boolean; start: string; end: string }[]>([]);
@@ -358,9 +470,7 @@ const HorariosTab = () => {
 
   useEffect(() => {
     supabase.from("horarios_funcionamento").select("*").order("dia_semana").then(({ data }) => {
-      if (data) {
-        setHours(data.map(d => ({ id: d.id, day: d.dia_semana, open: d.aberto, start: d.hora_inicio, end: d.hora_fim })));
-      }
+      if (data) setHours(data.map(d => ({ id: d.id, day: d.dia_semana, open: d.aberto, start: d.hora_inicio, end: d.hora_fim })));
       setLoading(false);
     });
   }, []);
@@ -371,13 +481,9 @@ const HorariosTab = () => {
   const handleSave = async () => {
     setSaving(true);
     for (const h of hours) {
-      await supabase.from("horarios_funcionamento").update({
-        aberto: h.open, hora_inicio: h.start, hora_fim: h.end, updated_at: new Date().toISOString(),
-      }).eq("id", h.id);
+      await supabase.from("horarios_funcionamento").update({ aberto: h.open, hora_inicio: h.start, hora_fim: h.end, updated_at: new Date().toISOString() }).eq("id", h.id);
     }
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000);
   };
 
   if (loading) return <p className="font-body text-[13px] text-primary-foreground/30 text-center py-8">Carregando...</p>;
@@ -396,10 +502,7 @@ const HorariosTab = () => {
           <div key={h.day} className="p-3 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
             <div className="flex items-center justify-between mb-2">
               <span className="font-body text-[13px] text-primary-foreground">{dayNames[h.day]}</span>
-              <button
-                onClick={() => toggle(h.day)}
-                className={`w-10 h-6 rounded-full relative transition-all duration-200 ${h.open ? "bg-gold" : "bg-primary-foreground/10"}`}
-              >
+              <button onClick={() => toggle(h.day)} className={`w-10 h-6 rounded-full relative transition-all duration-200 ${h.open ? "bg-gold" : "bg-primary-foreground/10"}`}>
                 <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200 ${h.open ? "left-4" : "left-0.5"}`} />
               </button>
             </div>
@@ -409,22 +512,18 @@ const HorariosTab = () => {
                 <span className="text-primary-foreground/30 text-[12px]">até</span>
                 <input type="time" value={h.end} onChange={e => updateTime(h.day, "end", e.target.value)} className="flex-1 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
               </div>
-            ) : (
-              <p className="font-body text-[12px] text-primary-foreground/25">Fechado</p>
-            )}
+            ) : <p className="font-body text-[12px] text-primary-foreground/25">Fechado</p>}
           </div>
         ))}
       </div>
       <div className="p-3 rounded-2xl bg-gold/5 border border-gold/10">
-        <p className="font-body text-[11px] text-gold/70 leading-relaxed">
-          ⚠ Alterações nos horários afetam apenas novos agendamentos.
-        </p>
+        <p className="font-body text-[11px] text-gold/70 leading-relaxed">⚠ Alterações nos horários afetam apenas novos agendamentos.</p>
       </div>
     </div>
   );
 };
 
-// ─── Serviços Tab (Mobile) ───
+// ─── Serviços Tab ───
 const ServicosTab = () => {
   const [services, setServices] = useState<{ id: string; name: string; price: number; category: string; active: boolean }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -444,29 +543,23 @@ const ServicosTab = () => {
   }, []);
 
   const startEdit = (s: typeof services[0]) => { setEditing(s.id); setEditName(s.name); setEditPrice(s.price.toString()); };
-
   const saveEdit = async (id: string) => {
     await supabase.from("servicos").update({ nome: editName, preco: Number(editPrice), updated_at: new Date().toISOString() }).eq("id", id);
     setServices(prev => prev.map(s => s.id === id ? { ...s, name: editName, price: Number(editPrice) } : s));
     setEditing(null);
   };
-
   const addService = async () => {
     if (!newName || !newPrice) return;
-    const { data } = await supabase.from("servicos").insert({
-      nome: newName, preco: Number(newPrice), categoria: newCategory || "Outros", ativo: true, ordem: services.length + 1,
-    }).select().single();
+    const { data } = await supabase.from("servicos").insert({ nome: newName, preco: Number(newPrice), categoria: newCategory || "Outros", ativo: true, ordem: services.length + 1 }).select().single();
     if (data) setServices(prev => [...prev, { id: data.id, name: data.nome, price: Number(data.preco), category: data.categoria, active: data.ativo }]);
     setNewName(""); setNewPrice(""); setNewCategory(""); setShowAdd(false);
   };
-
   const toggleActive = async (id: string) => {
     const s = services.find(s => s.id === id);
     if (!s) return;
     await supabase.from("servicos").update({ ativo: !s.active, updated_at: new Date().toISOString() }).eq("id", id);
     setServices(prev => prev.map(s => s.id === id ? { ...s, active: !s.active } : s));
   };
-
   const removeService = async (id: string) => {
     await supabase.from("servicos").delete().eq("id", id);
     setServices(prev => prev.filter(s => s.id !== id));
@@ -479,11 +572,9 @@ const ServicosTab = () => {
       <div className="flex items-center justify-between">
         <h2 className="font-heading text-lg font-semibold text-primary-foreground">Serviços</h2>
         <button onClick={() => setShowAdd(!showAdd)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all">
-          <Plus className="w-3.5 h-3.5" />
-          Adicionar
+          <Plus className="w-3.5 h-3.5" />Adicionar
         </button>
       </div>
-
       {showAdd && (
         <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-gold/20 space-y-3 animate-fade-in">
           <h3 className="font-body text-[13px] font-medium text-primary-foreground">Novo Serviço</h3>
@@ -498,7 +589,6 @@ const ServicosTab = () => {
           </div>
         </div>
       )}
-
       <div className="space-y-2">
         {services.map(s => (
           <div key={s.id} className={`p-4 rounded-2xl border transition-all ${s.active ? "bg-primary-foreground/[0.03] border-primary-foreground/[0.06]" : "bg-primary-foreground/[0.01] border-primary-foreground/[0.03] opacity-50"}`}>
