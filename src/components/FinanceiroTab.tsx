@@ -374,7 +374,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
                 <CartesianGrid strokeDasharray="3 3" stroke="hsla(0 0% 100% / 0.04)" horizontal={false} />
                 <XAxis type="number" tick={{ fill: "hsla(0 0% 100% / 0.3)", fontSize: 10 }} axisLine={false} tickLine={false} />
                 <YAxis dataKey="name" type="category" tick={{ fill: "hsla(0 0% 100% / 0.5)", fontSize: 10 }} axisLine={false} tickLine={false} width={80} />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsla(0 0% 100% / 0.03)' }} />
                 <Bar dataKey="value" name="Recebido" radius={[0, 8, 8, 0]} barSize={20}>
                   {serviceData.map((_, i) => (
                     <Cell key={i} fill={`url(#barGrad${i})`} />
