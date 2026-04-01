@@ -19,7 +19,7 @@ interface Agendamento {
 interface Profile { id: string; nome: string; whatsapp: string; created_at: string; }
 interface LembreteConfig { id: string; tipo: string; ativo: boolean; mensagem: string; horas_antes: number; }
 
-type Tab = "dashboard" | "agendamentos" | "clientes" | "horarios" | "servicos";
+type Tab = "dashboard" | "agendamentos" | "clientes" | "horarios" | "servicos" | "financeiro";
 
 const ADMIN_PASSWORD = "dyoliadmin";
 
