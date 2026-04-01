@@ -44,11 +44,17 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
       if (period === "semana") {
         const weekAgo = new Date(now);
         weekAgo.setDate(weekAgo.getDate() - 7);
-        return d >= weekAgo.toISOString().split("T")[0] && d <= today;
+        const weekAhead = new Date(now);
+        weekAhead.setDate(weekAhead.getDate() + 7);
+        return d >= weekAgo.toISOString().split("T")[0] && d <= weekAhead.toISOString().split("T")[0];
       }
       if (period === "mes") {
-        const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
-        return d >= monthStart && d <= today;
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const monthStart = `${year}-${String(month + 1).padStart(2, "0")}-01`;
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        const monthEnd = `${year}-${String(month + 1).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+        return d >= monthStart && d <= monthEnd;
       }
       if (period === "personalizado" && customStart && customEnd) {
         return d >= customStart && d <= customEnd;
