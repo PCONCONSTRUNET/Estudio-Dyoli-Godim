@@ -60,6 +60,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
 
 
   const [businessHours, setBusinessHours] = useState<Record<number, { open: string; close: string } | null>>({});
+  const [bookedSlots, setBookedSlots] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     supabase.from("horarios_funcionamento").select("*").then(({ data }) => {
@@ -71,7 +72,29 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
         setBusinessHours(map);
       }
     });
+    // Load all booked slots for the next 14 days
+    loadBookedSlots();
   }, []);
+
+  const loadBookedSlots = async () => {
+    const today = new Date();
+    const futureDate = new Date(today);
+    futureDate.setDate(futureDate.getDate() + 15);
+    const { data } = await supabase
+      .from("agendamentos")
+      .select("data_agendamento, horario, status")
+      .gte("data_agendamento", today.toISOString().split("T")[0])
+      .lte("data_agendamento", futureDate.toISOString().split("T")[0])
+      .in("status", ["confirmado", "concluido"]);
+    if (data) {
+      const map: Record<string, string[]> = {};
+      data.forEach(a => {
+        if (!map[a.data_agendamento]) map[a.data_agendamento] = [];
+        map[a.data_agendamento].push(a.horario);
+      });
+      setBookedSlots(map);
+    }
+  };
 
   const generateTimes = (open: string, close: string) => {
     const result: string[] = [];
@@ -96,7 +119,9 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     const d = new Date(dateStr + "T12:00:00");
     const hours = businessHours[d.getDay()];
     if (!hours) return [];
-    return generateTimes(hours.open, hours.close);
+    const allTimes = generateTimes(hours.open, hours.close);
+    const booked = bookedSlots[dateStr] || [];
+    return allTimes.filter(t => !booked.includes(t));
   };
 
   const times = selectedDate ? getTimesForDate(selectedDate) : [];
