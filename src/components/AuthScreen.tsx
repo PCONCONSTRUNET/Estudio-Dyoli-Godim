@@ -6,6 +6,7 @@ import professionalImg from "@/assets/professional.png";
 interface AuthScreenProps {
   onSuccess: () => void;
   onBack: () => void;
+  initialMode?: "login" | "signup";
 }
 
 type AuthMode = "login" | "signup";
