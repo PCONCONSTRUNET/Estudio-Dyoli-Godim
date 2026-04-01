@@ -9,6 +9,9 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription
 } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Calendar as DatePickerCalendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import FinanceiroTab from "@/components/FinanceiroTab";
 import ProdutosTab from "@/components/ProdutosTab";
 
@@ -24,6 +27,18 @@ interface LembreteConfig { id: string; tipo: string; ativo: boolean; mensagem: s
 type Tab = "dashboard" | "agendamentos" | "clientes" | "horarios" | "servicos" | "financeiro" | "produtos";
 
 const ADMIN_PASSWORD = "dyoliadmin";
+
+const getDateKey = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const parseDateKey = (dateKey: string) => {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0);
+};
 
 // ─── Lembretes Hub (Sheet lateral) ───
 const LembretesHub = () => {
@@ -248,6 +263,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [statusFilter, setStatusFilter] = useState("todos");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
+  const [selectedAgendaDate, setSelectedAgendaDate] = useState(() => getDateKey(new Date()));
 
   useEffect(() => {
     loadData();
@@ -333,6 +349,18 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     await supabase.from("agendamentos").update({ valor_pago: newPago }).eq("id", id);
     setAgendamentos((prev) => prev.map((item) => (item.id === id ? { ...item, valor_pago: newPago } : item)));
   };
+
+  const todayAgendaKey = getDateKey(new Date());
+  const selectedAgendaDateObj = parseDateKey(selectedAgendaDate);
+  const agendaDatesWithAppointments = Array.from(new Set(filteredAgendamentos.map((item) => item.data_agendamento))).sort((a, b) => a.localeCompare(b));
+  const selectedAgendaItems = filteredAgendamentos
+    .filter((item) => item.data_agendamento === selectedAgendaDate)
+    .sort((a, b) => a.horario.localeCompare(b.horario));
+  const selectedAgendaTotal = selectedAgendaItems.reduce((sum, item) => sum + Number(item.valor), 0);
+  const selectedAgendaPago = selectedAgendaItems.reduce((sum, item) => sum + Number(item.valor_pago || 0), 0);
+  const selectedAgendaLabel = selectedAgendaDate === todayAgendaKey
+    ? "Hoje"
+    : selectedAgendaDateObj.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
 
   return (
     <div className="admin-mobile-shell min-h-dvh w-screen max-w-full overflow-x-hidden bg-charcoal lg:flex">
@@ -456,181 +484,195 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
           {tab === "agendamentos" && (
             <div className="space-y-4 animate-fade-in">
               <h2 className="font-heading text-lg font-semibold text-primary-foreground lg:hidden">Agendamentos</h2>
-              <div className="space-y-2 lg:flex lg:items-center lg:gap-4 lg:space-y-0">
-                <div className="relative lg:flex-1">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary-foreground/25" />
-                  <input
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Buscar cliente ou serviço..."
-                    className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] py-2.5 pl-10 pr-4 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
-                  />
+
+              <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary-foreground/25" />
+                    <input
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Buscar cliente ou serviço..."
+                      className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] py-2.5 pl-10 pr-4 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
+                    />
+                  </div>
+
+                  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}>
+                    {[
+                      { value: "todos", label: "Todos" },
+                      { value: "confirmado", label: "Confirmados" },
+                      { value: "concluido", label: "Concluídos" },
+                      { value: "cancelado", label: "Cancelados" },
+                      { value: "falta", label: "Faltas" },
+                    ].map((f) => (
+                      <button
+                        key={f.value}
+                        onClick={() => setStatusFilter(f.value)}
+                        className={`px-3 py-1.5 rounded-full font-body text-[11px] font-medium whitespace-nowrap border transition-all ${statusFilter === f.value ? "bg-gold/10 text-gold border-gold/20" : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06]"}`}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide lg:pb-0" style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}>
-                  {[
-                    { value: "todos", label: "Todos" },
-                    { value: "confirmado", label: "Confirmados" },
-                    { value: "concluido", label: "Concluídos" },
-                    { value: "cancelado", label: "Cancelados" },
-                    { value: "falta", label: "Faltas" },
-                  ].map((f) => (
-                    <button
-                      key={f.value}
-                      onClick={() => setStatusFilter(f.value)}
-                      className={`px-3 py-1.5 rounded-full font-body text-[11px] font-medium whitespace-nowrap border transition-all ${statusFilter === f.value ? "bg-gold/10 text-gold border-gold/20" : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06]"}`}
-                    >
-                      {f.label}
-                    </button>
-                  ))}
+
+                <div className="flex gap-2 lg:flex-col lg:items-stretch">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setSelectedAgendaDate(todayAgendaKey)}
+                    className="h-11 flex-1 rounded-2xl bg-primary-foreground/[0.06] px-4 text-primary-foreground hover:bg-primary-foreground/[0.1] lg:flex-none"
+                  >
+                    Hoje
+                  </Button>
+
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        className="h-11 flex-1 rounded-2xl bg-gold/10 px-4 text-gold hover:bg-gold/20 lg:min-w-[220px]"
+                      >
+                        <Calendar className="h-4 w-4" />
+                        {selectedAgendaDateObj.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="w-auto rounded-3xl border border-primary-foreground/[0.06] bg-background p-0">
+                      <div className="border-b border-primary-foreground/[0.06] px-4 py-3">
+                        <p className="font-heading text-[15px] font-semibold text-primary-foreground">Selecionar data</p>
+                        <p className="font-body text-[11px] text-primary-foreground/35">Os dias marcados têm pedido</p>
+                      </div>
+                      <DatePickerCalendar
+                        mode="single"
+                        selected={selectedAgendaDateObj}
+                        onSelect={(date) => date && setSelectedAgendaDate(getDateKey(date))}
+                        modifiers={{
+                          hasAppointments: agendaDatesWithAppointments.map((dateKey) => parseDateKey(dateKey)),
+                        }}
+                        modifiersClassNames={{
+                          hasAppointments: "relative after:absolute after:bottom-1 after:left-1/2 after:h-1.5 after:w-1.5 after:-translate-x-1/2 after:rounded-full after:bg-gold",
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
-              {(() => {
-                const grouped = filteredAgendamentos.reduce((acc, agendamento) => {
-                  (acc[agendamento.data_agendamento] ||= []).push(agendamento);
-                  return acc;
-                }, {} as Record<string, Agendamento[]>);
 
-                const sortedDays = Object.keys(grouped).sort((a, b) => a.localeCompare(b));
-
-                if (!sortedDays.length) {
-                  return <p className="py-6 text-center font-body text-[13px] text-primary-foreground/30">Nenhum agendamento encontrado</p>;
-                }
-
-                const today = new Date().toISOString().split("T")[0];
-                const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0];
-
-                const dayLabel = (date: string) => {
-                  if (date === today) return "Hoje";
-                  if (date === tomorrow) return "Amanhã";
-                  return new Date(`${date}T12:00:00`).toLocaleDateString("pt-BR", {
-                    weekday: "long",
-                    day: "2-digit",
-                    month: "long",
-                  });
-                };
-
-                return (
-                  <div className="space-y-4 lg:space-y-5">
-                    {sortedDays.map((day) => {
-                      const items = [...grouped[day]].sort((a, b) => a.horario.localeCompare(b.horario));
-                      const dayTotal = items.reduce((sum, item) => sum + Number(item.valor), 0);
-                      const dayPago = items.reduce((sum, item) => sum + Number(item.valor_pago || 0), 0);
-                      const isToday = day === today;
-
-                      return (
-                        <section
-                          key={day}
-                          className={`overflow-hidden rounded-[24px] border ${isToday ? "border-gold/20 bg-gold/[0.04]" : "border-primary-foreground/[0.06] bg-primary-foreground/[0.02]"}`}
-                        >
-                          <div className={`flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3 lg:px-5 ${isToday ? "border-gold/15 bg-gold/[0.05]" : "border-primary-foreground/[0.06] bg-primary-foreground/[0.03]"}`}>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2">
-                                <div className={`h-2.5 w-2.5 rounded-full ${isToday ? "bg-gold animate-pulse" : "bg-primary-foreground/20"}`} />
-                                <p className={`font-heading text-[16px] font-semibold capitalize ${isToday ? "text-gold" : "text-primary-foreground"}`}>
-                                  {dayLabel(day)}
-                                </p>
-                              </div>
-                              <p className="mt-1 font-body text-[11px] text-primary-foreground/35">
-                                {new Date(`${day}T12:00:00`).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })} · {items.length} agendamento{items.length > 1 ? "s" : ""}
-                              </p>
-                            </div>
-
-                            <div className="flex flex-wrap items-center gap-2">
-                              <div className="rounded-full border border-primary-foreground/[0.08] bg-primary-foreground/[0.04] px-3 py-1.5">
-                                <p className="font-body text-[10px] text-primary-foreground/30">Previsto</p>
-                                <p className="font-body text-[12px] font-semibold text-primary-foreground">R$ {dayTotal.toFixed(2).replace(".", ",")}</p>
-                              </div>
-                              <div className="rounded-full border border-gold/20 bg-gold/10 px-3 py-1.5">
-                                <p className="font-body text-[10px] text-gold/70">Recebido</p>
-                                <p className="font-body text-[12px] font-semibold text-gold">R$ {dayPago.toFixed(2).replace(".", ",")}</p>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="space-y-2 p-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 lg:p-4">
-                            {items.map((a) => (
-                              <article key={a.id} className="rounded-2xl border border-primary-foreground/[0.06] bg-background/60 p-4 shadow-sm backdrop-blur-sm">
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="flex min-w-0 flex-1 items-start gap-3">
-                                    <div className="flex min-w-[54px] flex-col items-center rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] px-2 py-2">
-                                      <span className="font-heading text-[16px] font-semibold text-primary-foreground">{a.horario}</span>
-                                      <span className="font-body text-[9px] uppercase tracking-[0.18em] text-primary-foreground/25">horário</span>
-                                    </div>
-
-                                    <div className="min-w-0 flex-1">
-                                      <p className="truncate font-body text-[14px] font-semibold text-primary-foreground">{getClientName(a.user_id)}</p>
-                                      <p className="mt-0.5 truncate font-body text-[11px] text-primary-foreground/40">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""}</p>
-                                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                                        {statusBadge(a.status)}
-                                        {pagamentoBadge(a)}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                <div className="mt-3 rounded-xl border border-primary-foreground/[0.05] bg-primary-foreground/[0.02] px-3 py-2">
-                                  <div className="flex flex-wrap items-center justify-between gap-2">
-                                    <p className="font-body text-[11px] text-primary-foreground/35">Valor do atendimento</p>
-                                    <p className="font-body text-[13px] font-semibold text-gold">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</p>
-                                  </div>
-                                  {Number(a.valor_pago || 0) > 0 && (
-                                    <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-                                      <p className="font-body text-[11px] text-primary-foreground/35">Já recebido</p>
-                                      <p className="font-body text-[12px] font-medium text-primary-foreground">R$ {Number(a.valor_pago || 0).toFixed(2).replace(".", ",")}</p>
-                                    </div>
-                                  )}
-                                </div>
-
-                                <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-primary-foreground/[0.06] pt-3">
-                                  <div className="flex flex-wrap items-center gap-1">
-                                    {a.status !== "cancelado" && a.status !== "falta" && (
-                                      <>
-                                        <button
-                                          onClick={() => updatePayment(a.id, "sinal")}
-                                          title="Marcar sinal (50%)"
-                                          className={`rounded-lg px-2 py-1 font-body text-[10px] font-medium transition-all ${Number(a.valor_pago || 0) > 0 && Number(a.valor_pago || 0) < Number(a.valor) ? "bg-gold/10 text-gold" : "bg-primary-foreground/[0.03] text-primary-foreground/30 hover:bg-gold/10 hover:text-gold"}`}
-                                        >
-                                          Sinal
-                                        </button>
-                                        <button
-                                          onClick={() => updatePayment(a.id, "completo")}
-                                          title="Marcar pago completo"
-                                          className={`rounded-lg px-2 py-1 font-body text-[10px] font-medium transition-all ${Number(a.valor_pago || 0) >= Number(a.valor) ? "bg-green-500/10 text-green-500" : "bg-primary-foreground/[0.03] text-primary-foreground/30 hover:bg-green-500/10 hover:text-green-500"}`}
-                                        >
-                                          Pago
-                                        </button>
-                                      </>
-                                    )}
-                                  </div>
-
-                                  <div className="flex items-center gap-1 self-end">
-                                    {a.status === "confirmado" && (
-                                      <>
-                                        <button onClick={() => updateStatus(a.id, "concluido")} className="rounded-lg p-1.5 text-green-500/50 transition-all hover:bg-green-500/10 hover:text-green-500" title="Concluir">
-                                          <CheckCircle className="h-4 w-4" />
-                                        </button>
-                                        <button onClick={() => updateStatus(a.id, "falta")} className="rounded-lg p-1.5 text-orange-500/50 transition-all hover:bg-orange-500/10 hover:text-orange-500" title="Marcar falta">
-                                          <UserX className="h-4 w-4" />
-                                        </button>
-                                        <button onClick={() => updateStatus(a.id, "cancelado")} className="rounded-lg p-1.5 text-rose/50 transition-all hover:bg-rose/10 hover:text-rose" title="Cancelar">
-                                          <X className="h-4 w-4" />
-                                        </button>
-                                      </>
-                                    )}
-                                    <button onClick={() => deleteAgendamento(a.id)} className="rounded-lg p-1.5 text-primary-foreground/20 transition-all hover:bg-rose/10 hover:text-rose" title="Excluir">
-                                      <Trash2 className="h-4 w-4" />
-                                    </button>
-                                  </div>
-                                </div>
-                              </article>
-                            ))}
-                          </div>
-                        </section>
-                      );
-                    })}
+              <section className="overflow-hidden rounded-[28px] border border-primary-foreground/[0.06] bg-primary-foreground/[0.03]">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-primary-foreground/[0.06] px-4 py-4 lg:px-5">
+                  <div className="min-w-0">
+                    <p className="font-body text-[11px] uppercase tracking-[0.22em] text-primary-foreground/25">Agenda do dia</p>
+                    <h3 className="mt-1 font-heading text-[22px] font-semibold capitalize text-primary-foreground">{selectedAgendaLabel}</h3>
+                    <p className="mt-1 font-body text-[11px] text-primary-foreground/35">
+                      {selectedAgendaDateObj.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })}
+                    </p>
                   </div>
-                );
-              })()}
+
+                  <div className="grid w-full grid-cols-3 gap-2 lg:w-auto lg:min-w-[360px]">
+                    <div className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.04] px-3 py-2">
+                      <p className="font-body text-[10px] text-primary-foreground/30">Pedidos</p>
+                      <p className="font-body text-[15px] font-semibold text-primary-foreground">{selectedAgendaItems.length}</p>
+                    </div>
+                    <div className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.04] px-3 py-2">
+                      <p className="font-body text-[10px] text-primary-foreground/30">Previsto</p>
+                      <p className="font-body text-[13px] font-semibold text-primary-foreground">R$ {selectedAgendaTotal.toFixed(0)}</p>
+                    </div>
+                    <div className="rounded-2xl border border-gold/20 bg-gold/10 px-3 py-2">
+                      <p className="font-body text-[10px] text-gold/70">Recebido</p>
+                      <p className="font-body text-[13px] font-semibold text-gold">R$ {selectedAgendaPago.toFixed(0)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-3 lg:p-4">
+                  {selectedAgendaItems.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-primary-foreground/[0.08] bg-primary-foreground/[0.02] px-4 py-10 text-center">
+                      <p className="font-heading text-[20px] font-semibold text-primary-foreground">Nenhum pedido nessa data</p>
+                      <p className="mt-2 font-body text-[12px] text-primary-foreground/35">Escolha outro dia no calendário ou toque em Hoje para voltar para a agenda atual.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
+                      {selectedAgendaItems.map((a) => (
+                        <article key={a.id} className="rounded-2xl border border-primary-foreground/[0.06] bg-background/60 p-4 shadow-sm backdrop-blur-sm">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex min-w-0 flex-1 items-start gap-3">
+                              <div className="flex min-w-[54px] flex-col items-center rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] px-2 py-2">
+                                <span className="font-heading text-[16px] font-semibold text-primary-foreground">{a.horario}</span>
+                                <span className="font-body text-[9px] uppercase tracking-[0.18em] text-primary-foreground/25">horário</span>
+                              </div>
+
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate font-body text-[14px] font-semibold text-primary-foreground">{getClientName(a.user_id)}</p>
+                                <p className="mt-0.5 truncate font-body text-[11px] text-primary-foreground/40">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""}</p>
+                                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                                  {statusBadge(a.status)}
+                                  {pagamentoBadge(a)}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-3 rounded-xl border border-primary-foreground/[0.05] bg-primary-foreground/[0.02] px-3 py-2">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <p className="font-body text-[11px] text-primary-foreground/35">Valor do atendimento</p>
+                              <p className="font-body text-[13px] font-semibold text-gold">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</p>
+                            </div>
+                            {Number(a.valor_pago || 0) > 0 && (
+                              <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                                <p className="font-body text-[11px] text-primary-foreground/35">Já recebido</p>
+                                <p className="font-body text-[12px] font-medium text-primary-foreground">R$ {Number(a.valor_pago || 0).toFixed(2).replace(".", ",")}</p>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-primary-foreground/[0.06] pt-3">
+                            <div className="flex flex-wrap items-center gap-1">
+                              {a.status !== "cancelado" && a.status !== "falta" && (
+                                <>
+                                  <button
+                                    onClick={() => updatePayment(a.id, "sinal")}
+                                    title="Marcar sinal (50%)"
+                                    className={`rounded-lg px-2 py-1 font-body text-[10px] font-medium transition-all ${Number(a.valor_pago || 0) > 0 && Number(a.valor_pago || 0) < Number(a.valor) ? "bg-gold/10 text-gold" : "bg-primary-foreground/[0.03] text-primary-foreground/30 hover:bg-gold/10 hover:text-gold"}`}
+                                  >
+                                    Sinal
+                                  </button>
+                                  <button
+                                    onClick={() => updatePayment(a.id, "completo")}
+                                    title="Marcar pago completo"
+                                    className={`rounded-lg px-2 py-1 font-body text-[10px] font-medium transition-all ${Number(a.valor_pago || 0) >= Number(a.valor) ? "bg-green-500/10 text-green-500" : "bg-primary-foreground/[0.03] text-primary-foreground/30 hover:bg-green-500/10 hover:text-green-500"}`}
+                                  >
+                                    Pago
+                                  </button>
+                                </>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-1 self-end">
+                              {a.status === "confirmado" && (
+                                <>
+                                  <button onClick={() => updateStatus(a.id, "concluido")} className="rounded-lg p-1.5 text-green-500/50 transition-all hover:bg-green-500/10 hover:text-green-500" title="Concluir">
+                                    <CheckCircle className="h-4 w-4" />
+                                  </button>
+                                  <button onClick={() => updateStatus(a.id, "falta")} className="rounded-lg p-1.5 text-orange-500/50 transition-all hover:bg-orange-500/10 hover:text-orange-500" title="Marcar falta">
+                                    <UserX className="h-4 w-4" />
+                                  </button>
+                                  <button onClick={() => updateStatus(a.id, "cancelado")} className="rounded-lg p-1.5 text-rose/50 transition-all hover:bg-rose/10 hover:text-rose" title="Cancelar">
+                                    <X className="h-4 w-4" />
+                                  </button>
+                                </>
+                              )}
+                              <button onClick={() => deleteAgendamento(a.id)} className="rounded-lg p-1.5 text-primary-foreground/20 transition-all hover:bg-rose/10 hover:text-rose" title="Excluir">
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </section>
             </div>
           )}
 
