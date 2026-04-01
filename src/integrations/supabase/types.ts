@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           created_at: string
           data_agendamento: string
+          duracao_minutos: number
           forma_pagamento: string | null
           horario: string
           id: string
@@ -32,6 +33,7 @@ export type Database = {
         Insert: {
           created_at?: string
           data_agendamento: string
+          duracao_minutos?: number
           forma_pagamento?: string | null
           horario: string
           id?: string
@@ -46,6 +48,7 @@ export type Database = {
         Update: {
           created_at?: string
           data_agendamento?: string
+          duracao_minutos?: number
           forma_pagamento?: string | null
           horario?: string
           id?: string
@@ -148,6 +151,7 @@ export type Database = {
           ativo: boolean
           categoria: string
           created_at: string
+          duracao_minutos: number
           id: string
           nome: string
           ordem: number
@@ -158,6 +162,7 @@ export type Database = {
           ativo?: boolean
           categoria?: string
           created_at?: string
+          duracao_minutos?: number
           id?: string
           nome: string
           ordem?: number
@@ -168,6 +173,7 @@ export type Database = {
           ativo?: boolean
           categoria?: string
           created_at?: string
+          duracao_minutos?: number
           id?: string
           nome?: string
           ordem?: number
