@@ -41,7 +41,7 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
       {onProfile && (
         <button
           onClick={onProfile}
-          className="ios-press absolute top-6 right-6 w-10 h-10 rounded-full bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-gold/40 transition-all"
+          className="ios-press absolute top-6 right-6 z-20 w-10 h-10 rounded-full bg-secondary border border-border shadow-[0_2px_12px_-3px_rgba(0,0,0,0.1)] flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-gold/40 transition-all"
         >
           <User className="w-5 h-5" />
         </button>
