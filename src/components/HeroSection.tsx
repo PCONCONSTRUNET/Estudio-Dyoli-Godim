@@ -1,3 +1,4 @@
+import { User } from "lucide-react";
 import professionalImg from "@/assets/professional.png";
 
 interface HeroSectionProps {
