@@ -61,6 +61,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
 
   const [businessHours, setBusinessHours] = useState<Record<number, { open: string; close: string } | null>>({});
   const [bookedSlots, setBookedSlots] = useState<Record<string, string[]>>({});
+  const [serviceDuration, setServiceDuration] = useState(60);
 
   useEffect(() => {
     supabase.from("horarios_funcionamento").select("*").then(({ data }) => {
@@ -72,7 +73,10 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
         setBusinessHours(map);
       }
     });
-    // Load all booked slots for the next 14 days
+    // Load service duration
+    supabase.from("servicos").select("duracao_minutos, nome").eq("nome", service).maybeSingle().then(({ data }) => {
+      if (data?.duracao_minutos) setServiceDuration(data.duracao_minutos);
+    });
     loadBookedSlots();
   }, []);
 
