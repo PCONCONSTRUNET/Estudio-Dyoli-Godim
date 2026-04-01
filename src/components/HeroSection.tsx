@@ -1,14 +1,15 @@
-import { User } from "lucide-react";
+import { User, ShoppingBag } from "lucide-react";
 import professionalImg from "@/assets/professional.png";
 
 interface HeroSectionProps {
   onSchedule: () => void;
   onLogin: () => void;
   onProfile?: () => void;
+  onProdutos?: () => void;
   isAuthenticated?: boolean;
 }
 
-const HeroSection = ({ onSchedule, onLogin, onProfile, isAuthenticated }: HeroSectionProps) => {
+const HeroSection = ({ onSchedule, onLogin, onProfile, onProdutos, isAuthenticated }: HeroSectionProps) => {
   return (
     <section className="relative min-h-screen flex flex-col bg-charcoal overflow-hidden">
       {/* Animated premium gradient background */}
@@ -75,6 +76,13 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, isAuthenticated }: HeroSe
                   <User className="w-5 h-5" />
                   <span>Meu Perfil</span>
                 </button>
+                <button
+                  onClick={onProdutos}
+                  className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-2xl bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[16px] tracking-wide hover:bg-primary-foreground/[0.12] hover:border-primary-foreground/[0.18]"
+                >
+                  <ShoppingBag className="w-5 h-5" />
+                  <span>Produtos</span>
+                </button>
               </>
             ) : (
               <>
@@ -98,6 +106,13 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, isAuthenticated }: HeroSe
                     <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
                   </svg>
                   <span>Cadastrar</span>
+                </button>
+                <button
+                  onClick={onProdutos}
+                  className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-2xl bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[16px] tracking-wide hover:bg-primary-foreground/[0.12] hover:border-primary-foreground/[0.18]"
+                >
+                  <ShoppingBag className="w-5 h-5" />
+                  <span>Produtos</span>
                 </button>
               </>
             )}

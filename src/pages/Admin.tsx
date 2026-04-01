@@ -3,13 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   BarChart3, Calendar, Users, Clock, Settings, LogOut, Search,
   X, Edit2, Trash2, Plus, Save, CheckCircle, Bell, MessageSquare,
-  UserX, DollarSign, CreditCard
+  UserX, DollarSign, CreditCard, ShoppingBag
 } from "lucide-react";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription
 } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import FinanceiroTab from "@/components/FinanceiroTab";
+import ProdutosTab from "@/components/ProdutosTab";
 
 // ─── Types ───
 interface Agendamento {
@@ -20,7 +21,7 @@ interface Agendamento {
 interface Profile { id: string; nome: string; whatsapp: string; created_at: string; }
 interface LembreteConfig { id: string; tipo: string; ativo: boolean; mensagem: string; horas_antes: number; }
 
-type Tab = "dashboard" | "agendamentos" | "clientes" | "horarios" | "servicos" | "financeiro";
+type Tab = "dashboard" | "agendamentos" | "clientes" | "horarios" | "servicos" | "financeiro" | "produtos";
 
 const ADMIN_PASSWORD = "dyoliadmin";
 
@@ -278,6 +279,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     { id: "agendamentos", label: "Agenda", icon: Calendar },
     { id: "financeiro", label: "Financeiro", icon: DollarSign },
     { id: "clientes", label: "Clientes", icon: Users },
+    { id: "produtos", label: "Produtos", icon: ShoppingBag },
     { id: "horarios", label: "Horários", icon: Clock },
     { id: "servicos", label: "Serviços", icon: Settings },
   ];
@@ -660,6 +662,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
             })()}
 
           {tab === "financeiro" && <FinanceiroTab agendamentos={agendamentos} getClientName={getClientName} />}
+          {tab === "produtos" && <ProdutosTab />}
           {tab === "horarios" && <HorariosTab />}
           {tab === "servicos" && <ServicosTab />}
         </div>
@@ -667,7 +670,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
       {/* Mobile bottom nav (hidden on desktop) */}
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-primary-foreground/[0.06] bg-charcoal/95 backdrop-blur-xl pb-[env(safe-area-inset-bottom)] lg:hidden">
-        <div className="mx-auto grid w-full max-w-md grid-cols-6 px-1">
+        <div className="mx-auto grid w-full max-w-md grid-cols-7 px-1">
           {tabs.map((t) => (
             <button key={t.id} onClick={() => setTab(t.id)} className={`flex min-w-0 flex-col items-center gap-0.5 px-1 py-2.5 transition-all ${tab === t.id ? "text-gold" : "text-primary-foreground/30"}`}>
               <t.icon className="h-4 w-4 shrink-0" />
