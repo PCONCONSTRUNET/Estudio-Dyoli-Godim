@@ -30,11 +30,8 @@ const HeroSection = ({ onSchedule, onLogin }: HeroSectionProps) => {
           <img
             src={professionalImg}
             alt="Dyoli Godim - Profissional de Micropigmentação e Piercing"
-            className="w-full h-full object-cover object-top rounded-2xl shadow-2xl shadow-charcoal/80"
+            className="w-full h-full object-cover object-top"
           />
-          {/* Soft gold border glow */}
-          <div className="absolute -inset-px rounded-2xl border border-gold/15" />
-          <div className="absolute -inset-1 rounded-2xl bg-gold/[0.03] blur-sm -z-10" />
         </div>
 
         {/* Text content */}
