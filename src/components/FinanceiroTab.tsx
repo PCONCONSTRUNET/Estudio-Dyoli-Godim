@@ -169,6 +169,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
       <div class="metric"><div class="metric-label">Recebido</div><div class="metric-value green">${formatCurrency(totalRecebido)}</div></div>
       <div class="metric"><div class="metric-label">Pendente</div><div class="metric-value">${formatCurrency(totalPendente)}</div></div>
       <div class="metric"><div class="metric-label">Atendimentos</div><div class="metric-value">${qtdAtendimentos}</div></div>
+      <div class="metric" style="background:#f3e8ff"><div class="metric-label" style="color:#7c3aed">Comissão (${comissaoPct}%)</div><div class="metric-value" style="color:#7c3aed">${formatCurrency(comissaoValor)}</div></div>
     </div>
     <table>
       <thead><tr><th>Data</th><th>Horário</th><th>Cliente</th><th>Serviço</th><th>Valor</th><th>Pago</th></tr></thead>
