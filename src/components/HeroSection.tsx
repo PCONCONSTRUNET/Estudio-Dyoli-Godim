@@ -3,9 +3,11 @@ import professionalImg from "@/assets/professional.png";
 interface HeroSectionProps {
   onSchedule: () => void;
   onLogin: () => void;
+  onProfile?: () => void;
+  isAuthenticated?: boolean;
 }
 
-const HeroSection = ({ onSchedule, onLogin }: HeroSectionProps) => {
+const HeroSection = ({ onSchedule, onLogin, onProfile, isAuthenticated }: HeroSectionProps) => {
   return (
     <section className="relative min-h-screen flex flex-col bg-charcoal overflow-hidden">
       {/* Animated premium gradient background */}
