@@ -8,30 +8,25 @@ interface HeroSectionProps {
 const HeroSection = ({ onSchedule, onLogin }: HeroSectionProps) => {
   return (
     <section className="relative min-h-screen flex flex-col bg-charcoal overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute inset-0">
-        {/* Slow radial glow - gold */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-gold/[0.03] blur-[120px] animate-hero-glow" />
-        {/* Rose accent glow */}
-        <div className="absolute bottom-1/3 right-0 w-[400px] h-[400px] rounded-full bg-rose/[0.04] blur-[100px] animate-hero-glow-alt" />
-        {/* Floating particles */}
-        <div className="absolute top-[20%] left-[15%] w-1 h-1 rounded-full bg-gold/20 animate-float-particle" />
-        <div className="absolute top-[40%] right-[20%] w-0.5 h-0.5 rounded-full bg-gold/30 animate-float-particle-delayed" />
-        <div className="absolute bottom-[35%] left-[25%] w-0.5 h-0.5 rounded-full bg-rose/20 animate-float-particle-slow" />
-        <div className="absolute top-[60%] right-[30%] w-1 h-1 rounded-full bg-gold/15 animate-float-particle-delayed" />
-        {/* Subtle line accents */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-32 bg-gradient-to-b from-transparent via-gold/10 to-transparent animate-line-fade" />
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-px h-24 bg-gradient-to-t from-transparent via-gold/10 to-transparent animate-line-fade-alt" />
-      </div>
+      {/* Animated premium gradient background */}
+      <div className="absolute inset-0 animate-bg-drift" style={{
+        background: 'linear-gradient(135deg, hsl(0 0% 8%) 0%, hsl(30 15% 12%) 25%, hsl(20 10% 10%) 50%, hsl(0 0% 9%) 75%, hsl(30 20% 11%) 100%)',
+        backgroundSize: '400% 400%',
+      }} />
+      {/* Soft ambient glow - nude/warm */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-gold/[0.025] blur-[150px] animate-hero-glow" />
+      <div className="absolute bottom-1/4 right-1/4 w-[350px] h-[350px] rounded-full bg-nude/[0.03] blur-[130px] animate-hero-glow-alt" />
 
-      {/* Professional photo */}
+      {/* Content */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pb-8 pt-12">
         {/* 1. IMAGEM (impacto) */}
         <div className="relative w-56 h-56 mb-6 animate-fade-in">
+          {/* Glow behind image */}
+          <div className="absolute inset-0 rounded-full bg-gold/[0.08] blur-[60px] scale-125 animate-hero-glow" />
           <img
             src={professionalImg}
             alt="Dyoli Godim - Profissional de Micropigmentação e Piercing"
-            className="w-full h-full object-cover object-top"
+            className="relative w-full h-full object-cover object-top"
           />
         </div>
 

@@ -142,6 +142,7 @@ export default {
         "line-fade": "line-fade 5s ease-in-out infinite",
         "line-fade-alt": "line-fade-alt 7s ease-in-out infinite 2s",
         "flicker": "flicker 2s linear infinite",
+        "bg-drift": "bg-drift 25s ease-in-out infinite",
       },
     },
   },
