@@ -822,7 +822,7 @@ const HorariosTab = () => {
         ) : slots.length === 0 ? (
           <p className="font-body text-[12px] text-primary-foreground/20 text-center py-4">Dia fechado — sem horários disponíveis</p>
         ) : (
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
             {slots.map(slot => {
               const isBlocked = !!blockedSlots.find(b => b.horario === slot);
               return (
