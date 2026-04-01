@@ -74,6 +74,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const totalRecebido = filtered.reduce((s, a) => s + Number(a.valor_pago || 0), 0);
   const totalPendente = totalReceita - totalRecebido;
   const qtdAtendimentos = filtered.length;
+  const comissaoValor = totalRecebido * (comissaoPct / 100);
 
   // Chart: receita por dia
   const dailyData = useMemo(() => {
