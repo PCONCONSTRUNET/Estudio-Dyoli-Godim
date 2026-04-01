@@ -55,18 +55,6 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     return payloadWithoutCRC + crc.toString(16).toUpperCase().padStart(4, "0");
   };
 
-  const getPaymentAmount = () => {
-    if (requiresDeposit) return Math.round(numericPrice * 0.3);
-    return numericPrice;
-  };
-
-  const pixPayload = generatePixPayload(getPaymentAmount());
-
-  const handleCopyPix = async () => {
-    await navigator.clipboard.writeText(pixPayload);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
-  };
 
   const businessHours: Record<number, { open: string; close: string } | null> = {
     0: null,
@@ -130,6 +118,19 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   const numericPrice = parseInt(price.replace(/\D/g, ""));
   const requiresDeposit = numericPrice > 300;
   const depositAmount = requiresDeposit ? `R$ ${Math.round(numericPrice * 0.3)}` : null;
+
+  const getPaymentAmount = () => {
+    if (requiresDeposit) return Math.round(numericPrice * 0.3);
+    return numericPrice;
+  };
+
+  const pixPayload = generatePixPayload(getPaymentAmount());
+
+  const handleCopyPix = async () => {
+    await navigator.clipboard.writeText(pixPayload);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
 
   if (step === "confirm") {
     return (
