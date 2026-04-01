@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ArrowLeft, Calendar, Clock, CheckCircle2, Copy, Check } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import pixIcon from "@/assets/pix-icon.svg";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BookingFlowProps {
   service: string;
