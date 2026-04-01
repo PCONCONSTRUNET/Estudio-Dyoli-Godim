@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   BarChart3, Calendar, Users, Clock, Settings, LogOut, Search,
-  X, Edit2, Trash2, Plus, Save, CheckCircle, Bell, MessageSquare
+  X, Edit2, Trash2, Plus, Save, CheckCircle, Bell, MessageSquare,
+  UserX, DollarSign, CreditCard
 } from "lucide-react";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription
@@ -252,7 +253,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const confirmados = agendamentos.filter(a => a.status === "confirmado").length;
   const cancelados = agendamentos.filter(a => a.status === "cancelado").length;
   const concluidos = agendamentos.filter(a => a.status === "concluido").length;
-  const faturamento = agendamentos.filter(a => a.status !== "cancelado").reduce((sum, a) => sum + (a.valor_pago || 0), 0);
+  const faltas = agendamentos.filter(a => a.status === "falta").length;
+  const faturamento = agendamentos.filter(a => a.status !== "cancelado" && a.status !== "falta").reduce((sum, a) => sum + (a.valor_pago || 0), 0);
 
   const getClientName = (userId: string) => clientes.find(c => c.id === userId)?.nome || "—";
   const formatDate = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
@@ -272,13 +274,31 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
       confirmado: "bg-gold/10 text-gold border-gold/20",
       cancelado: "bg-rose/10 text-rose border-rose/20",
       concluido: "bg-green-500/10 text-green-500 border-green-500/20",
+      falta: "bg-orange-500/10 text-orange-500 border-orange-500/20",
     };
-    const labels: Record<string, string> = { confirmado: "Confirmado", cancelado: "Cancelado", concluido: "Concluído" };
+    const labels: Record<string, string> = { confirmado: "Confirmado", cancelado: "Cancelado", concluido: "Concluído", falta: "Falta" };
     return (
       <span className={`px-2 py-0.5 rounded-full text-[10px] font-body font-medium border ${map[s] || "bg-secondary text-muted-foreground border-border"}`}>
         {labels[s] || s}
       </span>
     );
+  };
+
+  const pagamentoBadge = (a: Agendamento) => {
+    const pago = Number(a.valor_pago || 0);
+    const total = Number(a.valor);
+    if (pago >= total) return <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-medium border bg-green-500/10 text-green-500 border-green-500/20">Pago</span>;
+    if (pago > 0) return <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-medium border bg-gold/10 text-gold border-gold/20">Sinal</span>;
+    return <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-medium border bg-primary-foreground/5 text-primary-foreground/30 border-primary-foreground/[0.06]">Pendente</span>;
+  };
+
+  const updatePayment = async (id: string, type: "sinal" | "completo") => {
+    const a = agendamentos.find(a => a.id === id);
+    if (!a) return;
+    const valor = Number(a.valor);
+    const newPago = type === "completo" ? valor : valor * 0.5;
+    await supabase.from("agendamentos").update({ valor_pago: newPago }).eq("id", id);
+    setAgendamentos(prev => prev.map(a => a.id === id ? { ...a, valor_pago: newPago } : a));
   };
 
   return (
@@ -317,22 +337,17 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                 { label: "Confirmados", value: confirmados, color: "text-gold" },
                 { label: "Concluídos", value: concluidos, color: "text-green-500" },
                 { label: "Cancelados", value: cancelados, color: "text-rose" },
+                { label: "Faltas", value: faltas, color: "text-orange-500" },
+                { label: "Faturamento", value: `R$ ${faturamento.toFixed(2).replace(".", ",")}`, color: "text-gold" },
               ].map(s => (
                 <div key={s.label} className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
                   <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest">{s.label}</p>
-                  <p className={`font-heading text-2xl font-bold mt-1 ${s.color}`}>{s.value}</p>
+                  <p className={`font-heading text-xl font-bold mt-1 ${s.color}`}>{s.value}</p>
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-                <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest">Faturamento</p>
-                <p className="font-heading text-xl font-bold text-gold mt-1">R$ {faturamento.toFixed(2).replace(".", ",")}</p>
-              </div>
-              <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-                <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest">Clientes</p>
-                <p className="font-heading text-xl font-bold text-primary-foreground mt-1">{clientes.length}</p>
-              </div>
+            <div>
+              <p className="font-body text-[10px] text-primary-foreground/25 text-center">Total de clientes: {clientes.length}</p>
             </div>
             <div>
               <h3 className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest mb-3">Últimos agendamentos</h3>
@@ -366,7 +381,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
               </div>
               <div className="flex gap-2 overflow-x-auto pb-1">
-                {[{ value: "todos", label: "Todos" }, { value: "confirmado", label: "Confirmados" }, { value: "concluido", label: "Concluídos" }, { value: "cancelado", label: "Cancelados" }].map(f => (
+                {[{ value: "todos", label: "Todos" }, { value: "confirmado", label: "Confirmados" }, { value: "concluido", label: "Concluídos" }, { value: "cancelado", label: "Cancelados" }, { value: "falta", label: "Faltas" }].map(f => (
                   <button key={f.value} onClick={() => setStatusFilter(f.value)}
                     className={`px-3 py-1.5 rounded-full font-body text-[11px] font-medium whitespace-nowrap border transition-all ${statusFilter === f.value ? "bg-gold/10 text-gold border-gold/20" : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06]"}`}>
                     {f.label}
@@ -377,30 +392,56 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
             <div className="space-y-2">
               {filteredAgendamentos.map(a => (
                 <div key={a.id} className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-                  <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-start justify-between mb-1">
                     <div className="flex-1 min-w-0">
                       <p className="font-body text-[14px] font-medium text-primary-foreground truncate">{getClientName(a.user_id)}</p>
                       <p className="font-body text-[12px] text-primary-foreground/40 truncate">{a.servico}{a.variacao ? ` (${a.variacao})` : ""}</p>
                     </div>
-                    {statusBadge(a.status)}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <p className="font-body text-[11px] text-primary-foreground/30">{formatDate(a.data_agendamento)} · {a.horario}</p>
-                      <p className="font-body text-[12px] text-gold font-semibold">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</p>
+                    <div className="flex flex-col items-end gap-1">
+                      {statusBadge(a.status)}
+                      {pagamentoBadge(a)}
                     </div>
+                  </div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <p className="font-body text-[11px] text-primary-foreground/30">{formatDate(a.data_agendamento)} · {a.horario}</p>
+                    <p className="font-body text-[12px] text-gold font-semibold">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</p>
+                    {Number(a.valor_pago || 0) > 0 && Number(a.valor_pago || 0) < Number(a.valor) && (
+                      <p className="font-body text-[10px] text-primary-foreground/30">Pago: R$ {Number(a.valor_pago).toFixed(2).replace(".", ",")}</p>
+                    )}
+                  </div>
+                  {/* Actions */}
+                  <div className="flex items-center justify-between border-t border-primary-foreground/[0.04] pt-2 mt-1">
+                    {/* Payment buttons */}
+                    <div className="flex items-center gap-1">
+                      {a.status !== "cancelado" && a.status !== "falta" && (
+                        <>
+                          <button onClick={() => updatePayment(a.id, "sinal")} title="Marcar sinal (50%)"
+                            className={`px-2 py-1 rounded-lg font-body text-[10px] font-medium transition-all ${Number(a.valor_pago || 0) > 0 && Number(a.valor_pago || 0) < Number(a.valor) ? "bg-gold/10 text-gold" : "bg-primary-foreground/[0.03] text-primary-foreground/30 hover:text-gold hover:bg-gold/10"}`}>
+                            Sinal
+                          </button>
+                          <button onClick={() => updatePayment(a.id, "completo")} title="Marcar pago completo"
+                            className={`px-2 py-1 rounded-lg font-body text-[10px] font-medium transition-all ${Number(a.valor_pago || 0) >= Number(a.valor) ? "bg-green-500/10 text-green-500" : "bg-primary-foreground/[0.03] text-primary-foreground/30 hover:text-green-500 hover:bg-green-500/10"}`}>
+                            Pago
+                          </button>
+                        </>
+                      )}
+                    </div>
+                    {/* Status buttons */}
                     <div className="flex items-center gap-1">
                       {a.status === "confirmado" && (
                         <>
-                          <button onClick={() => updateStatus(a.id, "concluido")} className="p-1.5 rounded-lg hover:bg-green-500/10 text-green-500/50 hover:text-green-500 transition-all">
+                          <button onClick={() => updateStatus(a.id, "concluido")} className="p-1.5 rounded-lg hover:bg-green-500/10 text-green-500/50 hover:text-green-500 transition-all" title="Concluir">
                             <CheckCircle className="w-4 h-4" />
                           </button>
-                          <button onClick={() => updateStatus(a.id, "cancelado")} className="p-1.5 rounded-lg hover:bg-rose/10 text-rose/50 hover:text-rose transition-all">
+                          <button onClick={() => updateStatus(a.id, "falta")} className="p-1.5 rounded-lg hover:bg-orange-500/10 text-orange-500/50 hover:text-orange-500 transition-all" title="Marcar falta">
+                            <UserX className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => updateStatus(a.id, "cancelado")} className="p-1.5 rounded-lg hover:bg-rose/10 text-rose/50 hover:text-rose transition-all" title="Cancelar">
                             <X className="w-4 h-4" />
                           </button>
                         </>
                       )}
-                      <button onClick={() => deleteAgendamento(a.id)} className="p-1.5 rounded-lg hover:bg-rose/10 text-primary-foreground/20 hover:text-rose transition-all">
+                      <button onClick={() => deleteAgendamento(a.id)} className="p-1.5 rounded-lg hover:bg-rose/10 text-primary-foreground/20 hover:text-rose transition-all" title="Excluir">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
