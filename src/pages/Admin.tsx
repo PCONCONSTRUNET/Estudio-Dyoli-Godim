@@ -346,15 +346,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-                <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest">Faturamento</p>
-                <p className="font-heading text-xl font-bold text-gold mt-1">R$ {faturamento.toFixed(2).replace(".", ",")}</p>
-              </div>
-              <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-                <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest">Clientes</p>
-                <p className="font-heading text-xl font-bold text-primary-foreground mt-1">{clientes.length}</p>
-              </div>
+            <div>
+              <p className="font-body text-[10px] text-primary-foreground/25 text-center">Total de clientes: {clientes.length}</p>
             </div>
             <div>
               <h3 className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest mb-3">Últimos agendamentos</h3>
