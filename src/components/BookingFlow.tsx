@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Calendar, Clock, CheckCircle2, Copy, Check } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import pixIcon from "@/assets/pix-icon.svg";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BookingFlowProps {
   service: string;
@@ -58,15 +59,19 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   };
 
 
-  const businessHours: Record<number, { open: string; close: string } | null> = {
-    0: null,
-    1: null,
-    2: { open: "09:00", close: "19:00" },
-    3: null,
-    4: { open: "09:00", close: "19:00" },
-    5: { open: "09:00", close: "19:00" },
-    6: null,
-  };
+  const [businessHours, setBusinessHours] = useState<Record<number, { open: string; close: string } | null>>({});
+
+  useEffect(() => {
+    supabase.from("horarios_funcionamento").select("*").then(({ data }) => {
+      if (data) {
+        const map: Record<number, { open: string; close: string } | null> = {};
+        data.forEach(d => {
+          map[d.dia_semana] = d.aberto ? { open: d.hora_inicio, close: d.hora_fim } : null;
+        });
+        setBusinessHours(map);
+      }
+    });
+  }, []);
 
   const generateTimes = (open: string, close: string) => {
     const result: string[] = [];

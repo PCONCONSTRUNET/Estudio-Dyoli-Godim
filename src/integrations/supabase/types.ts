@@ -59,6 +59,36 @@ export type Database = {
         }
         Relationships: []
       }
+      horarios_funcionamento: {
+        Row: {
+          aberto: boolean
+          created_at: string
+          dia_semana: number
+          hora_fim: string
+          hora_inicio: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          aberto?: boolean
+          created_at?: string
+          dia_semana: number
+          hora_fim?: string
+          hora_inicio?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          aberto?: boolean
+          created_at?: string
+          dia_semana?: number
+          hora_fim?: string
+          hora_inicio?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -80,6 +110,39 @@ export type Database = {
           nome?: string
           updated_at?: string
           whatsapp?: string
+        }
+        Relationships: []
+      }
+      servicos: {
+        Row: {
+          ativo: boolean
+          categoria: string
+          created_at: string
+          id: string
+          nome: string
+          ordem: number
+          preco: number
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          categoria?: string
+          created_at?: string
+          id?: string
+          nome: string
+          ordem?: number
+          preco: number
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          ordem?: number
+          preco?: number
+          updated_at?: string
         }
         Relationships: []
       }
