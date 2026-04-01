@@ -245,6 +245,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const tabs: { id: Tab; label: string; icon: typeof BarChart3 }[] = [
     { id: "dashboard", label: "Início", icon: BarChart3 },
     { id: "agendamentos", label: "Agenda", icon: Calendar },
+    { id: "financeiro", label: "Financeiro", icon: DollarSign },
     { id: "clientes", label: "Clientes", icon: Users },
     { id: "horarios", label: "Horários", icon: Clock },
     { id: "servicos", label: "Serviços", icon: Settings },
