@@ -7,7 +7,7 @@ interface BookingFlowProps {
   service: string;
   variation?: string;
   onBack: () => void;
-  onConfirm: () => void;
+  onConfirm: (bookingData?: { date: string; time: string; price: number; paidAmount: number }) => void;
 }
 
 const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps) => {
