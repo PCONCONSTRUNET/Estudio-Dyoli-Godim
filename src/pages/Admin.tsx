@@ -494,7 +494,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
             {/* Modal detalhes do cliente */}
             <Dialog open={!!selectedClient} onOpenChange={(o) => !o && setSelectedClient(null)}>
-              <DialogContent className="w-[calc(100vw-2rem)] max-w-md max-h-[90vh] overflow-y-auto bg-background border border-gold/20 rounded-2xl p-5">
+              <DialogContent className="w-[calc(100vw-2rem)] max-w-md max-h-[90vh] overflow-y-auto border border-gold/20 rounded-2xl p-5 bg-[hsl(0,0%,11%)]">
                 <DialogHeader>
                   <DialogTitle className="font-heading text-lg text-primary-foreground">{selProfile?.nome || "Cliente"}</DialogTitle>
                 </DialogHeader>
