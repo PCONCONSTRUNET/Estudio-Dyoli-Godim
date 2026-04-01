@@ -183,31 +183,58 @@ const Admin = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    document.documentElement.classList.add("admin-mobile-page");
+    document.body.classList.add("admin-mobile-page");
+
+    return () => {
+      document.documentElement.classList.remove("admin-mobile-page");
+      document.body.classList.remove("admin-mobile-page");
+    };
+  }, []);
+
   if (!authenticated) {
     return (
-      <div className="min-h-screen bg-charcoal flex items-center justify-center px-4">
-        <div className="w-full max-w-sm rounded-3xl border border-primary-foreground/[0.08] bg-charcoal/70 backdrop-blur-2xl shadow-[0_25px_60px_-12px_rgba(0,0,0,0.6)] p-8 space-y-6">
-          <div className="text-center">
-            <div className="w-14 h-14 rounded-full bg-gold/10 flex items-center justify-center mx-auto mb-4">
-              <Settings className="w-7 h-7 text-gold" />
+      <div className="admin-mobile-shell min-h-dvh w-screen max-w-full overflow-x-hidden bg-charcoal px-4">
+        <div className="mx-auto flex min-h-dvh w-full max-w-sm items-center justify-center py-6">
+          <div className="w-full rounded-3xl border border-primary-foreground/[0.08] bg-charcoal/70 p-8 shadow-[0_25px_60px_-12px_rgba(0,0,0,0.6)] backdrop-blur-2xl space-y-6">
+            <div className="text-center">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gold/10">
+                <Settings className="h-7 w-7 text-gold" />
+              </div>
+              <h1 className="font-heading text-2xl font-semibold text-primary-foreground">Painel Admin</h1>
+              <p className="mt-1 font-body text-[13px] text-primary-foreground/40">Acesso restrito</p>
             </div>
-            <h1 className="font-heading text-2xl font-semibold text-primary-foreground">Painel Admin</h1>
-            <p className="font-body text-[13px] text-primary-foreground/40 mt-1">Acesso restrito</p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (password === ADMIN_PASSWORD) {
+                  setAuthenticated(true);
+                  setError("");
+                } else {
+                  setError("Senha incorreta");
+                }
+              }}
+              className="space-y-4"
+            >
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Senha de acesso"
+                className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] px-4 py-3 text-primary-foreground font-body text-[15px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
+              />
+              {error && <p className="font-body text-[12px] text-rose text-center">{error}</p>}
+              <button type="submit" className="w-full rounded-2xl bg-rose py-3.5 text-primary-foreground font-body text-[15px] font-semibold shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)]">
+                Entrar
+              </button>
+            </form>
           </div>
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            if (password === ADMIN_PASSWORD) { setAuthenticated(true); setError(""); }
-            else { setError("Senha incorreta"); }
-          }} className="space-y-4">
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Senha de acesso"
-              className="w-full px-4 py-3 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[15px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
-            {error && <p className="font-body text-[12px] text-rose text-center">{error}</p>}
-            <button type="submit" className="w-full py-3.5 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)]">Entrar</button>
-          </form>
         </div>
       </div>
     );
   }
+
   return <AdminPanel onLogout={() => setAuthenticated(false)} />;
 };
 
@@ -221,7 +248,9 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
@@ -236,12 +265,12 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
   const updateStatus = async (id: string, status: string) => {
     await supabase.from("agendamentos").update({ status }).eq("id", id);
-    setAgendamentos(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+    setAgendamentos((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
   };
 
   const deleteAgendamento = async (id: string) => {
     await supabase.from("agendamentos").delete().eq("id", id);
-    setAgendamentos(prev => prev.filter(a => a.id !== id));
+    setAgendamentos((prev) => prev.filter((a) => a.id !== id));
   };
 
   const tabs: { id: Tab; label: string; icon: typeof BarChart3 }[] = [
@@ -254,17 +283,19 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   ];
 
   const total = agendamentos.length;
-  const confirmados = agendamentos.filter(a => a.status === "confirmado").length;
-  const cancelados = agendamentos.filter(a => a.status === "cancelado").length;
-  const concluidos = agendamentos.filter(a => a.status === "concluido").length;
-  const faltas = agendamentos.filter(a => a.status === "falta").length;
-  const faturamento = agendamentos.filter(a => a.status !== "cancelado" && a.status !== "falta").reduce((sum, a) => sum + (a.valor_pago || 0), 0);
+  const confirmados = agendamentos.filter((a) => a.status === "confirmado").length;
+  const cancelados = agendamentos.filter((a) => a.status === "cancelado").length;
+  const concluidos = agendamentos.filter((a) => a.status === "concluido").length;
+  const faltas = agendamentos.filter((a) => a.status === "falta").length;
+  const faturamento = agendamentos
+    .filter((a) => a.status !== "cancelado" && a.status !== "falta")
+    .reduce((sum, a) => sum + (a.valor_pago || 0), 0);
 
-  const getClientName = (userId: string) => clientes.find(c => c.id === userId)?.nome || "—";
+  const getClientName = (userId: string) => clientes.find((c) => c.id === userId)?.nome || "—";
   const formatDate = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
-  const formatWhatsapp = (w: string) => w ? `(${w.slice(0,2)}) ${w.slice(2,7)}-${w.slice(7)}` : "—";
+  const formatWhatsapp = (w: string) => (w ? `(${w.slice(0, 2)}) ${w.slice(2, 7)}-${w.slice(7)}` : "—");
 
-  const filteredAgendamentos = agendamentos.filter(a => {
+  const filteredAgendamentos = agendamentos.filter((a) => {
     if (statusFilter !== "todos" && a.status !== statusFilter) return false;
     if (searchTerm) {
       const name = getClientName(a.user_id).toLowerCase();
@@ -281,58 +312,53 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
       falta: "bg-orange-500/10 text-orange-500 border-orange-500/20",
     };
     const labels: Record<string, string> = { confirmado: "Confirmado", cancelado: "Cancelado", concluido: "Concluído", falta: "Falta" };
-    return (
-      <span className={`px-2 py-0.5 rounded-full text-[10px] font-body font-medium border ${map[s] || "bg-secondary text-muted-foreground border-border"}`}>
-        {labels[s] || s}
-      </span>
-    );
+    return <span className={`px-2 py-0.5 rounded-full text-[10px] font-body font-medium border ${map[s] || "bg-secondary text-muted-foreground border-border"}`}>{labels[s] || s}</span>;
   };
 
   const pagamentoBadge = (a: Agendamento) => {
     const pago = Number(a.valor_pago || 0);
-    const total = Number(a.valor);
-    if (pago >= total) return <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-medium border bg-green-500/10 text-green-500 border-green-500/20">Pago</span>;
+    const totalValor = Number(a.valor);
+    if (pago >= totalValor) return <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-medium border bg-green-500/10 text-green-500 border-green-500/20">Pago</span>;
     if (pago > 0) return <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-medium border bg-gold/10 text-gold border-gold/20">Sinal</span>;
     return <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-medium border bg-primary-foreground/5 text-primary-foreground/30 border-primary-foreground/[0.06]">Pendente</span>;
   };
 
   const updatePayment = async (id: string, type: "sinal" | "completo") => {
-    const a = agendamentos.find(a => a.id === id);
+    const a = agendamentos.find((item) => item.id === id);
     if (!a) return;
     const valor = Number(a.valor);
     const newPago = type === "completo" ? valor : valor * 0.5;
     await supabase.from("agendamentos").update({ valor_pago: newPago }).eq("id", id);
-    setAgendamentos(prev => prev.map(a => a.id === id ? { ...a, valor_pago: newPago } : a));
+    setAgendamentos((prev) => prev.map((item) => (item.id === id ? { ...item, valor_pago: newPago } : item)));
   };
 
   return (
-    <div className="min-h-screen bg-charcoal pb-20 max-w-md mx-auto">
-      {/* Header */}
-      <div className="sticky top-0 z-20 bg-charcoal/90 backdrop-blur-xl border-b border-primary-foreground/[0.06] px-4 py-3 flex items-center justify-between">
-        <div>
-          <h1 className="font-heading text-[16px] font-semibold text-primary-foreground">Admin</h1>
-          <p className="font-body text-[10px] text-primary-foreground/30">Estúdio Dyoli Godim</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Sheet>
-            <SheetTrigger asChild>
-              <button className="p-2 rounded-xl hover:bg-gold/10 text-primary-foreground/40 hover:text-gold transition-all">
-                <Bell className="w-4 h-4" />
-              </button>
-            </SheetTrigger>
-            <SheetContent side="right" className="bg-charcoal border-primary-foreground/[0.06] w-[340px] p-0 overflow-y-auto">
-              <LembretesHub />
-            </SheetContent>
-          </Sheet>
-          <button onClick={onLogout} className="p-2 rounded-xl hover:bg-rose/10 text-rose/60 hover:text-rose transition-all">
-            <LogOut className="w-4 h-4" />
-          </button>
+    <div className="admin-mobile-shell min-h-dvh w-screen max-w-full overflow-x-hidden bg-charcoal pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
+      <div className="sticky top-0 z-20 border-b border-primary-foreground/[0.06] bg-charcoal/90 backdrop-blur-xl">
+        <div className="mx-auto flex w-full max-w-md items-center justify-between px-3 py-3 sm:px-4">
+          <div>
+            <h1 className="font-heading text-[16px] font-semibold text-primary-foreground">Admin</h1>
+            <p className="font-body text-[10px] text-primary-foreground/30">Estúdio Dyoli Godim</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Sheet>
+              <SheetTrigger asChild>
+                <button className="flex h-11 w-11 items-center justify-center rounded-2xl text-primary-foreground/40 transition-all hover:bg-gold/10 hover:text-gold">
+                  <Bell className="h-4 w-4" />
+                </button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[calc(100vw-0.75rem)] max-w-[22rem] overflow-x-hidden overflow-y-auto border-primary-foreground/[0.06] bg-charcoal p-0">
+                <LembretesHub />
+              </SheetContent>
+            </Sheet>
+            <button onClick={onLogout} className="flex h-11 w-11 items-center justify-center rounded-2xl text-rose/60 transition-all hover:bg-rose/10 hover:text-rose">
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="px-4 py-4">
-        {/* Dashboard */}
+      <div className="mx-auto w-full max-w-md overflow-x-hidden px-3 py-4 sm:px-4">
         {tab === "dashboard" && (
           <div className="space-y-4 animate-fade-in">
             <div className="grid grid-cols-2 gap-3">
@@ -343,10 +369,10 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                 { label: "Cancelados", value: cancelados, color: "text-rose" },
                 { label: "Faltas", value: faltas, color: "text-orange-500" },
                 { label: "Faturamento", value: `R$ ${faturamento.toFixed(2).replace(".", ",")}`, color: "text-gold" },
-              ].map(s => (
-                <div key={s.label} className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+              ].map((s) => (
+                <div key={s.label} className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-4">
                   <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest">{s.label}</p>
-                  <p className={`font-heading text-xl font-bold mt-1 ${s.color}`}>{s.value}</p>
+                  <p className={`mt-1 font-heading text-xl font-bold ${s.color}`}>{s.value}</p>
                 </div>
               ))}
             </div>
@@ -354,224 +380,245 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
               <p className="font-body text-[10px] text-primary-foreground/25 text-center">Total de clientes: {clientes.length}</p>
             </div>
             <div>
-              <h3 className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest mb-3">Últimos agendamentos</h3>
+              <h3 className="mb-3 font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest">Últimos agendamentos</h3>
               <div className="space-y-2">
-                {agendamentos.slice(0, 5).map(a => (
-                  <div key={a.id} className="p-3 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-                    <div className="flex items-start justify-between">
+                {agendamentos.slice(0, 5).map((a) => (
+                  <div key={a.id} className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-3">
+                    <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <p className="font-body text-[13px] font-medium text-primary-foreground truncate">{getClientName(a.user_id)}</p>
                         <p className="font-body text-[11px] text-primary-foreground/40 truncate">{a.servico}{a.variacao ? ` — ${a.variacao}` : ""}</p>
                       </div>
                       {statusBadge(a.status)}
                     </div>
-                    <p className="font-body text-[11px] text-primary-foreground/30 mt-1">{formatDate(a.data_agendamento)} · {a.horario}</p>
+                    <p className="mt-1 font-body text-[11px] text-primary-foreground/30">{formatDate(a.data_agendamento)} · {a.horario}</p>
                   </div>
                 ))}
-                {agendamentos.length === 0 && <p className="font-body text-[13px] text-primary-foreground/30 text-center py-6">Nenhum agendamento ainda</p>}
+                {agendamentos.length === 0 && <p className="py-6 text-center font-body text-[13px] text-primary-foreground/30">Nenhum agendamento ainda</p>}
               </div>
             </div>
           </div>
         )}
 
-        {/* Agendamentos */}
         {tab === "agendamentos" && (
           <div className="space-y-4 animate-fade-in">
             <h2 className="font-heading text-lg font-semibold text-primary-foreground">Agendamentos</h2>
             <div className="space-y-2">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/25" />
-                <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Buscar cliente ou serviço..."
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary-foreground/25" />
+                <input
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Buscar cliente ou serviço..."
+                  className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] py-2.5 pl-10 pr-4 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
+                />
               </div>
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
-                {[{ value: "todos", label: "Todos" }, { value: "confirmado", label: "Confirmados" }, { value: "concluido", label: "Concluídos" }, { value: "cancelado", label: "Cancelados" }, { value: "falta", label: "Faltas" }].map(f => (
-                  <button key={f.value} onClick={() => setStatusFilter(f.value)}
-                    className={`px-3 py-1.5 rounded-full font-body text-[11px] font-medium whitespace-nowrap border transition-all ${statusFilter === f.value ? "bg-gold/10 text-gold border-gold/20" : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06]"}`}>
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}>
+                {[
+                  { value: "todos", label: "Todos" },
+                  { value: "confirmado", label: "Confirmados" },
+                  { value: "concluido", label: "Concluídos" },
+                  { value: "cancelado", label: "Cancelados" },
+                  { value: "falta", label: "Faltas" },
+                ].map((f) => (
+                  <button
+                    key={f.value}
+                    onClick={() => setStatusFilter(f.value)}
+                    className={`px-3 py-1.5 rounded-full font-body text-[11px] font-medium whitespace-nowrap border transition-all ${statusFilter === f.value ? "bg-gold/10 text-gold border-gold/20" : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06]"}`}
+                  >
                     {f.label}
                   </button>
                 ))}
               </div>
             </div>
             <div className="space-y-2">
-              {filteredAgendamentos.map(a => (
-                <div key={a.id} className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-                  <div className="flex items-start justify-between mb-1">
+              {filteredAgendamentos.map((a) => (
+                <div key={a.id} className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-4">
+                  <div className="mb-1 flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <p className="font-body text-[14px] font-medium text-primary-foreground truncate">{getClientName(a.user_id)}</p>
                       <p className="font-body text-[12px] text-primary-foreground/40 truncate">{a.servico}{a.variacao ? ` (${a.variacao})` : ""}</p>
                     </div>
-                    <div className="flex flex-col items-end gap-1">
+                    <div className="flex flex-col items-end gap-1 shrink-0">
                       {statusBadge(a.status)}
                       {pagamentoBadge(a)}
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 mb-2">
+                  <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1">
                     <p className="font-body text-[11px] text-primary-foreground/30">{formatDate(a.data_agendamento)} · {a.horario}</p>
-                    <p className="font-body text-[12px] text-gold font-semibold">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</p>
+                    <p className="font-body text-[12px] font-semibold text-gold">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</p>
                     {Number(a.valor_pago || 0) > 0 && Number(a.valor_pago || 0) < Number(a.valor) && (
                       <p className="font-body text-[10px] text-primary-foreground/30">Pago: R$ {Number(a.valor_pago).toFixed(2).replace(".", ",")}</p>
                     )}
                   </div>
-                  {/* Actions */}
-                  <div className="flex items-center justify-between border-t border-primary-foreground/[0.04] pt-2 mt-1">
-                    {/* Payment buttons */}
-                    <div className="flex items-center gap-1">
+                  <div className="mt-1 flex flex-wrap items-center justify-between gap-3 border-t border-primary-foreground/[0.04] pt-2">
+                    <div className="flex flex-wrap items-center gap-1">
                       {a.status !== "cancelado" && a.status !== "falta" && (
                         <>
-                          <button onClick={() => updatePayment(a.id, "sinal")} title="Marcar sinal (50%)"
-                            className={`px-2 py-1 rounded-lg font-body text-[10px] font-medium transition-all ${Number(a.valor_pago || 0) > 0 && Number(a.valor_pago || 0) < Number(a.valor) ? "bg-gold/10 text-gold" : "bg-primary-foreground/[0.03] text-primary-foreground/30 hover:text-gold hover:bg-gold/10"}`}>
+                          <button
+                            onClick={() => updatePayment(a.id, "sinal")}
+                            title="Marcar sinal (50%)"
+                            className={`px-2 py-1 rounded-lg font-body text-[10px] font-medium transition-all ${Number(a.valor_pago || 0) > 0 && Number(a.valor_pago || 0) < Number(a.valor) ? "bg-gold/10 text-gold" : "bg-primary-foreground/[0.03] text-primary-foreground/30 hover:text-gold hover:bg-gold/10"}`}
+                          >
                             Sinal
                           </button>
-                          <button onClick={() => updatePayment(a.id, "completo")} title="Marcar pago completo"
-                            className={`px-2 py-1 rounded-lg font-body text-[10px] font-medium transition-all ${Number(a.valor_pago || 0) >= Number(a.valor) ? "bg-green-500/10 text-green-500" : "bg-primary-foreground/[0.03] text-primary-foreground/30 hover:text-green-500 hover:bg-green-500/10"}`}>
+                          <button
+                            onClick={() => updatePayment(a.id, "completo")}
+                            title="Marcar pago completo"
+                            className={`px-2 py-1 rounded-lg font-body text-[10px] font-medium transition-all ${Number(a.valor_pago || 0) >= Number(a.valor) ? "bg-green-500/10 text-green-500" : "bg-primary-foreground/[0.03] text-primary-foreground/30 hover:text-green-500 hover:bg-green-500/10"}`}
+                          >
                             Pago
                           </button>
                         </>
                       )}
                     </div>
-                    {/* Status buttons */}
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 self-end">
                       {a.status === "confirmado" && (
                         <>
-                          <button onClick={() => updateStatus(a.id, "concluido")} className="p-1.5 rounded-lg hover:bg-green-500/10 text-green-500/50 hover:text-green-500 transition-all" title="Concluir">
-                            <CheckCircle className="w-4 h-4" />
+                          <button onClick={() => updateStatus(a.id, "concluido")} className="rounded-lg p-1.5 text-green-500/50 transition-all hover:bg-green-500/10 hover:text-green-500" title="Concluir">
+                            <CheckCircle className="h-4 w-4" />
                           </button>
-                          <button onClick={() => updateStatus(a.id, "falta")} className="p-1.5 rounded-lg hover:bg-orange-500/10 text-orange-500/50 hover:text-orange-500 transition-all" title="Marcar falta">
-                            <UserX className="w-4 h-4" />
+                          <button onClick={() => updateStatus(a.id, "falta")} className="rounded-lg p-1.5 text-orange-500/50 transition-all hover:bg-orange-500/10 hover:text-orange-500" title="Marcar falta">
+                            <UserX className="h-4 w-4" />
                           </button>
-                          <button onClick={() => updateStatus(a.id, "cancelado")} className="p-1.5 rounded-lg hover:bg-rose/10 text-rose/50 hover:text-rose transition-all" title="Cancelar">
-                            <X className="w-4 h-4" />
+                          <button onClick={() => updateStatus(a.id, "cancelado")} className="rounded-lg p-1.5 text-rose/50 transition-all hover:bg-rose/10 hover:text-rose" title="Cancelar">
+                            <X className="h-4 w-4" />
                           </button>
                         </>
                       )}
-                      <button onClick={() => deleteAgendamento(a.id)} className="p-1.5 rounded-lg hover:bg-rose/10 text-primary-foreground/20 hover:text-rose transition-all" title="Excluir">
-                        <Trash2 className="w-4 h-4" />
+                      <button onClick={() => deleteAgendamento(a.id)} className="rounded-lg p-1.5 text-primary-foreground/20 transition-all hover:bg-rose/10 hover:text-rose" title="Excluir">
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
                 </div>
               ))}
-              {filteredAgendamentos.length === 0 && <p className="font-body text-[13px] text-primary-foreground/30 text-center py-6">Nenhum agendamento encontrado</p>}
+              {filteredAgendamentos.length === 0 && <p className="py-6 text-center font-body text-[13px] text-primary-foreground/30">Nenhum agendamento encontrado</p>}
             </div>
           </div>
         )}
 
-        {/* Clientes */}
-        {tab === "clientes" && (() => {
-          const selProfile = clientes.find(c => c.id === selectedClient);
-          const selAgendamentos = agendamentos.filter(a => a.user_id === selectedClient);
-          const totalGasto = selAgendamentos.reduce((s, a) => s + (a.valor_pago || 0), 0);
-          const totalValor = selAgendamentos.reduce((s, a) => s + a.valor, 0);
-          const confirmedCount = selAgendamentos.filter(a => a.status === "confirmado" || a.status === "concluido").length;
-          const faltaCount = selAgendamentos.filter(a => a.status === "falta").length;
-          const cancelCount = selAgendamentos.filter(a => a.status === "cancelado").length;
+        {tab === "clientes" &&
+          (() => {
+            const selProfile = clientes.find((c) => c.id === selectedClient);
+            const selAgendamentos = agendamentos.filter((a) => a.user_id === selectedClient);
+            const totalGasto = selAgendamentos.reduce((s, a) => s + (a.valor_pago || 0), 0);
+            const totalValor = selAgendamentos.reduce((s, a) => s + a.valor, 0);
+            const confirmedCount = selAgendamentos.filter((a) => a.status === "confirmado" || a.status === "concluido").length;
+            const faltaCount = selAgendamentos.filter((a) => a.status === "falta").length;
+            const cancelCount = selAgendamentos.filter((a) => a.status === "cancelado").length;
 
-          return (
-          <div className="space-y-4 animate-fade-in">
-            <h2 className="font-heading text-lg font-semibold text-primary-foreground">Clientes</h2>
-            <div className="space-y-2">
-              {clientes.map(c => {
-                const count = agendamentos.filter(a => a.user_id === c.id).length;
-                const gasto = agendamentos.filter(a => a.user_id === c.id).reduce((s, a) => s + (a.valor_pago || 0), 0);
-                return (
-                  <div key={c.id} onClick={() => setSelectedClient(c.id)} className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06] cursor-pointer hover:border-gold/30 transition-all active:scale-[0.98]">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-body text-[14px] font-medium text-primary-foreground truncate">{c.nome}</p>
-                        <p className="font-body text-[12px] text-primary-foreground/40">{formatWhatsapp(c.whatsapp)}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-body text-[14px] font-semibold text-gold">R$ {gasto.toFixed(2).replace(".",",")}</p>
-                        <p className="font-body text-[10px] text-primary-foreground/30">{count} agendamentos</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-              {clientes.length === 0 && <p className="font-body text-[13px] text-primary-foreground/30 text-center py-6">Nenhum cliente cadastrado</p>}
-            </div>
-
-            {/* Modal detalhes do cliente */}
-            <Dialog open={!!selectedClient} onOpenChange={(o) => !o && setSelectedClient(null)}>
-              <DialogContent className="w-[calc(100vw-2rem)] max-w-md max-h-[90vh] overflow-y-auto border border-gold/20 rounded-2xl p-5 bg-[hsl(0,0%,11%)]">
-                <DialogHeader>
-                  <DialogTitle className="font-heading text-lg text-primary-foreground">{selProfile?.nome || "Cliente"}</DialogTitle>
-                </DialogHeader>
-                {selProfile && (
-                  <div className="space-y-4">
-                    <div className="p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06] space-y-1">
-                      <p className="font-body text-[12px] text-primary-foreground/50">📱 {formatWhatsapp(selProfile.whatsapp)}</p>
-                      <p className="font-body text-[12px] text-primary-foreground/50">📅 Cliente desde {new Date(selProfile.created_at).toLocaleDateString("pt-BR")}</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="p-3 rounded-xl bg-gold/5 border border-gold/10 text-center">
-                        <p className="font-body text-[18px] font-bold text-gold">R$ {totalGasto.toFixed(2).replace(".",",")}</p>
-                        <p className="font-body text-[10px] text-gold/60">Total pago</p>
-                      </div>
-                      <div className="p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06] text-center">
-                        <p className="font-body text-[18px] font-bold text-primary-foreground">R$ {totalValor.toFixed(2).replace(".",",")}</p>
-                        <p className="font-body text-[10px] text-primary-foreground/30">Valor total</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
-                        <p className="font-body text-[16px] font-bold text-emerald-400">{confirmedCount}</p>
-                        <p className="font-body text-[9px] text-emerald-400/60">Realizados</p>
-                      </div>
-                      <div className="p-2 rounded-xl bg-red-500/10 border border-red-500/20 text-center">
-                        <p className="font-body text-[16px] font-bold text-red-400">{faltaCount}</p>
-                        <p className="font-body text-[9px] text-red-400/60">Faltas</p>
-                      </div>
-                      <div className="p-2 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06] text-center">
-                        <p className="font-body text-[16px] font-bold text-primary-foreground/50">{cancelCount}</p>
-                        <p className="font-body text-[9px] text-primary-foreground/30">Cancelados</p>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="font-body text-[12px] font-medium text-primary-foreground/50 mb-2">Histórico de agendamentos</p>
-                      <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                        {selAgendamentos.length === 0 && <p className="font-body text-[12px] text-primary-foreground/30 text-center py-4">Nenhum agendamento</p>}
-                        {selAgendamentos.sort((a, b) => b.data_agendamento.localeCompare(a.data_agendamento)).map(a => (
-                          <div key={a.id} className="flex items-center justify-between p-2.5 rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.04]">
-                            <div className="flex-1 min-w-0">
-                              <p className="font-body text-[12px] text-primary-foreground truncate">{a.servico}{a.variacao ? ` - ${a.variacao}` : ""}</p>
-                              <p className="font-body text-[10px] text-primary-foreground/30">{formatDate(a.data_agendamento)} às {a.horario}</p>
-                            </div>
-                            <div className="text-right ml-2">
-                              <p className="font-body text-[12px] font-medium text-gold">R$ {(a.valor_pago || 0).toFixed(2).replace(".",",")}</p>
-                              <span className={`font-body text-[9px] px-1.5 py-0.5 rounded-full ${
-                                a.status === "confirmado" || a.status === "concluido" ? "bg-emerald-500/10 text-emerald-400" :
-                                a.status === "falta" ? "bg-red-500/10 text-red-400" :
-                                a.status === "cancelado" ? "bg-primary-foreground/[0.05] text-primary-foreground/30" :
-                                "bg-gold/10 text-gold"
-                              }`}>{a.status}</span>
-                            </div>
+            return (
+              <div className="space-y-4 animate-fade-in">
+                <h2 className="font-heading text-lg font-semibold text-primary-foreground">Clientes</h2>
+                <div className="space-y-2">
+                  {clientes.map((c) => {
+                    const count = agendamentos.filter((a) => a.user_id === c.id).length;
+                    const gasto = agendamentos.filter((a) => a.user_id === c.id).reduce((s, a) => s + (a.valor_pago || 0), 0);
+                    return (
+                      <div key={c.id} onClick={() => setSelectedClient(c.id)} className="cursor-pointer rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-4 transition-all active:scale-[0.98] hover:border-gold/30">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-body text-[14px] font-medium text-primary-foreground truncate">{c.nome}</p>
+                            <p className="font-body text-[12px] text-primary-foreground/40">{formatWhatsapp(c.whatsapp)}</p>
                           </div>
-                        ))}
+                          <div className="text-right shrink-0">
+                            <p className="font-body text-[14px] font-semibold text-gold">R$ {gasto.toFixed(2).replace(".", ",")}</p>
+                            <p className="font-body text-[10px] text-primary-foreground/30">{count} agendamentos</p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                )}
-              </DialogContent>
-            </Dialog>
-          </div>
-          );
-        })()}
+                    );
+                  })}
+                  {clientes.length === 0 && <p className="py-6 text-center font-body text-[13px] text-primary-foreground/30">Nenhum cliente cadastrado</p>}
+                </div>
+
+                <Dialog open={!!selectedClient} onOpenChange={(open) => !open && setSelectedClient(null)}>
+                  <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overflow-x-hidden rounded-2xl border border-gold/20 bg-charcoal p-4 sm:p-5">
+                    <DialogHeader>
+                      <DialogTitle className="font-heading text-lg text-primary-foreground">{selProfile?.nome || "Cliente"}</DialogTitle>
+                    </DialogHeader>
+                    {selProfile && (
+                      <div className="space-y-4">
+                        <div className="space-y-1 rounded-xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-3">
+                          <p className="font-body text-[12px] text-primary-foreground/50">📱 {formatWhatsapp(selProfile.whatsapp)}</p>
+                          <p className="font-body text-[12px] text-primary-foreground/50">📅 Cliente desde {new Date(selProfile.created_at).toLocaleDateString("pt-BR")}</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="rounded-xl border border-gold/10 bg-gold/5 p-3 text-center">
+                            <p className="font-body text-[18px] font-bold text-gold">R$ {totalGasto.toFixed(2).replace(".", ",")}</p>
+                            <p className="font-body text-[10px] text-gold/60">Total pago</p>
+                          </div>
+                          <div className="rounded-xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-3 text-center">
+                            <p className="font-body text-[18px] font-bold text-primary-foreground">R$ {totalValor.toFixed(2).replace(".", ",")}</p>
+                            <p className="font-body text-[10px] text-primary-foreground/30">Valor total</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-2 text-center">
+                            <p className="font-body text-[16px] font-bold text-emerald-400">{confirmedCount}</p>
+                            <p className="font-body text-[9px] text-emerald-400/60">Realizados</p>
+                          </div>
+                          <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-2 text-center">
+                            <p className="font-body text-[16px] font-bold text-red-400">{faltaCount}</p>
+                            <p className="font-body text-[9px] text-red-400/60">Faltas</p>
+                          </div>
+                          <div className="rounded-xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-2 text-center">
+                            <p className="font-body text-[16px] font-bold text-primary-foreground/50">{cancelCount}</p>
+                            <p className="font-body text-[9px] text-primary-foreground/30">Cancelados</p>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="mb-2 font-body text-[12px] font-medium text-primary-foreground/50">Histórico de agendamentos</p>
+                          <div className="max-h-48 space-y-1.5 overflow-y-auto pr-1">
+                            {selAgendamentos.length === 0 && <p className="py-4 text-center font-body text-[12px] text-primary-foreground/30">Nenhum agendamento</p>}
+                            {selAgendamentos
+                              .sort((a, b) => b.data_agendamento.localeCompare(a.data_agendamento))
+                              .map((a) => (
+                                <div key={a.id} className="flex items-center justify-between gap-3 rounded-xl border border-primary-foreground/[0.04] bg-primary-foreground/[0.02] p-2.5">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-body text-[12px] text-primary-foreground truncate">{a.servico}{a.variacao ? ` - ${a.variacao}` : ""}</p>
+                                    <p className="font-body text-[10px] text-primary-foreground/30">{formatDate(a.data_agendamento)} às {a.horario}</p>
+                                  </div>
+                                  <div className="ml-2 text-right shrink-0">
+                                    <p className="font-body text-[12px] font-medium text-gold">R$ {(a.valor_pago || 0).toFixed(2).replace(".", ",")}</p>
+                                    <span
+                                      className={`px-1.5 py-0.5 rounded-full font-body text-[9px] ${
+                                        a.status === "confirmado" || a.status === "concluido"
+                                          ? "bg-emerald-500/10 text-emerald-400"
+                                          : a.status === "falta"
+                                            ? "bg-red-500/10 text-red-400"
+                                            : a.status === "cancelado"
+                                              ? "bg-primary-foreground/[0.05] text-primary-foreground/30"
+                                              : "bg-gold/10 text-gold"
+                                      }`}
+                                    >
+                                      {a.status}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </DialogContent>
+                </Dialog>
+              </div>
+            );
+          })()}
 
         {tab === "financeiro" && <FinanceiroTab agendamentos={agendamentos} getClientName={getClientName} />}
         {tab === "horarios" && <HorariosTab />}
         {tab === "servicos" && <ServicosTab />}
       </div>
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-30 bg-charcoal/95 backdrop-blur-xl border-t border-primary-foreground/[0.06]">
-        <div className="max-w-md mx-auto flex overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
-          {tabs.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              className={`min-w-[60px] flex-1 flex flex-col items-center gap-0.5 py-2.5 transition-all ${tab === t.id ? "text-gold" : "text-primary-foreground/30"}`}>
-              <t.icon className="w-4 h-4" />
-              <span className="font-body text-[8px] font-medium">{t.label}</span>
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-primary-foreground/[0.06] bg-charcoal/95 backdrop-blur-xl pb-[env(safe-area-inset-bottom)]">
+        <div className="mx-auto grid w-full max-w-md grid-cols-6 px-1">
+          {tabs.map((t) => (
+            <button key={t.id} onClick={() => setTab(t.id)} className={`flex min-w-0 flex-col items-center gap-0.5 px-1 py-2.5 transition-all ${tab === t.id ? "text-gold" : "text-primary-foreground/30"}`}>
+              <t.icon className="h-4 w-4 shrink-0" />
+              <span className="w-full truncate text-center font-body text-[8px] font-medium">{t.label}</span>
             </button>
           ))}
         </div>
@@ -683,18 +730,18 @@ const HorariosTab = () => {
       {/* Funcionamento semanal */}
       <div className="space-y-2">
         {hours.map(h => (
-          <div key={h.day} className="p-3 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-            <div className="flex items-center justify-between mb-2">
+          <div key={h.day} className="p-3 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06] overflow-x-hidden">
+            <div className="flex items-center justify-between gap-3 mb-2">
               <span className="font-body text-[13px] text-primary-foreground">{dayNames[h.day]}</span>
-              <button onClick={() => toggle(h.day)} className={`w-10 h-6 rounded-full relative transition-all duration-200 ${h.open ? "bg-gold" : "bg-primary-foreground/10"}`}>
+              <button onClick={() => toggle(h.day)} className={`shrink-0 w-10 h-6 rounded-full relative transition-all duration-200 ${h.open ? "bg-gold" : "bg-primary-foreground/10"}`}>
                 <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200 ${h.open ? "left-4" : "left-0.5"}`} />
               </button>
             </div>
             {h.open ? (
-              <div className="flex items-center gap-2">
-                <input type="time" value={h.start} onChange={e => updateTime(h.day, "start", e.target.value)} className="flex-1 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
-                <span className="text-primary-foreground/30 text-[12px]">até</span>
-                <input type="time" value={h.end} onChange={e => updateTime(h.day, "end", e.target.value)} className="flex-1 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto_1fr] items-center min-w-0">
+                <input type="time" value={h.start} onChange={e => updateTime(h.day, "start", e.target.value)} className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                <span className="text-primary-foreground/30 text-[12px] text-center">até</span>
+                <input type="time" value={h.end} onChange={e => updateTime(h.day, "end", e.target.value)} className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
               </div>
             ) : <p className="font-body text-[12px] text-primary-foreground/25">Fechado</p>}
           </div>
@@ -702,17 +749,17 @@ const HorariosTab = () => {
       </div>
 
       {/* Bloqueio manual de horários */}
-      <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-rose/10">
+      <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-rose/10 overflow-x-hidden">
         <h3 className="font-body text-[13px] font-medium text-primary-foreground flex items-center gap-2 mb-3">
           🔒 Bloqueio manual de horários
         </h3>
         <p className="font-body text-[10px] text-primary-foreground/30 mb-3">Selecione uma data e bloqueie/desbloqueie horários individualmente</p>
 
-        <div className="flex items-center gap-2 mb-3">
+        <div className="grid grid-cols-1 gap-2 mb-3 sm:grid-cols-[1fr_auto] min-w-0">
           <input type="date" value={blockDate} onChange={e => setBlockDate(e.target.value)}
-            className="flex-1 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+            className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
           <button onClick={blockAllDay}
-            className={`px-3 py-2.5 rounded-xl font-body text-[11px] font-medium transition-all whitespace-nowrap ${allBlocked ? "bg-green-500/10 text-green-500 hover:bg-green-500/20" : "bg-rose/10 text-rose hover:bg-rose/20"}`}>
+            className={`w-full sm:w-auto px-3 py-2.5 rounded-xl font-body text-[11px] font-medium transition-all whitespace-nowrap ${allBlocked ? "bg-green-500/10 text-green-500 hover:bg-green-500/20" : "bg-rose/10 text-rose hover:bg-rose/20"}`}>
             {allBlocked ? "Liberar dia" : "Bloquear dia"}
           </button>
         </div>
@@ -722,7 +769,7 @@ const HorariosTab = () => {
         ) : slots.length === 0 ? (
           <p className="font-body text-[12px] text-primary-foreground/20 text-center py-4">Dia fechado — sem horários disponíveis</p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {slots.map(slot => {
               const isBlocked = !!blockedSlots.find(b => b.horario === slot);
               return (
@@ -740,14 +787,14 @@ const HorariosTab = () => {
                       toggleBlock(slot);
                     }
                   }}
-                  className={`w-full min-h-[44px] touch-manipulation select-none px-3 py-3 rounded-xl font-body text-[13px] font-medium transition-all border ${
+                  className={`w-full min-h-[46px] touch-manipulation select-none px-2 py-3 rounded-xl font-body text-[13px] font-medium transition-all border overflow-hidden ${
                     isBlocked
                       ? "bg-rose/10 text-rose border-rose/20 line-through"
                       : "bg-primary-foreground/[0.03] text-primary-foreground/60 border-primary-foreground/[0.06] hover:bg-gold/10 hover:text-gold hover:border-gold/20"
                   }`}
                 >
-                  {slot}
-                  {isBlocked && <span className="block text-[8px] mt-0.5 no-underline">🔒 Bloqueado</span>}
+                  <span className="block truncate">{slot}</span>
+                  {isBlocked && <span className="block text-[8px] mt-0.5 no-underline truncate">🔒 Bloqueado</span>}
                 </button>
               );
             })}
@@ -815,58 +862,58 @@ const ServicosTab = () => {
   if (loading) return <p className="font-body text-[13px] text-primary-foreground/30 text-center py-8">Carregando...</p>;
 
   return (
-    <div className="space-y-4 animate-fade-in">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 animate-fade-in overflow-x-hidden">
+      <div className="flex items-center justify-between gap-3">
         <h2 className="font-heading text-lg font-semibold text-primary-foreground">Serviços</h2>
-        <button onClick={() => setShowAdd(!showAdd)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all">
+        <button onClick={() => setShowAdd(!showAdd)} className="flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all">
           <Plus className="w-3.5 h-3.5" />Adicionar
         </button>
       </div>
       <Dialog open={showAdd} onOpenChange={setShowAdd}>
-        <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-md max-h-[85dvh] overflow-y-auto overflow-x-hidden bg-[hsl(0,0%,11%)] border border-gold/20 rounded-2xl p-4 sm:p-5">
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-md max-h-[85dvh] overflow-y-auto overflow-x-hidden bg-charcoal border border-gold/20 rounded-2xl p-4 sm:p-5">
           <DialogHeader>
             <DialogTitle className="font-body text-[14px] font-medium text-primary-foreground">Novo Serviço</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 w-full min-w-0 overflow-x-hidden">
             <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Nome do serviço" className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
-            <div className="flex gap-2 min-w-0">
-              <input value={newPrice} onChange={e => setNewPrice(e.target.value)} placeholder="Preço" type="number" className="flex-1 min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
-              <input value={newCategory} onChange={e => setNewCategory(e.target.value)} placeholder="Categoria" className="flex-1 min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
+            <div className="grid grid-cols-1 gap-2 min-w-0 sm:grid-cols-2">
+              <input value={newPrice} onChange={e => setNewPrice(e.target.value)} placeholder="Preço" type="number" className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
+              <input value={newCategory} onChange={e => setNewCategory(e.target.value)} placeholder="Categoria" className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
             </div>
             <div className="min-w-0">
               <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Duração (minutos)</label>
               <input value={newDuration} onChange={e => setNewDuration(e.target.value)} placeholder="60" type="number" className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
             </div>
-            <div className="flex gap-2 min-w-0">
-              <button onClick={addService} className="flex-1 min-w-0 py-2.5 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all">Salvar</button>
-              <button onClick={() => setShowAdd(false)} className="flex-1 min-w-0 py-2.5 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/40 font-body text-[12px] hover:text-primary-foreground/60 transition-all">Cancelar</button>
+            <div className="grid grid-cols-2 gap-2 min-w-0">
+              <button onClick={addService} className="w-full min-w-0 py-2.5 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all">Salvar</button>
+              <button onClick={() => setShowAdd(false)} className="w-full min-w-0 py-2.5 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/40 font-body text-[12px] hover:text-primary-foreground/60 transition-all">Cancelar</button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
       <div className="space-y-2">
         {services.map(s => (
-          <div key={s.id} className={`p-4 rounded-2xl border transition-all ${s.active ? "bg-primary-foreground/[0.03] border-primary-foreground/[0.06]" : "bg-primary-foreground/[0.01] border-primary-foreground/[0.03] opacity-50"}`}>
+          <div key={s.id} className={`p-4 rounded-2xl border transition-all overflow-x-hidden ${s.active ? "bg-primary-foreground/[0.03] border-primary-foreground/[0.06]" : "bg-primary-foreground/[0.01] border-primary-foreground/[0.03] opacity-50"}`}>
             {editing === s.id ? (
-              <div className="space-y-2">
-                <input value={editName} onChange={e => setEditName(e.target.value)} className="w-full px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
-                <div className="flex gap-2">
-                  <input value={editPrice} onChange={e => setEditPrice(e.target.value)} type="number" placeholder="Preço" className="flex-1 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
-                  <input value={editDuration} onChange={e => setEditDuration(e.target.value)} type="number" placeholder="Min" className="w-20 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+              <div className="space-y-2 min-w-0">
+                <input value={editName} onChange={e => setEditName(e.target.value)} className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                <div className="grid grid-cols-[1fr_96px] gap-2 min-w-0">
+                  <input value={editPrice} onChange={e => setEditPrice(e.target.value)} type="number" placeholder="Preço" className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                  <input value={editDuration} onChange={e => setEditDuration(e.target.value)} type="number" placeholder="Min" className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={() => saveEdit(s.id)} className="flex-1 px-3 py-2 rounded-xl bg-gold/10 text-gold hover:bg-gold/20 transition-all font-body text-[12px]"><Save className="w-4 h-4 inline mr-1" />Salvar</button>
+                <div className="grid grid-cols-[1fr_auto] gap-2">
+                  <button onClick={() => saveEdit(s.id)} className="min-w-0 px-3 py-2 rounded-xl bg-gold/10 text-gold hover:bg-gold/20 transition-all font-body text-[12px]"><Save className="w-4 h-4 inline mr-1" />Salvar</button>
                   <button onClick={() => setEditing(null)} className="px-3 py-2 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/30 hover:text-primary-foreground/50 transition-all"><X className="w-4 h-4" /></button>
                 </div>
               </div>
             ) : (
               <>
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <p className="font-body text-[14px] font-medium text-primary-foreground truncate">{s.name}</p>
-                    <p className="font-body text-[10px] text-primary-foreground/30">{s.category} · {s.duration}min</p>
+                    <p className="font-body text-[10px] text-primary-foreground/30 truncate">{s.category} · {s.duration}min</p>
                   </div>
-                  <p className="font-body text-[14px] font-semibold text-gold ml-2">R$ {s.price.toFixed(2).replace(".", ",")}</p>
+                  <p className="font-body text-[14px] font-semibold text-gold ml-2 shrink-0">R$ {s.price.toFixed(2).replace(".", ",")}</p>
                 </div>
                 <div className="flex items-center justify-end gap-2 mt-2">
                   <button onClick={() => toggleActive(s.id)} className={`w-10 h-6 rounded-full relative transition-all duration-200 ${s.active ? "bg-gold" : "bg-primary-foreground/10"}`}>
