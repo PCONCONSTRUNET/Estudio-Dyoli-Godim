@@ -20,6 +20,16 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, isAuthenticated }: HeroSe
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-gold/[0.025] blur-[150px] animate-hero-glow" />
       <div className="absolute bottom-1/4 right-1/4 w-[350px] h-[350px] rounded-full bg-nude/[0.03] blur-[130px] animate-hero-glow-alt" />
 
+      {/* Profile button (top-right) */}
+      {isAuthenticated && onProfile && (
+        <button
+          onClick={onProfile}
+          className="ios-press absolute top-6 right-6 z-20 w-10 h-10 rounded-full bg-primary-foreground/[0.1] backdrop-blur-md border border-primary-foreground/[0.12] flex items-center justify-center text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/[0.15] transition-all"
+        >
+          <User className="w-5 h-5" />
+        </button>
+      )}
+
       {/* Content */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pb-8 pt-12">
         {/* 1. IMAGEM (impacto) */}
