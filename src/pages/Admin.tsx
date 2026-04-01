@@ -809,7 +809,7 @@ const ServicosTab = () => {
         </button>
       </div>
       <Dialog open={showAdd} onOpenChange={setShowAdd}>
-        <DialogContent className="w-[calc(100vw-2rem)] max-w-md max-h-[90vh] overflow-y-auto bg-background border border-gold/20 rounded-2xl p-5">
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-md max-h-[90vh] overflow-y-auto bg-[hsl(0,0%,11%)] border border-gold/20 rounded-2xl p-5">
           <DialogHeader>
             <DialogTitle className="font-body text-[14px] font-medium text-primary-foreground">Novo Serviço</DialogTitle>
           </DialogHeader>
