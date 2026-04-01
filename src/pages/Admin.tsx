@@ -569,34 +569,36 @@ const HorariosTab = () => {
 
 // ─── Serviços Tab ───
 const ServicosTab = () => {
-  const [services, setServices] = useState<{ id: string; name: string; price: number; category: string; active: boolean }[]>([]);
+  const [services, setServices] = useState<{ id: string; name: string; price: number; category: string; active: boolean; duration: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editPrice, setEditPrice] = useState("");
+  const [editDuration, setEditDuration] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState("");
   const [newPrice, setNewPrice] = useState("");
   const [newCategory, setNewCategory] = useState("");
+  const [newDuration, setNewDuration] = useState("60");
 
   useEffect(() => {
     supabase.from("servicos").select("*").order("ordem").then(({ data }) => {
-      if (data) setServices(data.map(s => ({ id: s.id, name: s.nome, price: Number(s.preco), category: s.categoria, active: s.ativo })));
+      if (data) setServices(data.map(s => ({ id: s.id, name: s.nome, price: Number(s.preco), category: s.categoria, active: s.ativo, duration: s.duracao_minutos || 60 })));
       setLoading(false);
     });
   }, []);
 
-  const startEdit = (s: typeof services[0]) => { setEditing(s.id); setEditName(s.name); setEditPrice(s.price.toString()); };
+  const startEdit = (s: typeof services[0]) => { setEditing(s.id); setEditName(s.name); setEditPrice(s.price.toString()); setEditDuration(s.duration.toString()); };
   const saveEdit = async (id: string) => {
-    await supabase.from("servicos").update({ nome: editName, preco: Number(editPrice), updated_at: new Date().toISOString() }).eq("id", id);
-    setServices(prev => prev.map(s => s.id === id ? { ...s, name: editName, price: Number(editPrice) } : s));
+    await supabase.from("servicos").update({ nome: editName, preco: Number(editPrice), duracao_minutos: Number(editDuration), updated_at: new Date().toISOString() }).eq("id", id);
+    setServices(prev => prev.map(s => s.id === id ? { ...s, name: editName, price: Number(editPrice), duration: Number(editDuration) } : s));
     setEditing(null);
   };
   const addService = async () => {
     if (!newName || !newPrice) return;
-    const { data } = await supabase.from("servicos").insert({ nome: newName, preco: Number(newPrice), categoria: newCategory || "Outros", ativo: true, ordem: services.length + 1 }).select().single();
-    if (data) setServices(prev => [...prev, { id: data.id, name: data.nome, price: Number(data.preco), category: data.categoria, active: data.ativo }]);
-    setNewName(""); setNewPrice(""); setNewCategory(""); setShowAdd(false);
+    const { data } = await supabase.from("servicos").insert({ nome: newName, preco: Number(newPrice), categoria: newCategory || "Outros", ativo: true, ordem: services.length + 1, duracao_minutos: Number(newDuration) || 60 }).select().single();
+    if (data) setServices(prev => [...prev, { id: data.id, name: data.nome, price: Number(data.preco), category: data.categoria, active: data.ativo, duration: data.duracao_minutos || 60 }]);
+    setNewName(""); setNewPrice(""); setNewCategory(""); setNewDuration("60"); setShowAdd(false);
   };
   const toggleActive = async (id: string) => {
     const s = services.find(s => s.id === id);
