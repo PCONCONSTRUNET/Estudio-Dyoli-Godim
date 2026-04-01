@@ -14,6 +14,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [step, setStep] = useState<"date" | "confirm" | "pix">("date");
   const [copied, setCopied] = useState(false);
+  const [paymentMode, setPaymentMode] = useState<"deposit" | "full">("deposit");
 
   const PIX_KEY = "48999779829";
   const PIX_NAME = "DYOLI GODIM";
