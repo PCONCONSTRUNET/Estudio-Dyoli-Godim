@@ -459,7 +459,6 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
         {/* Clientes */}
         {tab === "clientes" && (() => {
-          const [selectedClient, setSelectedClient] = useState<string | null>(null);
           const selProfile = clientes.find(c => c.id === selectedClient);
           const selAgendamentos = agendamentos.filter(a => a.user_id === selectedClient);
           const totalGasto = selAgendamentos.reduce((s, a) => s + (a.valor_pago || 0), 0);
@@ -501,13 +500,10 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                 </DialogHeader>
                 {selProfile && (
                   <div className="space-y-4">
-                    {/* Info */}
                     <div className="p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06] space-y-1">
                       <p className="font-body text-[12px] text-primary-foreground/50">📱 {formatWhatsapp(selProfile.whatsapp)}</p>
                       <p className="font-body text-[12px] text-primary-foreground/50">📅 Cliente desde {new Date(selProfile.created_at).toLocaleDateString("pt-BR")}</p>
                     </div>
-
-                    {/* Resumo financeiro */}
                     <div className="grid grid-cols-2 gap-2">
                       <div className="p-3 rounded-xl bg-gold/5 border border-gold/10 text-center">
                         <p className="font-body text-[18px] font-bold text-gold">R$ {totalGasto.toFixed(2).replace(".",",")}</p>
@@ -518,8 +514,6 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                         <p className="font-body text-[10px] text-primary-foreground/30">Valor total</p>
                       </div>
                     </div>
-
-                    {/* Stats */}
                     <div className="grid grid-cols-3 gap-2">
                       <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
                         <p className="font-body text-[16px] font-bold text-emerald-400">{confirmedCount}</p>
@@ -534,8 +528,6 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                         <p className="font-body text-[9px] text-primary-foreground/30">Cancelados</p>
                       </div>
                     </div>
-
-                    {/* Histórico */}
                     <div>
                       <p className="font-body text-[12px] font-medium text-primary-foreground/50 mb-2">Histórico de agendamentos</p>
                       <div className="space-y-1.5 max-h-48 overflow-y-auto">
@@ -566,7 +558,6 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
           </div>
           );
         })()}
-        )}
 
         {tab === "financeiro" && <FinanceiroTab agendamentos={agendamentos} getClientName={getClientName} />}
         {tab === "horarios" && <HorariosTab />}
