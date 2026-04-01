@@ -75,14 +75,9 @@ const HeroSection = ({ onSchedule, onLogin }: HeroSectionProps) => {
         </div>
 
         {/* 4. TEXTO (apoio) */}
-        <p className="font-body text-base text-primary-foreground/70 leading-relaxed mt-8 text-center max-w-sm animate-fade-in" style={{ animationDelay: '0.45s', animationFillMode: 'both' }}>
-          Procedimentos estéticos com segurança e precisão
+        <p className="font-body text-sm text-primary-foreground/50 leading-relaxed mt-6 text-center max-w-xs animate-fade-in" style={{ animationDelay: '0.45s', animationFillMode: 'both' }}>
+          Realce sua estética com segurança e precisão profissional
         </p>
-
-        {/* Bottom accent */}
-        <div className="mt-auto pt-6">
-          <div className="w-12 h-0.5 bg-gold/30 mx-auto animate-line-fade" />
-        </div>
       </div>
     </section>
   );
