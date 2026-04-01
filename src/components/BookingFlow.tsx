@@ -8,7 +8,7 @@ interface BookingFlowProps {
   service: string;
   variation?: string;
   onBack: () => void;
-  onConfirm: (bookingData?: { date: string; time: string; price: number; paidAmount: number }) => void;
+  onConfirm: (bookingData?: { date: string; time: string; price: number; paidAmount: number; durationMinutes: number }) => void;
 }
 
 const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps) => {
@@ -61,6 +61,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
 
   const [businessHours, setBusinessHours] = useState<Record<number, { open: string; close: string } | null>>({});
   const [bookedSlots, setBookedSlots] = useState<Record<string, string[]>>({});
+  const [serviceDuration, setServiceDuration] = useState(60);
 
   useEffect(() => {
     supabase.from("horarios_funcionamento").select("*").then(({ data }) => {
@@ -72,7 +73,10 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
         setBusinessHours(map);
       }
     });
-    // Load all booked slots for the next 14 days
+    // Load service duration
+    supabase.from("servicos").select("duracao_minutos, nome").eq("nome", service).maybeSingle().then(({ data }) => {
+      if (data?.duracao_minutos) setServiceDuration(data.duracao_minutos);
+    });
     loadBookedSlots();
   }, []);
 
@@ -82,7 +86,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     futureDate.setDate(futureDate.getDate() + 15);
     const { data } = await supabase
       .from("agendamentos")
-      .select("data_agendamento, horario, status")
+      .select("data_agendamento, horario, status, duracao_minutos")
       .gte("data_agendamento", today.toISOString().split("T")[0])
       .lte("data_agendamento", futureDate.toISOString().split("T")[0])
       .in("status", ["confirmado", "concluido"]);
@@ -90,7 +94,19 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       const map: Record<string, string[]> = {};
       data.forEach(a => {
         if (!map[a.data_agendamento]) map[a.data_agendamento] = [];
-        map[a.data_agendamento].push(a.horario);
+        // Block the booked slot + consecutive slots based on duration
+        const dur = a.duracao_minutos || 60;
+        const [h, m] = a.horario.split(":").map(Number);
+        const startMin = h * 60 + m;
+        for (let t = 0; t < dur; t += 60) {
+          const slotMin = startMin + t;
+          const slotH = Math.floor(slotMin / 60);
+          const slotM = slotMin % 60;
+          const slotStr = `${String(slotH).padStart(2, "0")}:${String(slotM).padStart(2, "0")}`;
+          if (!map[a.data_agendamento].includes(slotStr)) {
+            map[a.data_agendamento].push(slotStr);
+          }
+        }
       });
       setBookedSlots(map);
     }
@@ -121,7 +137,22 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     if (!hours) return [];
     const allTimes = generateTimes(hours.open, hours.close);
     const booked = bookedSlots[dateStr] || [];
-    return allTimes.filter(t => !booked.includes(t));
+    // Filter: slot is available only if all consecutive slots needed by this service's duration are free
+    return allTimes.filter(t => {
+      const [h, m] = t.split(":").map(Number);
+      const startMin = h * 60 + m;
+      const [closeH] = hours.close.split(":").map(Number);
+      const closeMin = closeH * 60;
+      // Check service fits before closing time
+      if (startMin + serviceDuration > closeMin) return false;
+      // Check no overlap with booked slots
+      for (let offset = 0; offset < serviceDuration; offset += 60) {
+        const checkMin = startMin + offset;
+        const checkStr = `${String(Math.floor(checkMin / 60)).padStart(2, "0")}:${String(checkMin % 60).padStart(2, "0")}`;
+        if (booked.includes(checkStr)) return false;
+      }
+      return true;
+    });
   };
 
   const times = selectedDate ? getTimesForDate(selectedDate) : [];
@@ -337,7 +368,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
 
         <div className="pt-6 pb-4">
           <button
-            onClick={() => onConfirm({ date: selectedDate, time: selectedTime, price: numericPrice, paidAmount: paymentAmount })}
+            onClick={() => onConfirm({ date: selectedDate, time: selectedTime, price: numericPrice, paidAmount: paymentAmount, durationMinutes: serviceDuration })}
             className="ios-press w-full py-4 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all duration-200"
           >
             Confirmar Agendamento
