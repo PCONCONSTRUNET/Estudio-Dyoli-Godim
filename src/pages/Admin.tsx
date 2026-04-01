@@ -561,29 +561,83 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
               const faltaCount = selAgendamentos.filter((a) => a.status === "falta").length;
               const cancelCount = selAgendamentos.filter((a) => a.status === "cancelado").length;
 
+              const clientSearch = searchTerm.toLowerCase();
+              const filteredClientes = clientes.filter((c) => {
+                if (!clientSearch) return true;
+                return c.nome.toLowerCase().includes(clientSearch) || c.whatsapp.includes(clientSearch);
+              });
+
+              const totalClientes = clientes.length;
+              const clientesAtivos = clientes.filter((c) => agendamentos.some((a) => a.user_id === c.id && (a.status === "confirmado" || a.status === "concluido"))).length;
+              const receitaTotal = clientes.reduce((sum, c) => sum + agendamentos.filter((a) => a.user_id === c.id).reduce((s, a) => s + (a.valor_pago || 0), 0), 0);
+
               return (
                 <div className="space-y-4 animate-fade-in">
-                  <h2 className="font-heading text-lg font-semibold text-primary-foreground lg:hidden">Clientes</h2>
+                  <div className="flex items-center justify-between gap-3">
+                    <h2 className="font-heading text-lg font-semibold text-primary-foreground lg:hidden">Clientes</h2>
+                    <p className="hidden lg:block font-body text-[12px] text-primary-foreground/30">{totalClientes} clientes</p>
+                  </div>
+
+                  {/* KPIs */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-3 text-center">
+                      <p className="font-heading text-[20px] font-bold text-primary-foreground">{totalClientes}</p>
+                      <p className="font-body text-[9px] text-primary-foreground/30">Total</p>
+                    </div>
+                    <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-center">
+                      <p className="font-heading text-[20px] font-bold text-emerald-400">{clientesAtivos}</p>
+                      <p className="font-body text-[9px] text-emerald-400/60">Ativos</p>
+                    </div>
+                    <div className="rounded-2xl border border-gold/20 bg-gold/5 p-3 text-center">
+                      <p className="font-heading text-[16px] font-bold text-gold">R$ {receitaTotal.toFixed(0)}</p>
+                      <p className="font-body text-[9px] text-gold/60">Receita</p>
+                    </div>
+                  </div>
+
+                  {/* Search */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/20" />
+                    <input
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Buscar por nome ou WhatsApp..."
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
+                    />
+                    {searchTerm && (
+                      <button onClick={() => setSearchTerm("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-foreground/30 hover:text-primary-foreground/60">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Client list */}
                   <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
-                    {clientes.map((c) => {
+                    {filteredClientes.map((c) => {
                       const count = agendamentos.filter((a) => a.user_id === c.id).length;
                       const gasto = agendamentos.filter((a) => a.user_id === c.id).reduce((s, a) => s + (a.valor_pago || 0), 0);
+                      const lastVisit = agendamentos.filter((a) => a.user_id === c.id && (a.status === "confirmado" || a.status === "concluido")).sort((a, b) => b.data_agendamento.localeCompare(a.data_agendamento))[0];
                       return (
                         <div key={c.id} onClick={() => setSelectedClient(c.id)} className="cursor-pointer rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-4 transition-all active:scale-[0.98] hover:border-gold/30">
                           <div className="flex items-center justify-between gap-3">
-                            <div className="flex-1 min-w-0">
-                              <p className="font-body text-[14px] font-medium text-primary-foreground truncate">{c.nome}</p>
-                              <p className="font-body text-[12px] text-primary-foreground/40">{formatWhatsapp(c.whatsapp)}</p>
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <div className="w-10 h-10 shrink-0 rounded-full bg-gold/10 flex items-center justify-center">
+                                <span className="font-heading text-[14px] font-bold text-gold">{c.nome.charAt(0).toUpperCase()}</span>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-body text-[14px] font-medium text-primary-foreground truncate">{c.nome}</p>
+                                <p className="font-body text-[11px] text-primary-foreground/40">{formatWhatsapp(c.whatsapp)}</p>
+                                {lastVisit && <p className="font-body text-[10px] text-primary-foreground/20">Última visita: {formatDate(lastVisit.data_agendamento)}</p>}
+                              </div>
                             </div>
                             <div className="text-right shrink-0">
                               <p className="font-body text-[14px] font-semibold text-gold">R$ {gasto.toFixed(2).replace(".", ",")}</p>
-                              <p className="font-body text-[10px] text-primary-foreground/30">{count} agendamentos</p>
+                              <p className="font-body text-[10px] text-primary-foreground/30">{count} agendamento{count !== 1 ? "s" : ""}</p>
                             </div>
                           </div>
                         </div>
                       );
                     })}
-                    {clientes.length === 0 && <p className="py-6 text-center font-body text-[13px] text-primary-foreground/30 lg:col-span-2">Nenhum cliente cadastrado</p>}
+                    {filteredClientes.length === 0 && <p className="py-6 text-center font-body text-[13px] text-primary-foreground/30 lg:col-span-2">{searchTerm ? "Nenhum cliente encontrado" : "Nenhum cliente cadastrado"}</p>}
                   </div>
 
                   <Dialog open={!!selectedClient} onOpenChange={(open) => !open && setSelectedClient(null)}>
