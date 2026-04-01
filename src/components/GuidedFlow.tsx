@@ -1,14 +1,15 @@
 import { useState } from "react";
-import { ArrowLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronRight, User } from "lucide-react";
 
 interface GuidedFlowProps {
   onSelectService: (serviceId: string) => void;
   onBack: () => void;
+  onProfile?: () => void;
 }
 
 type Step = "initial" | "sobrancelhas" | "perfuracao-confirm";
 
-const GuidedFlow = ({ onSelectService, onBack }: GuidedFlowProps) => {
+const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => {
   const [step, setStep] = useState<Step>("initial");
 
   const OptionCard = ({
@@ -35,7 +36,17 @@ const GuidedFlow = ({ onSelectService, onBack }: GuidedFlowProps) => {
   );
 
   return (
-    <section className="min-h-screen bg-background px-6 py-8">
+    <section className="relative min-h-screen bg-background px-6 py-8">
+      {/* Profile button */}
+      {onProfile && (
+        <button
+          onClick={onProfile}
+          className="ios-press absolute top-6 right-6 w-10 h-10 rounded-full bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-gold/40 transition-all"
+        >
+          <User className="w-5 h-5" />
+        </button>
+      )}
+
       <button
         onClick={step === "initial" ? onBack : () => setStep("initial")}
         className="ios-press flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"

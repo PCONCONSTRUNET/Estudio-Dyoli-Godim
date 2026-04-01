@@ -100,6 +100,7 @@ const Index = () => {
         <GuidedFlow
           onSelectService={handleSelectService}
           onBack={() => setScreen("home")}
+          onProfile={() => setScreen("profile")}
         />
       )}
       {screen === "services" && (
