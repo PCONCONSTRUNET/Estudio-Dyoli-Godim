@@ -154,7 +154,7 @@ const AuthScreen = ({ onSuccess, onBack }: AuthScreenProps) => {
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 placeholder="Seu nome completo"
-                className="w-full px-4 py-3.5 rounded-xl bg-primary-foreground/[0.06] border border-primary-foreground/[0.08] text-primary-foreground font-body text-sm placeholder:text-primary-foreground/25 focus:outline-none focus:border-gold/40 focus:bg-primary-foreground/[0.08] transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-primary-foreground/[0.06] border border-primary-foreground/[0.08] text-primary-foreground font-body text-sm placeholder:text-primary-foreground/25 focus:outline-none focus:border-gold/40 focus:bg-primary-foreground/[0.08] transition-all"
                 maxLength={100}
               />
             </div>
