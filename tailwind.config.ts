@@ -128,6 +128,10 @@ export default {
           "50%": { backgroundPosition: "100% 50%" },
           "100%": { backgroundPosition: "0% 50%" },
         },
+        "scale-in": {
+          "0%": { opacity: "0", transform: "scale(0.95)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -143,6 +147,7 @@ export default {
         "line-fade-alt": "line-fade-alt 7s ease-in-out infinite 2s",
         "flicker": "flicker 2s linear infinite",
         "bg-drift": "bg-drift 25s ease-in-out infinite",
+        "scale-in": "scale-in 0.3s ease-out forwards",
       },
     },
   },

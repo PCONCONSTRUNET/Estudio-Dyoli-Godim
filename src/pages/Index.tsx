@@ -61,7 +61,7 @@ const Index = () => {
 
   return (
     <div className="max-w-md mx-auto min-h-screen">
-      {screen === "home" && (
+      {(screen === "home" || screen === "auth") && (
         <HeroSection
           onSchedule={handleScheduleClick}
           onLogin={handleLoginClick}
