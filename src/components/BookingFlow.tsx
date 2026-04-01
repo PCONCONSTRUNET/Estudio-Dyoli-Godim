@@ -176,8 +176,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
         <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide">
           {dates.map((d) => {
             const info = formatDate(d);
-            const isWeekend = d.getDay() === 0;
-            if (isWeekend) return null;
+            if (!isDayOpen(d)) return null;
             return (
               <button
                 key={info.full}
