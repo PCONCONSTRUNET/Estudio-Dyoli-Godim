@@ -9,6 +9,9 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription
 } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Calendar as DatePickerCalendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import FinanceiroTab from "@/components/FinanceiroTab";
 import ProdutosTab from "@/components/ProdutosTab";
 
@@ -24,6 +27,18 @@ interface LembreteConfig { id: string; tipo: string; ativo: boolean; mensagem: s
 type Tab = "dashboard" | "agendamentos" | "clientes" | "horarios" | "servicos" | "financeiro" | "produtos";
 
 const ADMIN_PASSWORD = "dyoliadmin";
+
+const getDateKey = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const parseDateKey = (dateKey: string) => {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0);
+};
 
 // ─── Lembretes Hub (Sheet lateral) ───
 const LembretesHub = () => {
@@ -248,6 +263,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [statusFilter, setStatusFilter] = useState("todos");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
+  const [selectedAgendaDate, setSelectedAgendaDate] = useState(() => getDateKey(new Date()));
 
   useEffect(() => {
     loadData();
@@ -333,6 +349,18 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     await supabase.from("agendamentos").update({ valor_pago: newPago }).eq("id", id);
     setAgendamentos((prev) => prev.map((item) => (item.id === id ? { ...item, valor_pago: newPago } : item)));
   };
+
+  const todayAgendaKey = getDateKey(new Date());
+  const selectedAgendaDateObj = parseDateKey(selectedAgendaDate);
+  const agendaDatesWithAppointments = Array.from(new Set(filteredAgendamentos.map((item) => item.data_agendamento))).sort((a, b) => a.localeCompare(b));
+  const selectedAgendaItems = filteredAgendamentos
+    .filter((item) => item.data_agendamento === selectedAgendaDate)
+    .sort((a, b) => a.horario.localeCompare(b.horario));
+  const selectedAgendaTotal = selectedAgendaItems.reduce((sum, item) => sum + Number(item.valor), 0);
+  const selectedAgendaPago = selectedAgendaItems.reduce((sum, item) => sum + Number(item.valor_pago || 0), 0);
+  const selectedAgendaLabel = selectedAgendaDate === todayAgendaKey
+    ? "Hoje"
+    : selectedAgendaDateObj.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
 
   return (
     <div className="admin-mobile-shell min-h-dvh w-screen max-w-full overflow-x-hidden bg-charcoal lg:flex">
