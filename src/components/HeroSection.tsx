@@ -21,7 +21,6 @@ const HeroSection = ({ onSchedule, onLogin }: HeroSectionProps) => {
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pb-8 pt-12">
         {/* 1. IMAGEM (impacto) */}
         <div className="relative w-56 h-56 mb-6 animate-fade-in">
-          {/* Glow behind image */}
           <div className="absolute inset-0 rounded-full bg-gold/[0.08] blur-[60px] scale-125 animate-hero-glow" />
           <img
             src={professionalImg}
@@ -40,25 +39,25 @@ const HeroSection = ({ onSchedule, onLogin }: HeroSectionProps) => {
           </p>
         </div>
 
-        {/* 3. BOTÃO (ação) */}
-        <div className="w-full max-w-sm mt-8 space-y-3 px-4 animate-fade-in" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
+        {/* 3. BOTÕES (ação) — estilo iOS */}
+        <div className="w-full max-w-sm mt-10 space-y-3 px-4 animate-fade-in" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
           <button
             onClick={onLogin}
-            className="group flex items-center justify-center gap-2 w-full py-3 rounded-full bg-rose text-primary-foreground font-body font-medium text-[17px] tracking-wider transition-all duration-300 hover:brightness-110 active:scale-[0.98] shadow-lg shadow-rose/20"
+            className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[16px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] backdrop-blur-sm"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width={22} viewBox="0 0 24 24" height={22} fill="none" className="group-hover:animate-flicker">
-              <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2"/>
-              <path d="M5 20c0-3.3137 3.134-6 7-6s7 2.6863 7 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            <svg xmlns="http://www.w3.org/2000/svg" width={20} viewBox="0 0 24 24" height={20} fill="none" strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="8" r="4"/>
+              <path d="M5 20c0-3.3137 3.134-6 7-6s7 2.6863 7 6"/>
             </svg>
             <span>Entrar</span>
           </button>
           <button
             onClick={onSchedule}
-            className="group flex items-center justify-center gap-2 w-full py-3 rounded-full border border-primary-foreground/20 text-primary-foreground/70 font-body text-[17px] tracking-wider transition-all duration-300 hover:border-gold/50 hover:text-gold"
+            className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-2xl bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[16px] tracking-wide hover:bg-primary-foreground/[0.12] hover:border-primary-foreground/[0.18]"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width={22} viewBox="0 0 24 24" height={22} fill="none" className="group-hover:animate-flicker">
-              <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
-              <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            <svg xmlns="http://www.w3.org/2000/svg" width={20} viewBox="0 0 24 24" height={20} fill="none" strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <path d="M16 2v4M8 2v4M3 10h18"/>
               <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
             </svg>
             <span>Cadastrar</span>

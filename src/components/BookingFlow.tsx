@@ -13,15 +13,14 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [step, setStep] = useState<"date" | "confirm">("date");
 
-  // Horário de atendimento por dia da semana (0=Dom, 1=Seg, ..., 6=Sáb)
   const businessHours: Record<number, { open: string; close: string } | null> = {
-    0: null,                          // Domingo — Fechada
-    1: null,                          // Segunda — Fechada
-    2: { open: "09:00", close: "19:00" }, // Terça
-    3: null,                          // Quarta — Fechada
-    4: { open: "09:00", close: "19:00" }, // Quinta
-    5: { open: "09:00", close: "19:00" }, // Sexta
-    6: null,                          // Sábado — Fechada
+    0: null,
+    1: null,
+    2: { open: "09:00", close: "19:00" },
+    3: null,
+    4: { open: "09:00", close: "19:00" },
+    5: { open: "09:00", close: "19:00" },
+    6: null,
   };
 
   const generateTimes = (open: string, close: string) => {
@@ -82,54 +81,56 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       <section className="min-h-screen bg-background px-6 py-8 flex flex-col">
         <button
           onClick={() => setStep("date")}
-          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
+          className="ios-press flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span className="font-body text-sm">Voltar</span>
+          <span className="font-body text-[14px]">Voltar</span>
         </button>
 
         <div className="flex-1 flex flex-col items-center justify-center text-center animate-fade-in">
-          <CheckCircle2 className="w-16 h-16 text-gold mb-6" />
+          <div className="w-16 h-16 rounded-full bg-gold/10 flex items-center justify-center mb-6">
+            <CheckCircle2 className="w-8 h-8 text-gold" />
+          </div>
           <h2 className="font-heading text-3xl font-semibold text-foreground mb-2">
             Quase lá!
           </h2>
-          <p className="font-body text-sm text-muted-foreground mb-8 max-w-xs">
+          <p className="font-body text-[13px] text-muted-foreground mb-8 max-w-xs">
             Confirme os detalhes do seu agendamento
           </p>
 
-          <div className="w-full max-w-sm bg-card rounded-2xl border border-border p-6 space-y-4 text-left">
+          <div className="w-full max-w-sm bg-card/80 backdrop-blur-sm rounded-3xl border border-border/60 p-6 space-y-4 text-left">
             <div>
-              <p className="font-body text-xs text-muted-foreground uppercase tracking-wider">Serviço</p>
-              <p className="font-body text-sm font-medium text-foreground">
+              <p className="font-body text-[11px] text-muted-foreground uppercase tracking-widest font-medium">Serviço</p>
+              <p className="font-body text-[14px] font-medium text-foreground mt-0.5">
                 {service}{variation ? ` — ${variation}` : ""}
               </p>
             </div>
-            <div className="flex gap-6">
+            <div className="flex gap-8">
               <div>
-                <p className="font-body text-xs text-muted-foreground uppercase tracking-wider">Data</p>
-                <p className="font-body text-sm font-medium text-foreground">{selectedDate}</p>
+                <p className="font-body text-[11px] text-muted-foreground uppercase tracking-widest font-medium">Data</p>
+                <p className="font-body text-[14px] font-medium text-foreground mt-0.5">{selectedDate}</p>
               </div>
               <div>
-                <p className="font-body text-xs text-muted-foreground uppercase tracking-wider">Horário</p>
-                <p className="font-body text-sm font-medium text-foreground">{selectedTime}</p>
+                <p className="font-body text-[11px] text-muted-foreground uppercase tracking-widest font-medium">Horário</p>
+                <p className="font-body text-[14px] font-medium text-foreground mt-0.5">{selectedTime}</p>
               </div>
             </div>
-            <div className="pt-2 border-t border-border">
+            <div className="pt-3 border-t border-border/40">
               <div className="flex justify-between items-center">
-                <p className="font-body text-sm text-muted-foreground">Valor total</p>
+                <p className="font-body text-[13px] text-muted-foreground">Valor total</p>
                 <p className="font-heading text-xl font-bold text-foreground">{price}</p>
               </div>
               {requiresDeposit && depositAmount && (
-                <div className="flex justify-between items-center mt-1">
-                  <p className="font-body text-xs text-rose">Sinal obrigatório (30%)</p>
-                  <p className="font-body text-sm font-semibold text-rose">{depositAmount}</p>
+                <div className="flex justify-between items-center mt-1.5">
+                  <p className="font-body text-[12px] text-rose font-medium">Sinal obrigatório (30%)</p>
+                  <p className="font-body text-[14px] font-semibold text-rose">{depositAmount}</p>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="mt-4 p-3 rounded-lg bg-secondary/50 max-w-sm">
-            <p className="font-body text-xs text-muted-foreground">
+          <div className="mt-4 p-3.5 rounded-2xl bg-secondary/30 backdrop-blur-sm border border-border/30 max-w-sm">
+            <p className="font-body text-[12px] text-muted-foreground leading-relaxed">
               ⚠ Cancelamentos devem ser feitos com no mínimo 24h de antecedência. Caso contrário, o sinal não será reembolsado.
             </p>
           </div>
@@ -138,7 +139,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
         <div className="pt-6 pb-4">
           <button
             onClick={onConfirm}
-            className="w-full py-4 rounded-lg bg-rose text-primary-foreground font-body font-medium text-sm tracking-wide uppercase transition-all duration-300 hover:brightness-110 active:scale-[0.98] shadow-lg shadow-rose/20"
+            className="ios-press w-full py-4 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all duration-200"
           >
             Confirmar Agendamento
           </button>
@@ -151,18 +152,18 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     <section className="min-h-screen bg-background px-6 py-8">
       <button
         onClick={onBack}
-        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
+        className="ios-press flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
       >
         <ArrowLeft className="w-4 h-4" />
-        <span className="font-body text-sm">Voltar</span>
+        <span className="font-body text-[14px]">Voltar</span>
       </button>
 
       <div className="space-y-2 mb-6">
-        <p className="font-body text-xs tracking-widest uppercase text-gold">Agendamento</p>
+        <p className="font-body text-[11px] tracking-widest uppercase text-gold font-medium">Agendamento</p>
         <h2 className="font-heading text-3xl font-semibold text-foreground">
           Escolha a data
         </h2>
-        <p className="font-body text-sm text-muted-foreground">
+        <p className="font-body text-[13px] text-muted-foreground">
           {service}{variation ? ` — ${variation}` : ""}
         </p>
       </div>
@@ -171,25 +172,26 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-4">
           <Calendar className="w-4 h-4 text-gold" />
-          <span className="font-body text-xs uppercase tracking-wider text-muted-foreground">Selecione o dia</span>
+          <span className="font-body text-[11px] uppercase tracking-widest text-muted-foreground font-medium">Selecione o dia</span>
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide">
+        <div className="flex gap-2.5 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide">
           {dates.map((d) => {
             const info = formatDate(d);
             if (!isDayOpen(d)) return null;
+            const isSelected = selectedDate === info.full;
             return (
               <button
                 key={info.full}
                 onClick={() => setSelectedDate(info.full)}
-                className={`flex-shrink-0 w-16 py-3 rounded-xl border text-center transition-all duration-200 ${
-                  selectedDate === info.full
-                    ? "border-rose bg-rose/10 text-foreground"
-                    : "border-border bg-card text-muted-foreground hover:border-gold/30"
+                className={`ios-press flex-shrink-0 w-[68px] py-3.5 rounded-2xl border text-center transition-all duration-200 ${
+                  isSelected
+                    ? "border-rose/60 bg-rose/10 text-foreground shadow-[0_2px_12px_-3px_hsl(340_30%_50%/0.25)]"
+                    : "border-border/50 bg-card/60 backdrop-blur-sm text-muted-foreground hover:border-gold/30 hover:bg-card/80"
                 }`}
               >
-                <p className="font-body text-xs">{info.day}</p>
-                <p className="font-heading text-lg font-semibold">{info.date}</p>
-                <p className="font-body text-xs">{info.month}</p>
+                <p className="font-body text-[11px] font-medium">{info.day}</p>
+                <p className="font-heading text-lg font-semibold mt-0.5">{info.date}</p>
+                <p className="font-body text-[10px] mt-0.5">{info.month}</p>
               </button>
             );
           })}
@@ -201,22 +203,25 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
         <div className="animate-fade-in">
           <div className="flex items-center gap-2 mb-4">
             <Clock className="w-4 h-4 text-gold" />
-            <span className="font-body text-xs uppercase tracking-wider text-muted-foreground">Selecione o horário</span>
+            <span className="font-body text-[11px] uppercase tracking-widest text-muted-foreground font-medium">Selecione o horário</span>
           </div>
-          <div className="grid grid-cols-4 gap-2">
-            {times.map((t) => (
-              <button
-                key={t}
-                onClick={() => setSelectedTime(t)}
-                className={`py-3 rounded-xl border text-center font-body text-sm transition-all duration-200 ${
-                  selectedTime === t
-                    ? "border-rose bg-rose/10 text-foreground font-medium"
-                    : "border-border bg-card text-muted-foreground hover:border-gold/30"
-                }`}
-              >
-                {t}
-              </button>
-            ))}
+          <div className="grid grid-cols-4 gap-2.5">
+            {times.map((t) => {
+              const isSelected = selectedTime === t;
+              return (
+                <button
+                  key={t}
+                  onClick={() => setSelectedTime(t)}
+                  className={`ios-press py-3 rounded-2xl border text-center font-body text-[14px] transition-all duration-200 ${
+                    isSelected
+                      ? "border-rose/60 bg-rose/10 text-foreground font-semibold shadow-[0_2px_12px_-3px_hsl(340_30%_50%/0.25)]"
+                      : "border-border/50 bg-card/60 backdrop-blur-sm text-muted-foreground hover:border-gold/30 hover:bg-card/80"
+                  }`}
+                >
+                  {t}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -226,7 +231,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
         <div className="mt-8 animate-fade-in">
           <button
             onClick={() => setStep("confirm")}
-            className="w-full py-4 rounded-lg bg-rose text-primary-foreground font-body font-medium text-sm tracking-wide uppercase transition-all duration-300 hover:brightness-110 active:scale-[0.98] shadow-lg shadow-rose/20"
+            className="ios-press w-full py-4 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all duration-200"
           >
             Continuar
           </button>
