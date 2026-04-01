@@ -26,7 +26,8 @@ const HeroSection = ({ onSchedule, onLogin }: HeroSectionProps) => {
 
       {/* Professional photo */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pb-8 pt-12">
-        <div className="relative w-56 h-56 mb-8 animate-fade-in">
+        {/* 1. IMAGEM (impacto) */}
+        <div className="relative w-56 h-56 mb-6 animate-fade-in">
           <img
             src={professionalImg}
             alt="Dyoli Godim - Profissional de Micropigmentação e Piercing"
@@ -34,8 +35,8 @@ const HeroSection = ({ onSchedule, onLogin }: HeroSectionProps) => {
           />
         </div>
 
-        {/* Text content */}
-        <div className="text-center space-y-4 max-w-sm animate-fade-in" style={{ animationDelay: '0.15s', animationFillMode: 'both' }}>
+        {/* 2. NOME (marca) */}
+        <div className="text-center space-y-3 max-w-sm animate-fade-in" style={{ animationDelay: '0.15s', animationFillMode: 'both' }}>
           <h1 className="font-heading text-3xl font-semibold text-primary-foreground tracking-wide">
             Estudio Dyoli Godim
           </h1>
@@ -46,13 +47,10 @@ const HeroSection = ({ onSchedule, onLogin }: HeroSectionProps) => {
             </p>
             <div className="w-8 h-px bg-gold/40" />
           </div>
-          <p className="font-body text-base text-primary-foreground/70 leading-relaxed pt-2">
-            Procedimentos estéticos com segurança e precisão
-          </p>
         </div>
 
-        {/* CTA Buttons */}
-        <div className="w-full max-w-sm mt-10 space-y-3 px-4 animate-fade-in" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
+        {/* 3. BOTÃO (ação) */}
+        <div className="w-full max-w-sm mt-8 space-y-3 px-4 animate-fade-in" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
           <button
             onClick={onLogin}
             className="group flex items-center justify-center gap-2 w-full py-3 rounded-full bg-rose text-primary-foreground font-body font-medium text-[17px] tracking-wider transition-all duration-300 hover:brightness-110 active:scale-[0.98] shadow-lg shadow-rose/20"
@@ -76,8 +74,13 @@ const HeroSection = ({ onSchedule, onLogin }: HeroSectionProps) => {
           </button>
         </div>
 
+        {/* 4. TEXTO (apoio) */}
+        <p className="font-body text-base text-primary-foreground/70 leading-relaxed mt-8 text-center max-w-sm animate-fade-in" style={{ animationDelay: '0.45s', animationFillMode: 'both' }}>
+          Procedimentos estéticos com segurança e precisão
+        </p>
+
         {/* Bottom accent */}
-        <div className="mt-auto pt-8">
+        <div className="mt-auto pt-6">
           <div className="w-12 h-0.5 bg-gold/30 mx-auto animate-line-fade" />
         </div>
       </div>
