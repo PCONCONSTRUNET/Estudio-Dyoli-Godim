@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   BarChart3, Calendar, Users, Clock, Settings, LogOut, Search,
   X, Edit2, Trash2, Plus, Save, CheckCircle, Bell, MessageSquare,
-  UserX, DollarSign, CreditCard, ShoppingBag
+  UserX, DollarSign, CreditCard, ShoppingBag, Download
 } from "lucide-react";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription
@@ -576,6 +576,27 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                   <div className="flex items-center justify-between gap-3">
                     <h2 className="font-heading text-lg font-semibold text-primary-foreground lg:hidden">Clientes</h2>
                     <p className="hidden lg:block font-body text-[12px] text-primary-foreground/30">{totalClientes} clientes</p>
+                    <button
+                      onClick={() => {
+                        const header = "Nome,WhatsApp,Agendamentos,Total Pago (R$),Cliente Desde\n";
+                        const rows = clientes.map((c) => {
+                          const count = agendamentos.filter((a) => a.user_id === c.id).length;
+                          const gasto = agendamentos.filter((a) => a.user_id === c.id).reduce((s, a) => s + (a.valor_pago || 0), 0);
+                          return `"${c.nome}","${c.whatsapp}",${count},${gasto.toFixed(2)},"${new Date(c.created_at).toLocaleDateString("pt-BR")}"`;
+                        }).join("\n");
+                        const blob = new Blob(["\uFEFF" + header + rows], { type: "text/csv;charset=utf-8;" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `clientes_${new Date().toISOString().split("T")[0]}.csv`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      }}
+                      className="flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      Exportar CSV
+                    </button>
                   </div>
 
                   {/* KPIs */}
