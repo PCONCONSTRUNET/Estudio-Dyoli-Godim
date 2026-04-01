@@ -205,8 +205,8 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
 
   if (step === "confirm") {
     return (
-      <section className="min-h-screen bg-background px-6 py-8 flex flex-col">
-        <button
+      <section className="min-h-screen bg-background px-6 py-8 flex flex-col lg:items-center">
+        <div className="w-full max-w-md lg:max-w-2xl">
           onClick={() => setStep("date")}
           className="ios-press flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
         >
