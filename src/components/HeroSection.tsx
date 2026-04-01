@@ -62,7 +62,7 @@ const HeroSection = ({ onSchedule, onLogin }: HeroSectionProps) => {
               <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
               <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
             </svg>
-            <span>Agendar Procedimento</span>
+            <span>Cadastrar</span>
           </button>
           <button
             onClick={onLogin}
@@ -72,7 +72,7 @@ const HeroSection = ({ onSchedule, onLogin }: HeroSectionProps) => {
               <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2"/>
               <path d="M5 20c0-3.3137 3.134-6 7-6s7 2.6863 7 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
             </svg>
-            <span>Já tenho cadastro</span>
+            <span>Entrar</span>
           </button>
         </div>
 
