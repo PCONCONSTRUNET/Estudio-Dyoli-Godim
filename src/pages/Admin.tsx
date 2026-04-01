@@ -219,6 +219,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("todos");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedClient, setSelectedClient] = useState<string | null>(null);
 
   useEffect(() => { loadData(); }, []);
 
