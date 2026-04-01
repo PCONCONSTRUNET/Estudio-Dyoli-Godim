@@ -1,0 +1,354 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Plus, Edit2, Trash2, Save, X, Upload, ShoppingBag, Image } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+interface Produto {
+  id: string;
+  nome: string;
+  descricao: string;
+  preco: number;
+  imagem_url: string;
+  ativo: boolean;
+  ordem: number;
+}
+
+const ProdutosTab = () => {
+  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  // New product fields
+  const [newNome, setNewNome] = useState("");
+  const [newDescricao, setNewDescricao] = useState("");
+  const [newPreco, setNewPreco] = useState("");
+  const [newImagem, setNewImagem] = useState<File | null>(null);
+  const [newPreview, setNewPreview] = useState("");
+
+  // Edit fields
+  const [editNome, setEditNome] = useState("");
+  const [editDescricao, setEditDescricao] = useState("");
+  const [editPreco, setEditPreco] = useState("");
+  const [editImagem, setEditImagem] = useState<File | null>(null);
+  const [editPreview, setEditPreview] = useState("");
+
+  useEffect(() => {
+    loadProdutos();
+  }, []);
+
+  const loadProdutos = async () => {
+    const { data } = await supabase.from("produtos").select("*").order("ordem");
+    if (data) setProdutos(data as Produto[]);
+    setLoading(false);
+  };
+
+  const uploadImage = async (file: File): Promise<string> => {
+    const ext = file.name.split(".").pop();
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage.from("produtos").upload(path, file);
+    if (error) throw error;
+    const { data } = supabase.storage.from("produtos").getPublicUrl(path);
+    return data.publicUrl;
+  };
+
+  const addProduto = async () => {
+    if (!newNome || !newPreco) return;
+    setUploading(true);
+    try {
+      let imagem_url = "";
+      if (newImagem) imagem_url = await uploadImage(newImagem);
+      const { data } = await supabase
+        .from("produtos")
+        .insert({
+          nome: newNome,
+          descricao: newDescricao,
+          preco: Number(newPreco),
+          imagem_url,
+          ativo: true,
+          ordem: produtos.length + 1,
+        })
+        .select()
+        .single();
+      if (data) setProdutos((prev) => [...prev, data as Produto]);
+      resetNewForm();
+    } catch (e) {
+      console.error(e);
+    }
+    setUploading(false);
+  };
+
+  const resetNewForm = () => {
+    setNewNome("");
+    setNewDescricao("");
+    setNewPreco("");
+    setNewImagem(null);
+    setNewPreview("");
+    setShowAdd(false);
+  };
+
+  const startEdit = (p: Produto) => {
+    setEditing(p.id);
+    setEditNome(p.nome);
+    setEditDescricao(p.descricao);
+    setEditPreco(p.preco.toString());
+    setEditPreview(p.imagem_url);
+    setEditImagem(null);
+  };
+
+  const saveEdit = async (id: string) => {
+    setUploading(true);
+    try {
+      let imagem_url = editPreview;
+      if (editImagem) imagem_url = await uploadImage(editImagem);
+      await supabase
+        .from("produtos")
+        .update({
+          nome: editNome,
+          descricao: editDescricao,
+          preco: Number(editPreco),
+          imagem_url,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id);
+      setProdutos((prev) =>
+        prev.map((p) =>
+          p.id === id ? { ...p, nome: editNome, descricao: editDescricao, preco: Number(editPreco), imagem_url } : p
+        )
+      );
+      setEditing(null);
+    } catch (e) {
+      console.error(e);
+    }
+    setUploading(false);
+  };
+
+  const toggleActive = async (id: string) => {
+    const p = produtos.find((p) => p.id === id);
+    if (!p) return;
+    await supabase.from("produtos").update({ ativo: !p.ativo, updated_at: new Date().toISOString() }).eq("id", id);
+    setProdutos((prev) => prev.map((p) => (p.id === id ? { ...p, ativo: !p.ativo } : p)));
+  };
+
+  const removeProduto = async (id: string) => {
+    await supabase.from("produtos").delete().eq("id", id);
+    setProdutos((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, isEdit: boolean) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const preview = URL.createObjectURL(file);
+    if (isEdit) {
+      setEditImagem(file);
+      setEditPreview(preview);
+    } else {
+      setNewImagem(file);
+      setNewPreview(preview);
+    }
+  };
+
+  if (loading) return <p className="font-body text-[13px] text-primary-foreground/30 text-center py-8">Carregando...</p>;
+
+  return (
+    <div className="space-y-4 animate-fade-in overflow-x-hidden">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="font-heading text-lg font-semibold text-primary-foreground">Produtos</h2>
+        <button
+          onClick={() => setShowAdd(!showAdd)}
+          className="flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          Adicionar
+        </button>
+      </div>
+
+      {/* Add product dialog */}
+      <Dialog open={showAdd} onOpenChange={setShowAdd}>
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-md max-h-[85dvh] overflow-y-auto overflow-x-hidden bg-charcoal border border-gold/20 rounded-2xl p-4 sm:p-5">
+          <DialogHeader>
+            <DialogTitle className="font-body text-[14px] font-medium text-primary-foreground">Novo Produto</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 w-full min-w-0">
+            {/* Image upload */}
+            <label className="block w-full cursor-pointer">
+              <div className="aspect-video rounded-xl border-2 border-dashed border-primary-foreground/10 bg-primary-foreground/[0.03] flex items-center justify-center overflow-hidden hover:border-gold/30 transition-all">
+                {newPreview ? (
+                  <img src={newPreview} alt="Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="flex flex-col items-center gap-1.5 text-primary-foreground/20">
+                    <Upload className="w-6 h-6" />
+                    <span className="font-body text-[11px]">Toque para adicionar foto</span>
+                  </div>
+                )}
+              </div>
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileChange(e, false)} />
+            </label>
+
+            <input
+              value={newNome}
+              onChange={(e) => setNewNome(e.target.value)}
+              placeholder="Nome do produto"
+              className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
+            />
+            <textarea
+              value={newDescricao}
+              onChange={(e) => setNewDescricao(e.target.value)}
+              placeholder="Descrição (opcional)"
+              rows={2}
+              className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20 resize-none"
+            />
+            <input
+              value={newPreco}
+              onChange={(e) => setNewPreco(e.target.value)}
+              placeholder="Preço (ex: 49.90)"
+              type="number"
+              step="0.01"
+              className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
+            />
+            <div className="grid grid-cols-2 gap-2 min-w-0">
+              <button
+                onClick={addProduto}
+                disabled={uploading}
+                className="w-full min-w-0 py-2.5 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all disabled:opacity-50"
+              >
+                {uploading ? "Salvando..." : "Salvar"}
+              </button>
+              <button
+                onClick={resetNewForm}
+                className="w-full min-w-0 py-2.5 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/40 font-body text-[12px] hover:text-primary-foreground/60 transition-all"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Products list */}
+      {produtos.length === 0 ? (
+        <div className="text-center py-12">
+          <ShoppingBag className="w-8 h-8 text-primary-foreground/10 mx-auto mb-2" />
+          <p className="font-body text-[13px] text-primary-foreground/30">Nenhum produto cadastrado</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {produtos.map((p) => (
+            <div
+              key={p.id}
+              className={`rounded-2xl border transition-all overflow-hidden ${
+                p.ativo
+                  ? "bg-primary-foreground/[0.03] border-primary-foreground/[0.06]"
+                  : "bg-primary-foreground/[0.01] border-primary-foreground/[0.03] opacity-50"
+              }`}
+            >
+              {editing === p.id ? (
+                <div className="p-4 space-y-3 min-w-0">
+                  <label className="block w-full cursor-pointer">
+                    <div className="aspect-video rounded-xl border-2 border-dashed border-primary-foreground/10 bg-primary-foreground/[0.03] flex items-center justify-center overflow-hidden">
+                      {editPreview ? (
+                        <img src={editPreview} alt="Preview" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="flex flex-col items-center gap-1 text-primary-foreground/20">
+                          <Image className="w-5 h-5" />
+                          <span className="font-body text-[10px]">Alterar foto</span>
+                        </div>
+                      )}
+                    </div>
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileChange(e, true)} />
+                  </label>
+                  <input
+                    value={editNome}
+                    onChange={(e) => setEditNome(e.target.value)}
+                    className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  />
+                  <textarea
+                    value={editDescricao}
+                    onChange={(e) => setEditDescricao(e.target.value)}
+                    placeholder="Descrição"
+                    rows={2}
+                    className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20 resize-none"
+                  />
+                  <input
+                    value={editPreco}
+                    onChange={(e) => setEditPreco(e.target.value)}
+                    type="number"
+                    step="0.01"
+                    className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  />
+                  <div className="grid grid-cols-[1fr_auto] gap-2">
+                    <button
+                      onClick={() => saveEdit(p.id)}
+                      disabled={uploading}
+                      className="min-w-0 px-3 py-2 rounded-xl bg-gold/10 text-gold hover:bg-gold/20 transition-all font-body text-[12px] disabled:opacity-50"
+                    >
+                      <Save className="w-4 h-4 inline mr-1" />
+                      {uploading ? "Salvando..." : "Salvar"}
+                    </button>
+                    <button
+                      onClick={() => setEditing(null)}
+                      className="px-3 py-2 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/30 hover:text-primary-foreground/50 transition-all"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-3 p-3">
+                  {/* Thumbnail */}
+                  <div className="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-primary-foreground/[0.03]">
+                    {p.imagem_url ? (
+                      <img src={p.imagem_url} alt={p.nome} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <ShoppingBag className="w-5 h-5 text-primary-foreground/10" />
+                      </div>
+                    )}
+                  </div>
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-body text-[13px] font-medium text-primary-foreground truncate">{p.nome}</p>
+                    {p.descricao && (
+                      <p className="font-body text-[10px] text-primary-foreground/30 truncate">{p.descricao}</p>
+                    )}
+                    <p className="font-body text-[14px] font-semibold text-gold mt-0.5">
+                      R$ {p.preco.toFixed(2).replace(".", ",")}
+                    </p>
+                  </div>
+                  {/* Actions */}
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <button
+                      onClick={() => toggleActive(p.id)}
+                      className={`w-10 h-6 rounded-full relative transition-all duration-200 ${p.ativo ? "bg-gold" : "bg-primary-foreground/10"}`}
+                    >
+                      <div
+                        className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200 ${p.ativo ? "left-4" : "left-0.5"}`}
+                      />
+                    </button>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => startEdit(p)}
+                        className="p-1.5 rounded-lg hover:bg-primary-foreground/[0.06] text-primary-foreground/30 hover:text-primary-foreground/60 transition-all"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => removeProduto(p.id)}
+                        className="p-1.5 rounded-lg hover:bg-rose/10 text-primary-foreground/20 hover:text-rose transition-all"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ProdutosTab;
