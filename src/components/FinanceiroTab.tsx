@@ -252,7 +252,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
         <p className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest mb-3">Receita por dia</p>
         {dailyData.length > 0 ? (
           <>
-            <div className="h-[200px]">
+            <div className="h-[200px] [&_.recharts-wrapper]:!bg-transparent [&_.recharts-surface]:!bg-transparent [&_svg]:!bg-transparent">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={dailyData}>
                   <defs>
@@ -290,7 +290,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
       <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
         <p className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest mb-3">Por serviço</p>
         {serviceData.length > 0 ? (
-          <div className="h-[200px]">
+          <div className="h-[200px] [&_.recharts-wrapper]:!bg-transparent [&_.recharts-surface]:!bg-transparent [&_svg]:!bg-transparent">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={serviceData} layout="vertical" margin={{ left: 0 }}>
                 <defs>
@@ -325,7 +325,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
         <p className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest mb-3">Status de pagamento</p>
         {paymentStatus.length > 0 ? (
           <>
-            <div className="h-[180px]">
+            <div className="h-[180px] [&_.recharts-wrapper]:!bg-transparent [&_.recharts-surface]:!bg-transparent [&_svg]:!bg-transparent">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie data={paymentStatus} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={4} dataKey="value" stroke="none">
