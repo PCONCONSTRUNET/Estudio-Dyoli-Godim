@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import FinanceiroTab from "@/components/FinanceiroTab";
+import ProdutosTab from "@/components/ProdutosTab";
 
 // ─── Types ───
 interface Agendamento {
