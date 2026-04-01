@@ -187,7 +187,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
       <div className="bg-charcoal/95 border border-primary-foreground/[0.1] rounded-xl px-3 py-2 shadow-xl">
         <p className="font-body text-[10px] text-primary-foreground/50 mb-1">{label}</p>
         {payload.map((p: any, i: number) => (
-          <p key={i} className="font-body text-[11px] font-semibold" style={{ color: p.color }}>
+          <p key={i} className="font-body text-[11px] font-semibold text-emerald-400">
             {p.name}: {formatCurrency(p.value)}
           </p>
         ))}
