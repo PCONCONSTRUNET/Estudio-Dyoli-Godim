@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { ArrowLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronRight, User } from "lucide-react";
 
 interface GuidedFlowProps {
   onSelectService: (serviceId: string) => void;
   onBack: () => void;
+  onProfile?: () => void;
 }
 
 type Step = "initial" | "sobrancelhas" | "perfuracao-confirm";
