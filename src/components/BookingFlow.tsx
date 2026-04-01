@@ -209,7 +209,9 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
 
   // PIX payment screen
   if (step === "pix") {
-    const paymentLabel = requiresDeposit ? `Sinal de ${depositAmount}` : `Total: ${price}`;
+    const paymentLabel = requiresDeposit
+      ? (paymentMode === "deposit" ? `Sinal: ${depositAmount}` : `Total: ${price}`)
+      : `Total: ${price}`;
     return (
       <section className="min-h-screen bg-background px-6 py-8 flex flex-col">
         <button
@@ -227,7 +229,38 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
           <h2 className="font-heading text-2xl font-semibold text-foreground mb-1">
             Pagamento PIX
           </h2>
-          <p className="font-body text-[13px] text-muted-foreground mb-6">
+
+          {/* Payment mode selector */}
+          {requiresDeposit && (
+            <div className="w-full max-w-sm mt-4 mb-2">
+              <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-secondary/40 border border-border/40">
+                <button
+                  onClick={() => setPaymentMode("deposit")}
+                  className={`ios-press py-3 rounded-xl font-body text-[13px] font-medium transition-all duration-200 ${
+                    paymentMode === "deposit"
+                      ? "bg-card shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)] text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Pagar Sinal
+                  <span className="block text-[11px] font-normal mt-0.5 text-gold">{depositAmount}</span>
+                </button>
+                <button
+                  onClick={() => setPaymentMode("full")}
+                  className={`ios-press py-3 rounded-xl font-body text-[13px] font-medium transition-all duration-200 ${
+                    paymentMode === "full"
+                      ? "bg-card shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)] text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Valor Completo
+                  <span className="block text-[11px] font-normal mt-0.5 text-gold">{price}</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          <p className="font-body text-[13px] text-muted-foreground mb-5">
             {paymentLabel}
           </p>
 
