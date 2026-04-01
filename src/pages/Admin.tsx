@@ -159,10 +159,21 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
           <h1 className="font-heading text-[16px] font-semibold text-primary-foreground">Admin</h1>
           <p className="font-body text-[10px] text-primary-foreground/30">Estúdio Dyoli Godim</p>
         </div>
-        <button onClick={onLogout} className="p-2 rounded-xl hover:bg-rose/10 text-rose/60 hover:text-rose transition-all">
-          <LogOut className="w-4 h-4" />
-        </button>
-      </div>
+        <div className="flex items-center gap-2">
+          <Sheet>
+            <SheetTrigger asChild>
+              <button className="p-2 rounded-xl hover:bg-gold/10 text-primary-foreground/40 hover:text-gold transition-all">
+                <Bell className="w-4 h-4" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="right" className="bg-charcoal border-primary-foreground/[0.06] w-[340px] p-0 overflow-y-auto">
+              <LembretesHub />
+            </SheetContent>
+          </Sheet>
+          <button onClick={onLogout} className="p-2 rounded-xl hover:bg-rose/10 text-rose/60 hover:text-rose transition-all">
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
 
       {/* Content */}
       <div className="px-4 py-4">
