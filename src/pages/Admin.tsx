@@ -457,31 +457,114 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         )}
 
         {/* Clientes */}
-        {tab === "clientes" && (
+        {tab === "clientes" && (() => {
+          const [selectedClient, setSelectedClient] = useState<string | null>(null);
+          const selProfile = clientes.find(c => c.id === selectedClient);
+          const selAgendamentos = agendamentos.filter(a => a.user_id === selectedClient);
+          const totalGasto = selAgendamentos.reduce((s, a) => s + (a.valor_pago || 0), 0);
+          const totalValor = selAgendamentos.reduce((s, a) => s + a.valor, 0);
+          const confirmedCount = selAgendamentos.filter(a => a.status === "confirmado" || a.status === "concluido").length;
+          const faltaCount = selAgendamentos.filter(a => a.status === "falta").length;
+          const cancelCount = selAgendamentos.filter(a => a.status === "cancelado").length;
+
+          return (
           <div className="space-y-4 animate-fade-in">
             <h2 className="font-heading text-lg font-semibold text-primary-foreground">Clientes</h2>
             <div className="space-y-2">
               {clientes.map(c => {
                 const count = agendamentos.filter(a => a.user_id === c.id).length;
+                const gasto = agendamentos.filter(a => a.user_id === c.id).reduce((s, a) => s + (a.valor_pago || 0), 0);
                 return (
-                  <div key={c.id} className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+                  <div key={c.id} onClick={() => setSelectedClient(c.id)} className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06] cursor-pointer hover:border-gold/30 transition-all active:scale-[0.98]">
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
                         <p className="font-body text-[14px] font-medium text-primary-foreground truncate">{c.nome}</p>
                         <p className="font-body text-[12px] text-primary-foreground/40">{formatWhatsapp(c.whatsapp)}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-body text-[14px] font-semibold text-gold">{count}</p>
-                        <p className="font-body text-[10px] text-primary-foreground/30">agendamentos</p>
+                        <p className="font-body text-[14px] font-semibold text-gold">R$ {gasto.toFixed(2).replace(".",",")}</p>
+                        <p className="font-body text-[10px] text-primary-foreground/30">{count} agendamentos</p>
                       </div>
                     </div>
-                    <p className="font-body text-[10px] text-primary-foreground/25 mt-1">Cadastro: {new Date(c.created_at).toLocaleDateString("pt-BR")}</p>
                   </div>
                 );
               })}
               {clientes.length === 0 && <p className="font-body text-[13px] text-primary-foreground/30 text-center py-6">Nenhum cliente cadastrado</p>}
             </div>
+
+            {/* Modal detalhes do cliente */}
+            <Dialog open={!!selectedClient} onOpenChange={(o) => !o && setSelectedClient(null)}>
+              <DialogContent className="w-[calc(100vw-2rem)] max-w-md max-h-[90vh] overflow-y-auto bg-background border border-gold/20 rounded-2xl p-5">
+                <DialogHeader>
+                  <DialogTitle className="font-heading text-lg text-primary-foreground">{selProfile?.nome || "Cliente"}</DialogTitle>
+                </DialogHeader>
+                {selProfile && (
+                  <div className="space-y-4">
+                    {/* Info */}
+                    <div className="p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06] space-y-1">
+                      <p className="font-body text-[12px] text-primary-foreground/50">📱 {formatWhatsapp(selProfile.whatsapp)}</p>
+                      <p className="font-body text-[12px] text-primary-foreground/50">📅 Cliente desde {new Date(selProfile.created_at).toLocaleDateString("pt-BR")}</p>
+                    </div>
+
+                    {/* Resumo financeiro */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="p-3 rounded-xl bg-gold/5 border border-gold/10 text-center">
+                        <p className="font-body text-[18px] font-bold text-gold">R$ {totalGasto.toFixed(2).replace(".",",")}</p>
+                        <p className="font-body text-[10px] text-gold/60">Total pago</p>
+                      </div>
+                      <div className="p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06] text-center">
+                        <p className="font-body text-[18px] font-bold text-primary-foreground">R$ {totalValor.toFixed(2).replace(".",",")}</p>
+                        <p className="font-body text-[10px] text-primary-foreground/30">Valor total</p>
+                      </div>
+                    </div>
+
+                    {/* Stats */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+                        <p className="font-body text-[16px] font-bold text-emerald-400">{confirmedCount}</p>
+                        <p className="font-body text-[9px] text-emerald-400/60">Realizados</p>
+                      </div>
+                      <div className="p-2 rounded-xl bg-red-500/10 border border-red-500/20 text-center">
+                        <p className="font-body text-[16px] font-bold text-red-400">{faltaCount}</p>
+                        <p className="font-body text-[9px] text-red-400/60">Faltas</p>
+                      </div>
+                      <div className="p-2 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06] text-center">
+                        <p className="font-body text-[16px] font-bold text-primary-foreground/50">{cancelCount}</p>
+                        <p className="font-body text-[9px] text-primary-foreground/30">Cancelados</p>
+                      </div>
+                    </div>
+
+                    {/* Histórico */}
+                    <div>
+                      <p className="font-body text-[12px] font-medium text-primary-foreground/50 mb-2">Histórico de agendamentos</p>
+                      <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                        {selAgendamentos.length === 0 && <p className="font-body text-[12px] text-primary-foreground/30 text-center py-4">Nenhum agendamento</p>}
+                        {selAgendamentos.sort((a, b) => b.data_agendamento.localeCompare(a.data_agendamento)).map(a => (
+                          <div key={a.id} className="flex items-center justify-between p-2.5 rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.04]">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-body text-[12px] text-primary-foreground truncate">{a.servico}{a.variacao ? ` - ${a.variacao}` : ""}</p>
+                              <p className="font-body text-[10px] text-primary-foreground/30">{formatDate(a.data_agendamento)} às {a.horario}</p>
+                            </div>
+                            <div className="text-right ml-2">
+                              <p className="font-body text-[12px] font-medium text-gold">R$ {(a.valor_pago || 0).toFixed(2).replace(".",",")}</p>
+                              <span className={`font-body text-[9px] px-1.5 py-0.5 rounded-full ${
+                                a.status === "confirmado" || a.status === "concluido" ? "bg-emerald-500/10 text-emerald-400" :
+                                a.status === "falta" ? "bg-red-500/10 text-red-400" :
+                                a.status === "cancelado" ? "bg-primary-foreground/[0.05] text-primary-foreground/30" :
+                                "bg-gold/10 text-gold"
+                              }`}>{a.status}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
           </div>
+          );
+        })()}
         )}
 
         {tab === "financeiro" && <FinanceiroTab agendamentos={agendamentos} getClientName={getClientName} />}
