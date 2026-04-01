@@ -29,7 +29,7 @@ interface Profile {
 type Tab = "dashboard" | "agendamentos" | "clientes" | "horarios" | "servicos";
 
 // ─── Admin Password Gate ───
-const ADMIN_PASSWORD = "admin2024";
+const ADMIN_PASSWORD = "dyoliadmin";
 
 const Admin = () => {
   const [authenticated, setAuthenticated] = useState(false);
