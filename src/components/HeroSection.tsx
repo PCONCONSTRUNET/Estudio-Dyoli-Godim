@@ -38,7 +38,7 @@ const HeroSection = ({ onSchedule, onLogin }: HeroSectionProps) => {
         {/* 2. NOME (marca) */}
         <div className="text-center space-y-3 max-w-sm animate-fade-in" style={{ animationDelay: '0.15s', animationFillMode: 'both' }}>
           <h1 className="font-heading text-3xl font-semibold text-primary-foreground tracking-wide">
-            Estudio Dyoli Godim
+            Estúdio Dyoli Godim
           </h1>
           <p className="font-body text-xs text-gold/70 tracking-[0.25em] uppercase">
             Agende seu procedimento com segurança e resultado profissional
