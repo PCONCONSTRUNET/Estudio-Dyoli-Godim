@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from "react";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
-import { Calendar, Download, FileText, Table2, TrendingUp, Wallet, X } from "lucide-react";
+import { Calendar, Download, FileText, Table2, TrendingUp, Wallet, X, Percent, Settings } from "lucide-react";
 
 interface Agendamento {
   id: string; servico: string; variacao: string | null; data_agendamento: string;
