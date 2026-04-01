@@ -374,16 +374,19 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 // ─── Horários Tab ───
 const HorariosTab = () => {
   const dayNames = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
-  const [hours, setHours] = useState([
-    { day: 0, open: false, start: "09:00", end: "19:00" },
-    { day: 1, open: false, start: "09:00", end: "19:00" },
-    { day: 2, open: true, start: "09:00", end: "19:00" },
-    { day: 3, open: false, start: "09:00", end: "19:00" },
-    { day: 4, open: true, start: "09:00", end: "19:00" },
-    { day: 5, open: true, start: "09:00", end: "19:00" },
-    { day: 6, open: false, start: "09:00", end: "19:00" },
-  ]);
+  const [hours, setHours] = useState<{ id: string; day: number; open: boolean; start: string; end: string }[]>([]);
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.from("horarios_funcionamento").select("*").order("dia_semana").then(({ data }) => {
+      if (data) {
+        setHours(data.map(d => ({ id: d.id, day: d.dia_semana, open: d.aberto, start: d.hora_inicio, end: d.hora_fim })));
+      }
+      setLoading(false);
+    });
+  }, []);
 
   const toggle = (day: number) => {
     setHours(prev => prev.map(h => h.day === day ? { ...h, open: !h.open } : h));
@@ -393,19 +396,30 @@ const HorariosTab = () => {
     setHours(prev => prev.map(h => h.day === day ? { ...h, [field]: val } : h));
   };
 
-  const handleSave = () => {
-    // In production, save to Supabase config table
+  const handleSave = async () => {
+    setSaving(true);
+    for (const h of hours) {
+      await supabase.from("horarios_funcionamento").update({
+        aberto: h.open,
+        hora_inicio: h.start,
+        hora_fim: h.end,
+        updated_at: new Date().toISOString(),
+      }).eq("id", h.id);
+    }
+    setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
+
+  if (loading) return <p className="font-body text-[13px] text-primary-foreground/30 text-center py-8">Carregando...</p>;
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <h2 className="font-heading text-2xl font-semibold text-primary-foreground">Horários de Funcionamento</h2>
-        <button onClick={handleSave} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gold/10 text-gold font-body text-[13px] font-medium hover:bg-gold/20 transition-all">
+        <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gold/10 text-gold font-body text-[13px] font-medium hover:bg-gold/20 transition-all disabled:opacity-40">
           <Save className="w-4 h-4" />
-          {saved ? "Salvo!" : "Salvar"}
+          {saving ? "Salvando..." : saved ? "Salvo!" : "Salvar"}
         </button>
       </div>
       <div className="space-y-2">
@@ -420,19 +434,9 @@ const HorariosTab = () => {
             <span className="font-body text-[14px] text-primary-foreground w-36">{dayNames[h.day]}</span>
             {h.open ? (
               <div className="flex items-center gap-2">
-                <input
-                  type="time"
-                  value={h.start}
-                  onChange={e => updateTime(h.day, "start", e.target.value)}
-                  className="px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
-                />
+                <input type="time" value={h.start} onChange={e => updateTime(h.day, "start", e.target.value)} className="px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
                 <span className="text-primary-foreground/30">—</span>
-                <input
-                  type="time"
-                  value={h.end}
-                  onChange={e => updateTime(h.day, "end", e.target.value)}
-                  className="px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
-                />
+                <input type="time" value={h.end} onChange={e => updateTime(h.day, "end", e.target.value)} className="px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
               </div>
             ) : (
               <span className="font-body text-[13px] text-primary-foreground/30">Fechado</span>
