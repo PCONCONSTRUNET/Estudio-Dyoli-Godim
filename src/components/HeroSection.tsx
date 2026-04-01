@@ -76,6 +76,12 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, onProdutos, isAuthenticat
                   <User className="w-5 h-5" />
                   <span>Meu Perfil</span>
                 </button>
+                <button
+                  onClick={onProdutos}
+                  className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-2xl bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[16px] tracking-wide hover:bg-primary-foreground/[0.12] hover:border-primary-foreground/[0.18]"
+                >
+                  <ShoppingBag className="w-5 h-5" />
+                  <span>Produtos</span>
               </>
             ) : (
               <>
