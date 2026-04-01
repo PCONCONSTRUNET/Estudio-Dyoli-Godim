@@ -646,8 +646,11 @@ const ServicosTab = () => {
               <div className="space-y-2">
                 <input value={editName} onChange={e => setEditName(e.target.value)} className="w-full px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
                 <div className="flex gap-2">
-                  <input value={editPrice} onChange={e => setEditPrice(e.target.value)} type="number" className="flex-1 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
-                  <button onClick={() => saveEdit(s.id)} className="px-3 py-2 rounded-xl bg-gold/10 text-gold hover:bg-gold/20 transition-all"><Save className="w-4 h-4" /></button>
+                  <input value={editPrice} onChange={e => setEditPrice(e.target.value)} type="number" placeholder="Preço" className="flex-1 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                  <input value={editDuration} onChange={e => setEditDuration(e.target.value)} type="number" placeholder="Min" className="w-20 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => saveEdit(s.id)} className="flex-1 px-3 py-2 rounded-xl bg-gold/10 text-gold hover:bg-gold/20 transition-all font-body text-[12px]"><Save className="w-4 h-4 inline mr-1" />Salvar</button>
                   <button onClick={() => setEditing(null)} className="px-3 py-2 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/30 hover:text-primary-foreground/50 transition-all"><X className="w-4 h-4" /></button>
                 </div>
               </div>
