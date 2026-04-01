@@ -252,7 +252,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
         <p className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest mb-3">Receita por dia</p>
         {dailyData.length > 0 ? (
           <>
-            <div className="h-[200px]">
+            <div className="h-[200px] [&_.recharts-wrapper]:!bg-transparent [&_.recharts-surface]:!bg-transparent [&_svg]:!bg-transparent">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={dailyData}>
                   <defs>
