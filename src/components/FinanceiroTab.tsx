@@ -254,6 +254,68 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
         </div>
       </div>
 
+      {/* Comissão */}
+      <div className="p-4 rounded-2xl border border-purple-500/20 bg-purple-500/5">
+        <div className="flex items-center justify-between mb-2">
+          <span className="font-body text-[11px] text-purple-400 uppercase tracking-widest flex items-center gap-1.5">
+            <Percent className="w-3.5 h-3.5" /> Minha Comissão ({comissaoPct}%)
+          </span>
+          <button
+            onClick={() => { setShowComissaoConfig(!showComissaoConfig); setTempComissao(comissaoPct.toString()); }}
+            className="p-1.5 rounded-lg hover:bg-purple-500/10 text-purple-400/50 hover:text-purple-400 transition-all"
+          >
+            <Settings className="w-3.5 h-3.5" />
+          </button>
+        </div>
+        <p className="font-heading text-2xl font-bold text-purple-400">{formatCurrency(comissaoValor)}</p>
+        <p className="font-body text-[10px] text-purple-400/50 mt-1">
+          {comissaoPct}% sobre {formatCurrency(totalRecebido)} recebido no período
+        </p>
+
+        {showComissaoConfig && (
+          <div className="mt-3 pt-3 border-t border-purple-500/10 space-y-2 animate-fade-in">
+            <label className="font-body text-[11px] text-purple-400/60">Percentual de comissão (%)</label>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                value={tempComissao}
+                onChange={(e) => setTempComissao(e.target.value)}
+                className="flex-1 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-purple-500/20 text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+              />
+              <button
+                onClick={() => {
+                  const val = Math.min(100, Math.max(0, Number(tempComissao) || 0));
+                  setComissaoPct(val);
+                  localStorage.setItem("dyoli_comissao_pct", val.toString());
+                  setShowComissaoConfig(false);
+                }}
+                className="px-4 py-2 rounded-xl bg-purple-500/10 text-purple-400 font-body text-[12px] font-medium hover:bg-purple-500/20 transition-all"
+              >
+                Salvar
+              </button>
+            </div>
+            <div className="flex gap-1.5 flex-wrap">
+              {[30, 35, 40, 45, 50].map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setTempComissao(p.toString())}
+                  className={`px-2.5 py-1 rounded-full font-body text-[10px] border transition-all ${
+                    Number(tempComissao) === p
+                      ? "bg-purple-500/20 text-purple-400 border-purple-500/30"
+                      : "bg-primary-foreground/[0.03] text-primary-foreground/30 border-primary-foreground/[0.06] hover:border-purple-500/20"
+                  }`}
+                >
+                  {p}%
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Area Chart - Receita por dia */}
       <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
         <p className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest mb-3">Receita por dia</p>
