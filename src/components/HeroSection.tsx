@@ -1,5 +1,4 @@
 import professionalImg from "@/assets/professional.png";
-import logoImg from "@/assets/logo.png";
 
 interface HeroSectionProps {
   onSchedule: () => void;
@@ -12,10 +11,6 @@ const HeroSection = ({ onSchedule, onLogin }: HeroSectionProps) => {
       {/* Background gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-charcoal via-charcoal/90 to-charcoal" />
 
-      {/* Logo */}
-      <div className="relative z-10 pt-8 px-6 flex justify-center">
-        <img src={logoImg} alt="Studio Dyoli Godim" className="w-24 h-24 object-contain" />
-      </div>
 
       {/* Professional photo */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pb-8">
