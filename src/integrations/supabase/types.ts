@@ -59,6 +59,36 @@ export type Database = {
         }
         Relationships: []
       }
+      configuracoes_lembretes: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          horas_antes: number
+          id: string
+          mensagem: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          horas_antes?: number
+          id?: string
+          mensagem?: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          horas_antes?: number
+          id?: string
+          mensagem?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       horarios_funcionamento: {
         Row: {
           aberto: boolean
