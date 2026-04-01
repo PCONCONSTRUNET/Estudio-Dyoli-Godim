@@ -307,7 +307,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
 
         <div className="pt-6 pb-4">
           <button
-            onClick={onConfirm}
+            onClick={() => onConfirm({ date: selectedDate, time: selectedTime, price: numericPrice, paidAmount: paymentAmount })}
             className="ios-press w-full py-4 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all duration-200"
           >
             Confirmar Agendamento
