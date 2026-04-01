@@ -1,16 +1,63 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import HeroSection from "@/components/HeroSection";
+import GuidedFlow from "@/components/GuidedFlow";
+import ServiceList from "@/components/ServiceList";
+import BookingFlow from "@/components/BookingFlow";
+import SuccessScreen from "@/components/SuccessScreen";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+type Screen = "home" | "guided" | "services" | "booking" | "success";
+
+const Index = () => {
+  const [screen, setScreen] = useState<Screen>("home");
+  const [selectedService, setSelectedService] = useState("");
+  const [selectedVariation, setSelectedVariation] = useState<string | undefined>();
+  const [serviceFilter, setServiceFilter] = useState("");
+
+  const handleSelectService = (serviceId: string) => {
+    setServiceFilter(serviceId);
+    setScreen("services");
+  };
+
+  const handleSchedule = (service: string, variation?: string) => {
+    setSelectedService(service);
+    setSelectedVariation(variation);
+    setScreen("booking");
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+    <div className="max-w-md mx-auto min-h-screen">
+      {screen === "home" && (
+        <HeroSection
+          onSchedule={() => setScreen("guided")}
+          onLogin={() => {}}
+        />
+      )}
+      {screen === "guided" && (
+        <GuidedFlow
+          onSelectService={handleSelectService}
+          onBack={() => setScreen("home")}
+        />
+      )}
+      {screen === "services" && (
+        <ServiceList
+          serviceFilter={serviceFilter}
+          onSchedule={handleSchedule}
+          onBack={() => setScreen("guided")}
+        />
+      )}
+      {screen === "booking" && (
+        <BookingFlow
+          service={selectedService}
+          variation={selectedVariation}
+          onBack={() => setScreen("services")}
+          onConfirm={() => setScreen("success")}
+        />
+      )}
+      {screen === "success" && (
+        <SuccessScreen onHome={() => setScreen("home")} />
+      )}
     </div>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
