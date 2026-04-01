@@ -37,7 +37,7 @@ const HeroSection = ({ onSchedule, onLogin }: HeroSectionProps) => {
         {/* Text content */}
         <div className="text-center space-y-4 max-w-sm animate-fade-in" style={{ animationDelay: '0.15s', animationFillMode: 'both' }}>
           <h1 className="font-heading text-3xl font-semibold text-primary-foreground tracking-wide">
-            Estúdio Dyoli Godim
+            Estudio Dyoli Godim
           </h1>
           <div className="flex items-center justify-center gap-3">
             <div className="w-8 h-px bg-gold/40" />
