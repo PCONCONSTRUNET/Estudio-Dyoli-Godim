@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   BarChart3, Calendar, Users, Clock, Settings, LogOut, Search,
-  ChevronDown, X, Edit2, Trash2, Plus, Save, ArrowLeft, Eye
+  X, Edit2, Trash2, Plus, Save, Eye, CheckCircle
 } from "lucide-react";
 
 // ─── Types ───
@@ -28,7 +28,6 @@ interface Profile {
 
 type Tab = "dashboard" | "agendamentos" | "clientes" | "horarios" | "servicos";
 
-// ─── Admin Password Gate ───
 const ADMIN_PASSWORD = "dyoliadmin";
 
 const Admin = () => {
@@ -76,7 +75,7 @@ const Admin = () => {
   return <AdminPanel onLogout={() => setAuthenticated(false)} />;
 };
 
-// ─── Admin Panel ───
+// ─── Admin Panel (Mobile First) ───
 const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [tab, setTab] = useState<Tab>("dashboard");
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
@@ -85,9 +84,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [statusFilter, setStatusFilter] = useState("todos");
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     setLoading(true);
@@ -110,27 +107,23 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setAgendamentos(prev => prev.filter(a => a.id !== id));
   };
 
-  const tabs = [
-    { id: "dashboard" as Tab, label: "Dashboard", icon: BarChart3 },
-    { id: "agendamentos" as Tab, label: "Agendamentos", icon: Calendar },
-    { id: "clientes" as Tab, label: "Clientes", icon: Users },
-    { id: "horarios" as Tab, label: "Horários", icon: Clock },
-    { id: "servicos" as Tab, label: "Serviços", icon: Settings },
+  const tabs: { id: Tab; label: string; icon: typeof BarChart3 }[] = [
+    { id: "dashboard", label: "Início", icon: BarChart3 },
+    { id: "agendamentos", label: "Agenda", icon: Calendar },
+    { id: "clientes", label: "Clientes", icon: Users },
+    { id: "horarios", label: "Horários", icon: Clock },
+    { id: "servicos", label: "Serviços", icon: Settings },
   ];
 
-  // Stats
   const total = agendamentos.length;
   const confirmados = agendamentos.filter(a => a.status === "confirmado").length;
   const cancelados = agendamentos.filter(a => a.status === "cancelado").length;
   const concluidos = agendamentos.filter(a => a.status === "concluido").length;
-  const faturamento = agendamentos
-    .filter(a => a.status !== "cancelado")
-    .reduce((sum, a) => sum + (a.valor_pago || 0), 0);
+  const faturamento = agendamentos.filter(a => a.status !== "cancelado").reduce((sum, a) => sum + (a.valor_pago || 0), 0);
 
-  const getClientName = (userId: string) => {
-    const c = clientes.find(c => c.id === userId);
-    return c?.nome || "—";
-  };
+  const getClientName = (userId: string) => clientes.find(c => c.id === userId)?.nome || "—";
+  const formatDate = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+  const formatWhatsapp = (w: string) => w ? `(${w.slice(0,2)}) ${w.slice(2,7)}-${w.slice(7)}` : "—";
 
   const filteredAgendamentos = agendamentos.filter(a => {
     if (statusFilter !== "todos" && a.status !== statusFilter) return false;
@@ -141,9 +134,6 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     return true;
   });
 
-  const formatDate = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
-  const formatWhatsapp = (w: string) => w ? `(${w.slice(0,2)}) ${w.slice(2,7)}-${w.slice(7)}` : "—";
-
   const statusBadge = (s: string) => {
     const map: Record<string, string> = {
       confirmado: "bg-gold/10 text-gold border-gold/20",
@@ -152,228 +142,215 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     };
     const labels: Record<string, string> = { confirmado: "Confirmado", cancelado: "Cancelado", concluido: "Concluído" };
     return (
-      <span className={`px-2.5 py-1 rounded-full text-[11px] font-body font-medium border ${map[s] || "bg-secondary text-muted-foreground border-border"}`}>
+      <span className={`px-2 py-0.5 rounded-full text-[10px] font-body font-medium border ${map[s] || "bg-secondary text-muted-foreground border-border"}`}>
         {labels[s] || s}
       </span>
     );
   };
 
   return (
-    <div className="min-h-screen bg-charcoal flex">
-      {/* Sidebar */}
-      <aside className="w-64 border-r border-primary-foreground/[0.06] bg-charcoal/50 backdrop-blur-xl flex flex-col">
-        <div className="px-6 py-6 border-b border-primary-foreground/[0.06]">
-          <h1 className="font-heading text-lg font-semibold text-primary-foreground">Admin Panel</h1>
-          <p className="font-body text-[11px] text-primary-foreground/30 mt-0.5">Estúdio Dyoli Godim</p>
+    <div className="min-h-screen bg-charcoal pb-20 max-w-md mx-auto">
+      {/* Header */}
+      <div className="sticky top-0 z-20 bg-charcoal/90 backdrop-blur-xl border-b border-primary-foreground/[0.06] px-4 py-3 flex items-center justify-between">
+        <div>
+          <h1 className="font-heading text-[16px] font-semibold text-primary-foreground">Admin</h1>
+          <p className="font-body text-[10px] text-primary-foreground/30">Estúdio Dyoli Godim</p>
         </div>
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <button onClick={onLogout} className="p-2 rounded-xl hover:bg-rose/10 text-rose/60 hover:text-rose transition-all">
+          <LogOut className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="px-4 py-4">
+        {/* ── Dashboard ── */}
+        {tab === "dashboard" && (
+          <div className="space-y-4 animate-fade-in">
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: "Total", value: total, color: "text-primary-foreground" },
+                { label: "Confirmados", value: confirmados, color: "text-gold" },
+                { label: "Concluídos", value: concluidos, color: "text-green-500" },
+                { label: "Cancelados", value: cancelados, color: "text-rose" },
+              ].map(s => (
+                <div key={s.label} className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+                  <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest">{s.label}</p>
+                  <p className={`font-heading text-2xl font-bold mt-1 ${s.color}`}>{s.value}</p>
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+                <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest">Faturamento</p>
+                <p className="font-heading text-xl font-bold text-gold mt-1">R$ {faturamento.toFixed(2).replace(".", ",")}</p>
+              </div>
+              <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+                <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest">Clientes</p>
+                <p className="font-heading text-xl font-bold text-primary-foreground mt-1">{clientes.length}</p>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest mb-3">Últimos agendamentos</h3>
+              <div className="space-y-2">
+                {agendamentos.slice(0, 5).map(a => (
+                  <div key={a.id} className="p-3 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-body text-[13px] font-medium text-primary-foreground truncate">{getClientName(a.user_id)}</p>
+                        <p className="font-body text-[11px] text-primary-foreground/40 truncate">{a.servico}{a.variacao ? ` — ${a.variacao}` : ""}</p>
+                      </div>
+                      {statusBadge(a.status)}
+                    </div>
+                    <p className="font-body text-[11px] text-primary-foreground/30 mt-1">{formatDate(a.data_agendamento)} · {a.horario}</p>
+                  </div>
+                ))}
+                {agendamentos.length === 0 && (
+                  <p className="font-body text-[13px] text-primary-foreground/30 text-center py-6">Nenhum agendamento ainda</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Agendamentos ── */}
+        {tab === "agendamentos" && (
+          <div className="space-y-4 animate-fade-in">
+            <h2 className="font-heading text-lg font-semibold text-primary-foreground">Agendamentos</h2>
+            {/* Filters */}
+            <div className="space-y-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/25" />
+                <input
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  placeholder="Buscar cliente ou serviço..."
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
+                />
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {[
+                  { value: "todos", label: "Todos" },
+                  { value: "confirmado", label: "Confirmados" },
+                  { value: "concluido", label: "Concluídos" },
+                  { value: "cancelado", label: "Cancelados" },
+                ].map(f => (
+                  <button
+                    key={f.value}
+                    onClick={() => setStatusFilter(f.value)}
+                    className={`px-3 py-1.5 rounded-full font-body text-[11px] font-medium whitespace-nowrap border transition-all ${
+                      statusFilter === f.value
+                        ? "bg-gold/10 text-gold border-gold/20"
+                        : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06]"
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Cards */}
+            <div className="space-y-2">
+              {filteredAgendamentos.map(a => (
+                <div key={a.id} className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-body text-[14px] font-medium text-primary-foreground truncate">{getClientName(a.user_id)}</p>
+                      <p className="font-body text-[12px] text-primary-foreground/40 truncate">{a.servico}{a.variacao ? ` (${a.variacao})` : ""}</p>
+                    </div>
+                    {statusBadge(a.status)}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <p className="font-body text-[11px] text-primary-foreground/30">{formatDate(a.data_agendamento)} · {a.horario}</p>
+                      <p className="font-body text-[12px] text-gold font-semibold">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {a.status === "confirmado" && (
+                        <>
+                          <button onClick={() => updateStatus(a.id, "concluido")} className="p-1.5 rounded-lg hover:bg-green-500/10 text-green-500/50 hover:text-green-500 transition-all">
+                            <CheckCircle className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => updateStatus(a.id, "cancelado")} className="p-1.5 rounded-lg hover:bg-rose/10 text-rose/50 hover:text-rose transition-all">
+                            <X className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
+                      <button onClick={() => deleteAgendamento(a.id)} className="p-1.5 rounded-lg hover:bg-rose/10 text-primary-foreground/20 hover:text-rose transition-all">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {filteredAgendamentos.length === 0 && (
+                <p className="font-body text-[13px] text-primary-foreground/30 text-center py-6">Nenhum agendamento encontrado</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Clientes ── */}
+        {tab === "clientes" && (
+          <div className="space-y-4 animate-fade-in">
+            <h2 className="font-heading text-lg font-semibold text-primary-foreground">Clientes</h2>
+            <div className="space-y-2">
+              {clientes.map(c => {
+                const count = agendamentos.filter(a => a.user_id === c.id).length;
+                return (
+                  <div key={c.id} className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-body text-[14px] font-medium text-primary-foreground truncate">{c.nome}</p>
+                        <p className="font-body text-[12px] text-primary-foreground/40">{formatWhatsapp(c.whatsapp)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-body text-[14px] font-semibold text-gold">{count}</p>
+                        <p className="font-body text-[10px] text-primary-foreground/30">agendamentos</p>
+                      </div>
+                    </div>
+                    <p className="font-body text-[10px] text-primary-foreground/25 mt-1">Cadastro: {new Date(c.created_at).toLocaleDateString("pt-BR")}</p>
+                  </div>
+                );
+              })}
+              {clientes.length === 0 && (
+                <p className="font-body text-[13px] text-primary-foreground/30 text-center py-6">Nenhum cliente cadastrado</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Horários ── */}
+        {tab === "horarios" && <HorariosTab />}
+
+        {/* ── Serviços ── */}
+        {tab === "servicos" && <ServicosTab />}
+      </div>
+
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 z-30 bg-charcoal/95 backdrop-blur-xl border-t border-primary-foreground/[0.06]">
+        <div className="max-w-md mx-auto flex">
           {tabs.map(t => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-body text-[13px] font-medium transition-all duration-200 ${
-                tab === t.id
-                  ? "bg-primary-foreground/[0.08] text-primary-foreground"
-                  : "text-primary-foreground/40 hover:text-primary-foreground/70 hover:bg-primary-foreground/[0.04]"
+              className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 transition-all ${
+                tab === t.id ? "text-gold" : "text-primary-foreground/30"
               }`}
             >
-              <t.icon className="w-4 h-4" />
-              {t.label}
+              <t.icon className="w-5 h-5" />
+              <span className="font-body text-[9px] font-medium">{t.label}</span>
             </button>
           ))}
-        </nav>
-        <div className="px-3 py-4 border-t border-primary-foreground/[0.06]">
-          <button
-            onClick={onLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-body text-[13px] font-medium text-rose/70 hover:text-rose hover:bg-rose/5 transition-all"
-          >
-            <LogOut className="w-4 h-4" />
-            Sair
-          </button>
         </div>
-      </aside>
-
-      {/* Content */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-8 max-w-6xl">
-          {/* ── Dashboard ── */}
-          {tab === "dashboard" && (
-            <div className="space-y-8 animate-fade-in">
-              <h2 className="font-heading text-2xl font-semibold text-primary-foreground">Dashboard</h2>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {[
-                  { label: "Total", value: total, color: "text-primary-foreground" },
-                  { label: "Confirmados", value: confirmados, color: "text-gold" },
-                  { label: "Concluídos", value: concluidos, color: "text-green-500" },
-                  { label: "Cancelados", value: cancelados, color: "text-rose" },
-                ].map(s => (
-                  <div key={s.label} className="p-5 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-                    <p className="font-body text-[11px] text-primary-foreground/35 uppercase tracking-widest">{s.label}</p>
-                    <p className={`font-heading text-3xl font-bold mt-1 ${s.color}`}>{s.value}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="p-5 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-                  <p className="font-body text-[11px] text-primary-foreground/35 uppercase tracking-widest">Faturamento (pago)</p>
-                  <p className="font-heading text-3xl font-bold text-gold mt-1">R$ {faturamento.toFixed(2).replace(".", ",")}</p>
-                </div>
-                <div className="p-5 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-                  <p className="font-body text-[11px] text-primary-foreground/35 uppercase tracking-widest">Total de clientes</p>
-                  <p className="font-heading text-3xl font-bold text-primary-foreground mt-1">{clientes.length}</p>
-                </div>
-              </div>
-
-              {/* Recent */}
-              <div>
-                <h3 className="font-body text-[13px] text-primary-foreground/50 uppercase tracking-widest mb-4">Últimos agendamentos</h3>
-                <div className="space-y-2">
-                  {agendamentos.slice(0, 5).map(a => (
-                    <div key={a.id} className="flex items-center justify-between p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-                      <div className="flex items-center gap-4">
-                        <div>
-                          <p className="font-body text-[14px] font-medium text-primary-foreground">{getClientName(a.user_id)}</p>
-                          <p className="font-body text-[12px] text-primary-foreground/40">{a.servico}{a.variacao ? ` — ${a.variacao}` : ""}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <p className="font-body text-[12px] text-primary-foreground/40">{formatDate(a.data_agendamento)} · {a.horario}</p>
-                        {statusBadge(a.status)}
-                      </div>
-                    </div>
-                  ))}
-                  {agendamentos.length === 0 && (
-                    <p className="font-body text-[13px] text-primary-foreground/30 text-center py-8">Nenhum agendamento ainda</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── Agendamentos ── */}
-          {tab === "agendamentos" && (
-            <div className="space-y-6 animate-fade-in">
-              <div className="flex items-center justify-between">
-                <h2 className="font-heading text-2xl font-semibold text-primary-foreground">Agendamentos</h2>
-              </div>
-              {/* Filters */}
-              <div className="flex items-center gap-3">
-                <div className="relative flex-1 max-w-xs">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/25" />
-                  <input
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                    placeholder="Buscar cliente ou serviço..."
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
-                  />
-                </div>
-                <select
-                  value={statusFilter}
-                  onChange={e => setStatusFilter(e.target.value)}
-                  className="px-4 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
-                >
-                  <option value="todos">Todos</option>
-                  <option value="confirmado">Confirmados</option>
-                  <option value="concluido">Concluídos</option>
-                  <option value="cancelado">Cancelados</option>
-                </select>
-              </div>
-              {/* Table */}
-              <div className="rounded-2xl border border-primary-foreground/[0.06] overflow-hidden">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-primary-foreground/[0.06]">
-                      {["Cliente", "Serviço", "Data", "Horário", "Valor", "Pago", "Status", "Ações"].map(h => (
-                        <th key={h} className="px-4 py-3 text-left font-body text-[11px] text-primary-foreground/35 uppercase tracking-widest font-medium">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredAgendamentos.map(a => (
-                      <tr key={a.id} className="border-b border-primary-foreground/[0.04] hover:bg-primary-foreground/[0.02] transition-colors">
-                        <td className="px-4 py-3 font-body text-[13px] text-primary-foreground">{getClientName(a.user_id)}</td>
-                        <td className="px-4 py-3 font-body text-[13px] text-primary-foreground/70">{a.servico}{a.variacao ? ` (${a.variacao})` : ""}</td>
-                        <td className="px-4 py-3 font-body text-[13px] text-primary-foreground/50">{formatDate(a.data_agendamento)}</td>
-                        <td className="px-4 py-3 font-body text-[13px] text-primary-foreground/50">{a.horario}</td>
-                        <td className="px-4 py-3 font-body text-[13px] text-gold">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</td>
-                        <td className="px-4 py-3 font-body text-[13px] text-primary-foreground/50">R$ {Number(a.valor_pago || 0).toFixed(2).replace(".", ",")}</td>
-                        <td className="px-4 py-3">{statusBadge(a.status)}</td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-1">
-                            {a.status === "confirmado" && (
-                              <button onClick={() => updateStatus(a.id, "concluido")} className="p-1.5 rounded-lg hover:bg-green-500/10 text-green-500/50 hover:text-green-500 transition-all" title="Concluir">
-                                <Eye className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                            {a.status === "confirmado" && (
-                              <button onClick={() => updateStatus(a.id, "cancelado")} className="p-1.5 rounded-lg hover:bg-rose/10 text-rose/50 hover:text-rose transition-all" title="Cancelar">
-                                <X className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                            <button onClick={() => deleteAgendamento(a.id)} className="p-1.5 rounded-lg hover:bg-rose/10 text-primary-foreground/20 hover:text-rose transition-all" title="Excluir">
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {filteredAgendamentos.length === 0 && (
-                  <p className="font-body text-[13px] text-primary-foreground/30 text-center py-8">Nenhum agendamento encontrado</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* ── Clientes ── */}
-          {tab === "clientes" && (
-            <div className="space-y-6 animate-fade-in">
-              <h2 className="font-heading text-2xl font-semibold text-primary-foreground">Clientes</h2>
-              <div className="rounded-2xl border border-primary-foreground/[0.06] overflow-hidden">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-primary-foreground/[0.06]">
-                      {["Nome", "WhatsApp", "Cadastro", "Agendamentos"].map(h => (
-                        <th key={h} className="px-4 py-3 text-left font-body text-[11px] text-primary-foreground/35 uppercase tracking-widest font-medium">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {clientes.map(c => {
-                      const count = agendamentos.filter(a => a.user_id === c.id).length;
-                      return (
-                        <tr key={c.id} className="border-b border-primary-foreground/[0.04] hover:bg-primary-foreground/[0.02] transition-colors">
-                          <td className="px-4 py-3 font-body text-[13px] text-primary-foreground font-medium">{c.nome}</td>
-                          <td className="px-4 py-3 font-body text-[13px] text-primary-foreground/50">{formatWhatsapp(c.whatsapp)}</td>
-                          <td className="px-4 py-3 font-body text-[13px] text-primary-foreground/40">{new Date(c.created_at).toLocaleDateString("pt-BR")}</td>
-                          <td className="px-4 py-3 font-body text-[13px] text-gold font-medium">{count}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-                {clientes.length === 0 && (
-                  <p className="font-body text-[13px] text-primary-foreground/30 text-center py-8">Nenhum cliente cadastrado</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* ── Horários ── */}
-          {tab === "horarios" && <HorariosTab />}
-
-          {/* ── Serviços ── */}
-          {tab === "servicos" && <ServicosTab />}
-        </div>
-      </main>
+      </nav>
     </div>
   );
 };
 
-// ─── Horários Tab ───
+// ─── Horários Tab (Mobile) ───
 const HorariosTab = () => {
-  const dayNames = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+  const dayNames = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
   const [hours, setHours] = useState<{ id: string; day: number; open: boolean; start: string; end: string }[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -388,22 +365,14 @@ const HorariosTab = () => {
     });
   }, []);
 
-  const toggle = (day: number) => {
-    setHours(prev => prev.map(h => h.day === day ? { ...h, open: !h.open } : h));
-  };
-
-  const updateTime = (day: number, field: "start" | "end", val: string) => {
-    setHours(prev => prev.map(h => h.day === day ? { ...h, [field]: val } : h));
-  };
+  const toggle = (day: number) => setHours(prev => prev.map(h => h.day === day ? { ...h, open: !h.open } : h));
+  const updateTime = (day: number, field: "start" | "end", val: string) => setHours(prev => prev.map(h => h.day === day ? { ...h, [field]: val } : h));
 
   const handleSave = async () => {
     setSaving(true);
     for (const h of hours) {
       await supabase.from("horarios_funcionamento").update({
-        aberto: h.open,
-        hora_inicio: h.start,
-        hora_fim: h.end,
-        updated_at: new Date().toISOString(),
+        aberto: h.open, hora_inicio: h.start, hora_fim: h.end, updated_at: new Date().toISOString(),
       }).eq("id", h.id);
     }
     setSaving(false);
@@ -414,46 +383,48 @@ const HorariosTab = () => {
   if (loading) return <p className="font-body text-[13px] text-primary-foreground/30 text-center py-8">Carregando...</p>;
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
-        <h2 className="font-heading text-2xl font-semibold text-primary-foreground">Horários de Funcionamento</h2>
-        <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gold/10 text-gold font-body text-[13px] font-medium hover:bg-gold/20 transition-all disabled:opacity-40">
-          <Save className="w-4 h-4" />
+        <h2 className="font-heading text-lg font-semibold text-primary-foreground">Horários</h2>
+        <button onClick={handleSave} disabled={saving} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all disabled:opacity-40">
+          <Save className="w-3.5 h-3.5" />
           {saving ? "Salvando..." : saved ? "Salvo!" : "Salvar"}
         </button>
       </div>
       <div className="space-y-2">
         {hours.map(h => (
-          <div key={h.day} className="flex items-center gap-4 p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-            <button
-              onClick={() => toggle(h.day)}
-              className={`w-12 h-7 rounded-full relative transition-all duration-200 ${h.open ? "bg-gold" : "bg-primary-foreground/10"}`}
-            >
-              <div className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-all duration-200 ${h.open ? "left-6" : "left-1"}`} />
-            </button>
-            <span className="font-body text-[14px] text-primary-foreground w-36">{dayNames[h.day]}</span>
+          <div key={h.day} className="p-3 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-body text-[13px] text-primary-foreground">{dayNames[h.day]}</span>
+              <button
+                onClick={() => toggle(h.day)}
+                className={`w-10 h-6 rounded-full relative transition-all duration-200 ${h.open ? "bg-gold" : "bg-primary-foreground/10"}`}
+              >
+                <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200 ${h.open ? "left-4" : "left-0.5"}`} />
+              </button>
+            </div>
             {h.open ? (
               <div className="flex items-center gap-2">
-                <input type="time" value={h.start} onChange={e => updateTime(h.day, "start", e.target.value)} className="px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
-                <span className="text-primary-foreground/30">—</span>
-                <input type="time" value={h.end} onChange={e => updateTime(h.day, "end", e.target.value)} className="px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                <input type="time" value={h.start} onChange={e => updateTime(h.day, "start", e.target.value)} className="flex-1 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                <span className="text-primary-foreground/30 text-[12px]">até</span>
+                <input type="time" value={h.end} onChange={e => updateTime(h.day, "end", e.target.value)} className="flex-1 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
               </div>
             ) : (
-              <span className="font-body text-[13px] text-primary-foreground/30">Fechado</span>
+              <p className="font-body text-[12px] text-primary-foreground/25">Fechado</p>
             )}
           </div>
         ))}
       </div>
-      <div className="p-4 rounded-2xl bg-gold/5 border border-gold/10">
-        <p className="font-body text-[12px] text-gold/70 leading-relaxed">
-          ⚠ Alterações nos horários afetam apenas novos agendamentos. Agendamentos já confirmados não são alterados automaticamente.
+      <div className="p-3 rounded-2xl bg-gold/5 border border-gold/10">
+        <p className="font-body text-[11px] text-gold/70 leading-relaxed">
+          ⚠ Alterações nos horários afetam apenas novos agendamentos.
         </p>
       </div>
     </div>
   );
 };
 
-// ─── Serviços Tab ───
+// ─── Serviços Tab (Mobile) ───
 const ServicosTab = () => {
   const [services, setServices] = useState<{ id: string; name: string; price: number; category: string; active: boolean }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -467,18 +438,12 @@ const ServicosTab = () => {
 
   useEffect(() => {
     supabase.from("servicos").select("*").order("ordem").then(({ data }) => {
-      if (data) {
-        setServices(data.map(s => ({ id: s.id, name: s.nome, price: Number(s.preco), category: s.categoria, active: s.ativo })));
-      }
+      if (data) setServices(data.map(s => ({ id: s.id, name: s.nome, price: Number(s.preco), category: s.categoria, active: s.ativo })));
       setLoading(false);
     });
   }, []);
 
-  const startEdit = (s: typeof services[0]) => {
-    setEditing(s.id);
-    setEditName(s.name);
-    setEditPrice(s.price.toString());
-  };
+  const startEdit = (s: typeof services[0]) => { setEditing(s.id); setEditName(s.name); setEditPrice(s.price.toString()); };
 
   const saveEdit = async (id: string) => {
     await supabase.from("servicos").update({ nome: editName, preco: Number(editPrice), updated_at: new Date().toISOString() }).eq("id", id);
@@ -489,15 +454,9 @@ const ServicosTab = () => {
   const addService = async () => {
     if (!newName || !newPrice) return;
     const { data } = await supabase.from("servicos").insert({
-      nome: newName,
-      preco: Number(newPrice),
-      categoria: newCategory || "Outros",
-      ativo: true,
-      ordem: services.length + 1,
+      nome: newName, preco: Number(newPrice), categoria: newCategory || "Outros", ativo: true, ordem: services.length + 1,
     }).select().single();
-    if (data) {
-      setServices(prev => [...prev, { id: data.id, name: data.nome, price: Number(data.preco), category: data.categoria, active: data.ativo }]);
-    }
+    if (data) setServices(prev => [...prev, { id: data.id, name: data.nome, price: Number(data.preco), category: data.categoria, active: data.ativo }]);
     setNewName(""); setNewPrice(""); setNewCategory(""); setShowAdd(false);
   };
 
@@ -516,55 +475,57 @@ const ServicosTab = () => {
   if (loading) return <p className="font-body text-[13px] text-primary-foreground/30 text-center py-8">Carregando...</p>;
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
-        <h2 className="font-heading text-2xl font-semibold text-primary-foreground">Serviços</h2>
-        <button onClick={() => setShowAdd(!showAdd)} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gold/10 text-gold font-body text-[13px] font-medium hover:bg-gold/20 transition-all">
-          <Plus className="w-4 h-4" />
+        <h2 className="font-heading text-lg font-semibold text-primary-foreground">Serviços</h2>
+        <button onClick={() => setShowAdd(!showAdd)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all">
+          <Plus className="w-3.5 h-3.5" />
           Adicionar
         </button>
       </div>
 
       {showAdd && (
-        <div className="p-5 rounded-2xl bg-primary-foreground/[0.03] border border-gold/20 space-y-3 animate-fade-in">
-          <h3 className="font-body text-[14px] font-medium text-primary-foreground">Novo Serviço</h3>
-          <div className="grid grid-cols-3 gap-3">
-            <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Nome do serviço" className="px-4 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
-            <input value={newPrice} onChange={e => setNewPrice(e.target.value)} placeholder="Preço" type="number" className="px-4 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
-            <input value={newCategory} onChange={e => setNewCategory(e.target.value)} placeholder="Categoria" className="px-4 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
+        <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-gold/20 space-y-3 animate-fade-in">
+          <h3 className="font-body text-[13px] font-medium text-primary-foreground">Novo Serviço</h3>
+          <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Nome do serviço" className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
+          <div className="flex gap-2">
+            <input value={newPrice} onChange={e => setNewPrice(e.target.value)} placeholder="Preço" type="number" className="flex-1 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
+            <input value={newCategory} onChange={e => setNewCategory(e.target.value)} placeholder="Categoria" className="flex-1 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
           </div>
           <div className="flex gap-2">
-            <button onClick={addService} className="px-4 py-2 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all">Salvar</button>
-            <button onClick={() => setShowAdd(false)} className="px-4 py-2 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/40 font-body text-[12px] hover:text-primary-foreground/60 transition-all">Cancelar</button>
+            <button onClick={addService} className="flex-1 py-2.5 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all">Salvar</button>
+            <button onClick={() => setShowAdd(false)} className="flex-1 py-2.5 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/40 font-body text-[12px] hover:text-primary-foreground/60 transition-all">Cancelar</button>
           </div>
         </div>
       )}
 
       <div className="space-y-2">
         {services.map(s => (
-          <div key={s.id} className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${s.active ? "bg-primary-foreground/[0.03] border-primary-foreground/[0.06]" : "bg-primary-foreground/[0.01] border-primary-foreground/[0.03] opacity-50"}`}>
+          <div key={s.id} className={`p-4 rounded-2xl border transition-all ${s.active ? "bg-primary-foreground/[0.03] border-primary-foreground/[0.06]" : "bg-primary-foreground/[0.01] border-primary-foreground/[0.03] opacity-50"}`}>
             {editing === s.id ? (
-              <div className="flex items-center gap-3 flex-1">
-                <input value={editName} onChange={e => setEditName(e.target.value)} className="flex-1 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
-                <input value={editPrice} onChange={e => setEditPrice(e.target.value)} type="number" className="w-24 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
-                <button onClick={() => saveEdit(s.id)} className="p-2 rounded-lg bg-gold/10 text-gold hover:bg-gold/20 transition-all"><Save className="w-4 h-4" /></button>
-                <button onClick={() => setEditing(null)} className="p-2 rounded-lg bg-primary-foreground/[0.05] text-primary-foreground/30 hover:text-primary-foreground/50 transition-all"><X className="w-4 h-4" /></button>
+              <div className="space-y-2">
+                <input value={editName} onChange={e => setEditName(e.target.value)} className="w-full px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                <div className="flex gap-2">
+                  <input value={editPrice} onChange={e => setEditPrice(e.target.value)} type="number" className="flex-1 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                  <button onClick={() => saveEdit(s.id)} className="px-3 py-2 rounded-xl bg-gold/10 text-gold hover:bg-gold/20 transition-all"><Save className="w-4 h-4" /></button>
+                  <button onClick={() => setEditing(null)} className="px-3 py-2 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/30 hover:text-primary-foreground/50 transition-all"><X className="w-4 h-4" /></button>
+                </div>
               </div>
             ) : (
               <>
-                <div>
-                  <p className="font-body text-[14px] font-medium text-primary-foreground">{s.name}</p>
-                  <p className="font-body text-[11px] text-primary-foreground/30">{s.category}</p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <p className="font-body text-[14px] font-semibold text-gold">R$ {s.price.toFixed(2).replace(".", ",")}</p>
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => toggleActive(s.id)} className={`w-10 h-6 rounded-full relative transition-all duration-200 ${s.active ? "bg-gold" : "bg-primary-foreground/10"}`}>
-                      <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200 ${s.active ? "left-4" : "left-0.5"}`} />
-                    </button>
-                    <button onClick={() => startEdit(s)} className="p-1.5 rounded-lg hover:bg-primary-foreground/[0.06] text-primary-foreground/30 hover:text-primary-foreground/60 transition-all"><Edit2 className="w-3.5 h-3.5" /></button>
-                    <button onClick={() => removeService(s.id)} className="p-1.5 rounded-lg hover:bg-rose/10 text-primary-foreground/20 hover:text-rose transition-all"><Trash2 className="w-3.5 h-3.5" /></button>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-body text-[14px] font-medium text-primary-foreground truncate">{s.name}</p>
+                    <p className="font-body text-[10px] text-primary-foreground/30">{s.category}</p>
                   </div>
+                  <p className="font-body text-[14px] font-semibold text-gold ml-2">R$ {s.price.toFixed(2).replace(".", ",")}</p>
+                </div>
+                <div className="flex items-center justify-end gap-2 mt-2">
+                  <button onClick={() => toggleActive(s.id)} className={`w-10 h-6 rounded-full relative transition-all duration-200 ${s.active ? "bg-gold" : "bg-primary-foreground/10"}`}>
+                    <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200 ${s.active ? "left-4" : "left-0.5"}`} />
+                  </button>
+                  <button onClick={() => startEdit(s)} className="p-1.5 rounded-lg hover:bg-primary-foreground/[0.06] text-primary-foreground/30 hover:text-primary-foreground/60 transition-all"><Edit2 className="w-4 h-4" /></button>
+                  <button onClick={() => removeService(s.id)} className="p-1.5 rounded-lg hover:bg-rose/10 text-primary-foreground/20 hover:text-rose transition-all"><Trash2 className="w-4 h-4" /></button>
                 </div>
               </>
             )}
