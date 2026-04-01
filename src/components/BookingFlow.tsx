@@ -82,7 +82,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     futureDate.setDate(futureDate.getDate() + 15);
     const { data } = await supabase
       .from("agendamentos")
-      .select("data_agendamento, horario, status")
+      .select("data_agendamento, horario, status, duracao_minutos")
       .gte("data_agendamento", today.toISOString().split("T")[0])
       .lte("data_agendamento", futureDate.toISOString().split("T")[0])
       .in("status", ["confirmado", "concluido"]);
@@ -90,7 +90,19 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       const map: Record<string, string[]> = {};
       data.forEach(a => {
         if (!map[a.data_agendamento]) map[a.data_agendamento] = [];
-        map[a.data_agendamento].push(a.horario);
+        // Block the booked slot + consecutive slots based on duration
+        const dur = a.duracao_minutos || 60;
+        const [h, m] = a.horario.split(":").map(Number);
+        const startMin = h * 60 + m;
+        for (let t = 0; t < dur; t += 60) {
+          const slotMin = startMin + t;
+          const slotH = Math.floor(slotMin / 60);
+          const slotM = slotMin % 60;
+          const slotStr = `${String(slotH).padStart(2, "0")}:${String(slotM).padStart(2, "0")}`;
+          if (!map[a.data_agendamento].includes(slotStr)) {
+            map[a.data_agendamento].push(slotStr);
+          }
+        }
       });
       setBookedSlots(map);
     }
