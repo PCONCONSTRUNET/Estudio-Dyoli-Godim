@@ -8,6 +8,7 @@ import {
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription
 } from "@/components/ui/sheet";
+import FinanceiroTab from "@/components/FinanceiroTab";
 
 // ─── Types ───
 interface Agendamento {
