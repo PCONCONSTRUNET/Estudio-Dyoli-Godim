@@ -337,10 +337,12 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                 { label: "Confirmados", value: confirmados, color: "text-gold" },
                 { label: "Concluídos", value: concluidos, color: "text-green-500" },
                 { label: "Cancelados", value: cancelados, color: "text-rose" },
+                { label: "Faltas", value: faltas, color: "text-orange-500" },
+                { label: "Faturamento", value: `R$ ${faturamento.toFixed(2).replace(".", ",")}`, color: "text-gold" },
               ].map(s => (
                 <div key={s.label} className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
                   <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest">{s.label}</p>
-                  <p className={`font-heading text-2xl font-bold mt-1 ${s.color}`}>{s.value}</p>
+                  <p className={`font-heading text-xl font-bold mt-1 ${s.color}`}>{s.value}</p>
                 </div>
               ))}
             </div>
