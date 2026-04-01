@@ -2,8 +2,11 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   BarChart3, Calendar, Users, Clock, Settings, LogOut, Search,
-  X, Edit2, Trash2, Plus, Save, Eye, CheckCircle
+  X, Edit2, Trash2, Plus, Save, Eye, CheckCircle, Bell, MessageSquare, Menu
 } from "lucide-react";
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription
+} from "@/components/ui/sheet";
 
 // ─── Types ───
 interface Agendamento {
