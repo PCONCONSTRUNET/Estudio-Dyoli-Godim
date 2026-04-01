@@ -484,97 +484,125 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                   ))}
                 </div>
               </div>
-              {/* Grouped by day */}
               {(() => {
-                // Group by date
-                const grouped: Record<string, typeof filteredAgendamentos> = {};
-                filteredAgendamentos.forEach((a) => {
-                  const d = a.data_agendamento;
-                  if (!grouped[d]) grouped[d] = [];
-                  grouped[d].push(a);
-                });
-                // Sort days descending
-                const sortedDays = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+                const grouped = filteredAgendamentos.reduce((acc, agendamento) => {
+                  (acc[agendamento.data_agendamento] ||= []).push(agendamento);
+                  return acc;
+                }, {} as Record<string, Agendamento[]>);
 
-                if (sortedDays.length === 0) {
+                const sortedDays = Object.keys(grouped).sort((a, b) => a.localeCompare(b));
+
+                if (!sortedDays.length) {
                   return <p className="py-6 text-center font-body text-[13px] text-primary-foreground/30">Nenhum agendamento encontrado</p>;
                 }
 
                 const today = new Date().toISOString().split("T")[0];
                 const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0];
 
-                const dayLabel = (d: string) => {
-                  if (d === today) return "Hoje";
-                  if (d === tomorrow) return "Amanhã";
-                  return new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
+                const dayLabel = (date: string) => {
+                  if (date === today) return "Hoje";
+                  if (date === tomorrow) return "Amanhã";
+                  return new Date(`${date}T12:00:00`).toLocaleDateString("pt-BR", {
+                    weekday: "long",
+                    day: "2-digit",
+                    month: "long",
+                  });
                 };
 
                 return (
-                  <div className="space-y-5">
+                  <div className="space-y-4 lg:space-y-5">
                     {sortedDays.map((day) => {
-                      const items = grouped[day].sort((a, b) => a.horario.localeCompare(b.horario));
-                      const dayTotal = items.reduce((s, a) => s + Number(a.valor), 0);
-                      const dayPago = items.reduce((s, a) => s + Number(a.valor_pago || 0), 0);
+                      const items = [...grouped[day]].sort((a, b) => a.horario.localeCompare(b.horario));
+                      const dayTotal = items.reduce((sum, item) => sum + Number(item.valor), 0);
+                      const dayPago = items.reduce((sum, item) => sum + Number(item.valor_pago || 0), 0);
                       const isToday = day === today;
 
                       return (
-                        <div key={day}>
-                          {/* Day header */}
-                          <div className={`sticky top-0 z-10 flex items-center justify-between px-1 py-2 mb-2 ${isToday ? "" : ""}`}>
-                            <div className="flex items-center gap-2">
-                              <div className={`w-2 h-2 rounded-full shrink-0 ${isToday ? "bg-gold animate-pulse" : "bg-primary-foreground/10"}`} />
-                              <p className={`font-body text-[13px] font-semibold capitalize ${isToday ? "text-gold" : "text-primary-foreground/60"}`}>
-                                {dayLabel(day)}
+                        <section
+                          key={day}
+                          className={`overflow-hidden rounded-[24px] border ${isToday ? "border-gold/20 bg-gold/[0.04]" : "border-primary-foreground/[0.06] bg-primary-foreground/[0.02]"}`}
+                        >
+                          <div className={`flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3 lg:px-5 ${isToday ? "border-gold/15 bg-gold/[0.05]" : "border-primary-foreground/[0.06] bg-primary-foreground/[0.03]"}`}>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <div className={`h-2.5 w-2.5 rounded-full ${isToday ? "bg-gold animate-pulse" : "bg-primary-foreground/20"}`} />
+                                <p className={`font-heading text-[16px] font-semibold capitalize ${isToday ? "text-gold" : "text-primary-foreground"}`}>
+                                  {dayLabel(day)}
+                                </p>
+                              </div>
+                              <p className="mt-1 font-body text-[11px] text-primary-foreground/35">
+                                {new Date(`${day}T12:00:00`).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })} · {items.length} agendamento{items.length > 1 ? "s" : ""}
                               </p>
-                              <span className="font-body text-[10px] text-primary-foreground/20">{items.length} atend.</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-body text-[10px] text-gold/60">R$ {dayTotal.toFixed(0)}</span>
-                              {dayPago > 0 && <span className="font-body text-[10px] text-green-500/60">✓ R$ {dayPago.toFixed(0)}</span>}
+
+                            <div className="flex flex-wrap items-center gap-2">
+                              <div className="rounded-full border border-primary-foreground/[0.08] bg-primary-foreground/[0.04] px-3 py-1.5">
+                                <p className="font-body text-[10px] text-primary-foreground/30">Previsto</p>
+                                <p className="font-body text-[12px] font-semibold text-primary-foreground">R$ {dayTotal.toFixed(2).replace(".", ",")}</p>
+                              </div>
+                              <div className="rounded-full border border-gold/20 bg-gold/10 px-3 py-1.5">
+                                <p className="font-body text-[10px] text-gold/70">Recebido</p>
+                                <p className="font-body text-[12px] font-semibold text-gold">R$ {dayPago.toFixed(2).replace(".", ",")}</p>
+                              </div>
                             </div>
                           </div>
 
-                          {/* Day items */}
-                          <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
+                          <div className="space-y-2 p-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 lg:p-4">
                             {items.map((a) => (
-                              <div key={a.id} className={`rounded-2xl border p-4 transition-all ${isToday ? "border-gold/10 bg-gold/[0.02]" : "border-primary-foreground/[0.06] bg-primary-foreground/[0.03]"}`}>
-                                <div className="mb-1 flex items-start justify-between gap-3">
-                                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                                    <div className={`w-1 h-10 rounded-full shrink-0 ${a.status === "concluido" ? "bg-green-500" : a.status === "cancelado" ? "bg-primary-foreground/10" : a.status === "falta" ? "bg-orange-500" : "bg-gold"}`} />
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-2">
-                                        <span className="font-body text-[15px] font-semibold text-primary-foreground">{a.horario}</span>
-                                        <span className="font-body text-[13px] text-primary-foreground/70 truncate">{getClientName(a.user_id)}</span>
+                              <article key={a.id} className="rounded-2xl border border-primary-foreground/[0.06] bg-background/60 p-4 shadow-sm backdrop-blur-sm">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="flex min-w-0 flex-1 items-start gap-3">
+                                    <div className="flex min-w-[54px] flex-col items-center rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] px-2 py-2">
+                                      <span className="font-heading text-[16px] font-semibold text-primary-foreground">{a.horario}</span>
+                                      <span className="font-body text-[9px] uppercase tracking-[0.18em] text-primary-foreground/25">horário</span>
+                                    </div>
+
+                                    <div className="min-w-0 flex-1">
+                                      <p className="truncate font-body text-[14px] font-semibold text-primary-foreground">{getClientName(a.user_id)}</p>
+                                      <p className="mt-0.5 truncate font-body text-[11px] text-primary-foreground/40">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""}</p>
+                                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                                        {statusBadge(a.status)}
+                                        {pagamentoBadge(a)}
                                       </div>
-                                      <p className="font-body text-[11px] text-primary-foreground/35 truncate">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""}</p>
                                     </div>
                                   </div>
-                                  <div className="flex flex-col items-end gap-1 shrink-0">
-                                    {statusBadge(a.status)}
-                                    {pagamentoBadge(a)}
-                                  </div>
                                 </div>
-                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 ml-3.5 pl-3 border-l border-primary-foreground/[0.04]">
-                                  <p className="font-body text-[12px] font-semibold text-gold">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</p>
-                                  {Number(a.valor_pago || 0) > 0 && Number(a.valor_pago || 0) < Number(a.valor) && (
-                                    <p className="font-body text-[10px] text-primary-foreground/30">Pago: R$ {Number(a.valor_pago).toFixed(2).replace(".", ",")}</p>
+
+                                <div className="mt-3 rounded-xl border border-primary-foreground/[0.05] bg-primary-foreground/[0.02] px-3 py-2">
+                                  <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <p className="font-body text-[11px] text-primary-foreground/35">Valor do atendimento</p>
+                                    <p className="font-body text-[13px] font-semibold text-gold">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</p>
+                                  </div>
+                                  {Number(a.valor_pago || 0) > 0 && (
+                                    <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                                      <p className="font-body text-[11px] text-primary-foreground/35">Já recebido</p>
+                                      <p className="font-body text-[12px] font-medium text-primary-foreground">R$ {Number(a.valor_pago || 0).toFixed(2).replace(".", ",")}</p>
+                                    </div>
                                   )}
                                 </div>
-                                <div className="mt-2 flex flex-wrap items-center justify-between gap-3 border-t border-primary-foreground/[0.04] pt-2">
+
+                                <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-primary-foreground/[0.06] pt-3">
                                   <div className="flex flex-wrap items-center gap-1">
                                     {a.status !== "cancelado" && a.status !== "falta" && (
                                       <>
-                                        <button onClick={() => updatePayment(a.id, "sinal")} title="Marcar sinal (50%)"
-                                          className={`px-2 py-1 rounded-lg font-body text-[10px] font-medium transition-all ${Number(a.valor_pago || 0) > 0 && Number(a.valor_pago || 0) < Number(a.valor) ? "bg-gold/10 text-gold" : "bg-primary-foreground/[0.03] text-primary-foreground/30 hover:text-gold hover:bg-gold/10"}`}>
+                                        <button
+                                          onClick={() => updatePayment(a.id, "sinal")}
+                                          title="Marcar sinal (50%)"
+                                          className={`rounded-lg px-2 py-1 font-body text-[10px] font-medium transition-all ${Number(a.valor_pago || 0) > 0 && Number(a.valor_pago || 0) < Number(a.valor) ? "bg-gold/10 text-gold" : "bg-primary-foreground/[0.03] text-primary-foreground/30 hover:bg-gold/10 hover:text-gold"}`}
+                                        >
                                           Sinal
                                         </button>
-                                        <button onClick={() => updatePayment(a.id, "completo")} title="Marcar pago completo"
-                                          className={`px-2 py-1 rounded-lg font-body text-[10px] font-medium transition-all ${Number(a.valor_pago || 0) >= Number(a.valor) ? "bg-green-500/10 text-green-500" : "bg-primary-foreground/[0.03] text-primary-foreground/30 hover:text-green-500 hover:bg-green-500/10"}`}>
+                                        <button
+                                          onClick={() => updatePayment(a.id, "completo")}
+                                          title="Marcar pago completo"
+                                          className={`rounded-lg px-2 py-1 font-body text-[10px] font-medium transition-all ${Number(a.valor_pago || 0) >= Number(a.valor) ? "bg-green-500/10 text-green-500" : "bg-primary-foreground/[0.03] text-primary-foreground/30 hover:bg-green-500/10 hover:text-green-500"}`}
+                                        >
                                           Pago
                                         </button>
                                       </>
                                     )}
                                   </div>
+
                                   <div className="flex items-center gap-1 self-end">
                                     {a.status === "confirmado" && (
                                       <>
@@ -594,10 +622,10 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                     </button>
                                   </div>
                                 </div>
-                              </div>
+                              </article>
                             ))}
                           </div>
-                        </div>
+                        </section>
                       );
                     })}
                   </div>
