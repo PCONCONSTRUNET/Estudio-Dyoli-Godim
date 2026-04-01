@@ -92,6 +92,30 @@ export type Database = {
         }
         Relationships: []
       }
+      horarios_bloqueados: {
+        Row: {
+          created_at: string
+          data: string
+          horario: string
+          id: string
+          motivo: string | null
+        }
+        Insert: {
+          created_at?: string
+          data: string
+          horario: string
+          id?: string
+          motivo?: string | null
+        }
+        Update: {
+          created_at?: string
+          data?: string
+          horario?: string
+          id?: string
+          motivo?: string | null
+        }
+        Relationships: []
+      }
       horarios_funcionamento: {
         Row: {
           aberto: boolean

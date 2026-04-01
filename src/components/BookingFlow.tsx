@@ -84,32 +84,39 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     const today = new Date();
     const futureDate = new Date(today);
     futureDate.setDate(futureDate.getDate() + 15);
-    const { data } = await supabase
-      .from("agendamentos")
-      .select("data_agendamento, horario, status, duracao_minutos")
-      .gte("data_agendamento", today.toISOString().split("T")[0])
-      .lte("data_agendamento", futureDate.toISOString().split("T")[0])
-      .in("status", ["confirmado", "concluido"]);
-    if (data) {
-      const map: Record<string, string[]> = {};
-      data.forEach(a => {
-        if (!map[a.data_agendamento]) map[a.data_agendamento] = [];
-        // Block the booked slot + consecutive slots based on duration
-        const dur = a.duracao_minutos || 60;
-        const [h, m] = a.horario.split(":").map(Number);
-        const startMin = h * 60 + m;
-        for (let t = 0; t < dur; t += 60) {
-          const slotMin = startMin + t;
-          const slotH = Math.floor(slotMin / 60);
-          const slotM = slotMin % 60;
-          const slotStr = `${String(slotH).padStart(2, "0")}:${String(slotM).padStart(2, "0")}`;
-          if (!map[a.data_agendamento].includes(slotStr)) {
-            map[a.data_agendamento].push(slotStr);
-          }
-        }
-      });
-      setBookedSlots(map);
-    }
+    const todayStr = today.toISOString().split("T")[0];
+    const futureStr = futureDate.toISOString().split("T")[0];
+
+    // Load agendamentos + manual blocks in parallel
+    const [agRes, blockRes] = await Promise.all([
+      supabase.from("agendamentos").select("data_agendamento, horario, status, duracao_minutos")
+        .gte("data_agendamento", todayStr).lte("data_agendamento", futureStr).in("status", ["confirmado", "concluido"]),
+      supabase.from("horarios_bloqueados").select("data, horario")
+        .gte("data", todayStr).lte("data", futureStr),
+    ]);
+
+    const map: Record<string, string[]> = {};
+
+    // Add booked slots (with duration)
+    agRes.data?.forEach(a => {
+      if (!map[a.data_agendamento]) map[a.data_agendamento] = [];
+      const dur = a.duracao_minutos || 60;
+      const [h, m] = a.horario.split(":").map(Number);
+      const startMin = h * 60 + m;
+      for (let t = 0; t < dur; t += 60) {
+        const slotMin = startMin + t;
+        const slotStr = `${String(Math.floor(slotMin / 60)).padStart(2, "0")}:${String(slotMin % 60).padStart(2, "0")}`;
+        if (!map[a.data_agendamento].includes(slotStr)) map[a.data_agendamento].push(slotStr);
+      }
+    });
+
+    // Add manually blocked slots
+    blockRes.data?.forEach(b => {
+      if (!map[b.data]) map[b.data] = [];
+      if (!map[b.data].includes(b.horario)) map[b.data].push(b.horario);
+    });
+
+    setBookedSlots(map);
   };
 
   const generateTimes = (open: string, close: string) => {
