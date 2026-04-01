@@ -614,7 +614,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                   ) : (
                     <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
                       {selectedAgendaItems.map((a) => (
-                        <article key={a.id} className="rounded-2xl border border-primary-foreground/[0.06] bg-background/60 p-4 shadow-sm backdrop-blur-sm">
+                        <article key={a.id} className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.04] p-4 shadow-sm">
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex min-w-0 flex-1 items-start gap-3">
                               <div className="flex min-w-[54px] flex-col items-center rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] px-2 py-2">
