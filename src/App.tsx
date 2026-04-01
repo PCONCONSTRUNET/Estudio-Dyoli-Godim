@@ -3,6 +3,7 @@ import { HashRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import Admin from "./pages/Admin";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import Agendar from "./pages/Agendar";
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/servicos" element={<Servicos />} />
           <Route path="/confirmar" element={<Confirmar />} />
           <Route path="/sucesso" element={<Sucesso />} />
+          <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </HashRouter>
