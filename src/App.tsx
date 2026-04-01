@@ -27,6 +27,7 @@ const App = () => (
           <Route path="/servicos" element={<Servicos />} />
           <Route path="/confirmar" element={<Confirmar />} />
           <Route path="/sucesso" element={<Sucesso />} />
+          <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </HashRouter>
