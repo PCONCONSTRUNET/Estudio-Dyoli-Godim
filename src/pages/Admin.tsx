@@ -732,24 +732,28 @@ const ServicosTab = () => {
           <Plus className="w-3.5 h-3.5" />Adicionar
         </button>
       </div>
-      {showAdd && (
-        <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-gold/20 space-y-3 animate-fade-in">
-          <h3 className="font-body text-[13px] font-medium text-primary-foreground">Novo Serviço</h3>
-          <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Nome do serviço" className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
-          <div className="flex gap-2">
-            <input value={newPrice} onChange={e => setNewPrice(e.target.value)} placeholder="Preço" type="number" className="flex-1 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
-            <input value={newCategory} onChange={e => setNewCategory(e.target.value)} placeholder="Categoria" className="flex-1 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
+      <Dialog open={showAdd} onOpenChange={setShowAdd}>
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-md max-h-[90vh] overflow-y-auto bg-background border border-gold/20 rounded-2xl p-5">
+          <DialogHeader>
+            <DialogTitle className="font-body text-[14px] font-medium text-primary-foreground">Novo Serviço</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Nome do serviço" className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
+            <div className="flex gap-2">
+              <input value={newPrice} onChange={e => setNewPrice(e.target.value)} placeholder="Preço" type="number" className="flex-1 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
+              <input value={newCategory} onChange={e => setNewCategory(e.target.value)} placeholder="Categoria" className="flex-1 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
+            </div>
+            <div>
+              <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Duração (minutos)</label>
+              <input value={newDuration} onChange={e => setNewDuration(e.target.value)} placeholder="60" type="number" className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
+            </div>
+            <div className="flex gap-2">
+              <button onClick={addService} className="flex-1 py-2.5 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all">Salvar</button>
+              <button onClick={() => setShowAdd(false)} className="flex-1 py-2.5 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/40 font-body text-[12px] hover:text-primary-foreground/60 transition-all">Cancelar</button>
+            </div>
           </div>
-          <div>
-            <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Duração (minutos)</label>
-            <input value={newDuration} onChange={e => setNewDuration(e.target.value)} placeholder="60" type="number" className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
-          </div>
-          <div className="flex gap-2">
-            <button onClick={addService} className="flex-1 py-2.5 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all">Salvar</button>
-            <button onClick={() => setShowAdd(false)} className="flex-1 py-2.5 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/40 font-body text-[12px] hover:text-primary-foreground/60 transition-all">Cancelar</button>
-          </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
       <div className="space-y-2">
         {services.map(s => (
           <div key={s.id} className={`p-4 rounded-2xl border transition-all ${s.active ? "bg-primary-foreground/[0.03] border-primary-foreground/[0.06]" : "bg-primary-foreground/[0.01] border-primary-foreground/[0.03] opacity-50"}`}>
