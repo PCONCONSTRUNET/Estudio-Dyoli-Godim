@@ -137,7 +137,22 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     if (!hours) return [];
     const allTimes = generateTimes(hours.open, hours.close);
     const booked = bookedSlots[dateStr] || [];
-    return allTimes.filter(t => !booked.includes(t));
+    // Filter: slot is available only if all consecutive slots needed by this service's duration are free
+    return allTimes.filter(t => {
+      const [h, m] = t.split(":").map(Number);
+      const startMin = h * 60 + m;
+      const [closeH] = hours.close.split(":").map(Number);
+      const closeMin = closeH * 60;
+      // Check service fits before closing time
+      if (startMin + serviceDuration > closeMin) return false;
+      // Check no overlap with booked slots
+      for (let offset = 0; offset < serviceDuration; offset += 60) {
+        const checkMin = startMin + offset;
+        const checkStr = `${String(Math.floor(checkMin / 60)).padStart(2, "0")}:${String(checkMin % 60).padStart(2, "0")}`;
+        if (booked.includes(checkStr)) return false;
+      }
+      return true;
+    });
   };
 
   const times = selectedDate ? getTimesForDate(selectedDate) : [];
