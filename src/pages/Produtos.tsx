@@ -12,7 +12,7 @@ interface Produto {
   ativo: boolean;
 }
 
-const WHATSAPP_NUMBER = "5500000000000"; // número do estúdio
+const WHATSAPP_NUMBER = "5548999779829";
 
 const Produtos = () => {
   const navigate = useNavigate();
