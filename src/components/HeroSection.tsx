@@ -1,5 +1,6 @@
 import professionalImg from "@/assets/professional.png";
 
+
 interface HeroSectionProps {
   onSchedule: () => void;
   onLogin: () => void;
