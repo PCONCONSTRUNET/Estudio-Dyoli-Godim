@@ -9,7 +9,7 @@ interface HeroSectionProps {
   isAuthenticated?: boolean;
 }
 
-const HeroSection = ({ onSchedule, onLogin, onProfile, isAuthenticated }: HeroSectionProps) => {
+const HeroSection = ({ onSchedule, onLogin, onProfile, onProdutos, isAuthenticated }: HeroSectionProps) => {
   return (
     <section className="relative min-h-screen flex flex-col bg-charcoal overflow-hidden">
       {/* Animated premium gradient background */}
