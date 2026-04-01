@@ -22,7 +22,7 @@ const GuidedFlow = ({ onSelectService, onBack }: GuidedFlowProps) => {
   }) => (
     <button
       onClick={onClick}
-      className="ios-press w-full flex items-center justify-between p-5 rounded-2xl border border-border/80 bg-card/80 backdrop-blur-sm hover:border-gold/40 hover:bg-card transition-all duration-200 group"
+      className="ios-press w-full flex items-center justify-between p-5 rounded-2xl border border-border bg-card shadow-[0_2px_16px_-4px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_24px_-6px_rgba(0,0,0,0.12)] hover:border-gold/40 transition-all duration-200 group"
     >
       <div className="text-left">
         <h3 className="font-heading text-xl font-semibold text-foreground group-hover:text-rose transition-colors duration-200">
