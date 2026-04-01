@@ -205,7 +205,8 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
 
   if (step === "confirm") {
     return (
-      <section className="min-h-screen bg-background px-6 py-8 flex flex-col">
+      <section className="min-h-screen bg-background px-6 py-8 flex flex-col lg:items-center lg:px-8">
+        <div className="w-full lg:max-w-2xl">
         <button
           onClick={() => setStep("date")}
           className="ios-press flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
@@ -272,6 +273,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
             Pagar com PIX
           </button>
         </div>
+        </div>
       </section>
     );
   }
@@ -282,7 +284,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       ? (paymentMode === "deposit" ? `Sinal: ${depositAmount}` : `Total: ${price}`)
       : `Total: ${price}`;
     return (
-      <section className="min-h-screen bg-background px-6 py-8 flex flex-col">
+      <section className="min-h-screen bg-background px-6 py-8 flex flex-col lg:items-center lg:px-8">
         <button
           onClick={() => setStep("confirm")}
           className="ios-press flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
@@ -386,7 +388,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   }
 
   return (
-    <section className="min-h-screen bg-background px-6 py-8">
+    <section className="min-h-screen bg-background px-6 py-8 lg:flex lg:flex-col lg:items-center lg:px-8">
       <button
         onClick={onBack}
         className="ios-press flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"

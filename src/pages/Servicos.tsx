@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import ServiceList from "@/components/ServiceList";
 
@@ -14,7 +13,7 @@ const Servicos = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto min-h-screen">
+    <div className="mx-auto min-h-screen max-w-md lg:max-w-2xl">
       <ServiceList
         serviceFilter={filtro}
         onSchedule={handleSchedule}

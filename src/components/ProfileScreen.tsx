@@ -98,7 +98,7 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
       <div className="absolute inset-0 bg-black/40" onClick={onBack} />
 
       {/* Glass modal */}
-      <div className="relative w-full max-w-sm max-h-[85vh] rounded-3xl border border-primary-foreground/[0.08] bg-charcoal/70 backdrop-blur-2xl shadow-[0_25px_60px_-12px_rgba(0,0,0,0.6)] animate-scale-in flex flex-col overflow-hidden">
+      <div className="relative w-full max-w-sm lg:max-w-md max-h-[85vh] rounded-3xl border border-primary-foreground/[0.08] bg-charcoal/70 backdrop-blur-2xl shadow-[0_25px_60px_-12px_rgba(0,0,0,0.6)] animate-scale-in flex flex-col overflow-hidden">
         {/* Header */}
         <div className="px-7 pt-6 pb-4">
           <button

@@ -7,7 +7,7 @@ const Auth = () => {
   const mode = searchParams.get("mode") === "login" ? "login" : "signup";
 
   return (
-    <div className="max-w-md mx-auto min-h-screen">
+    <div className="mx-auto min-h-screen">
       <AuthScreen
         onSuccess={() => navigate("/agendar")}
         onBack={() => navigate("/")}
