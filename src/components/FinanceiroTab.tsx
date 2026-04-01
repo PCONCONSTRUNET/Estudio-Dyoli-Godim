@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from "react";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
-import { Calendar, Download, FileText, Table2, TrendingUp, Wallet, X } from "lucide-react";
+import { Calendar, Download, FileText, Table2, TrendingUp, Wallet, X, Percent, Settings } from "lucide-react";
 
 interface Agendamento {
   id: string; servico: string; variacao: string | null; data_agendamento: string;
@@ -32,6 +32,12 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const [customEnd, setCustomEnd] = useState("");
   const [showCaixa, setShowCaixa] = useState(false);
   const [caixaDate, setCaixaDate] = useState(new Date().toISOString().split("T")[0]);
+  const [comissaoPct, setComissaoPct] = useState(() => {
+    const saved = localStorage.getItem("dyoli_comissao_pct");
+    return saved ? Number(saved) : 40;
+  });
+  const [showComissaoConfig, setShowComissaoConfig] = useState(false);
+  const [tempComissao, setTempComissao] = useState(comissaoPct.toString());
 
   // Filter agendamentos by period
   const filtered = useMemo(() => {
@@ -68,6 +74,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const totalRecebido = filtered.reduce((s, a) => s + Number(a.valor_pago || 0), 0);
   const totalPendente = totalReceita - totalRecebido;
   const qtdAtendimentos = filtered.length;
+  const comissaoValor = totalRecebido * (comissaoPct / 100);
 
   // Chart: receita por dia
   const dailyData = useMemo(() => {
@@ -162,6 +169,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
       <div class="metric"><div class="metric-label">Recebido</div><div class="metric-value green">${formatCurrency(totalRecebido)}</div></div>
       <div class="metric"><div class="metric-label">Pendente</div><div class="metric-value">${formatCurrency(totalPendente)}</div></div>
       <div class="metric"><div class="metric-label">Atendimentos</div><div class="metric-value">${qtdAtendimentos}</div></div>
+      <div class="metric" style="background:#f3e8ff"><div class="metric-label" style="color:#7c3aed">Comissão (${comissaoPct}%)</div><div class="metric-value" style="color:#7c3aed">${formatCurrency(comissaoValor)}</div></div>
     </div>
     <table>
       <thead><tr><th>Data</th><th>Horário</th><th>Cliente</th><th>Serviço</th><th>Valor</th><th>Pago</th></tr></thead>
@@ -245,6 +253,68 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
           <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest">Atendimentos</p>
           <p className="font-heading text-xl font-bold text-primary-foreground mt-1">{qtdAtendimentos}</p>
         </div>
+      </div>
+
+      {/* Comissão */}
+      <div className="p-4 rounded-2xl border border-purple-500/20 bg-purple-500/5">
+        <div className="flex items-center justify-between mb-2">
+          <span className="font-body text-[11px] text-purple-400 uppercase tracking-widest flex items-center gap-1.5">
+            <Percent className="w-3.5 h-3.5" /> Minha Comissão ({comissaoPct}%)
+          </span>
+          <button
+            onClick={() => { setShowComissaoConfig(!showComissaoConfig); setTempComissao(comissaoPct.toString()); }}
+            className="p-1.5 rounded-lg hover:bg-purple-500/10 text-purple-400/50 hover:text-purple-400 transition-all"
+          >
+            <Settings className="w-3.5 h-3.5" />
+          </button>
+        </div>
+        <p className="font-heading text-2xl font-bold text-purple-400">{formatCurrency(comissaoValor)}</p>
+        <p className="font-body text-[10px] text-purple-400/50 mt-1">
+          {comissaoPct}% sobre {formatCurrency(totalRecebido)} recebido no período
+        </p>
+
+        {showComissaoConfig && (
+          <div className="mt-3 pt-3 border-t border-purple-500/10 space-y-2 animate-fade-in">
+            <label className="font-body text-[11px] text-purple-400/60">Percentual de comissão (%)</label>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                value={tempComissao}
+                onChange={(e) => setTempComissao(e.target.value)}
+                className="flex-1 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-purple-500/20 text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+              />
+              <button
+                onClick={() => {
+                  const val = Math.min(100, Math.max(0, Number(tempComissao) || 0));
+                  setComissaoPct(val);
+                  localStorage.setItem("dyoli_comissao_pct", val.toString());
+                  setShowComissaoConfig(false);
+                }}
+                className="px-4 py-2 rounded-xl bg-purple-500/10 text-purple-400 font-body text-[12px] font-medium hover:bg-purple-500/20 transition-all"
+              >
+                Salvar
+              </button>
+            </div>
+            <div className="flex gap-1.5 flex-wrap">
+              {[30, 35, 40, 45, 50].map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setTempComissao(p.toString())}
+                  className={`px-2.5 py-1 rounded-full font-body text-[10px] border transition-all ${
+                    Number(tempComissao) === p
+                      ? "bg-purple-500/20 text-purple-400 border-purple-500/30"
+                      : "bg-primary-foreground/[0.03] text-primary-foreground/30 border-primary-foreground/[0.06] hover:border-purple-500/20"
+                  }`}
+                >
+                  {p}%
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Area Chart - Receita por dia */}
@@ -390,6 +460,15 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
                 <p className="font-body text-[9px] text-primary-foreground/30 uppercase tracking-widest">Recebido</p>
                 <p className="font-heading text-lg font-bold text-green-500">{formatCurrency(caixaData.recebido)}</p>
               </div>
+            </div>
+
+            {/* Comissão do dia */}
+            <div className="p-3 rounded-xl bg-purple-500/5 border border-purple-500/10">
+              <div className="flex items-center justify-between">
+                <p className="font-body text-[10px] text-purple-400/60 uppercase tracking-widest">Sua comissão ({comissaoPct}%)</p>
+                <p className="font-heading text-lg font-bold text-purple-400">{formatCurrency(caixaData.recebido * (comissaoPct / 100))}</p>
+              </div>
+              <p className="font-body text-[10px] text-purple-400/40 mt-0.5">Valor a retirar sobre o recebido do dia</p>
             </div>
 
             {caixaData.pendente > 0 && (
