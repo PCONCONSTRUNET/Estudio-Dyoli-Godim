@@ -279,6 +279,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     { id: "agendamentos", label: "Agenda", icon: Calendar },
     { id: "financeiro", label: "Financeiro", icon: DollarSign },
     { id: "clientes", label: "Clientes", icon: Users },
+    { id: "produtos", label: "Produtos", icon: ShoppingBag },
     { id: "horarios", label: "Horários", icon: Clock },
     { id: "servicos", label: "Serviços", icon: Settings },
   ];
