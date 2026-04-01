@@ -160,7 +160,7 @@ const AuthScreen = ({ onSuccess, onBack }: AuthScreenProps) => {
             </div>
           )}
 
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <label className="font-body text-xs text-primary-foreground/50 uppercase tracking-wider">
               WhatsApp
             </label>
