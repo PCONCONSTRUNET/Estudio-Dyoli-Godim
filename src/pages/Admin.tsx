@@ -253,7 +253,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const confirmados = agendamentos.filter(a => a.status === "confirmado").length;
   const cancelados = agendamentos.filter(a => a.status === "cancelado").length;
   const concluidos = agendamentos.filter(a => a.status === "concluido").length;
-  const faturamento = agendamentos.filter(a => a.status !== "cancelado").reduce((sum, a) => sum + (a.valor_pago || 0), 0);
+  const faltas = agendamentos.filter(a => a.status === "falta").length;
+  const faturamento = agendamentos.filter(a => a.status !== "cancelado" && a.status !== "falta").reduce((sum, a) => sum + (a.valor_pago || 0), 0);
 
   const getClientName = (userId: string) => clientes.find(c => c.id === userId)?.nome || "—";
   const formatDate = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
