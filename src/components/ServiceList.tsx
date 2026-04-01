@@ -56,22 +56,24 @@ const ServiceList = ({ serviceFilter, onSchedule, onBack }: ServiceListProps) =>
   };
 
   return (
-    <section className="min-h-screen bg-background px-6 py-8">
-      <button
-        onClick={onBack}
-        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        <span className="font-body text-sm">Voltar</span>
-      </button>
+    <section className="min-h-screen bg-background px-6 py-8 lg:flex lg:flex-col lg:items-center lg:px-8">
+      <div className="w-full max-w-md lg:max-w-2xl">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="font-body text-sm">Voltar</span>
+        </button>
 
-      <div className="space-y-2 mb-8">
-        <p className="font-body text-xs tracking-widest uppercase text-gold">Serviço selecionado</p>
-        <h2 className="font-heading text-3xl font-semibold text-foreground">Detalhes</h2>
-      </div>
+        <div className="space-y-2 mb-8">
+          <p className="font-body text-xs tracking-widest uppercase text-gold">Serviço selecionado</p>
+          <h2 className="font-heading text-3xl font-semibold text-foreground lg:text-4xl">Detalhes</h2>
+        </div>
 
-      <div className="space-y-6">
-        {services[serviceFilter as keyof typeof services]}
+        <div className="space-y-6">
+          {services[serviceFilter as keyof typeof services]}
+        </div>
       </div>
     </section>
   );
