@@ -338,7 +338,7 @@ const AdminDashboard = ({
                   tick={{ fontSize: 10, fill: "hsl(0 0% 100% / 0.25)" }}
                 />
                 <YAxis hide />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} wrapperStyle={{ outline: "none" }} />
                 <Area
                   type="monotone"
                   dataKey="receita"
@@ -372,7 +372,7 @@ const AdminDashboard = ({
                     tick={{ fontSize: 10, fill: "hsl(0 0% 100% / 0.35)" }}
                     width={100}
                   />
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} wrapperStyle={{ outline: "none" }} />
                   <Bar
                     dataKey="count"
                     fill="hsl(40 40% 55%)"
