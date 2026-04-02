@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Calendar, Clock, User, TrendingUp, Bell, ArrowRight } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
@@ -42,8 +42,20 @@ const AdminDashboard = ({
   statusBadge,
   onGoToAgenda,
 }: Props) => {
-  const today = getDateKey(new Date());
-  const now = new Date();
+  const getBrasiliaTime = () => {
+    const utc = new Date();
+    return new Date(utc.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  };
+
+  const [brasiliaTime, setBrasiliaTime] = useState(getBrasiliaTime);
+
+  useEffect(() => {
+    const interval = setInterval(() => setBrasiliaTime(getBrasiliaTime()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const today = getDateKey(brasiliaTime);
+  const now = brasiliaTime;
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
   // Today's appointments
@@ -138,11 +150,17 @@ const AdminDashboard = ({
             </p>
           </div>
           <div className="text-right">
-            <p className="font-heading text-2xl font-bold text-gold">{totalHoje}</p>
-            <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-wider">hoje</p>
+            <p className="font-heading text-2xl font-bold text-gold tabular-nums tracking-tight">
+              {brasiliaTime.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+            </p>
+            <p className="font-body text-[9px] text-primary-foreground/25 uppercase tracking-wider">Brasília</p>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-4 gap-3">
+          <div className="text-center">
+            <p className="font-heading text-lg font-bold text-gold">{totalHoje}</p>
+            <p className="font-body text-[10px] text-primary-foreground/35">Hoje</p>
+          </div>
           <div className="text-center">
             <p className="font-heading text-lg font-bold text-primary-foreground">{confirmadosHoje}</p>
             <p className="font-body text-[10px] text-primary-foreground/35">Pendentes</p>
