@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   BarChart3, Calendar, Users, Clock, Settings, LogOut, Search,
@@ -14,6 +14,8 @@ import { Calendar as DatePickerCalendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import FinanceiroTab from "@/components/FinanceiroTab";
 import ProdutosTab from "@/components/ProdutosTab";
+import { useAdminNotifications } from "@/hooks/use-admin-notifications";
+import { Switch } from "@/components/ui/switch";
 
 // ─── Types ───
 interface Agendamento {
@@ -271,6 +273,19 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const [selectedAgendaDate, setSelectedAgendaDate] = useState(() => getDateKey(new Date()));
 
+  const handleNewAgendamento = useCallback((newAg: any) => {
+    setAgendamentos((prev) => [newAg, ...prev]);
+    loadData();
+  }, []);
+
+  const {
+    notificationsEnabled,
+    soundEnabled,
+    toggleNotifications,
+    toggleSound,
+    playSound,
+  } = useAdminNotifications(true, handleNewAgendamento);
+
   useEffect(() => {
     loadData();
   }, []);
@@ -462,6 +477,33 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                     <p className={`mt-1 font-heading text-xl font-bold lg:text-2xl ${s.color}`}>{s.value}</p>
                   </div>
                 ))}
+              </div>
+              {/* Notification settings */}
+              <div className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-4 space-y-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <Bell className="w-4 h-4 text-gold" />
+                  <h3 className="font-body text-[12px] text-primary-foreground/60 uppercase tracking-widest font-medium">Notificações</h3>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-body text-[13px] text-primary-foreground">Pop-up de novos pedidos</p>
+                    <p className="font-body text-[11px] text-primary-foreground/35">Receba alerta quando chegar agendamento</p>
+                  </div>
+                  <Switch checked={notificationsEnabled} onCheckedChange={toggleNotifications} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-body text-[13px] text-primary-foreground">Som de notificação</p>
+                    <p className="font-body text-[11px] text-primary-foreground/35">Toque sonoro ao receber novo pedido</p>
+                  </div>
+                  <Switch checked={soundEnabled} onCheckedChange={toggleSound} />
+                </div>
+                <button
+                  onClick={() => playSound()}
+                  className="w-full py-2 rounded-xl bg-gold/10 border border-gold/20 text-gold font-body text-[12px] font-medium hover:bg-gold/15 transition-all"
+                >
+                  🔔 Testar som
+                </button>
               </div>
               <div>
                 <p className="font-body text-[10px] text-primary-foreground/25 text-center">Total de clientes: {clientes.length}</p>
