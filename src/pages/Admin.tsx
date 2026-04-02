@@ -463,71 +463,17 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         {/* Content */}
         <div className="mx-auto w-full max-w-md overflow-x-hidden px-3 py-4 sm:px-4 lg:max-w-4xl lg:px-8 lg:py-6">
           {tab === "dashboard" && (
-            <div className="space-y-4 animate-fade-in">
-              <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4">
-                {[
-                  { label: "Total", value: total, color: "text-primary-foreground" },
-                  { label: "Confirmados", value: confirmados, color: "text-gold" },
-                  { label: "Concluídos", value: concluidos, color: "text-green-500" },
-                  { label: "Cancelados", value: cancelados, color: "text-rose" },
-                  { label: "Faltas", value: faltas, color: "text-orange-500" },
-                  { label: "Faturamento", value: `R$ ${faturamento.toFixed(2).replace(".", ",")}`, color: "text-gold" },
-                ].map((s) => (
-                  <div key={s.label} className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-4">
-                    <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest">{s.label}</p>
-                    <p className={`mt-1 font-heading text-xl font-bold lg:text-2xl ${s.color}`}>{s.value}</p>
-                  </div>
-                ))}
-              </div>
-              {/* Notification settings */}
-              <div className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-4 space-y-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <Bell className="w-4 h-4 text-gold" />
-                  <h3 className="font-body text-[12px] text-primary-foreground/60 uppercase tracking-widest font-medium">Notificações</h3>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-body text-[13px] text-primary-foreground">Pop-up de novos pedidos</p>
-                    <p className="font-body text-[11px] text-primary-foreground/35">Receba alerta quando chegar agendamento</p>
-                  </div>
-                  <Switch checked={notificationsEnabled} onCheckedChange={toggleNotifications} />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-body text-[13px] text-primary-foreground">Som de notificação</p>
-                    <p className="font-body text-[11px] text-primary-foreground/35">Toque sonoro ao receber novo pedido</p>
-                  </div>
-                  <Switch checked={soundEnabled} onCheckedChange={toggleSound} />
-                </div>
-                <button
-                  onClick={() => playSound()}
-                  className="w-full py-2 rounded-xl bg-gold/10 border border-gold/20 text-gold font-body text-[12px] font-medium hover:bg-gold/15 transition-all"
-                >
-                  🔔 Testar som
-                </button>
-              </div>
-              <div>
-                <p className="font-body text-[10px] text-primary-foreground/25 text-center">Total de clientes: {clientes.length}</p>
-              </div>
-              <div>
-                <h3 className="mb-3 font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest">Últimos agendamentos</h3>
-                <div className="space-y-2">
-                  {agendamentos.slice(0, 5).map((a) => (
-                    <div key={a.id} className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-3 lg:p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-body text-[13px] font-medium text-primary-foreground truncate">{getClientName(a.user_id)}</p>
-                          <p className="font-body text-[11px] text-primary-foreground/40 truncate">{a.servico}{a.variacao ? ` — ${a.variacao}` : ""}</p>
-                        </div>
-                        {statusBadge(a.status)}
-                      </div>
-                      <p className="mt-1 font-body text-[11px] text-primary-foreground/30">{formatDate(a.data_agendamento)} · {a.horario}</p>
-                    </div>
-                  ))}
-                  {agendamentos.length === 0 && <p className="py-6 text-center font-body text-[13px] text-primary-foreground/30">Nenhum agendamento ainda</p>}
-                </div>
-              </div>
-            </div>
+            <AdminDashboard
+              agendamentos={agendamentos}
+              getClientName={getClientName}
+              notificationsEnabled={notificationsEnabled}
+              soundEnabled={soundEnabled}
+              toggleNotifications={toggleNotifications}
+              toggleSound={toggleSound}
+              playSound={playSound}
+              statusBadge={statusBadge}
+              onGoToAgenda={() => setTab("agendamentos")}
+            />
           )}
 
           {tab === "agendamentos" && (
