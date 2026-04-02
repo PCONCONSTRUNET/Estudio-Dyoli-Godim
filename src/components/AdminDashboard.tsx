@@ -42,8 +42,20 @@ const AdminDashboard = ({
   statusBadge,
   onGoToAgenda,
 }: Props) => {
-  const today = getDateKey(new Date());
-  const now = new Date();
+  const getBrasiliaTime = () => {
+    const utc = new Date();
+    return new Date(utc.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  };
+
+  const [brasiliaTime, setBrasiliaTime] = useState(getBrasiliaTime);
+
+  useEffect(() => {
+    const interval = setInterval(() => setBrasiliaTime(getBrasiliaTime()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const today = getDateKey(brasiliaTime);
+  const now = brasiliaTime;
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
   // Today's appointments
