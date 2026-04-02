@@ -150,11 +150,17 @@ const AdminDashboard = ({
             </p>
           </div>
           <div className="text-right">
-            <p className="font-heading text-2xl font-bold text-gold">{totalHoje}</p>
-            <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-wider">hoje</p>
+            <p className="font-heading text-2xl font-bold text-gold tabular-nums tracking-tight">
+              {brasiliaTime.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+            </p>
+            <p className="font-body text-[9px] text-primary-foreground/25 uppercase tracking-wider">Brasília</p>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-4 gap-3">
+          <div className="text-center">
+            <p className="font-heading text-lg font-bold text-gold">{totalHoje}</p>
+            <p className="font-body text-[10px] text-primary-foreground/35">Hoje</p>
+          </div>
           <div className="text-center">
             <p className="font-heading text-lg font-bold text-primary-foreground">{confirmadosHoje}</p>
             <p className="font-body text-[10px] text-primary-foreground/35">Pendentes</p>
