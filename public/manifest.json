@@ -1,0 +1,17 @@
+{
+  "name": "Estúdio Dyoli Godim",
+  "short_name": "Dyoli Godim",
+  "description": "Procedimentos estéticos com segurança e precisão.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#d4a0a0",
+  "icons": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
