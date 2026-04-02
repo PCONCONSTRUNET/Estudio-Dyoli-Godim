@@ -14,6 +14,7 @@ import { Calendar as DatePickerCalendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import FinanceiroTab from "@/components/FinanceiroTab";
 import ProdutosTab from "@/components/ProdutosTab";
+import AdminDashboard from "@/components/AdminDashboard";
 import { useAdminNotifications } from "@/hooks/use-admin-notifications";
 import { Switch } from "@/components/ui/switch";
 
