@@ -22,7 +22,7 @@ import { Switch } from "@/components/ui/switch";
 interface Agendamento {
   id: string; servico: string; variacao: string | null; data_agendamento: string;
   horario: string; valor: number; valor_pago: number | null; status: string;
-  created_at: string; user_id: string;
+  created_at: string; user_id: string; duracao_minutos: number;
 }
 interface Profile { id: string; nome: string; whatsapp: string; created_at: string; }
 interface LembreteConfig { id: string; tipo: string; ativo: boolean; mensagem: string; horas_antes: number; }
