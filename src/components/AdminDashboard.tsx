@@ -143,7 +143,7 @@ const AdminDashboard = ({
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="font-heading text-lg font-semibold text-primary-foreground">
-              Bom {now.getHours() < 12 ? "dia" : now.getHours() < 18 ? "tarde" : "noite"} ☀️
+              {now.getHours() < 12 ? "Bom dia ☀️" : now.getHours() < 18 ? "Boa tarde 🌤️" : "Boa noite 🌙"}
             </h2>
             <p className="font-body text-[12px] text-primary-foreground/40 mt-0.5">
               {now.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
