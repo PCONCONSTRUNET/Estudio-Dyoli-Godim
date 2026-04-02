@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Calendar, Clock, User, TrendingUp, Bell, ArrowRight } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
