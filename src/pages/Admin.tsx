@@ -273,6 +273,19 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const [selectedAgendaDate, setSelectedAgendaDate] = useState(() => getDateKey(new Date()));
 
+  const handleNewAgendamento = useCallback((newAg: any) => {
+    setAgendamentos((prev) => [newAg, ...prev]);
+    loadData();
+  }, []);
+
+  const {
+    notificationsEnabled,
+    soundEnabled,
+    toggleNotifications,
+    toggleSound,
+    playSound,
+  } = useAdminNotifications(true, handleNewAgendamento);
+
   useEffect(() => {
     loadData();
   }, []);
