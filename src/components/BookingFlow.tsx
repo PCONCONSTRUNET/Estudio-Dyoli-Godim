@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Calendar, Clock, CheckCircle2, Copy, Check } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, CheckCircle2, Copy, Check, CreditCard, FileText, Loader2, ExternalLink } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import pixIcon from "@/assets/pix-icon.svg";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface BookingFlowProps {
   service: string;
@@ -11,12 +12,42 @@ interface BookingFlowProps {
   onConfirm: (bookingData?: { date: string; time: string; price: number; paidAmount: number; durationMinutes: number }) => void;
 }
 
+interface PaymentResponse {
+  gateway: string;
+  method: string;
+  qr_code?: string;
+  qr_code_base64?: string;
+  qr_code_image?: string;
+  payment_id?: string;
+  charge_id?: string;
+  init_point?: string;
+  barcode?: string;
+  boleto_url?: string;
+  ticket_url?: string;
+  status?: string;
+  message?: string;
+  error?: string;
+}
+
+interface GatewayInfo {
+  gateway: string;
+  pix_enabled: boolean;
+  cartao_enabled: boolean;
+  boleto_enabled: boolean;
+}
+
 const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps) => {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<string>("");
-  const [step, setStep] = useState<"date" | "confirm" | "pix">("date");
+  const [step, setStep] = useState<"date" | "confirm" | "payment">("date");
   const [copied, setCopied] = useState(false);
   const [paymentMode, setPaymentMode] = useState<"deposit" | "full">("deposit");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"pix" | "cartao" | "boleto">("pix");
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentData, setPaymentData] = useState<PaymentResponse | null>(null);
+  const [availableMethods, setAvailableMethods] = useState<{ pix: boolean; cartao: boolean; boleto: boolean }>({ pix: true, cartao: false, boleto: false });
+  const [gatewayInfo, setGatewayInfo] = useState<GatewayInfo | null>(null);
+  const [checkingPayment, setCheckingPayment] = useState(false);
 
   const PIX_KEY = "48999779829";
   const PIX_NAME = "DYOLI GODIM";
