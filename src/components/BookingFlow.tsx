@@ -537,6 +537,10 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
             <ArrowLeft className="w-4 h-4" /><span className="font-body text-[14px]">Voltar</span>
           </button>
           <div className="flex-1 flex flex-col items-center justify-center text-center animate-fade-in">
+            {/* Timer */}
+            <div className={`mb-4 px-4 py-2 rounded-full font-body text-[13px] font-semibold ${timerUrgent ? "bg-destructive/20 text-destructive animate-pulse" : "bg-gold/10 text-gold"}`}>
+              ⏱ Expira em {timerStr}
+            </div>
             <CreditCard className="w-12 h-12 text-gold mb-4" />
             <h2 className="font-heading text-2xl font-semibold text-foreground mb-2">Pagamento com Cartão</h2>
             <p className="font-body text-[13px] text-muted-foreground mb-6 max-w-xs">Você será redirecionado para o checkout seguro</p>
@@ -544,10 +548,9 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
               className="ios-press w-full max-w-sm py-4 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] flex items-center justify-center gap-2">
               <ExternalLink className="w-5 h-5" /> Ir para o Checkout
             </a>
-            <button onClick={() => onConfirm({ date: selectedDate, time: selectedTime, price: numericPrice, paidAmount: 0, durationMinutes: serviceDuration })}
-              className="ios-press mt-4 font-body text-[13px] text-muted-foreground hover:text-foreground transition-colors">
-              Já realizei o pagamento
-            </button>
+            <p className="mt-4 font-body text-[12px] text-muted-foreground flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" /> Aguardando confirmação do pagamento...
+            </p>
           </div>
         </section>
       );
