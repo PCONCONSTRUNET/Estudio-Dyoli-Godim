@@ -111,10 +111,13 @@ async function handleMercadoPago(
   try {
     // PIX payment
     if (payment_method === "pix") {
+      // 5 min expiration
+      const expDate = new Date(Date.now() + 5 * 60 * 1000).toISOString();
       const body: any = {
         transaction_amount: amount,
         description: description || "Agendamento",
         payment_method_id: "pix",
+        date_of_expiration: expDate,
         payer: {
           email: customer_email || "cliente@email.com",
           first_name: customer_name || "Cliente",
