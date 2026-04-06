@@ -1,6 +1,7 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
-import { Calendar, Download, FileText, Table2, TrendingUp, Wallet, X, Percent, Settings } from "lucide-react";
+import { Calendar, Download, FileText, Table2, TrendingUp, Wallet, X, Percent, Settings, ArrowDown } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Agendamento {
   id: string; servico: string; variacao: string | null; data_agendamento: string;
@@ -39,6 +40,14 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const [showComissaoConfig, setShowComissaoConfig] = useState(false);
   const [tempComissao, setTempComissao] = useState(comissaoPct.toString());
 
+  // Load despesas
+  const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string }[]>([]);
+  useEffect(() => {
+    (supabase.from as any)("despesas").select("valor,pago,data_vencimento").then(({ data }: any) => {
+      if (data) setDespesas(data);
+    });
+  }, []);
+
   // Filter agendamentos by period
   const filtered = useMemo(() => {
     const now = new Date();
@@ -75,6 +84,8 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const totalPendente = totalReceita - totalRecebido;
   const qtdAtendimentos = filtered.length;
   const comissaoValor = totalRecebido * (comissaoPct / 100);
+  const totalDespesas = despesas.reduce((s, d) => s + Number(d.valor), 0);
+  const lucroLiquido = totalRecebido - totalDespesas;
 
   // Chart: receita por dia
   const dailyData = useMemo(() => {
@@ -250,8 +261,16 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
           <p className="font-heading text-xl font-bold text-rose mt-1">{formatCurrency(totalPendente)}</p>
         </div>
         <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+          <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest flex items-center gap-1"><ArrowDown className="w-3 h-3" /> Despesas</p>
+          <p className="font-heading text-xl font-bold text-red-400 mt-1">- {formatCurrency(totalDespesas)}</p>
+        </div>
+        <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
           <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest">Atendimentos</p>
           <p className="font-heading text-xl font-bold text-primary-foreground mt-1">{qtdAtendimentos}</p>
+        </div>
+        <div className={`p-4 rounded-2xl border ${lucroLiquido >= 0 ? "bg-green-500/5 border-green-500/20" : "bg-red-500/5 border-red-500/20"}`}>
+          <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest">Lucro Líquido</p>
+          <p className={`font-heading text-xl font-bold mt-1 ${lucroLiquido >= 0 ? "text-green-400" : "text-red-400"}`}>{formatCurrency(lucroLiquido)}</p>
         </div>
       </div>
 
