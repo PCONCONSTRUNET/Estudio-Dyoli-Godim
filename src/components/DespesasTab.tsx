@@ -123,14 +123,15 @@ const DespesasTab = () => {
       return;
     }
     setSaving(true);
-    const { error } = await (supabase.from as any)("despesas").insert({
+    const { error } = await (supabase.from as any)("despesas").insert([{
       descricao,
       valor: parseFloat(valor),
       data_vencimento: dataVencimento,
       categoria,
       observacao: observacao || null,
-    });
+    }]);
     if (error) {
+      console.error("Erro despesas insert:", error);
       toast.error("Erro ao salvar despesa");
     } else {
       toast.success("Despesa adicionada!");
