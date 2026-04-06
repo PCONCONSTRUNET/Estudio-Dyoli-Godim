@@ -509,7 +509,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
             </div>
           )}
           <button onClick={handleGoToPayment} disabled={paymentLoading}
-            className="ios-press w-full py-4 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all flex items-center justify-center gap-2.5 disabled:opacity-50">
+            className="ios-press w-full py-4 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all flex items-center justify-center gap-2.5 disabled:opacity-50">
             {paymentLoading ? (<><Loader2 className="w-5 h-5 animate-spin" /> Processando...</>) : (
               <>{selectedPaymentMethod === "pix" && <img src={pixIcon} alt="PIX" className="w-5 h-5" />}
               {selectedPaymentMethod === "cartao" && <CreditCard className="w-5 h-5" />}
@@ -557,7 +557,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
             <h2 className="font-heading text-2xl font-semibold text-foreground mb-2">Pagamento com Cartão</h2>
             <p className="font-body text-[13px] text-muted-foreground mb-6 max-w-xs">Você será redirecionado para o checkout seguro</p>
             <a href={paymentData.init_point} target="_blank" rel="noopener noreferrer"
-              className="ios-press w-full max-w-sm py-4 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] flex items-center justify-center gap-2">
+              className="ios-press w-full max-w-sm py-4 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[15px] flex items-center justify-center gap-2">
               <ExternalLink className="w-5 h-5" /> Ir para o Checkout
             </a>
             <p className="mt-4 font-body text-[12px] text-muted-foreground flex items-center gap-2">
@@ -602,7 +602,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
             )}
             {paymentData.boleto_url && (
               <a href={paymentData.boleto_url} target="_blank" rel="noopener noreferrer"
-                className="ios-press w-full max-w-sm py-4 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] flex items-center justify-center gap-2 mb-4">
+                className="ios-press w-full max-w-sm py-4 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[15px] flex items-center justify-center gap-2 mb-4">
                 <ExternalLink className="w-5 h-5" /> Abrir Boleto
               </a>
             )}
@@ -682,7 +682,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
               }
               onConfirm({ date: selectedDate, time: selectedTime, price: numericPrice, paidAmount: paymentAmount, durationMinutes: serviceDuration });
             }}
-              className="ios-press w-full py-4 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all">
+              className="ios-press w-full py-4 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all">
               Confirmar Agendamento
             </button>
           ) : (

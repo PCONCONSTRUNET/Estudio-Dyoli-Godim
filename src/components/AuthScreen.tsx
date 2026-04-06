@@ -210,7 +210,7 @@ const AuthScreen = ({ onSuccess, onBack, initialMode = "signup" }: AuthScreenPro
           <button
             type="submit"
             disabled={loading}
-            className="ios-press w-full py-3.5 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] disabled:opacity-40 disabled:cursor-not-allowed mt-2 transition-all duration-200"
+            className="ios-press w-full py-3.5 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] disabled:opacity-40 disabled:cursor-not-allowed mt-2 transition-all duration-200"
           >
             {loading
               ? "Aguarde..."

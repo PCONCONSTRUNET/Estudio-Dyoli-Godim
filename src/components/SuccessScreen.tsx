@@ -75,7 +75,7 @@ const SuccessScreen = ({ onHome, onProfile }: SuccessScreenProps) => {
           {onProfile && (
             <button
               onClick={onProfile}
-              className="ios-press w-full py-3.5 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all duration-200 flex items-center justify-center gap-2.5"
+              className="ios-press w-full py-3.5 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all duration-200 flex items-center justify-center gap-2.5"
             >
               <User className="w-5 h-5" />
               Meu Perfil
@@ -83,7 +83,7 @@ const SuccessScreen = ({ onHome, onProfile }: SuccessScreenProps) => {
           )}
           <button
             onClick={onHome}
-            className="ios-press w-full py-3.5 rounded-2xl bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[15px] tracking-wide transition-all duration-200 hover:bg-primary-foreground/[0.12] flex items-center justify-center gap-2.5"
+            className="ios-press w-full py-3.5 rounded-full bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[15px] tracking-wide transition-all duration-200 hover:bg-primary-foreground/[0.12] flex items-center justify-center gap-2.5"
           >
             <Home className="w-5 h-5" />
             Voltar ao Início

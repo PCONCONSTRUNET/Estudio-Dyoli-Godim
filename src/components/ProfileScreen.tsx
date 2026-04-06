@@ -171,7 +171,7 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
               <div className="pt-4">
                 <button
                   onClick={handleLogout}
-                  className="ios-press w-full py-3 rounded-2xl bg-rose/10 border border-rose/20 text-rose font-body text-[14px] font-medium flex items-center justify-center gap-2 transition-all duration-200 hover:bg-rose/15"
+                  className="ios-press w-full py-3 rounded-full bg-rose/10 border border-rose/20 text-rose font-body text-[14px] font-medium flex items-center justify-center gap-2 transition-all duration-200 hover:bg-rose/15"
                 >
                   <LogOut className="w-4 h-4" />
                   Sair da Conta
