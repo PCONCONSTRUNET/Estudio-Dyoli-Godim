@@ -241,10 +241,48 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   const paymentAmount = getPaymentAmount();
   const pixPayload = generatePixPayload(paymentAmount);
 
-  const handleCopyPix = async () => {
-    await navigator.clipboard.writeText(pixPayload);
+  const handleCopyCode = async (text: string) => {
+    await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
+  };
+
+  const handleCreatePayment = async () => {
+    setPaymentLoading(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke("create-payment", {
+        body: {
+          amount: paymentAmount,
+          description: `${service}${variation ? ` — ${variation}` : ""}`,
+          agendamento_id: `temp-${Date.now()}`,
+          payment_method: selectedPaymentMethod,
+          customer_email: sessionData?.session?.user?.email,
+          customer_name: sessionData?.session?.user?.user_metadata?.nome,
+        },
+      });
+      const result = res.data as PaymentResponse;
+      if (result?.error) {
+        toast.error(result.error);
+        setPaymentLoading(false);
+        return;
+      }
+      setPaymentData(result);
+      setStep("payment");
+    } catch (err) {
+      console.error("Payment error:", err);
+      toast.error("Erro ao criar pagamento");
+    }
+    setPaymentLoading(false);
+  };
+
+  const handleGoToPayment = () => {
+    if (gatewayInfo) {
+      handleCreatePayment();
+    } else {
+      setPaymentData({ gateway: "local", method: "pix" });
+      setStep("payment");
+    }
   };
 
   if (step === "confirm") {
