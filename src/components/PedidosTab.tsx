@@ -339,7 +339,9 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                         </button>
                       </div>
                     </div>
+                  </div>
                 )}
+
               </div>
             );
           })}
