@@ -882,7 +882,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
       {/* Mobile bottom nav (hidden on desktop) */}
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-primary-foreground/[0.06] bg-charcoal/95 backdrop-blur-xl pb-[env(safe-area-inset-bottom)] lg:hidden">
-        <div className="mx-auto grid w-full max-w-md grid-cols-7 px-1">
+        <div className="mx-auto grid w-full max-w-md grid-cols-8 px-1">
           {tabs.map((t) => (
             <button key={t.id} onClick={() => setTab(t.id)} className={`flex min-w-0 flex-col items-center gap-0.5 px-1 py-2.5 transition-all ${tab === t.id ? "text-gold" : "text-primary-foreground/30"}`}>
               <t.icon className="h-4 w-4 shrink-0" />
