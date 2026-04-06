@@ -131,6 +131,48 @@ export type Database = {
         }
         Relationships: []
       }
+      gateway_configs: {
+        Row: {
+          access_token: string | null
+          ativo: boolean
+          boleto_enabled: boolean
+          cartao_enabled: boolean
+          created_at: string
+          gateway: string
+          id: string
+          pix_enabled: boolean
+          public_key: string | null
+          updated_at: string
+          webhook_url: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          ativo?: boolean
+          boleto_enabled?: boolean
+          cartao_enabled?: boolean
+          created_at?: string
+          gateway: string
+          id?: string
+          pix_enabled?: boolean
+          public_key?: string | null
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          ativo?: boolean
+          boleto_enabled?: boolean
+          cartao_enabled?: boolean
+          created_at?: string
+          gateway?: string
+          id?: string
+          pix_enabled?: boolean
+          public_key?: string | null
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
       horarios_bloqueados: {
         Row: {
           created_at: string
