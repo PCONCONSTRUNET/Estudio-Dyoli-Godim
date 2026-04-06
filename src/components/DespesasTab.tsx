@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Save, X, Trash2, Check, AlertTriangle, Clock } from "lucide-react";
+import { Plus, Save, X, Trash2, Check, AlertTriangle, Clock, Bell, ChevronRight } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
@@ -108,6 +109,34 @@ const DespesasTab = () => {
     }).length;
   }, [despesas, today]);
 
+  // Notificações: atrasadas, hoje, e próximos 3 dias
+  const notifications = useMemo(() => {
+    const notifs: { tipo: "atrasado" | "hoje" | "proximo"; despesa: Despesa; dias: number }[] = [];
+    const todayDate = new Date(today + "T12:00:00");
+
+    despesas.forEach((d) => {
+      if (d.pago) return;
+      const venc = new Date(d.data_vencimento + "T12:00:00");
+      const diffDays = Math.round((venc.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) {
+        notifs.push({ tipo: "atrasado", despesa: d, dias: Math.abs(diffDays) });
+      } else if (diffDays === 0) {
+        notifs.push({ tipo: "hoje", despesa: d, dias: 0 });
+      } else if (diffDays <= 3) {
+        notifs.push({ tipo: "proximo", despesa: d, dias: diffDays });
+      }
+    });
+
+    // Ordenar: atrasados primeiro, depois hoje, depois próximos
+    notifs.sort((a, b) => {
+      const order = { atrasado: 0, hoje: 1, proximo: 2 };
+      return order[a.tipo] - order[b.tipo] || a.dias - b.dias;
+    });
+
+    return notifs;
+  }, [despesas, today]);
+
   const totalPendente = useMemo(
     () => despesas.filter((d) => !d.pago).reduce((s, d) => s + Number(d.valor), 0),
     [despesas]
@@ -186,22 +215,168 @@ const DespesasTab = () => {
     <div className="space-y-4 animate-fade-in">
       <div className="flex items-center justify-between">
         <h2 className="font-heading text-lg font-semibold text-primary-foreground lg:hidden">Despesas</h2>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 rounded-xl bg-gold/10 px-3 py-2 font-body text-[12px] font-medium text-gold transition-all hover:bg-gold/20"
-        >
-          <Plus className="h-3.5 w-3.5" /> Adicionar
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Notification Bell */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <button className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] transition-all hover:bg-primary-foreground/[0.1]">
+                <Bell className={`h-4 w-4 ${notifications.length > 0 ? "text-yellow-400" : "text-primary-foreground/30"}`} />
+                {notifications.length > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white animate-pulse">
+                    {notifications.length}
+                  </span>
+                )}
+              </button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[340px] sm:w-[400px] bg-charcoal border-primary-foreground/[0.06] p-0">
+              <SheetHeader className="px-5 pt-5 pb-4 border-b border-primary-foreground/[0.06]">
+                <SheetTitle className="font-heading text-[16px] font-semibold text-primary-foreground flex items-center gap-2">
+                  <Bell className="w-4 h-4 text-gold" />
+                  Notificações
+                  {notifications.length > 0 && (
+                    <span className="ml-auto px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 text-[10px] font-body font-medium border border-red-500/20">
+                      {notifications.length} alerta{notifications.length > 1 ? "s" : ""}
+                    </span>
+                  )}
+                </SheetTitle>
+              </SheetHeader>
+
+              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 max-h-[calc(100vh-120px)]">
+                {notifications.length === 0 ? (
+                  <div className="py-16 text-center">
+                    <Check className="h-8 w-8 text-green-400/40 mx-auto mb-3" />
+                    <p className="font-body text-[13px] text-primary-foreground/30">Tudo em dia! 🎉</p>
+                    <p className="font-body text-[11px] text-primary-foreground/20 mt-1">Nenhuma despesa pendente ou atrasada</p>
+                  </div>
+                ) : (
+                  notifications.map((n) => {
+                    const notifConfig = {
+                      atrasado: {
+                        bg: "bg-red-500/10 border-red-500/25",
+                        icon: AlertTriangle,
+                        iconColor: "text-red-400",
+                        title: `Atrasado há ${n.dias} dia${n.dias > 1 ? "s" : ""}`,
+                        titleColor: "text-red-400",
+                      },
+                      hoje: {
+                        bg: "bg-yellow-500/10 border-yellow-500/25",
+                        icon: Clock,
+                        iconColor: "text-yellow-400",
+                        title: "Vence hoje!",
+                        titleColor: "text-yellow-400",
+                      },
+                      proximo: {
+                        bg: "bg-blue-500/10 border-blue-500/25",
+                        icon: Clock,
+                        iconColor: "text-blue-400",
+                        title: `Vence em ${n.dias} dia${n.dias > 1 ? "s" : ""}`,
+                        titleColor: "text-blue-400",
+                      },
+                    };
+                    const cfg = notifConfig[n.tipo];
+                    const Icon = cfg.icon;
+
+                    return (
+                      <div
+                        key={n.despesa.id}
+                        className={`rounded-xl border p-3 transition-all ${cfg.bg}`}
+                      >
+                        <div className="flex items-start gap-2.5">
+                          <div className={`mt-0.5 shrink-0 ${cfg.iconColor}`}>
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`font-body text-[11px] font-semibold ${cfg.titleColor}`}>{cfg.title}</p>
+                            <p className="font-body text-[13px] font-medium text-primary-foreground truncate mt-0.5">
+                              {n.despesa.descricao}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="font-heading text-[13px] font-bold text-primary-foreground">
+                                {formatCurrency(Number(n.despesa.valor))}
+                              </span>
+                              <span className="font-body text-[10px] text-primary-foreground/30">
+                                {n.despesa.categoria}
+                              </span>
+                            </div>
+                            <p className="font-body text-[10px] text-primary-foreground/25 mt-1">
+                              Vencimento: {formatDate(n.despesa.data_vencimento)}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => togglePago(n.despesa)}
+                            className="shrink-0 flex h-8 w-8 items-center justify-center rounded-lg bg-green-500/10 text-green-400/50 border border-green-500/20 transition-all hover:bg-green-500/20 hover:text-green-400"
+                            title="Marcar como pago"
+                          >
+                            <Check className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-1.5 rounded-xl bg-gold/10 px-3 py-2 font-body text-[12px] font-medium text-gold transition-all hover:bg-gold/20"
+          >
+            <Plus className="h-3.5 w-3.5" /> Adicionar
+          </button>
+        </div>
       </div>
 
       {/* Alert banner */}
       {alertCount > 0 && (
-        <div className="flex items-center gap-2 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-3 py-2.5">
-          <AlertTriangle className="h-4 w-4 text-yellow-400 shrink-0" />
-          <p className="font-body text-[12px] text-yellow-300">
-            Você tem <strong>{alertCount}</strong> despesa{alertCount > 1 ? "s" : ""} que precisa{alertCount > 1 ? "m" : ""} de atenção!
-          </p>
-        </div>
+        <Sheet>
+          <SheetTrigger asChild>
+            <button className="w-full flex items-center gap-2 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-3 py-2.5 text-left transition-all hover:bg-yellow-500/15">
+              <AlertTriangle className="h-4 w-4 text-yellow-400 shrink-0" />
+              <p className="font-body text-[12px] text-yellow-300 flex-1">
+                Você tem <strong>{alertCount}</strong> despesa{alertCount > 1 ? "s" : ""} que precisa{alertCount > 1 ? "m" : ""} de atenção!
+              </p>
+              <ChevronRight className="h-3.5 w-3.5 text-yellow-400/50 shrink-0" />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-[340px] sm:w-[400px] bg-charcoal border-primary-foreground/[0.06] p-0">
+            <SheetHeader className="px-5 pt-5 pb-4 border-b border-primary-foreground/[0.06]">
+              <SheetTitle className="font-heading text-[16px] font-semibold text-primary-foreground flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-yellow-400" />
+                Despesas com atenção
+              </SheetTitle>
+            </SheetHeader>
+            <div className="overflow-y-auto px-4 py-4 space-y-2 max-h-[calc(100vh-120px)]">
+              {notifications.filter(n => n.tipo === "atrasado" || n.tipo === "hoje").map((n) => (
+                <div
+                  key={n.despesa.id}
+                  className={`rounded-xl border p-3 ${n.tipo === "atrasado" ? "bg-red-500/10 border-red-500/25" : "bg-yellow-500/10 border-yellow-500/25"}`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    {n.tipo === "atrasado" ? (
+                      <AlertTriangle className="h-3.5 w-3.5 text-red-400" />
+                    ) : (
+                      <Clock className="h-3.5 w-3.5 text-yellow-400" />
+                    )}
+                    <span className={`font-body text-[10px] font-semibold ${n.tipo === "atrasado" ? "text-red-400" : "text-yellow-400"}`}>
+                      {n.tipo === "atrasado" ? `Atrasado há ${n.dias} dia${n.dias > 1 ? "s" : ""}` : "Vence hoje!"}
+                    </span>
+                  </div>
+                  <p className="font-body text-[13px] font-medium text-primary-foreground">{n.despesa.descricao}</p>
+                  <div className="flex items-center justify-between mt-1.5">
+                    <span className="font-heading text-[14px] font-bold text-primary-foreground">{formatCurrency(Number(n.despesa.valor))}</span>
+                    <button
+                      onClick={() => togglePago(n.despesa)}
+                      className="flex items-center gap-1 rounded-lg px-2 py-1 bg-green-500/10 text-green-400/60 text-[10px] font-body font-medium border border-green-500/20 hover:bg-green-500/20 hover:text-green-400 transition-all"
+                    >
+                      <Check className="h-3 w-3" /> Pagar
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SheetContent>
+        </Sheet>
       )}
 
       {/* Summary cards */}
