@@ -587,10 +587,9 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
                 <ExternalLink className="w-5 h-5" /> Abrir Boleto
               </a>
             )}
-            <button onClick={() => onConfirm({ date: selectedDate, time: selectedTime, price: numericPrice, paidAmount: 0, durationMinutes: serviceDuration })}
-              className="ios-press w-full max-w-sm py-4 rounded-2xl bg-card border border-border font-body font-semibold text-[15px] text-foreground">
-              Confirmar Agendamento
-            </button>
+            <p className="mt-4 font-body text-[12px] text-muted-foreground flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" /> Aguardando confirmação do pagamento...
+            </p>
           </div>
         </section>
       );
