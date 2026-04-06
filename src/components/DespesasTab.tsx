@@ -164,8 +164,7 @@ const DespesasTab = () => {
     });
     toast.success("Todas limpas");
   };
-
-
+  const totalPendente = useMemo(
     () => despesas.filter((d) => !d.pago).reduce((s, d) => s + Number(d.valor), 0),
     [despesas]
   );
