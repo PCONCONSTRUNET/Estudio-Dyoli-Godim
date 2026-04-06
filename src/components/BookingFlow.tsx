@@ -149,7 +149,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       const dur = a.duracao_minutos || 60;
       const [h, m] = a.horario.split(":").map(Number);
       const startMin = h * 60 + m;
-      for (let t = 0; t < dur; t += 60) {
+      for (let t = 0; t < dur; t += 30) {
         const slotMin = startMin + t;
         const slotStr = `${String(Math.floor(slotMin / 60)).padStart(2, "0")}:${String(slotMin % 60).padStart(2, "0")}`;
         if (!map[a.data_agendamento].includes(slotStr)) map[a.data_agendamento].push(slotStr);
@@ -168,9 +168,11 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   const generateTimes = (open: string, close: string) => {
     const result: string[] = [];
     const [oh, om] = open.split(":").map(Number);
-    const [ch] = close.split(":").map(Number);
-    for (let h = oh; h < ch; h++) {
-      result.push(`${String(h).padStart(2, "0")}:${String(om).padStart(2, "0")}`);
+    const [ch, cm] = close.split(":").map(Number);
+    const startMin = oh * 60 + om;
+    const endMin = ch * 60 + (cm || 0);
+    for (let m = startMin; m < endMin; m += 30) {
+      result.push(`${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`);
     }
     return result;
   };
@@ -194,12 +196,12 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     return allTimes.filter(t => {
       const [h, m] = t.split(":").map(Number);
       const startMin = h * 60 + m;
-      const [closeH] = hours.close.split(":").map(Number);
-      const closeMin = closeH * 60;
+      const [closeH, closeM] = hours.close.split(":").map(Number);
+      const closeMin = closeH * 60 + (closeM || 0);
       // Check service fits before closing time
       if (startMin + serviceDuration > closeMin) return false;
-      // Check no overlap with booked slots
-      for (let offset = 0; offset < serviceDuration; offset += 60) {
+      // Check no overlap with booked slots (30-min increments)
+      for (let offset = 0; offset < serviceDuration; offset += 30) {
         const checkMin = startMin + offset;
         const checkStr = `${String(Math.floor(checkMin / 60)).padStart(2, "0")}:${String(checkMin % 60).padStart(2, "0")}`;
         if (booked.includes(checkStr)) return false;
