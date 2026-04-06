@@ -95,6 +95,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   const [businessHours, setBusinessHours] = useState<Record<number, { open: string; close: string } | null>>({});
   const [bookedSlots, setBookedSlots] = useState<Record<string, string[]>>({});
   const [serviceDuration, setServiceDuration] = useState(60);
+  const [servicePrice, setServicePrice] = useState<number | null>(null);
 
   useEffect(() => {
     supabase.from("horarios_funcionamento").select("*").then(({ data }) => {
@@ -107,8 +108,9 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       }
     });
     // Load service duration
-    supabase.from("servicos").select("duracao_minutos, nome").eq("nome", service).maybeSingle().then(({ data }) => {
+    supabase.from("servicos").select("duracao_minutos, nome, preco").eq("nome", service).maybeSingle().then(({ data }) => {
       if (data?.duracao_minutos) setServiceDuration(data.duracao_minutos);
+      if (data?.preco) setServicePrice(data.preco);
     });
     // Load active gateway payment methods
     (supabase.from as any)("gateway_configs").select("gateway, pix_enabled, cartao_enabled, boleto_enabled").eq("ativo", true).then(({ data }: any) => {
@@ -149,7 +151,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       const dur = a.duracao_minutos || 60;
       const [h, m] = a.horario.split(":").map(Number);
       const startMin = h * 60 + m;
-      for (let t = 0; t < dur; t += 60) {
+      for (let t = 0; t < dur; t += 30) {
         const slotMin = startMin + t;
         const slotStr = `${String(Math.floor(slotMin / 60)).padStart(2, "0")}:${String(slotMin % 60).padStart(2, "0")}`;
         if (!map[a.data_agendamento].includes(slotStr)) map[a.data_agendamento].push(slotStr);
@@ -168,9 +170,11 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   const generateTimes = (open: string, close: string) => {
     const result: string[] = [];
     const [oh, om] = open.split(":").map(Number);
-    const [ch] = close.split(":").map(Number);
-    for (let h = oh; h < ch; h++) {
-      result.push(`${String(h).padStart(2, "0")}:${String(om).padStart(2, "0")}`);
+    const [ch, cm] = close.split(":").map(Number);
+    const startMin = oh * 60 + om;
+    const endMin = ch * 60 + (cm || 0);
+    for (let m = startMin; m < endMin; m += 30) {
+      result.push(`${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`);
     }
     return result;
   };
@@ -194,12 +198,12 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     return allTimes.filter(t => {
       const [h, m] = t.split(":").map(Number);
       const startMin = h * 60 + m;
-      const [closeH] = hours.close.split(":").map(Number);
-      const closeMin = closeH * 60;
+      const [closeH, closeM] = hours.close.split(":").map(Number);
+      const closeMin = closeH * 60 + (closeM || 0);
       // Check service fits before closing time
       if (startMin + serviceDuration > closeMin) return false;
-      // Check no overlap with booked slots
-      for (let offset = 0; offset < serviceDuration; offset += 60) {
+      // Check no overlap with booked slots (30-min increments)
+      for (let offset = 0; offset < serviceDuration; offset += 30) {
         const checkMin = startMin + offset;
         const checkStr = `${String(Math.floor(checkMin / 60)).padStart(2, "0")}:${String(checkMin % 60).padStart(2, "0")}`;
         if (booked.includes(checkStr)) return false;
@@ -222,6 +226,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   };
 
   const getPrice = () => {
+    if (servicePrice !== null) return `R$ ${servicePrice}`;
     if (variation === "Básica") return "R$ 170";
     if (variation === "Padrão") return "R$ 180";
     if (variation === "Premium") return "R$ 300";
@@ -533,7 +538,14 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     if (paymentData?.method === "cartao" && paymentData.init_point) {
       return (
         <section className="min-h-screen bg-background px-6 py-8 flex flex-col items-center lg:px-8">
-          <button onClick={() => setStep("confirm")} className="ios-press self-start flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8">
+          <button onClick={async () => {
+            if (agendamentoId) {
+              await supabase.from("agendamentos").update({ status: "cancelado" }).eq("id", agendamentoId);
+            }
+            setAgendamentoId(null);
+            setPaymentData(null);
+            setStep("confirm");
+          }} className="ios-press self-start flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8">
             <ArrowLeft className="w-4 h-4" /><span className="font-body text-[14px]">Voltar</span>
           </button>
           <div className="flex-1 flex flex-col items-center justify-center text-center animate-fade-in">
@@ -559,7 +571,14 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     if (paymentData?.method === "boleto") {
       return (
         <section className="min-h-screen bg-background px-6 py-8 flex flex-col items-center lg:px-8">
-          <button onClick={() => setStep("confirm")} className="ios-press self-start flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8">
+          <button onClick={async () => {
+            if (agendamentoId) {
+              await supabase.from("agendamentos").update({ status: "cancelado" }).eq("id", agendamentoId);
+            }
+            setAgendamentoId(null);
+            setPaymentData(null);
+            setStep("confirm");
+          }} className="ios-press self-start flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8">
             <ArrowLeft className="w-4 h-4" /><span className="font-body text-[14px]">Voltar</span>
           </button>
           <div className="flex-1 flex flex-col items-center justify-center text-center animate-fade-in">
@@ -598,7 +617,14 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     // PIX (gateway or local)
     return (
       <section className="min-h-screen bg-background px-6 py-8 flex flex-col lg:items-center lg:px-8">
-        <button onClick={() => setStep("confirm")} className="ios-press flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6">
+        <button onClick={async () => {
+            if (agendamentoId) {
+              await supabase.from("agendamentos").update({ status: "cancelado" }).eq("id", agendamentoId);
+            }
+            setAgendamentoId(null);
+            setPaymentData(null);
+            setStep("confirm");
+          }} className="ios-press flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6">
           <ArrowLeft className="w-4 h-4" /><span className="font-body text-[14px]">Voltar</span>
         </button>
         <div className="flex-1 flex flex-col items-center text-center animate-fade-in">
