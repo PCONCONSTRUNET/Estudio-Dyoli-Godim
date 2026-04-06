@@ -261,8 +261,16 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
           <p className="font-heading text-xl font-bold text-rose mt-1">{formatCurrency(totalPendente)}</p>
         </div>
         <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+          <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest flex items-center gap-1"><ArrowDown className="w-3 h-3" /> Despesas</p>
+          <p className="font-heading text-xl font-bold text-red-400 mt-1">- {formatCurrency(totalDespesas)}</p>
+        </div>
+        <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
           <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest">Atendimentos</p>
           <p className="font-heading text-xl font-bold text-primary-foreground mt-1">{qtdAtendimentos}</p>
+        </div>
+        <div className={`p-4 rounded-2xl border ${lucroLiquido >= 0 ? "bg-green-500/5 border-green-500/20" : "bg-red-500/5 border-red-500/20"}`}>
+          <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest">Lucro Líquido</p>
+          <p className={`font-heading text-xl font-bold mt-1 ${lucroLiquido >= 0 ? "text-green-400" : "text-red-400"}`}>{formatCurrency(lucroLiquido)}</p>
         </div>
       </div>
 
