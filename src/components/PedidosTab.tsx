@@ -331,14 +331,14 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                         )}
                       </div>
                       <div className="flex justify-end">
-                      <button
-                        onClick={() => deleteAgendamento(a.id)}
-                        className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-primary-foreground/20 transition-all hover:bg-rose/10 hover:text-rose"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" /> Excluir
-                      </button>
+                        <button
+                          onClick={() => deleteAgendamento(a.id)}
+                          className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-primary-foreground/20 transition-all hover:bg-rose/10 hover:text-rose"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" /> Excluir
+                        </button>
+                      </div>
                     </div>
-                  </div>
                 )}
               </div>
             );
