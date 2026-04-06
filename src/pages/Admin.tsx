@@ -632,6 +632,19 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                 </Sheet>
               </div>
 
+              {/* Alert banner */}
+              {activeAgendaNotifs.filter(n => n.tipo === "hoje" || n.tipo === "falta").length > 0 && (
+                <div className="flex items-center gap-2 rounded-xl border border-gold/30 bg-gold/10 px-3 py-2.5">
+                  <Bell className="h-4 w-4 text-gold shrink-0" />
+                  <p className="font-body text-[12px] text-gold flex-1">
+                    <strong>{activeAgendaNotifs.filter(n => n.tipo === "hoje").length}</strong> atendimento(s) hoje
+                    {activeAgendaNotifs.filter(n => n.tipo === "falta").length > 0 && (
+                      <> · <strong className="text-orange-400">{activeAgendaNotifs.filter(n => n.tipo === "falta").length}</strong> falta(s)</>
+                    )}
+                  </p>
+                </div>
+              )}
+
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
                 <div className="space-y-2">
                   <div className="relative">
