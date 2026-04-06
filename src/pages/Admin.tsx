@@ -442,6 +442,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     falta: { bg: "bg-orange-500/10 border-orange-500/25", iconColor: "text-orange-400", titleColor: "text-orange-400" },
   };
 
+  return (
     <div className="admin-mobile-shell min-h-dvh w-screen max-w-full overflow-x-hidden bg-charcoal lg:flex">
       {/* ── Desktop Sidebar (hidden on mobile) ── */}
       <aside className="hidden lg:flex lg:flex-col lg:w-56 lg:shrink-0 lg:border-r lg:border-primary-foreground/[0.06] lg:bg-charcoal lg:fixed lg:inset-y-0 lg:left-0 lg:z-30">
