@@ -109,6 +109,34 @@ const DespesasTab = () => {
     }).length;
   }, [despesas, today]);
 
+  // Notificações: atrasadas, hoje, e próximos 3 dias
+  const notifications = useMemo(() => {
+    const notifs: { tipo: "atrasado" | "hoje" | "proximo"; despesa: Despesa; dias: number }[] = [];
+    const todayDate = new Date(today + "T12:00:00");
+
+    despesas.forEach((d) => {
+      if (d.pago) return;
+      const venc = new Date(d.data_vencimento + "T12:00:00");
+      const diffDays = Math.round((venc.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) {
+        notifs.push({ tipo: "atrasado", despesa: d, dias: Math.abs(diffDays) });
+      } else if (diffDays === 0) {
+        notifs.push({ tipo: "hoje", despesa: d, dias: 0 });
+      } else if (diffDays <= 3) {
+        notifs.push({ tipo: "proximo", despesa: d, dias: diffDays });
+      }
+    });
+
+    // Ordenar: atrasados primeiro, depois hoje, depois próximos
+    notifs.sort((a, b) => {
+      const order = { atrasado: 0, hoje: 1, proximo: 2 };
+      return order[a.tipo] - order[b.tipo] || a.dias - b.dias;
+    });
+
+    return notifs;
+  }, [despesas, today]);
+
   const totalPendente = useMemo(
     () => despesas.filter((d) => !d.pago).reduce((s, d) => s + Number(d.valor), 0),
     [despesas]
