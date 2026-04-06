@@ -303,6 +303,7 @@ async function handleWoovi(
       correlationID: agendamento_id,
       value: Math.round(amount * 100), // Woovi uses cents
       comment: description || "Agendamento",
+      expiresIn: 300, // 5 minutes in seconds
     };
 
     if (customer_name) {
