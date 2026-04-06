@@ -34,6 +34,7 @@ const DespesasTab = () => {
     const saved = localStorage.getItem("despesas_dismissed");
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
+
   // Form state
   const [descricao, setDescricao] = useState("");
   const [valor, setValor] = useState("");
@@ -131,7 +132,6 @@ const DespesasTab = () => {
       }
     });
 
-    // Ordenar: atrasados primeiro, depois hoje, depois próximos
     notifs.sort((a, b) => {
       const order = { atrasado: 0, hoje: 1, proximo: 2 };
       return order[a.tipo] - order[b.tipo] || a.dias - b.dias;
@@ -164,6 +164,7 @@ const DespesasTab = () => {
     });
     toast.success("Todas limpas");
   };
+
   const totalPendente = useMemo(
     () => despesas.filter((d) => !d.pago).reduce((s, d) => s + Number(d.valor), 0),
     [despesas]
@@ -247,10 +248,10 @@ const DespesasTab = () => {
           <Sheet>
             <SheetTrigger asChild>
               <button className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] transition-all hover:bg-primary-foreground/[0.1]">
-                <Bell className={`h-4 w-4 ${notifications.length > 0 ? "text-yellow-400" : "text-primary-foreground/30"}`} />
-                {notifications.length > 0 && (
+                <Bell className={`h-4 w-4 ${activeNotifications.length > 0 ? "text-yellow-400" : "text-primary-foreground/30"}`} />
+                {activeNotifications.length > 0 && (
                   <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white animate-pulse">
-                    {notifications.length}
+                    {activeNotifications.length}
                   </span>
                 )}
               </button>
@@ -260,23 +261,34 @@ const DespesasTab = () => {
                 <SheetTitle className="font-heading text-[16px] font-semibold text-primary-foreground flex items-center gap-2">
                   <Bell className="w-4 h-4 text-gold" />
                   Notificações
-                  {notifications.length > 0 && (
+                  {activeNotifications.length > 0 && (
                     <span className="ml-auto px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 text-[10px] font-body font-medium border border-red-500/20">
-                      {notifications.length} alerta{notifications.length > 1 ? "s" : ""}
+                      {activeNotifications.length}
                     </span>
                   )}
                 </SheetTitle>
               </SheetHeader>
 
-              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 max-h-[calc(100vh-120px)]">
-                {notifications.length === 0 ? (
+              {activeNotifications.length > 0 && (
+                <div className="px-4 pt-3 flex justify-end">
+                  <button
+                    onClick={clearAllNotifications}
+                    className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 font-body text-[10px] font-medium text-primary-foreground/30 transition-all hover:bg-primary-foreground/[0.06] hover:text-primary-foreground/50"
+                  >
+                    <X className="h-3 w-3" /> Limpar tudo
+                  </button>
+                </div>
+              )}
+
+              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 max-h-[calc(100vh-160px)]">
+                {activeNotifications.length === 0 ? (
                   <div className="py-16 text-center">
                     <Check className="h-8 w-8 text-green-400/40 mx-auto mb-3" />
                     <p className="font-body text-[13px] text-primary-foreground/30">Tudo em dia! 🎉</p>
-                    <p className="font-body text-[11px] text-primary-foreground/20 mt-1">Nenhuma despesa pendente ou atrasada</p>
+                    <p className="font-body text-[11px] text-primary-foreground/20 mt-1">Nenhuma notificação pendente</p>
                   </div>
                 ) : (
-                  notifications.map((n) => {
+                  activeNotifications.map((n) => {
                     const notifConfig = {
                       atrasado: {
                         bg: "bg-red-500/10 border-red-500/25",
@@ -304,10 +316,7 @@ const DespesasTab = () => {
                     const Icon = cfg.icon;
 
                     return (
-                      <div
-                        key={n.despesa.id}
-                        className={`rounded-xl border p-3 transition-all ${cfg.bg}`}
-                      >
+                      <div key={n.despesa.id} className={`rounded-xl border p-3 transition-all ${cfg.bg}`}>
                         <div className="flex items-start gap-2.5">
                           <div className={`mt-0.5 shrink-0 ${cfg.iconColor}`}>
                             <Icon className="h-4 w-4" />
@@ -328,14 +337,21 @@ const DespesasTab = () => {
                             <p className="font-body text-[10px] text-primary-foreground/25 mt-1">
                               Vencimento: {formatDate(n.despesa.data_vencimento)}
                             </p>
+                            <div className="flex items-center gap-1.5 mt-2">
+                              <button
+                                onClick={() => dismissNotification(n.despesa.id)}
+                                className="flex items-center gap-1 rounded-lg px-2 py-1 bg-primary-foreground/[0.06] text-primary-foreground/40 text-[10px] font-body font-medium border border-primary-foreground/[0.08] hover:bg-primary-foreground/[0.1] hover:text-primary-foreground/60 transition-all"
+                              >
+                                <Eye className="h-3 w-3" /> Lida
+                              </button>
+                              <button
+                                onClick={() => deleteDespesa(n.despesa.id)}
+                                className="flex items-center gap-1 rounded-lg px-2 py-1 bg-rose/10 text-rose/60 text-[10px] font-body font-medium border border-rose/20 hover:bg-rose/20 hover:text-rose transition-all"
+                              >
+                                <Trash2 className="h-3 w-3" /> Excluir
+                              </button>
+                            </div>
                           </div>
-                          <button
-                            onClick={() => togglePago(n.despesa)}
-                            className="shrink-0 flex h-8 w-8 items-center justify-center rounded-lg bg-green-500/10 text-green-400/50 border border-green-500/20 transition-all hover:bg-green-500/20 hover:text-green-400"
-                            title="Marcar como pago"
-                          >
-                            <Check className="h-3.5 w-3.5" />
-                          </button>
                         </div>
                       </div>
                     );
@@ -355,55 +371,13 @@ const DespesasTab = () => {
       </div>
 
       {/* Alert banner */}
-      {alertCount > 0 && (
-        <Sheet>
-          <SheetTrigger asChild>
-            <button className="w-full flex items-center gap-2 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-3 py-2.5 text-left transition-all hover:bg-yellow-500/15">
-              <AlertTriangle className="h-4 w-4 text-yellow-400 shrink-0" />
-              <p className="font-body text-[12px] text-yellow-300 flex-1">
-                Você tem <strong>{alertCount}</strong> despesa{alertCount > 1 ? "s" : ""} que precisa{alertCount > 1 ? "m" : ""} de atenção!
-              </p>
-              <ChevronRight className="h-3.5 w-3.5 text-yellow-400/50 shrink-0" />
-            </button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-[340px] sm:w-[400px] bg-charcoal border-primary-foreground/[0.06] p-0">
-            <SheetHeader className="px-5 pt-5 pb-4 border-b border-primary-foreground/[0.06]">
-              <SheetTitle className="font-heading text-[16px] font-semibold text-primary-foreground flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-yellow-400" />
-                Despesas com atenção
-              </SheetTitle>
-            </SheetHeader>
-            <div className="overflow-y-auto px-4 py-4 space-y-2 max-h-[calc(100vh-120px)]">
-              {notifications.filter(n => n.tipo === "atrasado" || n.tipo === "hoje").map((n) => (
-                <div
-                  key={n.despesa.id}
-                  className={`rounded-xl border p-3 ${n.tipo === "atrasado" ? "bg-red-500/10 border-red-500/25" : "bg-yellow-500/10 border-yellow-500/25"}`}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    {n.tipo === "atrasado" ? (
-                      <AlertTriangle className="h-3.5 w-3.5 text-red-400" />
-                    ) : (
-                      <Clock className="h-3.5 w-3.5 text-yellow-400" />
-                    )}
-                    <span className={`font-body text-[10px] font-semibold ${n.tipo === "atrasado" ? "text-red-400" : "text-yellow-400"}`}>
-                      {n.tipo === "atrasado" ? `Atrasado há ${n.dias} dia${n.dias > 1 ? "s" : ""}` : "Vence hoje!"}
-                    </span>
-                  </div>
-                  <p className="font-body text-[13px] font-medium text-primary-foreground">{n.despesa.descricao}</p>
-                  <div className="flex items-center justify-between mt-1.5">
-                    <span className="font-heading text-[14px] font-bold text-primary-foreground">{formatCurrency(Number(n.despesa.valor))}</span>
-                    <button
-                      onClick={() => togglePago(n.despesa)}
-                      className="flex items-center gap-1 rounded-lg px-2 py-1 bg-green-500/10 text-green-400/60 text-[10px] font-body font-medium border border-green-500/20 hover:bg-green-500/20 hover:text-green-400 transition-all"
-                    >
-                      <Check className="h-3 w-3" /> Pagar
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </SheetContent>
-        </Sheet>
+      {activeNotifications.filter(n => n.tipo === "atrasado" || n.tipo === "hoje").length > 0 && (
+        <div className="flex items-center gap-2 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-3 py-2.5">
+          <AlertTriangle className="h-4 w-4 text-yellow-400 shrink-0" />
+          <p className="font-body text-[12px] text-yellow-300 flex-1">
+            Você tem <strong>{activeNotifications.filter(n => n.tipo === "atrasado" || n.tipo === "hoje").length}</strong> despesa(s) que precisa(m) de atenção!
+          </p>
+        </div>
       )}
 
       {/* Summary cards */}
