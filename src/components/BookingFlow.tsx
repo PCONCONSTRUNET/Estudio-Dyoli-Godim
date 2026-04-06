@@ -346,13 +346,64 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
           </div>
         </div>
 
+        {/* Payment method selector */}
+        <div className="w-full max-w-sm mt-6 lg:mx-auto">
+          <p className="font-body text-[11px] text-muted-foreground uppercase tracking-widest font-medium mb-3 text-left">Forma de pagamento</p>
+          <div className="space-y-2">
+            {availableMethods.pix && (
+              <button onClick={() => setSelectedPaymentMethod("pix")}
+                className={`ios-press w-full flex items-center gap-3 p-3.5 rounded-2xl border transition-all ${selectedPaymentMethod === "pix" ? "border-gold/40 bg-gold/5" : "border-border/50 bg-card/60 hover:border-gold/20"}`}>
+                <img src={pixIcon} alt="PIX" className="w-6 h-6" />
+                <div className="text-left"><p className="font-body text-[13px] font-medium text-foreground">PIX</p><p className="font-body text-[11px] text-muted-foreground">Pagamento instantâneo</p></div>
+                <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedPaymentMethod === "pix" ? "border-gold bg-gold" : "border-muted-foreground/30"}`}>
+                  {selectedPaymentMethod === "pix" && <Check className="w-3 h-3 text-charcoal" />}
+                </div>
+              </button>
+            )}
+            {availableMethods.cartao && (
+              <button onClick={() => setSelectedPaymentMethod("cartao")}
+                className={`ios-press w-full flex items-center gap-3 p-3.5 rounded-2xl border transition-all ${selectedPaymentMethod === "cartao" ? "border-gold/40 bg-gold/5" : "border-border/50 bg-card/60 hover:border-gold/20"}`}>
+                <CreditCard className="w-6 h-6 text-muted-foreground" />
+                <div className="text-left"><p className="font-body text-[13px] font-medium text-foreground">Cartão de Crédito</p><p className="font-body text-[11px] text-muted-foreground">Até 6x sem juros</p></div>
+                <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedPaymentMethod === "cartao" ? "border-gold bg-gold" : "border-muted-foreground/30"}`}>
+                  {selectedPaymentMethod === "cartao" && <Check className="w-3 h-3 text-charcoal" />}
+                </div>
+              </button>
+            )}
+            {availableMethods.boleto && (
+              <button onClick={() => setSelectedPaymentMethod("boleto")}
+                className={`ios-press w-full flex items-center gap-3 p-3.5 rounded-2xl border transition-all ${selectedPaymentMethod === "boleto" ? "border-gold/40 bg-gold/5" : "border-border/50 bg-card/60 hover:border-gold/20"}`}>
+                <FileText className="w-6 h-6 text-muted-foreground" />
+                <div className="text-left"><p className="font-body text-[13px] font-medium text-foreground">Boleto Bancário</p><p className="font-body text-[11px] text-muted-foreground">Compensação em até 3 dias</p></div>
+                <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedPaymentMethod === "boleto" ? "border-gold bg-gold" : "border-muted-foreground/30"}`}>
+                  {selectedPaymentMethod === "boleto" && <Check className="w-3 h-3 text-charcoal" />}
+                </div>
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="pt-6 pb-4 space-y-3">
-          <button
-            onClick={() => setStep("pix")}
-            className="ios-press w-full py-4 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all duration-200 flex items-center justify-center gap-2.5"
-          >
-            <img src={pixIcon} alt="PIX" className="w-5 h-5" />
-            Pagar com PIX
+          {requiresDeposit && (
+            <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-secondary/40 border border-border/40">
+              <button onClick={() => setPaymentMode("deposit")}
+                className={`ios-press py-3 rounded-xl font-body text-[13px] font-medium transition-all ${paymentMode === "deposit" ? "bg-card shadow text-foreground" : "text-muted-foreground"}`}>
+                Pagar Sinal<span className="block text-[11px] font-normal mt-0.5 text-gold">{depositAmount}</span>
+              </button>
+              <button onClick={() => setPaymentMode("full")}
+                className={`ios-press py-3 rounded-xl font-body text-[13px] font-medium transition-all ${paymentMode === "full" ? "bg-card shadow text-foreground" : "text-muted-foreground"}`}>
+                Valor Completo<span className="block text-[11px] font-normal mt-0.5 text-gold">{price}</span>
+              </button>
+            </div>
+          )}
+          <button onClick={handleGoToPayment} disabled={paymentLoading}
+            className="ios-press w-full py-4 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all flex items-center justify-center gap-2.5 disabled:opacity-50">
+            {paymentLoading ? (<><Loader2 className="w-5 h-5 animate-spin" /> Processando...</>) : (
+              <>{selectedPaymentMethod === "pix" && <img src={pixIcon} alt="PIX" className="w-5 h-5" />}
+              {selectedPaymentMethod === "cartao" && <CreditCard className="w-5 h-5" />}
+              {selectedPaymentMethod === "boleto" && <FileText className="w-5 h-5" />}
+              Pagar R$ {paymentAmount}</>
+            )}
           </button>
         </div>
         </div>
@@ -360,108 +411,115 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     );
   }
 
-  // PIX payment screen
-  if (step === "pix") {
+  // Payment screen
+  if (step === "payment") {
+    const isLocalPix = !paymentData || paymentData.gateway === "local";
+    const pixCode = isLocalPix ? pixPayload : (paymentData?.qr_code || pixPayload);
     const paymentLabel = requiresDeposit
       ? (paymentMode === "deposit" ? `Sinal: ${depositAmount}` : `Total: ${price}`)
       : `Total: ${price}`;
+
+    if (paymentData?.method === "cartao" && paymentData.init_point) {
+      return (
+        <section className="min-h-screen bg-background px-6 py-8 flex flex-col items-center lg:px-8">
+          <button onClick={() => setStep("confirm")} className="ios-press self-start flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8">
+            <ArrowLeft className="w-4 h-4" /><span className="font-body text-[14px]">Voltar</span>
+          </button>
+          <div className="flex-1 flex flex-col items-center justify-center text-center animate-fade-in">
+            <CreditCard className="w-12 h-12 text-gold mb-4" />
+            <h2 className="font-heading text-2xl font-semibold text-foreground mb-2">Pagamento com Cartão</h2>
+            <p className="font-body text-[13px] text-muted-foreground mb-6 max-w-xs">Você será redirecionado para o checkout seguro</p>
+            <a href={paymentData.init_point} target="_blank" rel="noopener noreferrer"
+              className="ios-press w-full max-w-sm py-4 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] flex items-center justify-center gap-2">
+              <ExternalLink className="w-5 h-5" /> Ir para o Checkout
+            </a>
+            <button onClick={() => onConfirm({ date: selectedDate, time: selectedTime, price: numericPrice, paidAmount: 0, durationMinutes: serviceDuration })}
+              className="ios-press mt-4 font-body text-[13px] text-muted-foreground hover:text-foreground transition-colors">
+              Já realizei o pagamento
+            </button>
+          </div>
+        </section>
+      );
+    }
+
+    if (paymentData?.method === "boleto") {
+      return (
+        <section className="min-h-screen bg-background px-6 py-8 flex flex-col items-center lg:px-8">
+          <button onClick={() => setStep("confirm")} className="ios-press self-start flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8">
+            <ArrowLeft className="w-4 h-4" /><span className="font-body text-[14px]">Voltar</span>
+          </button>
+          <div className="flex-1 flex flex-col items-center justify-center text-center animate-fade-in">
+            <FileText className="w-12 h-12 text-gold mb-4" />
+            <h2 className="font-heading text-2xl font-semibold text-foreground mb-2">Boleto Gerado</h2>
+            <p className="font-body text-[13px] text-muted-foreground mb-4">{paymentLabel}</p>
+            {paymentData.barcode && (
+              <div className="w-full max-w-sm space-y-3 mb-6">
+                <p className="font-body text-[11px] text-muted-foreground uppercase tracking-widest font-medium">Código de barras</p>
+                <div className="relative">
+                  <div className="w-full px-4 py-3.5 rounded-2xl bg-card border border-border text-left font-body text-[12px] text-foreground/70 break-all pr-14">{paymentData.barcode}</div>
+                  <button onClick={() => handleCopyCode(paymentData.barcode!)}
+                    className="ios-press absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center text-gold">
+                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+            )}
+            {paymentData.boleto_url && (
+              <a href={paymentData.boleto_url} target="_blank" rel="noopener noreferrer"
+                className="ios-press w-full max-w-sm py-4 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] flex items-center justify-center gap-2 mb-4">
+                <ExternalLink className="w-5 h-5" /> Abrir Boleto
+              </a>
+            )}
+            <button onClick={() => onConfirm({ date: selectedDate, time: selectedTime, price: numericPrice, paidAmount: 0, durationMinutes: serviceDuration })}
+              className="ios-press w-full max-w-sm py-4 rounded-2xl bg-card border border-border font-body font-semibold text-[15px] text-foreground">
+              Confirmar Agendamento
+            </button>
+          </div>
+        </section>
+      );
+    }
+
+    // PIX (gateway or local)
     return (
       <section className="min-h-screen bg-background px-6 py-8 flex flex-col lg:items-center lg:px-8">
-        <button
-          onClick={() => setStep("confirm")}
-          className="ios-press flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="font-body text-[14px]">Voltar</span>
+        <button onClick={() => setStep("confirm")} className="ios-press flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6">
+          <ArrowLeft className="w-4 h-4" /><span className="font-body text-[14px]">Voltar</span>
         </button>
-
         <div className="flex-1 flex flex-col items-center text-center animate-fade-in">
           <div className="w-14 h-14 rounded-full bg-gold/10 flex items-center justify-center mb-4">
             <img src={pixIcon} alt="PIX" className="w-7 h-7" />
           </div>
-          <h2 className="font-heading text-2xl font-semibold text-foreground mb-1">
-            Pagamento PIX
-          </h2>
-
-          {/* Payment mode selector */}
-          {requiresDeposit && (
-            <div className="w-full max-w-sm mt-4 mb-2">
-              <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-secondary/40 border border-border/40">
-                <button
-                  onClick={() => setPaymentMode("deposit")}
-                  className={`ios-press py-3 rounded-xl font-body text-[13px] font-medium transition-all duration-200 ${
-                    paymentMode === "deposit"
-                      ? "bg-card shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)] text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Pagar Sinal
-                  <span className="block text-[11px] font-normal mt-0.5 text-gold">{depositAmount}</span>
-                </button>
-                <button
-                  onClick={() => setPaymentMode("full")}
-                  className={`ios-press py-3 rounded-xl font-body text-[13px] font-medium transition-all duration-200 ${
-                    paymentMode === "full"
-                      ? "bg-card shadow-[0_2px_8px_-2px_rgba(0,0,0,0.08)] text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Valor Completo
-                  <span className="block text-[11px] font-normal mt-0.5 text-gold">{price}</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          <p className="font-body text-[13px] text-muted-foreground mb-5">
-            {paymentLabel}
-          </p>
-
-          {/* QR Code */}
+          <h2 className="font-heading text-2xl font-semibold text-foreground mb-1">Pagamento PIX</h2>
+          <p className="font-body text-[13px] text-muted-foreground mb-5">{paymentLabel}</p>
           <div className="bg-white p-5 rounded-3xl shadow-[0_4px_24px_-6px_rgba(0,0,0,0.1)] mb-6">
-            <QRCodeSVG
-              value={pixPayload}
-              size={220}
-              level="M"
-              bgColor="#FFFFFF"
-              fgColor="#1C1C1C"
-            />
+            {paymentData?.qr_code_base64 ? (
+              <img src={`data:image/png;base64,${paymentData.qr_code_base64}`} alt="QR Code" className="w-[220px] h-[220px]" />
+            ) : paymentData?.qr_code_image ? (
+              <img src={paymentData.qr_code_image} alt="QR Code" className="w-[220px] h-[220px]" />
+            ) : (
+              <QRCodeSVG value={pixCode} size={220} level="M" bgColor="#FFFFFF" fgColor="#1C1C1C" />
+            )}
           </div>
-
-          {/* PIX Copia e Cola */}
           <div className="w-full max-w-sm space-y-3">
             <p className="font-body text-[11px] text-muted-foreground uppercase tracking-widest font-medium">PIX Copia e Cola</p>
             <div className="relative">
-              <div className="w-full px-4 py-3.5 rounded-2xl bg-card border border-border text-left font-body text-[12px] text-foreground/70 break-all leading-relaxed pr-14 max-h-24 overflow-y-auto scrollbar-hide">
-                {pixPayload}
-              </div>
-              <button
-                onClick={handleCopyPix}
-                className="ios-press absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center text-gold hover:bg-gold/20 transition-all duration-200"
-              >
+              <div className="w-full px-4 py-3.5 rounded-2xl bg-card border border-border text-left font-body text-[12px] text-foreground/70 break-all leading-relaxed pr-14 max-h-24 overflow-y-auto scrollbar-hide">{pixCode}</div>
+              <button onClick={() => handleCopyCode(pixCode)}
+                className="ios-press absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center text-gold hover:bg-gold/20 transition-all">
                 {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               </button>
             </div>
-            {copied && (
-              <p className="font-body text-[12px] text-gold font-medium animate-fade-in">
-                ✓ Código copiado!
-              </p>
-            )}
+            {copied && <p className="font-body text-[12px] text-gold font-medium animate-fade-in">✓ Código copiado!</p>}
           </div>
-
-          {/* Info */}
           <div className="mt-6 p-3.5 rounded-2xl bg-secondary/30 backdrop-blur-sm border border-border/30 max-w-sm">
             <p className="font-body text-[12px] text-muted-foreground leading-relaxed">
-              Após o pagamento, clique em "Confirmar" abaixo. Seu agendamento será validado automaticamente.
+              Após o pagamento, clique em "Confirmar" abaixo. {!isLocalPix ? "O sistema validará automaticamente." : "Seu agendamento será validado."}
             </p>
           </div>
         </div>
-
         <div className="pt-6 pb-4">
-          <button
-            onClick={() => onConfirm({ date: selectedDate, time: selectedTime, price: numericPrice, paidAmount: paymentAmount, durationMinutes: serviceDuration })}
-            className="ios-press w-full py-4 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all duration-200"
-          >
+          <button onClick={() => onConfirm({ date: selectedDate, time: selectedTime, price: numericPrice, paidAmount: paymentAmount, durationMinutes: serviceDuration })}
+            className="ios-press w-full py-4 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all">
             Confirmar Agendamento
           </button>
         </div>
