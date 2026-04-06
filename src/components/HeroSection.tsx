@@ -60,7 +60,7 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, onProdutos, isAuthenticat
               <>
                 <button
                   onClick={onSchedule}
-                  className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[16px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] backdrop-blur-sm"
+                  className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[16px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] backdrop-blur-sm"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width={20} viewBox="0 0 24 24" height={20} fill="none" strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="4" width="18" height="18" rx="2"/>
@@ -71,14 +71,14 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, onProdutos, isAuthenticat
                 </button>
                 <button
                   onClick={onProfile}
-                  className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-2xl bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[16px] tracking-wide hover:bg-primary-foreground/[0.12] hover:border-primary-foreground/[0.18]"
+                  className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-full bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[16px] tracking-wide hover:bg-primary-foreground/[0.12] hover:border-primary-foreground/[0.18]"
                 >
                   <User className="w-5 h-5" />
                   <span>Meu Perfil</span>
                 </button>
                 <button
                   onClick={onProdutos}
-                  className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-2xl bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[16px] tracking-wide hover:bg-primary-foreground/[0.12] hover:border-primary-foreground/[0.18]"
+                  className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-full bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[16px] tracking-wide hover:bg-primary-foreground/[0.12] hover:border-primary-foreground/[0.18]"
                 >
                   <ShoppingBag className="w-5 h-5" />
                   <span>Produtos</span>
@@ -88,7 +88,7 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, onProdutos, isAuthenticat
               <>
                 <button
                   onClick={onLogin}
-                  className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[16px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] backdrop-blur-sm"
+                  className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[16px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] backdrop-blur-sm"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width={20} viewBox="0 0 24 24" height={20} fill="none" strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="8" r="4"/>
@@ -98,7 +98,7 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, onProdutos, isAuthenticat
                 </button>
                 <button
                   onClick={onSchedule}
-                  className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-2xl bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[16px] tracking-wide hover:bg-primary-foreground/[0.12] hover:border-primary-foreground/[0.18]"
+                  className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-full bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[16px] tracking-wide hover:bg-primary-foreground/[0.12] hover:border-primary-foreground/[0.18]"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width={20} viewBox="0 0 24 24" height={20} fill="none" strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="4" width="18" height="18" rx="2"/>
@@ -109,7 +109,7 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, onProdutos, isAuthenticat
                 </button>
                 <button
                   onClick={onProdutos}
-                  className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-2xl bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[16px] tracking-wide hover:bg-primary-foreground/[0.12] hover:border-primary-foreground/[0.18]"
+                  className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-full bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[16px] tracking-wide hover:bg-primary-foreground/[0.12] hover:border-primary-foreground/[0.18]"
                 >
                   <ShoppingBag className="w-5 h-5" />
                   <span>Produtos</span>
