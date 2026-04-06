@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   BarChart3, Calendar, Users, Clock, Settings, LogOut, Search,
   X, Edit2, Trash2, Plus, Save, CheckCircle, Bell, MessageSquare,
-  UserX, DollarSign, CreditCard, ShoppingBag, Download, ChevronLeft, ChevronRight, Receipt
+  UserX, DollarSign, CreditCard, ShoppingBag, Download, ChevronLeft, ChevronRight, Receipt, ClipboardList
 } from "lucide-react";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription
@@ -14,6 +14,7 @@ import { Calendar as DatePickerCalendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import FinanceiroTab from "@/components/FinanceiroTab";
 import DespesasTab from "@/components/DespesasTab";
+import PedidosTab from "@/components/PedidosTab";
 import ProdutosTab from "@/components/ProdutosTab";
 import AdminDashboard from "@/components/AdminDashboard";
 import { useAdminNotifications } from "@/hooks/use-admin-notifications";
@@ -28,7 +29,7 @@ interface Agendamento {
 interface Profile { id: string; nome: string; whatsapp: string; created_at: string; }
 interface LembreteConfig { id: string; tipo: string; ativo: boolean; mensagem: string; horas_antes: number; }
 
-type Tab = "dashboard" | "agendamentos" | "clientes" | "horarios" | "servicos" | "financeiro" | "produtos" | "despesas";
+type Tab = "dashboard" | "agendamentos" | "pedidos" | "clientes" | "horarios" | "servicos" | "financeiro" | "produtos" | "despesas";
 
 const ADMIN_PASSWORD = "dyoliadmin";
 
@@ -316,6 +317,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const tabs: { id: Tab; label: string; icon: typeof BarChart3 }[] = [
     { id: "dashboard", label: "Início", icon: BarChart3 },
     { id: "agendamentos", label: "Agenda", icon: Calendar },
+    { id: "pedidos", label: "Pedidos", icon: ClipboardList },
     { id: "financeiro", label: "Financeiro", icon: DollarSign },
     { id: "despesas", label: "Despesas", icon: Receipt },
     { id: "clientes", label: "Clientes", icon: Users },
