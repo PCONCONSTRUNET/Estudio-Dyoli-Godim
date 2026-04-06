@@ -294,31 +294,43 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between border-t border-primary-foreground/[0.06] pt-3">
-                      <div className="flex items-center gap-1">
-                        {a.status === "confirmado" && (
-                          <>
-                            <button
-                              onClick={() => updateStatus(a.id, "concluido")}
-                              className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-green-400/60 transition-all hover:bg-green-500/10 hover:text-green-400"
-                            >
-                              <CheckCircle className="h-3.5 w-3.5" /> Concluir
-                            </button>
-                            <button
-                              onClick={() => updateStatus(a.id, "falta")}
-                              className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-orange-400/60 transition-all hover:bg-orange-500/10 hover:text-orange-400"
-                            >
-                              <UserX className="h-3.5 w-3.5" /> Falta
-                            </button>
-                            <button
-                              onClick={() => updateStatus(a.id, "cancelado")}
-                              className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-rose/60 transition-all hover:bg-rose/10 hover:text-rose"
-                            >
-                              <X className="h-3.5 w-3.5" /> Cancelar
-                            </button>
-                          </>
+                    <div className="border-t border-primary-foreground/[0.06] pt-3 space-y-2">
+                      <p className="font-body text-[10px] text-primary-foreground/30 uppercase tracking-wider">Alterar status</p>
+                      <div className="flex items-center gap-1 flex-wrap">
+                        {a.status !== "confirmado" && (
+                          <button
+                            onClick={() => updateStatus(a.id, "confirmado")}
+                            className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-gold/60 transition-all hover:bg-gold/10 hover:text-gold"
+                          >
+                            <CheckCircle className="h-3.5 w-3.5" /> Confirmado
+                          </button>
+                        )}
+                        {a.status !== "concluido" && (
+                          <button
+                            onClick={() => updateStatus(a.id, "concluido")}
+                            className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-green-400/60 transition-all hover:bg-green-500/10 hover:text-green-400"
+                          >
+                            <CheckCircle className="h-3.5 w-3.5" /> Concluído
+                          </button>
+                        )}
+                        {a.status !== "falta" && (
+                          <button
+                            onClick={() => updateStatus(a.id, "falta")}
+                            className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-orange-400/60 transition-all hover:bg-orange-500/10 hover:text-orange-400"
+                          >
+                            <UserX className="h-3.5 w-3.5" /> Falta
+                          </button>
+                        )}
+                        {a.status !== "cancelado" && (
+                          <button
+                            onClick={() => updateStatus(a.id, "cancelado")}
+                            className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-rose/60 transition-all hover:bg-rose/10 hover:text-rose"
+                          >
+                            <X className="h-3.5 w-3.5" /> Cancelado
+                          </button>
                         )}
                       </div>
+                      <div className="flex justify-end">
                       <button
                         onClick={() => deleteAgendamento(a.id)}
                         className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-primary-foreground/20 transition-all hover:bg-rose/10 hover:text-rose"
