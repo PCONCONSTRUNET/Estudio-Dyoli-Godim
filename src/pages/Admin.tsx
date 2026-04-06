@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   BarChart3, Calendar, Users, Clock, Settings, LogOut, Search,
   X, Edit2, Trash2, Plus, Save, CheckCircle, Bell, MessageSquare,
-  UserX, DollarSign, CreditCard, ShoppingBag, Download, ChevronLeft, ChevronRight, Receipt, ClipboardList
+  UserX, DollarSign, CreditCard, ShoppingBag, Download, ChevronLeft, ChevronRight, Receipt, ClipboardList, Wallet
 } from "lucide-react";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription
@@ -15,6 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import FinanceiroTab from "@/components/FinanceiroTab";
 import DespesasTab from "@/components/DespesasTab";
 import PedidosTab from "@/components/PedidosTab";
+import GatewayTab from "@/components/GatewayTab";
 import ProdutosTab from "@/components/ProdutosTab";
 import AdminDashboard from "@/components/AdminDashboard";
 import { useAdminNotifications } from "@/hooks/use-admin-notifications";
@@ -29,7 +30,7 @@ interface Agendamento {
 interface Profile { id: string; nome: string; whatsapp: string; created_at: string; }
 interface LembreteConfig { id: string; tipo: string; ativo: boolean; mensagem: string; horas_antes: number; }
 
-type Tab = "dashboard" | "agendamentos" | "pedidos" | "clientes" | "horarios" | "servicos" | "financeiro" | "produtos" | "despesas";
+type Tab = "dashboard" | "agendamentos" | "pedidos" | "clientes" | "horarios" | "servicos" | "financeiro" | "produtos" | "despesas" | "gateway";
 
 const ADMIN_PASSWORD = "dyoliadmin";
 
@@ -322,6 +323,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     { id: "despesas", label: "Despesas", icon: Receipt },
     { id: "clientes", label: "Clientes", icon: Users },
     { id: "produtos", label: "Produtos", icon: ShoppingBag },
+    { id: "gateway", label: "Gateway", icon: Wallet },
     { id: "horarios", label: "Horários", icon: Clock },
     { id: "servicos", label: "Serviços", icon: Settings },
   ];
@@ -878,6 +880,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
           {tab === "pedidos" && <PedidosTab agendamentos={agendamentos} getClientName={getClientName} onUpdate={loadData} />}
           {tab === "despesas" && <DespesasTab />}
           {tab === "produtos" && <ProdutosTab />}
+          {tab === "gateway" && <GatewayTab />}
           {tab === "horarios" && <HorariosTab />}
           {tab === "servicos" && <ServicosTab />}
         </div>
