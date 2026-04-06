@@ -95,6 +95,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   const [businessHours, setBusinessHours] = useState<Record<number, { open: string; close: string } | null>>({});
   const [bookedSlots, setBookedSlots] = useState<Record<string, string[]>>({});
   const [serviceDuration, setServiceDuration] = useState(60);
+  const [servicePrice, setServicePrice] = useState<number | null>(null);
 
   useEffect(() => {
     supabase.from("horarios_funcionamento").select("*").then(({ data }) => {
@@ -107,8 +108,9 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       }
     });
     // Load service duration
-    supabase.from("servicos").select("duracao_minutos, nome").eq("nome", service).maybeSingle().then(({ data }) => {
+    supabase.from("servicos").select("duracao_minutos, nome, preco").eq("nome", service).maybeSingle().then(({ data }) => {
       if (data?.duracao_minutos) setServiceDuration(data.duracao_minutos);
+      if (data?.preco) setServicePrice(data.preco);
     });
     // Load active gateway payment methods
     (supabase.from as any)("gateway_configs").select("gateway, pix_enabled, cartao_enabled, boleto_enabled").eq("ativo", true).then(({ data }: any) => {
@@ -224,6 +226,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   };
 
   const getPrice = () => {
+    if (servicePrice !== null) return `R$ ${servicePrice}`;
     if (variation === "Básica") return "R$ 170";
     if (variation === "Padrão") return "R$ 180";
     if (variation === "Premium") return "R$ 300";
