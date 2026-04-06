@@ -44,8 +44,7 @@ const DespesasTab = () => {
 
   const loadDespesas = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("despesas")
+    const { data } = await (supabase.from as any)("despesas")
       .select("*")
       .order("data_vencimento", { ascending: true });
     if (data) setDespesas(data as Despesa[]);
@@ -124,7 +123,7 @@ const DespesasTab = () => {
       return;
     }
     setSaving(true);
-    const { error } = await supabase.from("despesas").insert({
+    const { error } = await (supabase.from as any)("despesas").insert({
       descricao,
       valor: parseFloat(valor),
       data_vencimento: dataVencimento,
@@ -144,8 +143,7 @@ const DespesasTab = () => {
 
   const togglePago = async (d: Despesa) => {
     const newPago = !d.pago;
-    await supabase
-      .from("despesas")
+    await (supabase.from as any)("despesas")
       .update({
         pago: newPago,
         data_pagamento: newPago ? new Date().toISOString().split("T")[0] : null,
@@ -162,7 +160,7 @@ const DespesasTab = () => {
   };
 
   const deleteDespesa = async (id: string) => {
-    await supabase.from("despesas").delete().eq("id", id);
+    await (supabase.from as any)("despesas").delete().eq("id", id);
     setDespesas((prev) => prev.filter((d) => d.id !== id));
     toast.success("Despesa removida");
   };
