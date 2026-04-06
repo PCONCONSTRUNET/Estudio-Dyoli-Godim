@@ -39,7 +39,7 @@ interface GatewayInfo {
 const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps) => {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<string>("");
-  const [step, setStep] = useState<"date" | "confirm" | "payment">("date");
+  const [step, setStep] = useState<"date" | "confirm" | "payment" | "waiting">("date");
   const [copied, setCopied] = useState(false);
   const [paymentMode, setPaymentMode] = useState<"deposit" | "full">("deposit");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"pix" | "cartao" | "boleto">("pix");
@@ -47,7 +47,9 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   const [paymentData, setPaymentData] = useState<PaymentResponse | null>(null);
   const [availableMethods, setAvailableMethods] = useState<{ pix: boolean; cartao: boolean; boleto: boolean }>({ pix: true, cartao: false, boleto: false });
   const [gatewayInfo, setGatewayInfo] = useState<GatewayInfo | null>(null);
-  const [checkingPayment, setCheckingPayment] = useState(false);
+  const [agendamentoId, setAgendamentoId] = useState<string | null>(null);
+  const [paymentExpiry, setPaymentExpiry] = useState<number>(0);
+  const [timeLeft, setTimeLeft] = useState<number>(300); // 5 min in seconds
 
   const PIX_KEY = "48999779829";
   const PIX_NAME = "DYOLI GODIM";
@@ -247,27 +249,103 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     setTimeout(() => setCopied(false), 2500);
   };
 
+  // Countdown timer for payment expiry
+  useEffect(() => {
+    if (step !== "payment" && step !== "waiting") return;
+    if (paymentExpiry <= 0) return;
+    const interval = setInterval(() => {
+      const remaining = Math.max(0, Math.floor((paymentExpiry - Date.now()) / 1000));
+      setTimeLeft(remaining);
+      if (remaining <= 0) {
+        clearInterval(interval);
+        toast.error("Tempo de pagamento expirado. Agendamento cancelado.");
+        // Cancel the agendamento
+        if (agendamentoId) {
+          supabase.from("agendamentos").update({ status: "cancelado" }).eq("id", agendamentoId);
+        }
+        setStep("confirm");
+        setPaymentData(null);
+        setAgendamentoId(null);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [step, paymentExpiry, agendamentoId]);
+
+  // Poll for payment confirmation via webhook
+  useEffect(() => {
+    if (step !== "payment" && step !== "waiting") return;
+    if (!agendamentoId) return;
+    const isLocal = !paymentData || paymentData.gateway === "local";
+    if (isLocal) return; // local PIX doesn't poll
+
+    const interval = setInterval(async () => {
+      const { data } = await supabase.from("agendamentos").select("status").eq("id", agendamentoId).maybeSingle();
+      if (data?.status === "confirmado") {
+        clearInterval(interval);
+        toast.success("Pagamento confirmado! ✅");
+        onConfirm({ date: selectedDate, time: selectedTime, price: numericPrice, paidAmount: paymentAmount, durationMinutes: serviceDuration });
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [step, agendamentoId, paymentData]);
+
   const handleCreatePayment = async () => {
     setPaymentLoading(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Faça login para continuar");
+        setPaymentLoading(false);
+        return;
+      }
+
+      // 1. Create agendamento as "pendente"
+      const { data: agData, error: agError } = await supabase.from("agendamentos").insert({
+        user_id: user.id,
+        servico: service,
+        variacao: variation || null,
+        data_agendamento: selectedDate,
+        horario: selectedTime,
+        valor: numericPrice,
+        valor_pago: 0,
+        forma_pagamento: selectedPaymentMethod,
+        status: "pendente",
+        duracao_minutos: serviceDuration,
+      }).select("id").single();
+
+      if (agError || !agData) {
+        toast.error("Erro ao criar agendamento");
+        setPaymentLoading(false);
+        return;
+      }
+
+      const realAgendamentoId = agData.id;
+      setAgendamentoId(realAgendamentoId);
+
+      // 2. Create payment with real agendamento_id
       const res = await supabase.functions.invoke("create-payment", {
         body: {
           amount: paymentAmount,
           description: `${service}${variation ? ` — ${variation}` : ""}`,
-          agendamento_id: `temp-${Date.now()}`,
+          agendamento_id: realAgendamentoId,
           payment_method: selectedPaymentMethod,
-          customer_email: sessionData?.session?.user?.email,
-          customer_name: sessionData?.session?.user?.user_metadata?.nome,
+          customer_email: user.email,
+          customer_name: user.user_metadata?.nome,
         },
       });
+
       const result = res.data as PaymentResponse;
       if (result?.error) {
         toast.error(result.error);
+        // Cancel the pending agendamento
+        await supabase.from("agendamentos").update({ status: "cancelado" }).eq("id", realAgendamentoId);
         setPaymentLoading(false);
         return;
       }
+
       setPaymentData(result);
+      setPaymentExpiry(Date.now() + 5 * 60 * 1000); // 5 minutes
+      setTimeLeft(300);
       setStep("payment");
     } catch (err) {
       console.error("Payment error:", err);
@@ -280,9 +358,38 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     if (gatewayInfo) {
       handleCreatePayment();
     } else {
-      setPaymentData({ gateway: "local", method: "pix" });
-      setStep("payment");
+      // No gateway — create agendamento as confirmado directly (local PIX)
+      handleLocalPayment();
     }
+  };
+
+  const handleLocalPayment = async () => {
+    setPaymentLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Faça login para continuar");
+      setPaymentLoading(false);
+      return;
+    }
+    const { data: agData } = await supabase.from("agendamentos").insert({
+      user_id: user.id,
+      servico: service,
+      variacao: variation || null,
+      data_agendamento: selectedDate,
+      horario: selectedTime,
+      valor: numericPrice,
+      valor_pago: 0,
+      forma_pagamento: "pix",
+      status: "pendente",
+      duracao_minutos: serviceDuration,
+    }).select("id").single();
+
+    if (agData) setAgendamentoId(agData.id);
+    setPaymentData({ gateway: "local", method: "pix" });
+    setPaymentExpiry(Date.now() + 5 * 60 * 1000);
+    setTimeLeft(300);
+    setStep("payment");
+    setPaymentLoading(false);
   };
 
   if (step === "confirm") {
@@ -418,6 +525,10 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     const paymentLabel = requiresDeposit
       ? (paymentMode === "deposit" ? `Sinal: ${depositAmount}` : `Total: ${price}`)
       : `Total: ${price}`;
+    const timerMin = Math.floor(timeLeft / 60);
+    const timerSec = timeLeft % 60;
+    const timerStr = `${timerMin}:${String(timerSec).padStart(2, "0")}`;
+    const timerUrgent = timeLeft <= 60;
 
     if (paymentData?.method === "cartao" && paymentData.init_point) {
       return (
@@ -426,6 +537,10 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
             <ArrowLeft className="w-4 h-4" /><span className="font-body text-[14px]">Voltar</span>
           </button>
           <div className="flex-1 flex flex-col items-center justify-center text-center animate-fade-in">
+            {/* Timer */}
+            <div className={`mb-4 px-4 py-2 rounded-full font-body text-[13px] font-semibold ${timerUrgent ? "bg-destructive/20 text-destructive animate-pulse" : "bg-gold/10 text-gold"}`}>
+              ⏱ Expira em {timerStr}
+            </div>
             <CreditCard className="w-12 h-12 text-gold mb-4" />
             <h2 className="font-heading text-2xl font-semibold text-foreground mb-2">Pagamento com Cartão</h2>
             <p className="font-body text-[13px] text-muted-foreground mb-6 max-w-xs">Você será redirecionado para o checkout seguro</p>
@@ -433,10 +548,9 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
               className="ios-press w-full max-w-sm py-4 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] flex items-center justify-center gap-2">
               <ExternalLink className="w-5 h-5" /> Ir para o Checkout
             </a>
-            <button onClick={() => onConfirm({ date: selectedDate, time: selectedTime, price: numericPrice, paidAmount: 0, durationMinutes: serviceDuration })}
-              className="ios-press mt-4 font-body text-[13px] text-muted-foreground hover:text-foreground transition-colors">
-              Já realizei o pagamento
-            </button>
+            <p className="mt-4 font-body text-[12px] text-muted-foreground flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" /> Aguardando confirmação do pagamento...
+            </p>
           </div>
         </section>
       );
@@ -449,6 +563,9 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
             <ArrowLeft className="w-4 h-4" /><span className="font-body text-[14px]">Voltar</span>
           </button>
           <div className="flex-1 flex flex-col items-center justify-center text-center animate-fade-in">
+            <div className={`mb-4 px-4 py-2 rounded-full font-body text-[13px] font-semibold ${timerUrgent ? "bg-destructive/20 text-destructive animate-pulse" : "bg-gold/10 text-gold"}`}>
+              ⏱ Expira em {timerStr}
+            </div>
             <FileText className="w-12 h-12 text-gold mb-4" />
             <h2 className="font-heading text-2xl font-semibold text-foreground mb-2">Boleto Gerado</h2>
             <p className="font-body text-[13px] text-muted-foreground mb-4">{paymentLabel}</p>
@@ -470,10 +587,9 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
                 <ExternalLink className="w-5 h-5" /> Abrir Boleto
               </a>
             )}
-            <button onClick={() => onConfirm({ date: selectedDate, time: selectedTime, price: numericPrice, paidAmount: 0, durationMinutes: serviceDuration })}
-              className="ios-press w-full max-w-sm py-4 rounded-2xl bg-card border border-border font-body font-semibold text-[15px] text-foreground">
-              Confirmar Agendamento
-            </button>
+            <p className="mt-4 font-body text-[12px] text-muted-foreground flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" /> Aguardando confirmação do pagamento...
+            </p>
           </div>
         </section>
       );
@@ -490,6 +606,10 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
             <img src={pixIcon} alt="PIX" className="w-7 h-7" />
           </div>
           <h2 className="font-heading text-2xl font-semibold text-foreground mb-1">Pagamento PIX</h2>
+          {/* Timer */}
+          <div className={`mt-2 mb-3 px-4 py-2 rounded-full font-body text-[13px] font-semibold ${timerUrgent ? "bg-destructive/20 text-destructive animate-pulse" : "bg-gold/10 text-gold"}`}>
+            ⏱ Expira em {timerStr}
+          </div>
           <p className="font-body text-[13px] text-muted-foreground mb-5">{paymentLabel}</p>
           <div className="bg-white p-5 rounded-3xl shadow-[0_4px_24px_-6px_rgba(0,0,0,0.1)] mb-6">
             {paymentData?.qr_code_base64 ? (
@@ -511,17 +631,39 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
             </div>
             {copied && <p className="font-body text-[12px] text-gold font-medium animate-fade-in">✓ Código copiado!</p>}
           </div>
-          <div className="mt-6 p-3.5 rounded-2xl bg-secondary/30 backdrop-blur-sm border border-border/30 max-w-sm">
-            <p className="font-body text-[12px] text-muted-foreground leading-relaxed">
-              Após o pagamento, clique em "Confirmar" abaixo. {!isLocalPix ? "O sistema validará automaticamente." : "Seu agendamento será validado."}
-            </p>
-          </div>
+
+          {!isLocalPix ? (
+            <div className="mt-6 p-3.5 rounded-2xl bg-secondary/30 backdrop-blur-sm border border-border/30 max-w-sm">
+              <p className="font-body text-[12px] text-muted-foreground leading-relaxed flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin flex-shrink-0" />
+                Aguardando confirmação do pagamento... O sistema validará automaticamente.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-6 p-3.5 rounded-2xl bg-secondary/30 backdrop-blur-sm border border-border/30 max-w-sm">
+              <p className="font-body text-[12px] text-muted-foreground leading-relaxed">
+                Após o pagamento, clique em "Confirmar" abaixo.
+              </p>
+            </div>
+          )}
         </div>
         <div className="pt-6 pb-4">
-          <button onClick={() => onConfirm({ date: selectedDate, time: selectedTime, price: numericPrice, paidAmount: paymentAmount, durationMinutes: serviceDuration })}
-            className="ios-press w-full py-4 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all">
-            Confirmar Agendamento
-          </button>
+          {isLocalPix ? (
+            <button onClick={async () => {
+              // Mark local PIX agendamento as confirmado
+              if (agendamentoId) {
+                await supabase.from("agendamentos").update({ status: "confirmado", valor_pago: paymentAmount }).eq("id", agendamentoId);
+              }
+              onConfirm({ date: selectedDate, time: selectedTime, price: numericPrice, paidAmount: paymentAmount, durationMinutes: serviceDuration });
+            }}
+              className="ios-press w-full py-4 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all">
+              Confirmar Agendamento
+            </button>
+          ) : (
+            <p className="text-center font-body text-[12px] text-muted-foreground">
+              O agendamento será confirmado automaticamente após o pagamento
+            </p>
+          )}
         </div>
       </section>
     );

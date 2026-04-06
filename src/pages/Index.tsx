@@ -61,22 +61,9 @@ const Index = () => {
   };
 
   const handleConfirm = async (bookingData?: { date: string; time: string; price: number; paidAmount: number }) => {
-    if (bookingData) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase.from("agendamentos").insert({
-          user_id: user.id,
-          servico: selectedService,
-          variacao: selectedVariation || null,
-          data_agendamento: bookingData.date,
-          horario: bookingData.time,
-          valor: bookingData.price,
-          valor_pago: bookingData.paidAmount,
-          forma_pagamento: "pix",
-          status: "confirmado",
-        });
-      }
-    }
+    // Agendamento is now created as "pendente" inside BookingFlow before payment
+    // When payment is confirmed via webhook, status changes to "confirmado"
+    // If no gateway is active (local PIX), BookingFlow creates it as "confirmado" directly
     setScreen("success");
   };
 
