@@ -352,7 +352,7 @@ const DespesasTab = () => {
               <select
                 value={categoria}
                 onChange={(e) => setCategoria(e.target.value)}
-                className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] py-2.5 px-3 text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                className="w-full rounded-xl bg-charcoal border border-primary-foreground/[0.06] py-2.5 px-3 text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20 [&>option]:bg-charcoal [&>option]:text-primary-foreground"
               >
                 {CATEGORIAS.map((c) => (
                   <option key={c} value={c}>{c}</option>
