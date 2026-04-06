@@ -92,6 +92,45 @@ export type Database = {
         }
         Relationships: []
       }
+      despesas: {
+        Row: {
+          categoria: string
+          created_at: string
+          data_pagamento: string | null
+          data_vencimento: string
+          descricao: string
+          id: string
+          observacao: string | null
+          pago: boolean
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          categoria?: string
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento: string
+          descricao: string
+          id?: string
+          observacao?: string | null
+          pago?: boolean
+          updated_at?: string
+          valor: number
+        }
+        Update: {
+          categoria?: string
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento?: string
+          descricao?: string
+          id?: string
+          observacao?: string | null
+          pago?: boolean
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: []
+      }
       horarios_bloqueados: {
         Row: {
           created_at: string
