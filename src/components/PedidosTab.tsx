@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { Search, Trash2, CheckCircle, X, UserX, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, Trash2, CheckCircle, X, UserX, ChevronDown, ChevronUp, Bell, Clock, AlertTriangle, Eye } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -37,16 +38,79 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
   const [sortField, setSortField] = useState<SortField>("data");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem("pedidos_dismissed");
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
+
+  const today = new Date().toISOString().split("T")[0];
+
+  // Notifications: today's appointments, pending payments, no-shows
+  const notifications = useMemo(() => {
+    const notifs: { tipo: "hoje" | "pendente" | "falta" | "proximo"; agendamento: Agendamento; label: string }[] = [];
+    const todayDate = new Date(today + "T12:00:00");
+
+    agendamentos.forEach((a) => {
+      if (a.status === "cancelado") return;
+
+      const aDate = new Date(a.data_agendamento + "T12:00:00");
+      const diffDays = Math.round((aDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      // Falta (no-show)
+      if (a.status === "falta") {
+        notifs.push({ tipo: "falta", agendamento: a, label: "Cliente faltou" });
+        return;
+      }
+
+      // Today's confirmed appointments
+      if (diffDays === 0 && a.status === "confirmado") {
+        notifs.push({ tipo: "hoje", agendamento: a, label: `Hoje às ${a.horario}` });
+      }
+
+      // Tomorrow
+      if (diffDays === 1 && a.status === "confirmado") {
+        notifs.push({ tipo: "proximo", agendamento: a, label: "Amanhã" });
+      }
+
+      // Pending payment (pago < valor)
+      if (a.status !== "falta" && Number(a.valor_pago || 0) < Number(a.valor) && diffDays <= 0) {
+        notifs.push({ tipo: "pendente", agendamento: a, label: `Falta ${formatCurrency(Number(a.valor) - Number(a.valor_pago || 0))}` });
+      }
+    });
+
+    const order = { falta: 0, hoje: 1, pendente: 2, proximo: 3 };
+    notifs.sort((a, b) => order[a.tipo] - order[b.tipo]);
+    return notifs;
+  }, [agendamentos, today]);
+
+  const activeNotifications = useMemo(
+    () => notifications.filter((n) => !dismissedIds.has(n.agendamento.id + n.tipo)),
+    [notifications, dismissedIds]
+  );
+
+  const dismissNotification = (id: string, tipo: string) => {
+    setDismissedIds((prev) => {
+      const next = new Set(prev);
+      next.add(id + tipo);
+      localStorage.setItem("pedidos_dismissed", JSON.stringify([...next]));
+      return next;
+    });
+    toast.success("Marcada como lida");
+  };
+
+  const clearAllNotifications = () => {
+    const keys = activeNotifications.map((n) => n.agendamento.id + n.tipo);
+    setDismissedIds((prev) => {
+      const next = new Set([...prev, ...keys]);
+      localStorage.setItem("pedidos_dismissed", JSON.stringify([...next]));
+      return next;
+    });
+    toast.success("Todas limpas");
+  };
 
   const filtered = useMemo(() => {
     let list = [...agendamentos];
-
-    // Filter by status
-    if (statusFilter !== "todos") {
-      list = list.filter((a) => a.status === statusFilter);
-    }
-
-    // Filter by search
+    if (statusFilter !== "todos") list = list.filter((a) => a.status === statusFilter);
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       list = list.filter(
@@ -56,37 +120,22 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
           a.data_agendamento.includes(term)
       );
     }
-
-    // Sort
     list.sort((a, b) => {
       let cmp = 0;
       switch (sortField) {
-        case "data":
-          cmp = a.data_agendamento.localeCompare(b.data_agendamento) || a.horario.localeCompare(b.horario);
-          break;
-        case "cliente":
-          cmp = getClientName(a.user_id).localeCompare(getClientName(b.user_id));
-          break;
-        case "valor":
-          cmp = Number(a.valor) - Number(b.valor);
-          break;
-        case "status":
-          cmp = a.status.localeCompare(b.status);
-          break;
+        case "data": cmp = a.data_agendamento.localeCompare(b.data_agendamento) || a.horario.localeCompare(b.horario); break;
+        case "cliente": cmp = getClientName(a.user_id).localeCompare(getClientName(b.user_id)); break;
+        case "valor": cmp = Number(a.valor) - Number(b.valor); break;
+        case "status": cmp = a.status.localeCompare(b.status); break;
       }
       return sortDir === "desc" ? -cmp : cmp;
     });
-
     return list;
   }, [agendamentos, statusFilter, searchTerm, sortField, sortDir, getClientName]);
 
   const toggleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    } else {
-      setSortField(field);
-      setSortDir("desc");
-    }
+    if (sortField === field) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortField(field); setSortDir("desc"); }
   };
 
   const updateStatus = async (id: string, status: string) => {
@@ -108,12 +157,7 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
       concluido: "bg-green-500/10 text-green-500 border-green-500/20",
       falta: "bg-orange-500/10 text-orange-500 border-orange-500/20",
     };
-    const labels: Record<string, string> = {
-      confirmado: "Confirmado",
-      cancelado: "Cancelado",
-      concluido: "Concluído",
-      falta: "Falta",
-    };
+    const labels: Record<string, string> = { confirmado: "Confirmado", cancelado: "Cancelado", concluido: "Concluído", falta: "Falta" };
     return (
       <span className={`px-2 py-0.5 rounded-full text-[10px] font-body font-medium border ${map[s] || "bg-secondary text-muted-foreground border-border"}`}>
         {labels[s] || s}
@@ -134,11 +178,124 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     falta: agendamentos.filter((a) => a.status === "falta").length,
   }), [agendamentos]);
 
+  const notifConfig = {
+    hoje: { bg: "bg-gold/10 border-gold/25", icon: Clock, iconColor: "text-gold", titleColor: "text-gold" },
+    proximo: { bg: "bg-blue-500/10 border-blue-500/25", icon: Clock, iconColor: "text-blue-400", titleColor: "text-blue-400" },
+    pendente: { bg: "bg-red-500/10 border-red-500/25", icon: AlertTriangle, iconColor: "text-red-400", titleColor: "text-red-400" },
+    falta: { bg: "bg-orange-500/10 border-orange-500/25", icon: UserX, iconColor: "text-orange-400", titleColor: "text-orange-400" },
+  };
+
   return (
     <div className="space-y-4 animate-fade-in">
-      <h2 className="font-heading text-lg font-semibold text-primary-foreground lg:hidden">
-        Todos os Pedidos
-      </h2>
+      <div className="flex items-center justify-between">
+        <h2 className="font-heading text-lg font-semibold text-primary-foreground lg:hidden">
+          Todos os Pedidos
+        </h2>
+
+        {/* Notification Bell */}
+        <Sheet>
+          <SheetTrigger asChild>
+            <button className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] transition-all hover:bg-primary-foreground/[0.1]">
+              <Bell className={`h-4 w-4 ${activeNotifications.length > 0 ? "text-gold" : "text-primary-foreground/30"}`} />
+              {activeNotifications.length > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white animate-pulse">
+                  {activeNotifications.length}
+                </span>
+              )}
+            </button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-[340px] sm:w-[400px] bg-charcoal border-primary-foreground/[0.06] p-0">
+            <SheetHeader className="px-5 pt-5 pb-4 border-b border-primary-foreground/[0.06]">
+              <SheetTitle className="font-heading text-[16px] font-semibold text-primary-foreground flex items-center gap-2">
+                <Bell className="w-4 h-4 text-gold" />
+                Notificações da Agenda
+                {activeNotifications.length > 0 && (
+                  <span className="ml-auto px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 text-[10px] font-body font-medium border border-red-500/20">
+                    {activeNotifications.length}
+                  </span>
+                )}
+              </SheetTitle>
+            </SheetHeader>
+
+            {activeNotifications.length > 0 && (
+              <div className="px-4 pt-3 flex justify-end">
+                <button onClick={clearAllNotifications}
+                  className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 font-body text-[10px] font-medium text-primary-foreground/30 transition-all hover:bg-primary-foreground/[0.06] hover:text-primary-foreground/50">
+                  <X className="h-3 w-3" /> Limpar tudo
+                </button>
+              </div>
+            )}
+
+            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 max-h-[calc(100vh-160px)]">
+              {activeNotifications.length === 0 ? (
+                <div className="py-16 text-center">
+                  <CheckCircle className="h-8 w-8 text-green-400/40 mx-auto mb-3" />
+                  <p className="font-body text-[13px] text-primary-foreground/30">Tudo em dia! 🎉</p>
+                  <p className="font-body text-[11px] text-primary-foreground/20 mt-1">Nenhuma notificação pendente</p>
+                </div>
+              ) : (
+                activeNotifications.map((n, i) => {
+                  const cfg = notifConfig[n.tipo];
+                  const Icon = cfg.icon;
+                  return (
+                    <div key={n.agendamento.id + n.tipo + i} className={`rounded-xl border p-3 transition-all ${cfg.bg}`}>
+                      <div className="flex items-start gap-2.5">
+                        <div className={`mt-0.5 shrink-0 ${cfg.iconColor}`}>
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`font-body text-[11px] font-semibold ${cfg.titleColor}`}>{n.label}</p>
+                          <p className="font-body text-[13px] font-medium text-primary-foreground truncate mt-0.5">
+                            {getClientName(n.agendamento.user_id)}
+                          </p>
+                          <p className="font-body text-[11px] text-primary-foreground/40 truncate">
+                            {n.agendamento.servico}{n.agendamento.variacao ? ` · ${n.agendamento.variacao}` : ""}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="font-heading text-[13px] font-bold text-primary-foreground">
+                              {formatCurrency(Number(n.agendamento.valor))}
+                            </span>
+                            <span className="font-body text-[10px] text-primary-foreground/30">
+                              {formatDate(n.agendamento.data_agendamento)} · {n.agendamento.horario}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-2">
+                            <button
+                              onClick={() => dismissNotification(n.agendamento.id, n.tipo)}
+                              className="flex items-center gap-1 rounded-lg px-2 py-1 bg-primary-foreground/[0.06] text-primary-foreground/40 text-[10px] font-body font-medium border border-primary-foreground/[0.08] hover:bg-primary-foreground/[0.1] hover:text-primary-foreground/60 transition-all"
+                            >
+                              <Eye className="h-3 w-3" /> Lida
+                            </button>
+                            <button
+                              onClick={() => deleteAgendamento(n.agendamento.id)}
+                              className="flex items-center gap-1 rounded-lg px-2 py-1 bg-rose/10 text-rose/60 text-[10px] font-body font-medium border border-rose/20 hover:bg-rose/20 hover:text-rose transition-all"
+                            >
+                              <Trash2 className="h-3 w-3" /> Excluir
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {/* Alert banner */}
+      {activeNotifications.filter(n => n.tipo === "hoje" || n.tipo === "falta").length > 0 && (
+        <div className="flex items-center gap-2 rounded-xl border border-gold/30 bg-gold/10 px-3 py-2.5">
+          <Bell className="h-4 w-4 text-gold shrink-0" />
+          <p className="font-body text-[12px] text-gold flex-1">
+            Você tem <strong>{activeNotifications.filter(n => n.tipo === "hoje").length}</strong> atendimento(s) hoje
+            {activeNotifications.filter(n => n.tipo === "falta").length > 0 && (
+              <> e <strong className="text-orange-400">{activeNotifications.filter(n => n.tipo === "falta").length}</strong> falta(s)</>
+            )}
+          </p>
+        </div>
+      )}
 
       {/* Summary */}
       <div className="grid grid-cols-5 gap-1.5">
@@ -176,15 +333,12 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
           { value: "cancelado", label: "Cancelados" },
           { value: "falta", label: "Faltas" },
         ] as const).map((f) => (
-          <button
-            key={f.value}
-            onClick={() => setStatusFilter(f.value)}
+          <button key={f.value} onClick={() => setStatusFilter(f.value)}
             className={`shrink-0 rounded-full border px-3 py-1.5 font-body text-[11px] font-medium transition-all ${
               statusFilter === f.value
                 ? "bg-gold/10 text-gold border-gold/20"
                 : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06] hover:text-primary-foreground/60"
-            }`}
-          >
+            }`}>
             {f.label}
           </button>
         ))}
@@ -198,22 +352,16 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
           { field: "valor" as SortField, label: "Valor" },
           { field: "status" as SortField, label: "Status" },
         ]).map((s) => (
-          <button
-            key={s.field}
-            onClick={() => toggleSort(s.field)}
+          <button key={s.field} onClick={() => toggleSort(s.field)}
             className={`flex items-center gap-0.5 rounded-lg px-2 py-1 font-body text-[10px] font-medium transition-all ${
-              sortField === s.field
-                ? "bg-gold/10 text-gold"
-                : "text-primary-foreground/30 hover:text-primary-foreground/50"
-            }`}
-          >
+              sortField === s.field ? "bg-gold/10 text-gold" : "text-primary-foreground/30 hover:text-primary-foreground/50"
+            }`}>
             {s.label}
             <SortIcon field={s.field} />
           </button>
         ))}
       </div>
 
-      {/* Results count */}
       <p className="font-body text-[11px] text-primary-foreground/30">
         {filtered.length} pedido{filtered.length !== 1 ? "s" : ""} encontrado{filtered.length !== 1 ? "s" : ""}
       </p>
@@ -228,42 +376,25 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
           {filtered.map((a) => {
             const isExpanded = expandedId === a.id;
             return (
-              <div
-                key={a.id}
-                className="rounded-xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] overflow-hidden transition-all"
-              >
-                {/* Main row */}
-                <button
-                  onClick={() => setExpandedId(isExpanded ? null : a.id)}
-                  className="flex w-full items-center gap-3 p-3 text-left"
-                >
+              <div key={a.id} className="rounded-xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] overflow-hidden transition-all">
+                <button onClick={() => setExpandedId(isExpanded ? null : a.id)} className="flex w-full items-center gap-3 p-3 text-left">
                   <div className="flex min-w-[52px] flex-col items-center rounded-xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] px-2 py-1.5">
                     <span className="font-body text-[10px] text-primary-foreground/40">
                       {new Date(a.data_agendamento + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
                     </span>
                     <span className="font-heading text-[13px] font-semibold text-primary-foreground">{a.horario}</span>
                   </div>
-
                   <div className="flex-1 min-w-0">
-                    <p className="font-body text-[13px] font-medium text-primary-foreground truncate">
-                      {getClientName(a.user_id)}
-                    </p>
-                    <p className="font-body text-[11px] text-primary-foreground/35 truncate">
-                      {a.servico}{a.variacao ? ` · ${a.variacao}` : ""}
-                    </p>
+                    <p className="font-body text-[13px] font-medium text-primary-foreground truncate">{getClientName(a.user_id)}</p>
+                    <p className="font-body text-[11px] text-primary-foreground/35 truncate">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""}</p>
                   </div>
-
                   <div className="flex flex-col items-end gap-1 shrink-0">
-                    <p className="font-heading text-[13px] font-semibold text-gold">
-                      {formatCurrency(Number(a.valor))}
-                    </p>
+                    <p className="font-heading text-[13px] font-semibold text-gold">{formatCurrency(Number(a.valor))}</p>
                     {statusBadge(a.status)}
                   </div>
-
                   <ChevronDown className={`h-3.5 w-3.5 text-primary-foreground/20 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                 </button>
 
-                {/* Expanded details */}
                 {isExpanded && (
                   <div className="border-t border-primary-foreground/[0.06] p-3 space-y-3 animate-fade-in">
                     <div className="grid grid-cols-2 gap-2 text-[11px] font-body">
@@ -276,72 +407,56 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                         <p className="text-primary-foreground font-medium">
                           {formatCurrency(Number(a.valor_pago || 0))}
                           {Number(a.valor_pago || 0) < Number(a.valor) && (
-                            <span className="text-red-400 ml-1">
-                              (falta {formatCurrency(Number(a.valor) - Number(a.valor_pago || 0))})
-                            </span>
+                            <span className="text-red-400 ml-1">(falta {formatCurrency(Number(a.valor) - Number(a.valor_pago || 0))})</span>
                           )}
                         </p>
                       </div>
                       <div>
                         <p className="text-primary-foreground/30">Criado em</p>
-                        <p className="text-primary-foreground font-medium">
-                          {new Date(a.created_at).toLocaleDateString("pt-BR")}
-                        </p>
+                        <p className="text-primary-foreground font-medium">{new Date(a.created_at).toLocaleDateString("pt-BR")}</p>
                       </div>
                       <div>
                         <p className="text-primary-foreground/30">Serviço</p>
                         <p className="text-primary-foreground font-medium">{a.servico}</p>
                       </div>
                     </div>
-
                     <div className="border-t border-primary-foreground/[0.06] pt-3 space-y-2">
                       <p className="font-body text-[10px] text-primary-foreground/30 uppercase tracking-wider">Alterar status</p>
                       <div className="flex items-center gap-1 flex-wrap">
                         {a.status !== "confirmado" && (
-                          <button
-                            onClick={() => updateStatus(a.id, "confirmado")}
-                            className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-gold/60 transition-all hover:bg-gold/10 hover:text-gold"
-                          >
+                          <button onClick={() => updateStatus(a.id, "confirmado")}
+                            className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-gold/60 transition-all hover:bg-gold/10 hover:text-gold">
                             <CheckCircle className="h-3.5 w-3.5" /> Confirmado
                           </button>
                         )}
                         {a.status !== "concluido" && (
-                          <button
-                            onClick={() => updateStatus(a.id, "concluido")}
-                            className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-green-400/60 transition-all hover:bg-green-500/10 hover:text-green-400"
-                          >
+                          <button onClick={() => updateStatus(a.id, "concluido")}
+                            className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-green-400/60 transition-all hover:bg-green-500/10 hover:text-green-400">
                             <CheckCircle className="h-3.5 w-3.5" /> Concluído
                           </button>
                         )}
                         {a.status !== "falta" && (
-                          <button
-                            onClick={() => updateStatus(a.id, "falta")}
-                            className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-orange-400/60 transition-all hover:bg-orange-500/10 hover:text-orange-400"
-                          >
+                          <button onClick={() => updateStatus(a.id, "falta")}
+                            className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-orange-400/60 transition-all hover:bg-orange-500/10 hover:text-orange-400">
                             <UserX className="h-3.5 w-3.5" /> Falta
                           </button>
                         )}
                         {a.status !== "cancelado" && (
-                          <button
-                            onClick={() => updateStatus(a.id, "cancelado")}
-                            className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-rose/60 transition-all hover:bg-rose/10 hover:text-rose"
-                          >
+                          <button onClick={() => updateStatus(a.id, "cancelado")}
+                            className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-rose/60 transition-all hover:bg-rose/10 hover:text-rose">
                             <X className="h-3.5 w-3.5" /> Cancelado
                           </button>
                         )}
                       </div>
                       <div className="flex justify-end">
-                        <button
-                          onClick={() => deleteAgendamento(a.id)}
-                          className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-primary-foreground/20 transition-all hover:bg-rose/10 hover:text-rose"
-                        >
+                        <button onClick={() => deleteAgendamento(a.id)}
+                          className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-primary-foreground/20 transition-all hover:bg-rose/10 hover:text-rose">
                           <Trash2 className="h-3.5 w-3.5" /> Excluir
                         </button>
                       </div>
                     </div>
                   </div>
                 )}
-
               </div>
             );
           })}
