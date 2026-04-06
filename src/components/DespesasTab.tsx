@@ -140,7 +140,32 @@ const DespesasTab = () => {
     return notifs;
   }, [despesas, today]);
 
-  const totalPendente = useMemo(
+  const activeNotifications = useMemo(
+    () => notifications.filter((n) => !dismissedIds.has(n.despesa.id)),
+    [notifications, dismissedIds]
+  );
+
+  const dismissNotification = (id: string) => {
+    setDismissedIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      localStorage.setItem("despesas_dismissed", JSON.stringify([...next]));
+      return next;
+    });
+    toast.success("Marcada como lida");
+  };
+
+  const clearAllNotifications = () => {
+    const ids = activeNotifications.map((n) => n.despesa.id);
+    setDismissedIds((prev) => {
+      const next = new Set([...prev, ...ids]);
+      localStorage.setItem("despesas_dismissed", JSON.stringify([...next]));
+      return next;
+    });
+    toast.success("Todas limpas");
+  };
+
+
     () => despesas.filter((d) => !d.pago).reduce((s, d) => s + Number(d.valor), 0),
     [despesas]
   );
