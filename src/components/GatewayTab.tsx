@@ -95,7 +95,18 @@ const GatewayTab = () => {
     if (data) {
       const map: Record<string, GatewayConfig> = {};
       const formMap: Record<string, any> = {};
-      (data as GatewayConfig[]).forEach((d) => {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://vlepenxinekoljxecomr.supabase.co";
+      
+      for (const d of data as GatewayConfig[]) {
+        // Auto-generate webhook URL if empty
+        if (!d.webhook_url) {
+          const webhookFn = d.gateway === "mercadopago" ? "mercadopago-webhook" : "woovi-webhook";
+          const generatedUrl = `${supabaseUrl}/functions/v1/${webhookFn}`;
+          await (supabase.from as any)("gateway_configs")
+            .update({ webhook_url: generatedUrl })
+            .eq("id", d.id);
+          d.webhook_url = generatedUrl;
+        }
         map[d.gateway] = d;
         formMap[d.gateway] = {
           accessToken: d.access_token || "",
@@ -105,7 +116,7 @@ const GatewayTab = () => {
           cartaoEnabled: d.cartao_enabled,
           boletoEnabled: d.boleto_enabled,
         };
-      });
+      }
       setConfigs(map);
       setForms(formMap);
     }
