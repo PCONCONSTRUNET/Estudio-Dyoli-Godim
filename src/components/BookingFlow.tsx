@@ -525,6 +525,10 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     const paymentLabel = requiresDeposit
       ? (paymentMode === "deposit" ? `Sinal: ${depositAmount}` : `Total: ${price}`)
       : `Total: ${price}`;
+    const timerMin = Math.floor(timeLeft / 60);
+    const timerSec = timeLeft % 60;
+    const timerStr = `${timerMin}:${String(timerSec).padStart(2, "0")}`;
+    const timerUrgent = timeLeft <= 60;
 
     if (paymentData?.method === "cartao" && paymentData.init_point) {
       return (
