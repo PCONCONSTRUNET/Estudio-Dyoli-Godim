@@ -40,6 +40,14 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const [showComissaoConfig, setShowComissaoConfig] = useState(false);
   const [tempComissao, setTempComissao] = useState(comissaoPct.toString());
 
+  // Load despesas
+  const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string }[]>([]);
+  useEffect(() => {
+    (supabase.from as any)("despesas").select("valor,pago,data_vencimento").then(({ data }: any) => {
+      if (data) setDespesas(data);
+    });
+  }, []);
+
   // Filter agendamentos by period
   const filtered = useMemo(() => {
     const now = new Date();
