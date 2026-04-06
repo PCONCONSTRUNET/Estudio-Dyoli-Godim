@@ -136,7 +136,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     // Load agendamentos + manual blocks in parallel
     const [agRes, blockRes] = await Promise.all([
       supabase.from("agendamentos").select("data_agendamento, horario, status, duracao_minutos")
-        .gte("data_agendamento", todayStr).lte("data_agendamento", futureStr).in("status", ["confirmado", "concluido"]),
+        .gte("data_agendamento", todayStr).lte("data_agendamento", futureStr).in("status", ["pendente", "confirmado", "concluido"]),
       supabase.from("horarios_bloqueados").select("data, horario")
         .gte("data", todayStr).lte("data", futureStr),
     ]);
