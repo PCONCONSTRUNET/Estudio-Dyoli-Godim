@@ -17,6 +17,7 @@ import DespesasTab from "@/components/DespesasTab";
 import PedidosTab from "@/components/PedidosTab";
 import GatewayTab from "@/components/GatewayTab";
 import ProdutosTab from "@/components/ProdutosTab";
+import PagamentosTab from "@/components/PagamentosTab";
 import AdminDashboard from "@/components/AdminDashboard";
 import { useAdminNotifications } from "@/hooks/use-admin-notifications";
 import { Switch } from "@/components/ui/switch";
@@ -324,6 +325,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     { id: "agendamentos", label: "Agenda", icon: Calendar },
     { id: "pedidos", label: "Pedidos", icon: ClipboardList },
     { id: "financeiro", label: "Financeiro", icon: DollarSign },
+    { id: "pagamentos", label: "Pagamentos", icon: CreditCard },
     { id: "despesas", label: "Despesas", icon: Receipt },
     { id: "clientes", label: "Clientes", icon: Users },
     { id: "produtos", label: "Produtos", icon: ShoppingBag },
@@ -1036,6 +1038,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
             })()}
 
           {tab === "financeiro" && <FinanceiroTab agendamentos={agendamentos} getClientName={getClientName} />}
+          {tab === "pagamentos" && <PagamentosTab agendamentos={agendamentos} getClientName={getClientName} />}
           {tab === "pedidos" && <PedidosTab agendamentos={agendamentos} getClientName={getClientName} onUpdate={loadData} />}
           {tab === "despesas" && <DespesasTab />}
           {tab === "produtos" && <ProdutosTab />}
