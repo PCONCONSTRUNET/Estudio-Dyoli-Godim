@@ -394,7 +394,54 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     ? "Hoje"
     : selectedAgendaDateObj.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
 
-  return (
+  // Agenda notifications
+  const agendaNotifs = useMemo(() => {
+    const today = getDateKey(new Date());
+    const todayDate = new Date(today + "T12:00:00");
+    const notifs: { tipo: "hoje" | "falta" | "pendente" | "proximo"; ag: Agendamento; label: string }[] = [];
+    agendamentos.forEach((a) => {
+      if (a.status === "cancelado") return;
+      const aDate = new Date(a.data_agendamento + "T12:00:00");
+      const diff = Math.round((aDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
+      if (a.status === "falta") { notifs.push({ tipo: "falta", ag: a, label: "Cliente faltou" }); return; }
+      if (diff === 0 && a.status === "confirmado") notifs.push({ tipo: "hoje", ag: a, label: `Hoje às ${a.horario}` });
+      if (diff === 1 && a.status === "confirmado") notifs.push({ tipo: "proximo", ag: a, label: "Amanhã" });
+      if (a.status !== "falta" && Number(a.valor_pago || 0) < Number(a.valor) && diff <= 0) notifs.push({ tipo: "pendente", ag: a, label: `Falta R$ ${(Number(a.valor) - Number(a.valor_pago || 0)).toFixed(2).replace(".", ",")}` });
+    });
+    const order = { falta: 0, hoje: 1, pendente: 2, proximo: 3 };
+    notifs.sort((x, y) => order[x.tipo] - order[y.tipo]);
+    return notifs;
+  }, [agendamentos]);
+
+  const activeAgendaNotifs = useMemo(
+    () => agendaNotifs.filter((n) => !agendaDismissed.has(n.ag.id + n.tipo)),
+    [agendaNotifs, agendaDismissed]
+  );
+
+  const dismissAgendaNotif = (id: string, tipo: string) => {
+    setAgendaDismissed((prev) => {
+      const next = new Set(prev); next.add(id + tipo);
+      localStorage.setItem("agenda_dismissed", JSON.stringify([...next]));
+      return next;
+    });
+  };
+
+  const clearAgendaNotifs = () => {
+    const keys = activeAgendaNotifs.map((n) => n.ag.id + n.tipo);
+    setAgendaDismissed((prev) => {
+      const next = new Set([...prev, ...keys]);
+      localStorage.setItem("agenda_dismissed", JSON.stringify([...next]));
+      return next;
+    });
+  };
+
+  const agendaNotifConfig: Record<string, { bg: string; iconColor: string; titleColor: string }> = {
+    hoje: { bg: "bg-gold/10 border-gold/25", iconColor: "text-gold", titleColor: "text-gold" },
+    proximo: { bg: "bg-blue-500/10 border-blue-500/25", iconColor: "text-blue-400", titleColor: "text-blue-400" },
+    pendente: { bg: "bg-red-500/10 border-red-500/25", iconColor: "text-red-400", titleColor: "text-red-400" },
+    falta: { bg: "bg-orange-500/10 border-orange-500/25", iconColor: "text-orange-400", titleColor: "text-orange-400" },
+  };
+
     <div className="admin-mobile-shell min-h-dvh w-screen max-w-full overflow-x-hidden bg-charcoal lg:flex">
       {/* ── Desktop Sidebar (hidden on mobile) ── */}
       <aside className="hidden lg:flex lg:flex-col lg:w-56 lg:shrink-0 lg:border-r lg:border-primary-foreground/[0.06] lg:bg-charcoal lg:fixed lg:inset-y-0 lg:left-0 lg:z-30">
