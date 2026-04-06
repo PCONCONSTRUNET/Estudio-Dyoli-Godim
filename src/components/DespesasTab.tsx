@@ -30,7 +30,10 @@ const DespesasTab = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState<"todas" | "pendentes" | "pagas" | "atrasadas">("todas");
-
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem("despesas_dismissed");
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
   // Form state
   const [descricao, setDescricao] = useState("");
   const [valor, setValor] = useState("");
