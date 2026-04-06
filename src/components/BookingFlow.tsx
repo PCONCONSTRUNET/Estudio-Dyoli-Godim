@@ -606,6 +606,10 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
             <img src={pixIcon} alt="PIX" className="w-7 h-7" />
           </div>
           <h2 className="font-heading text-2xl font-semibold text-foreground mb-1">Pagamento PIX</h2>
+          {/* Timer */}
+          <div className={`mt-2 mb-3 px-4 py-2 rounded-full font-body text-[13px] font-semibold ${timerUrgent ? "bg-destructive/20 text-destructive animate-pulse" : "bg-gold/10 text-gold"}`}>
+            ⏱ Expira em {timerStr}
+          </div>
           <p className="font-body text-[13px] text-muted-foreground mb-5">{paymentLabel}</p>
           <div className="bg-white p-5 rounded-3xl shadow-[0_4px_24px_-6px_rgba(0,0,0,0.1)] mb-6">
             {paymentData?.qr_code_base64 ? (
@@ -627,17 +631,39 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
             </div>
             {copied && <p className="font-body text-[12px] text-gold font-medium animate-fade-in">✓ Código copiado!</p>}
           </div>
-          <div className="mt-6 p-3.5 rounded-2xl bg-secondary/30 backdrop-blur-sm border border-border/30 max-w-sm">
-            <p className="font-body text-[12px] text-muted-foreground leading-relaxed">
-              Após o pagamento, clique em "Confirmar" abaixo. {!isLocalPix ? "O sistema validará automaticamente." : "Seu agendamento será validado."}
-            </p>
-          </div>
+
+          {!isLocalPix ? (
+            <div className="mt-6 p-3.5 rounded-2xl bg-secondary/30 backdrop-blur-sm border border-border/30 max-w-sm">
+              <p className="font-body text-[12px] text-muted-foreground leading-relaxed flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin flex-shrink-0" />
+                Aguardando confirmação do pagamento... O sistema validará automaticamente.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-6 p-3.5 rounded-2xl bg-secondary/30 backdrop-blur-sm border border-border/30 max-w-sm">
+              <p className="font-body text-[12px] text-muted-foreground leading-relaxed">
+                Após o pagamento, clique em "Confirmar" abaixo.
+              </p>
+            </div>
+          )}
         </div>
         <div className="pt-6 pb-4">
-          <button onClick={() => onConfirm({ date: selectedDate, time: selectedTime, price: numericPrice, paidAmount: paymentAmount, durationMinutes: serviceDuration })}
-            className="ios-press w-full py-4 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all">
-            Confirmar Agendamento
-          </button>
+          {isLocalPix ? (
+            <button onClick={async () => {
+              // Mark local PIX agendamento as confirmado
+              if (agendamentoId) {
+                await supabase.from("agendamentos").update({ status: "confirmado", valor_pago: paymentAmount }).eq("id", agendamentoId);
+              }
+              onConfirm({ date: selectedDate, time: selectedTime, price: numericPrice, paidAmount: paymentAmount, durationMinutes: serviceDuration });
+            }}
+              className="ios-press w-full py-4 rounded-2xl bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all">
+              Confirmar Agendamento
+            </button>
+          ) : (
+            <p className="text-center font-body text-[12px] text-muted-foreground">
+              O agendamento será confirmado automaticamente após o pagamento
+            </p>
+          )}
         </div>
       </section>
     );
