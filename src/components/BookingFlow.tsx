@@ -39,7 +39,7 @@ interface GatewayInfo {
 const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps) => {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<string>("");
-  const [step, setStep] = useState<"date" | "confirm" | "payment">("date");
+  const [step, setStep] = useState<"date" | "confirm" | "payment" | "waiting">("date");
   const [copied, setCopied] = useState(false);
   const [paymentMode, setPaymentMode] = useState<"deposit" | "full">("deposit");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"pix" | "cartao" | "boleto">("pix");
@@ -47,7 +47,9 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   const [paymentData, setPaymentData] = useState<PaymentResponse | null>(null);
   const [availableMethods, setAvailableMethods] = useState<{ pix: boolean; cartao: boolean; boleto: boolean }>({ pix: true, cartao: false, boleto: false });
   const [gatewayInfo, setGatewayInfo] = useState<GatewayInfo | null>(null);
-  const [checkingPayment, setCheckingPayment] = useState(false);
+  const [agendamentoId, setAgendamentoId] = useState<string | null>(null);
+  const [paymentExpiry, setPaymentExpiry] = useState<number>(0);
+  const [timeLeft, setTimeLeft] = useState<number>(300); // 5 min in seconds
 
   const PIX_KEY = "48999779829";
   const PIX_NAME = "DYOLI GODIM";
