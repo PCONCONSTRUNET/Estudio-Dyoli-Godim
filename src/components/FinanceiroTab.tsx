@@ -84,6 +84,8 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const totalPendente = totalReceita - totalRecebido;
   const qtdAtendimentos = filtered.length;
   const comissaoValor = totalRecebido * (comissaoPct / 100);
+  const totalDespesas = despesas.reduce((s, d) => s + Number(d.valor), 0);
+  const lucroLiquido = totalRecebido - totalDespesas;
 
   // Chart: receita por dia
   const dailyData = useMemo(() => {
