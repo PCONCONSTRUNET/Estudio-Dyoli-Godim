@@ -249,27 +249,103 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     setTimeout(() => setCopied(false), 2500);
   };
 
+  // Countdown timer for payment expiry
+  useEffect(() => {
+    if (step !== "payment" && step !== "waiting") return;
+    if (paymentExpiry <= 0) return;
+    const interval = setInterval(() => {
+      const remaining = Math.max(0, Math.floor((paymentExpiry - Date.now()) / 1000));
+      setTimeLeft(remaining);
+      if (remaining <= 0) {
+        clearInterval(interval);
+        toast.error("Tempo de pagamento expirado. Agendamento cancelado.");
+        // Cancel the agendamento
+        if (agendamentoId) {
+          supabase.from("agendamentos").update({ status: "cancelado" }).eq("id", agendamentoId);
+        }
+        setStep("confirm");
+        setPaymentData(null);
+        setAgendamentoId(null);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [step, paymentExpiry, agendamentoId]);
+
+  // Poll for payment confirmation via webhook
+  useEffect(() => {
+    if (step !== "payment" && step !== "waiting") return;
+    if (!agendamentoId) return;
+    const isLocal = !paymentData || paymentData.gateway === "local";
+    if (isLocal) return; // local PIX doesn't poll
+
+    const interval = setInterval(async () => {
+      const { data } = await supabase.from("agendamentos").select("status").eq("id", agendamentoId).maybeSingle();
+      if (data?.status === "confirmado") {
+        clearInterval(interval);
+        toast.success("Pagamento confirmado! ✅");
+        onConfirm({ date: selectedDate, time: selectedTime, price: numericPrice, paidAmount: paymentAmount, durationMinutes: serviceDuration });
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [step, agendamentoId, paymentData]);
+
   const handleCreatePayment = async () => {
     setPaymentLoading(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Faça login para continuar");
+        setPaymentLoading(false);
+        return;
+      }
+
+      // 1. Create agendamento as "pendente"
+      const { data: agData, error: agError } = await supabase.from("agendamentos").insert({
+        user_id: user.id,
+        servico: service,
+        variacao: variation || null,
+        data_agendamento: selectedDate,
+        horario: selectedTime,
+        valor: numericPrice,
+        valor_pago: 0,
+        forma_pagamento: selectedPaymentMethod,
+        status: "pendente",
+        duracao_minutos: serviceDuration,
+      }).select("id").single();
+
+      if (agError || !agData) {
+        toast.error("Erro ao criar agendamento");
+        setPaymentLoading(false);
+        return;
+      }
+
+      const realAgendamentoId = agData.id;
+      setAgendamentoId(realAgendamentoId);
+
+      // 2. Create payment with real agendamento_id
       const res = await supabase.functions.invoke("create-payment", {
         body: {
           amount: paymentAmount,
           description: `${service}${variation ? ` — ${variation}` : ""}`,
-          agendamento_id: `temp-${Date.now()}`,
+          agendamento_id: realAgendamentoId,
           payment_method: selectedPaymentMethod,
-          customer_email: sessionData?.session?.user?.email,
-          customer_name: sessionData?.session?.user?.user_metadata?.nome,
+          customer_email: user.email,
+          customer_name: user.user_metadata?.nome,
         },
       });
+
       const result = res.data as PaymentResponse;
       if (result?.error) {
         toast.error(result.error);
+        // Cancel the pending agendamento
+        await supabase.from("agendamentos").update({ status: "cancelado" }).eq("id", realAgendamentoId);
         setPaymentLoading(false);
         return;
       }
+
       setPaymentData(result);
+      setPaymentExpiry(Date.now() + 5 * 60 * 1000); // 5 minutes
+      setTimeLeft(300);
       setStep("payment");
     } catch (err) {
       console.error("Payment error:", err);
@@ -282,9 +358,38 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     if (gatewayInfo) {
       handleCreatePayment();
     } else {
-      setPaymentData({ gateway: "local", method: "pix" });
-      setStep("payment");
+      // No gateway — create agendamento as confirmado directly (local PIX)
+      handleLocalPayment();
     }
+  };
+
+  const handleLocalPayment = async () => {
+    setPaymentLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Faça login para continuar");
+      setPaymentLoading(false);
+      return;
+    }
+    const { data: agData } = await supabase.from("agendamentos").insert({
+      user_id: user.id,
+      servico: service,
+      variacao: variation || null,
+      data_agendamento: selectedDate,
+      horario: selectedTime,
+      valor: numericPrice,
+      valor_pago: 0,
+      forma_pagamento: "pix",
+      status: "pendente",
+      duracao_minutos: serviceDuration,
+    }).select("id").single();
+
+    if (agData) setAgendamentoId(agData.id);
+    setPaymentData({ gateway: "local", method: "pix" });
+    setPaymentExpiry(Date.now() + 5 * 60 * 1000);
+    setTimeLeft(300);
+    setStep("payment");
+    setPaymentLoading(false);
   };
 
   if (step === "confirm") {
