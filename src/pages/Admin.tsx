@@ -536,7 +536,101 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
           {tab === "agendamentos" && (
             <div className="space-y-4 animate-fade-in">
-              <h2 className="font-heading text-lg font-semibold text-primary-foreground lg:hidden">Agendamentos</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="font-heading text-lg font-semibold text-primary-foreground">Agenda</h2>
+
+                {/* Bell */}
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <button className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] transition-all hover:bg-primary-foreground/[0.1]">
+                      <Bell className={`h-4 w-4 ${activeAgendaNotifs.length > 0 ? "text-gold" : "text-primary-foreground/30"}`} />
+                      {activeAgendaNotifs.length > 0 && (
+                        <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white animate-pulse">
+                          {activeAgendaNotifs.length}
+                        </span>
+                      )}
+                    </button>
+                  </SheetTrigger>
+                  <SheetContent side="right" className="w-[340px] sm:w-[400px] bg-charcoal border-primary-foreground/[0.06] p-0">
+                    <SheetHeader className="px-5 pt-5 pb-4 border-b border-primary-foreground/[0.06]">
+                      <SheetTitle className="font-heading text-[16px] font-semibold text-primary-foreground flex items-center gap-2">
+                        <Bell className="w-4 h-4 text-gold" />
+                        Notificações da Agenda
+                        {activeAgendaNotifs.length > 0 && (
+                          <span className="ml-auto px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 text-[10px] font-body font-medium border border-red-500/20">
+                            {activeAgendaNotifs.length}
+                          </span>
+                        )}
+                      </SheetTitle>
+                    </SheetHeader>
+
+                    {activeAgendaNotifs.length > 0 && (
+                      <div className="px-4 pt-3 flex justify-end">
+                        <button onClick={clearAgendaNotifs}
+                          className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 font-body text-[10px] font-medium text-primary-foreground/30 transition-all hover:bg-primary-foreground/[0.06] hover:text-primary-foreground/50">
+                          <X className="h-3 w-3" /> Limpar tudo
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 max-h-[calc(100vh-160px)]">
+                      {activeAgendaNotifs.length === 0 ? (
+                        <div className="py-16 text-center">
+                          <CheckCircle className="h-8 w-8 text-green-400/40 mx-auto mb-3" />
+                          <p className="font-body text-[13px] text-primary-foreground/30">Tudo em dia! 🎉</p>
+                          <p className="font-body text-[11px] text-primary-foreground/20 mt-1">Nenhuma notificação pendente</p>
+                        </div>
+                      ) : (
+                        activeAgendaNotifs.map((n, i) => {
+                          const cfg = agendaNotifConfig[n.tipo];
+                          const icons: Record<string, typeof Bell> = { hoje: Clock, proximo: Clock, pendente: DollarSign, falta: UserX };
+                          const Icon = icons[n.tipo] || Bell;
+                          return (
+                            <div key={n.ag.id + n.tipo + i} className={`rounded-xl border p-3 transition-all ${cfg.bg}`}>
+                              <div className="flex items-start gap-2.5">
+                                <div className={`mt-0.5 shrink-0 ${cfg.iconColor}`}>
+                                  <Icon className="h-4 w-4" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className={`font-body text-[11px] font-semibold ${cfg.titleColor}`}>{n.label}</p>
+                                  <p className="font-body text-[13px] font-medium text-primary-foreground truncate mt-0.5">
+                                    {getClientName(n.ag.user_id)}
+                                  </p>
+                                  <p className="font-body text-[11px] text-primary-foreground/40 truncate">
+                                    {n.ag.servico}{n.ag.variacao ? ` · ${n.ag.variacao}` : ""}
+                                  </p>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <span className="font-heading text-[13px] font-bold text-primary-foreground">
+                                      R$ {Number(n.ag.valor).toFixed(2).replace(".", ",")}
+                                    </span>
+                                    <span className="font-body text-[10px] text-primary-foreground/30">
+                                      {new Date(n.ag.data_agendamento + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })} · {n.ag.horario}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-1.5 mt-2">
+                                    <button
+                                      onClick={() => dismissAgendaNotif(n.ag.id, n.tipo)}
+                                      className="flex items-center gap-1 rounded-lg px-2 py-1 bg-primary-foreground/[0.06] text-primary-foreground/40 text-[10px] font-body font-medium border border-primary-foreground/[0.08] hover:bg-primary-foreground/[0.1] hover:text-primary-foreground/60 transition-all"
+                                    >
+                                      <CheckCircle className="h-3 w-3" /> Lida
+                                    </button>
+                                    <button
+                                      onClick={() => deleteAgendamento(n.ag.id)}
+                                      className="flex items-center gap-1 rounded-lg px-2 py-1 bg-rose/10 text-rose/60 text-[10px] font-body font-medium border border-rose/20 hover:bg-rose/20 hover:text-rose transition-all"
+                                    >
+                                      <Trash2 className="h-3 w-3" /> Excluir
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              </div>
 
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
                 <div className="space-y-2">
