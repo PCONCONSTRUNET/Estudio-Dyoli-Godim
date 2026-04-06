@@ -282,24 +282,24 @@ const DespesasTab = () => {
                       </p>
                     )}
                   </div>
-                  <div className="flex flex-col gap-1.5 shrink-0">
+                  <div className="flex flex-col gap-2 shrink-0">
                     <button
                       onClick={() => togglePago(d)}
-                      className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all ${
+                      className={`flex h-11 w-11 items-center justify-center rounded-2xl border-2 transition-all shadow-sm ${
                         d.pago
-                          ? "bg-green-500/20 text-green-400"
-                          : "bg-primary-foreground/[0.05] text-primary-foreground/30 hover:bg-gold/10 hover:text-gold"
+                          ? "bg-green-500/25 text-green-400 border-green-500/40 shadow-green-500/10"
+                          : "bg-primary-foreground/[0.06] text-primary-foreground/40 border-primary-foreground/[0.1] hover:bg-gold/15 hover:text-gold hover:border-gold/30 hover:shadow-gold/10"
                       }`}
                       title={d.pago ? "Desmarcar" : "Marcar como pago"}
                     >
-                      <Check className="h-4 w-4" />
+                      <Check className="h-5 w-5" />
                     </button>
                     <button
                       onClick={() => deleteDespesa(d.id)}
-                      className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/20 transition-all hover:bg-rose/10 hover:text-rose"
+                      className="flex h-11 w-11 items-center justify-center rounded-2xl border-2 bg-primary-foreground/[0.06] text-primary-foreground/30 border-primary-foreground/[0.1] transition-all shadow-sm hover:bg-rose/15 hover:text-rose hover:border-rose/30 hover:shadow-rose/10"
                       title="Excluir"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
