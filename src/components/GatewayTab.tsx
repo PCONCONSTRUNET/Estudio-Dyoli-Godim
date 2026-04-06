@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Save, Eye, EyeOff, Copy, Check, CreditCard, QrCode, FileText, ExternalLink } from "lucide-react";
+import { Save, Eye, EyeOff, Copy, Check, CreditCard, QrCode, FileText, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
 
 interface GatewayConfig {
   id: string;
@@ -15,66 +15,133 @@ interface GatewayConfig {
   boleto_enabled: boolean;
 }
 
+interface GatewayMeta {
+  key: string;
+  label: string;
+  color: string;
+  icon: typeof CreditCard;
+  tokenPlaceholder: string;
+  publicKeyPlaceholder: string;
+  publicKeyLabel: string;
+  helpSteps: string[];
+  helpLink: string;
+  helpLinkLabel: string;
+  supportsCartao: boolean;
+  supportsBoleto: boolean;
+}
+
+const GATEWAYS: GatewayMeta[] = [
+  {
+    key: "mercadopago",
+    label: "Mercado Pago",
+    color: "#009ee3",
+    icon: CreditCard,
+    tokenPlaceholder: "APP_USR-...",
+    publicKeyPlaceholder: "APP_USR-...",
+    publicKeyLabel: "Public Key",
+    helpSteps: [
+      'Acesse mercadopago.com.br/developers',
+      'Vá em "Suas integrações" → Criar aplicação',
+      'Copie o Access Token e Public Key',
+      'Cole a URL do Webhook acima nas notificações',
+      'Ative o gateway e escolha os métodos de pagamento',
+    ],
+    helpLink: "https://www.mercadopago.com.br/developers/panel/app",
+    helpLinkLabel: "Abrir painel Mercado Pago",
+    supportsCartao: true,
+    supportsBoleto: true,
+  },
+  {
+    key: "woovi",
+    label: "Woovi (OpenPix)",
+    color: "#03d69d",
+    icon: QrCode,
+    tokenPlaceholder: "Q2xpZW50X0lk...",
+    publicKeyPlaceholder: "(opcional)",
+    publicKeyLabel: "App ID",
+    helpSteps: [
+      'Acesse app.woovi.com e faça login',
+      'Vá em API/Plugins → Criar nova API',
+      'Copie o App ID e o Token de acesso',
+      'Cole a URL do Webhook nas configurações da API',
+      'Ative o gateway — Woovi suporta apenas PIX',
+    ],
+    helpLink: "https://app.woovi.com",
+    helpLinkLabel: "Abrir painel Woovi",
+    supportsCartao: false,
+    supportsBoleto: false,
+  },
+];
+
 const GatewayTab = () => {
-  const [config, setConfig] = useState<GatewayConfig | null>(null);
+  const [configs, setConfigs] = useState<Record<string, GatewayConfig>>({});
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [showToken, setShowToken] = useState(false);
+  const [savingKey, setSavingKey] = useState<string | null>(null);
+  const [showToken, setShowToken] = useState<Record<string, boolean>>({});
   const [copied, setCopied] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({ mercadopago: true, woovi: true });
 
-  // Form
-  const [accessToken, setAccessToken] = useState("");
-  const [publicKey, setPublicKey] = useState("");
-  const [ativo, setAtivo] = useState(false);
-  const [pixEnabled, setPixEnabled] = useState(true);
-  const [cartaoEnabled, setCartaoEnabled] = useState(false);
-  const [boletoEnabled, setBoletoEnabled] = useState(false);
+  // Form state per gateway
+  const [forms, setForms] = useState<Record<string, {
+    accessToken: string; publicKey: string; ativo: boolean;
+    pixEnabled: boolean; cartaoEnabled: boolean; boletoEnabled: boolean;
+  }>>({});
 
-  useEffect(() => {
-    loadConfig();
-  }, []);
+  useEffect(() => { loadAll(); }, []);
 
-  const loadConfig = async () => {
+  const loadAll = async () => {
     setLoading(true);
-    const { data } = await (supabase.from as any)("gateway_configs")
-      .select("*")
-      .eq("gateway", "mercadopago")
-      .maybeSingle();
+    const { data } = await (supabase.from as any)("gateway_configs").select("*");
     if (data) {
-      const d = data as GatewayConfig;
-      setConfig(d);
-      setAccessToken(d.access_token || "");
-      setPublicKey(d.public_key || "");
-      setAtivo(d.ativo);
-      setPixEnabled(d.pix_enabled);
-      setCartaoEnabled(d.cartao_enabled);
-      setBoletoEnabled(d.boleto_enabled);
+      const map: Record<string, GatewayConfig> = {};
+      const formMap: Record<string, any> = {};
+      (data as GatewayConfig[]).forEach((d) => {
+        map[d.gateway] = d;
+        formMap[d.gateway] = {
+          accessToken: d.access_token || "",
+          publicKey: d.public_key || "",
+          ativo: d.ativo,
+          pixEnabled: d.pix_enabled,
+          cartaoEnabled: d.cartao_enabled,
+          boletoEnabled: d.boleto_enabled,
+        };
+      });
+      setConfigs(map);
+      setForms(formMap);
     }
     setLoading(false);
   };
 
-  const handleSave = async () => {
-    if (!config) return;
-    setSaving(true);
+  const handleSave = async (gatewayKey: string) => {
+    const cfg = configs[gatewayKey];
+    const form = forms[gatewayKey];
+    if (!cfg || !form) return;
+    setSavingKey(gatewayKey);
     const { error } = await (supabase.from as any)("gateway_configs")
       .update({
-        access_token: accessToken,
-        public_key: publicKey,
-        ativo,
-        pix_enabled: pixEnabled,
-        cartao_enabled: cartaoEnabled,
-        boleto_enabled: boletoEnabled,
+        access_token: form.accessToken,
+        public_key: form.publicKey,
+        ativo: form.ativo,
+        pix_enabled: form.pixEnabled,
+        cartao_enabled: form.cartaoEnabled,
+        boleto_enabled: form.boletoEnabled,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", config.id);
+      .eq("id", cfg.id);
     if (error) {
-      console.error("Erro gateway save:", error);
       toast.error("Erro ao salvar configuração");
     } else {
-      toast.success("Configuração salva com sucesso!");
-      loadConfig();
+      toast.success("Configuração salva!");
+      loadAll();
     }
-    setSaving(false);
+    setSavingKey(null);
+  };
+
+  const updateForm = (gatewayKey: string, field: string, value: any) => {
+    setForms((prev) => ({
+      ...prev,
+      [gatewayKey]: { ...prev[gatewayKey], [field]: value },
+    }));
   };
 
   const copyToClipboard = (text: string, label: string) => {
@@ -98,161 +165,161 @@ const GatewayTab = () => {
         Gateway de Pagamento
       </h2>
 
-      {/* Mercado Pago Card */}
-      <div className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-primary-foreground/[0.06]">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#009ee3]/10">
-              <CreditCard className="h-5 w-5 text-[#009ee3]" />
-            </div>
-            <div>
-              <h3 className="font-heading text-[14px] font-semibold text-primary-foreground">Mercado Pago</h3>
-              <p className="font-body text-[11px] text-primary-foreground/35">Gateway de pagamento</p>
-            </div>
-          </div>
-          <button
-            onClick={() => { setAtivo(!ativo); }}
-            className={`w-11 h-6 rounded-full relative transition-all duration-200 ${ativo ? "bg-green-500" : "bg-primary-foreground/10"}`}
-          >
-            <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200 ${ativo ? "left-5" : "left-0.5"}`} />
-          </button>
-        </div>
+      {GATEWAYS.map((gw) => {
+        const cfg = configs[gw.key];
+        const form = forms[gw.key];
+        if (!cfg || !form) return null;
+        const isExpanded = expanded[gw.key] !== false;
+        const tokenVisible = showToken[gw.key] || false;
 
-        <div className="p-4 space-y-4">
-          {/* Access Token */}
-          <div>
-            <label className="font-body text-[11px] text-primary-foreground/40 mb-1.5 block">Access Token *</label>
-            <div className="relative">
-              <input
-                type={showToken ? "text" : "password"}
-                value={accessToken}
-                onChange={(e) => setAccessToken(e.target.value)}
-                placeholder="APP_USR-..."
-                className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] py-2.5 pl-3 pr-20 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
-              />
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
-                <button
-                  onClick={() => setShowToken(!showToken)}
-                  className="p-1.5 rounded-lg text-primary-foreground/25 hover:text-primary-foreground/50 transition-all"
-                >
-                  {showToken ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                </button>
-                {accessToken && (
-                  <button
-                    onClick={() => copyToClipboard(accessToken, "Token")}
-                    className="p-1.5 rounded-lg text-primary-foreground/25 hover:text-primary-foreground/50 transition-all"
-                  >
-                    {copied === "Token" ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
-                  </button>
-                )}
+        return (
+          <div key={gw.key} className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] overflow-hidden">
+            {/* Header */}
+            <button
+              onClick={() => setExpanded((p) => ({ ...p, [gw.key]: !isExpanded }))}
+              className="w-full flex items-center justify-between p-4 border-b border-primary-foreground/[0.06] hover:bg-primary-foreground/[0.02] transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: `${gw.color}15` }}>
+                  <gw.icon className="h-5 w-5" style={{ color: gw.color }} />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-heading text-[14px] font-semibold text-primary-foreground">{gw.label}</h3>
+                  <p className="font-body text-[11px] text-primary-foreground/35">
+                    {form.ativo ? "Ativo" : "Inativo"}
+                    {form.ativo && (
+                      <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
+                    )}
+                  </p>
+                </div>
               </div>
-            </div>
-            <p className="font-body text-[10px] text-primary-foreground/25 mt-1">
-              Encontre em: Mercado Pago → Seu negócio → Configurações → Credenciais
-            </p>
-          </div>
-
-          {/* Public Key */}
-          <div>
-            <label className="font-body text-[11px] text-primary-foreground/40 mb-1.5 block">Public Key</label>
-            <input
-              value={publicKey}
-              onChange={(e) => setPublicKey(e.target.value)}
-              placeholder="APP_USR-..."
-              className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] py-2.5 px-3 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
-            />
-          </div>
-
-          {/* Webhook URL (read-only) */}
-          <div>
-            <label className="font-body text-[11px] text-primary-foreground/40 mb-1.5 block">URL do Webhook</label>
-            <div className="relative">
-              <input
-                readOnly
-                value={config?.webhook_url || ""}
-                className="w-full rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.06] py-2.5 pl-3 pr-10 text-primary-foreground/50 font-body text-[12px] cursor-default"
-              />
-              <button
-                onClick={() => copyToClipboard(config?.webhook_url || "", "URL Webhook")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-primary-foreground/25 hover:text-primary-foreground/50 transition-all"
-              >
-                {copied === "URL Webhook" ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
-              </button>
-            </div>
-            <p className="font-body text-[10px] text-primary-foreground/25 mt-1">
-              Cole esta URL nas configurações de webhook do Mercado Pago
-            </p>
-          </div>
-
-          {/* Métodos de pagamento */}
-          <div>
-            <label className="font-body text-[11px] text-primary-foreground/40 mb-2 block">Métodos de Pagamento</label>
-            <div className="space-y-2">
-              {([
-                { key: "pix", label: "PIX", desc: "Pagamento instantâneo", icon: QrCode, enabled: pixEnabled, toggle: setPixEnabled },
-                { key: "cartao", label: "Cartão de Crédito", desc: "Visa, Master, Elo, etc.", icon: CreditCard, enabled: cartaoEnabled, toggle: setCartaoEnabled },
-                { key: "boleto", label: "Boleto Bancário", desc: "Compensação em até 3 dias", icon: FileText, enabled: boletoEnabled, toggle: setBoletoEnabled },
-              ] as const).map((m) => (
+              <div className="flex items-center gap-3">
                 <div
-                  key={m.key}
-                  className={`flex items-center justify-between rounded-xl border p-3 transition-all ${
-                    m.enabled
-                      ? "bg-primary-foreground/[0.04] border-gold/20"
-                      : "bg-primary-foreground/[0.02] border-primary-foreground/[0.06]"
-                  }`}
+                  onClick={(e) => { e.stopPropagation(); updateForm(gw.key, "ativo", !form.ativo); }}
+                  className={`w-11 h-6 rounded-full relative transition-all duration-200 cursor-pointer ${form.ativo ? "bg-green-500" : "bg-primary-foreground/10"}`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <m.icon className={`h-4 w-4 ${m.enabled ? "text-gold" : "text-primary-foreground/25"}`} />
-                    <div>
-                      <p className={`font-body text-[12px] font-medium ${m.enabled ? "text-primary-foreground" : "text-primary-foreground/40"}`}>
-                        {m.label}
-                      </p>
-                      <p className="font-body text-[10px] text-primary-foreground/25">{m.desc}</p>
+                  <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200 ${form.ativo ? "left-5" : "left-0.5"}`} />
+                </div>
+                {isExpanded ? <ChevronUp className="h-4 w-4 text-primary-foreground/30" /> : <ChevronDown className="h-4 w-4 text-primary-foreground/30" />}
+              </div>
+            </button>
+
+            {isExpanded && (
+              <div className="p-4 space-y-4">
+                {/* Access Token */}
+                <div>
+                  <label className="font-body text-[11px] text-primary-foreground/40 mb-1.5 block">Access Token *</label>
+                  <div className="relative">
+                    <input
+                      type={tokenVisible ? "text" : "password"}
+                      value={form.accessToken}
+                      onChange={(e) => updateForm(gw.key, "accessToken", e.target.value)}
+                      placeholder={gw.tokenPlaceholder}
+                      className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] py-2.5 pl-3 pr-20 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
+                    />
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                      <button onClick={() => setShowToken((p) => ({ ...p, [gw.key]: !tokenVisible }))}
+                        className="p-1.5 rounded-lg text-primary-foreground/25 hover:text-primary-foreground/50 transition-all">
+                        {tokenVisible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                      </button>
+                      {form.accessToken && (
+                        <button onClick={() => copyToClipboard(form.accessToken, `Token ${gw.label}`)}
+                          className="p-1.5 rounded-lg text-primary-foreground/25 hover:text-primary-foreground/50 transition-all">
+                          {copied === `Token ${gw.label}` ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
+                        </button>
+                      )}
                     </div>
                   </div>
-                  <button
-                    onClick={() => m.toggle(!m.enabled)}
-                    className={`w-10 h-6 rounded-full relative transition-all duration-200 ${m.enabled ? "bg-gold" : "bg-primary-foreground/10"}`}
-                  >
-                    <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200 ${m.enabled ? "left-4" : "left-0.5"}`} />
-                  </button>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Como configurar */}
-          <div className="rounded-xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.02] p-3">
-            <p className="font-body text-[11px] font-medium text-primary-foreground/50 mb-2">📋 Como configurar:</p>
-            <ol className="font-body text-[10px] text-primary-foreground/30 space-y-1 list-decimal list-inside">
-              <li>Acesse <span className="text-gold/60">mercadopago.com.br/developers</span></li>
-              <li>Vá em "Suas integrações" → Criar aplicação</li>
-              <li>Copie o <strong className="text-primary-foreground/40">Access Token</strong> e <strong className="text-primary-foreground/40">Public Key</strong></li>
-              <li>Cole a <strong className="text-primary-foreground/40">URL do Webhook</strong> acima nas notificações</li>
-              <li>Ative o gateway e escolha os métodos de pagamento</li>
-            </ol>
-            <a
-              href="https://www.mercadopago.com.br/developers/panel/app"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 inline-flex items-center gap-1 font-body text-[10px] text-gold/60 hover:text-gold transition-all"
-            >
-              <ExternalLink className="h-3 w-3" /> Abrir painel Mercado Pago
-            </a>
-          </div>
+                {/* Public Key / App ID */}
+                <div>
+                  <label className="font-body text-[11px] text-primary-foreground/40 mb-1.5 block">{gw.publicKeyLabel}</label>
+                  <input
+                    value={form.publicKey}
+                    onChange={(e) => updateForm(gw.key, "publicKey", e.target.value)}
+                    placeholder={gw.publicKeyPlaceholder}
+                    className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] py-2.5 px-3 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  />
+                </div>
 
-          {/* Save */}
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="w-full flex items-center justify-center gap-2 rounded-xl bg-gold py-3 font-body text-[13px] font-semibold text-charcoal transition-all hover:bg-gold/90 disabled:opacity-50"
-          >
-            <Save className="h-4 w-4" />
-            {saving ? "Salvando..." : "Salvar Configuração"}
-          </button>
-        </div>
-      </div>
+                {/* Webhook URL */}
+                <div>
+                  <label className="font-body text-[11px] text-primary-foreground/40 mb-1.5 block">URL do Webhook</label>
+                  <div className="relative">
+                    <input
+                      readOnly
+                      value={cfg.webhook_url || ""}
+                      className="w-full rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.06] py-2.5 pl-3 pr-10 text-primary-foreground/50 font-body text-[12px] cursor-default"
+                    />
+                    <button
+                      onClick={() => copyToClipboard(cfg.webhook_url || "", `Webhook ${gw.label}`)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-primary-foreground/25 hover:text-primary-foreground/50 transition-all"
+                    >
+                      {copied === `Webhook ${gw.label}` ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
+                  <p className="font-body text-[10px] text-primary-foreground/25 mt-1">
+                    Cole esta URL nas configurações de webhook do {gw.label}
+                  </p>
+                </div>
+
+                {/* Métodos de pagamento */}
+                <div>
+                  <label className="font-body text-[11px] text-primary-foreground/40 mb-2 block">Métodos de Pagamento</label>
+                  <div className="space-y-2">
+                    {([
+                      { field: "pixEnabled", label: "PIX", desc: "Pagamento instantâneo", icon: QrCode, show: true },
+                      { field: "cartaoEnabled", label: "Cartão de Crédito", desc: "Visa, Master, Elo, etc.", icon: CreditCard, show: gw.supportsCartao },
+                      { field: "boletoEnabled", label: "Boleto Bancário", desc: "Compensação em até 3 dias", icon: FileText, show: gw.supportsBoleto },
+                    ] as const).filter(m => m.show).map((m) => {
+                      const enabled = form[m.field];
+                      return (
+                        <div key={m.field}
+                          className={`flex items-center justify-between rounded-xl border p-3 transition-all ${enabled ? "bg-primary-foreground/[0.04] border-gold/20" : "bg-primary-foreground/[0.02] border-primary-foreground/[0.06]"}`}>
+                          <div className="flex items-center gap-2.5">
+                            <m.icon className={`h-4 w-4 ${enabled ? "text-gold" : "text-primary-foreground/25"}`} />
+                            <div>
+                              <p className={`font-body text-[12px] font-medium ${enabled ? "text-primary-foreground" : "text-primary-foreground/40"}`}>{m.label}</p>
+                              <p className="font-body text-[10px] text-primary-foreground/25">{m.desc}</p>
+                            </div>
+                          </div>
+                          <button onClick={() => updateForm(gw.key, m.field, !enabled)}
+                            className={`w-10 h-6 rounded-full relative transition-all duration-200 ${enabled ? "bg-gold" : "bg-primary-foreground/10"}`}>
+                            <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200 ${enabled ? "left-4" : "left-0.5"}`} />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Como configurar */}
+                <div className="rounded-xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.02] p-3">
+                  <p className="font-body text-[11px] font-medium text-primary-foreground/50 mb-2">📋 Como configurar:</p>
+                  <ol className="font-body text-[10px] text-primary-foreground/30 space-y-1 list-decimal list-inside">
+                    {gw.helpSteps.map((step, i) => (
+                      <li key={i}>{step}</li>
+                    ))}
+                  </ol>
+                  <a href={gw.helpLink} target="_blank" rel="noopener noreferrer"
+                    className="mt-2 inline-flex items-center gap-1 font-body text-[10px] hover:text-gold transition-all"
+                    style={{ color: `${gw.color}99` }}>
+                    <ExternalLink className="h-3 w-3" /> {gw.helpLinkLabel}
+                  </a>
+                </div>
+
+                {/* Save */}
+                <button onClick={() => handleSave(gw.key)} disabled={savingKey === gw.key}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-gold py-3 font-body text-[13px] font-semibold text-charcoal transition-all hover:bg-gold/90 disabled:opacity-50">
+                  <Save className="h-4 w-4" />
+                  {savingKey === gw.key ? "Salvando..." : "Salvar Configuração"}
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };
