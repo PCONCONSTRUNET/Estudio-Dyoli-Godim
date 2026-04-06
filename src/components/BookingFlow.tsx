@@ -535,7 +535,14 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     if (paymentData?.method === "cartao" && paymentData.init_point) {
       return (
         <section className="min-h-screen bg-background px-6 py-8 flex flex-col items-center lg:px-8">
-          <button onClick={() => setStep("confirm")} className="ios-press self-start flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8">
+          <button onClick={async () => {
+            if (agendamentoId) {
+              await supabase.from("agendamentos").update({ status: "cancelado" }).eq("id", agendamentoId);
+            }
+            setAgendamentoId(null);
+            setPaymentData(null);
+            setStep("confirm");
+          }} className="ios-press self-start flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8">
             <ArrowLeft className="w-4 h-4" /><span className="font-body text-[14px]">Voltar</span>
           </button>
           <div className="flex-1 flex flex-col items-center justify-center text-center animate-fade-in">
@@ -561,7 +568,14 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     if (paymentData?.method === "boleto") {
       return (
         <section className="min-h-screen bg-background px-6 py-8 flex flex-col items-center lg:px-8">
-          <button onClick={() => setStep("confirm")} className="ios-press self-start flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8">
+          <button onClick={async () => {
+            if (agendamentoId) {
+              await supabase.from("agendamentos").update({ status: "cancelado" }).eq("id", agendamentoId);
+            }
+            setAgendamentoId(null);
+            setPaymentData(null);
+            setStep("confirm");
+          }} className="ios-press self-start flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8">
             <ArrowLeft className="w-4 h-4" /><span className="font-body text-[14px]">Voltar</span>
           </button>
           <div className="flex-1 flex flex-col items-center justify-center text-center animate-fade-in">
@@ -600,7 +614,14 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     // PIX (gateway or local)
     return (
       <section className="min-h-screen bg-background px-6 py-8 flex flex-col lg:items-center lg:px-8">
-        <button onClick={() => setStep("confirm")} className="ios-press flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6">
+        <button onClick={async () => {
+            if (agendamentoId) {
+              await supabase.from("agendamentos").update({ status: "cancelado" }).eq("id", agendamentoId);
+            }
+            setAgendamentoId(null);
+            setPaymentData(null);
+            setStep("confirm");
+          }} className="ios-press flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6">
           <ArrowLeft className="w-4 h-4" /><span className="font-body text-[14px]">Voltar</span>
         </button>
         <div className="flex-1 flex flex-col items-center text-center animate-fade-in">
