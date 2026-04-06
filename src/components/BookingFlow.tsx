@@ -563,6 +563,9 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
             <ArrowLeft className="w-4 h-4" /><span className="font-body text-[14px]">Voltar</span>
           </button>
           <div className="flex-1 flex flex-col items-center justify-center text-center animate-fade-in">
+            <div className={`mb-4 px-4 py-2 rounded-full font-body text-[13px] font-semibold ${timerUrgent ? "bg-destructive/20 text-destructive animate-pulse" : "bg-gold/10 text-gold"}`}>
+              ⏱ Expira em {timerStr}
+            </div>
             <FileText className="w-12 h-12 text-gold mb-4" />
             <h2 className="font-heading text-2xl font-semibold text-foreground mb-2">Boleto Gerado</h2>
             <p className="font-body text-[13px] text-muted-foreground mb-4">{paymentLabel}</p>
