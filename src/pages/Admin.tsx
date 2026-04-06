@@ -276,6 +276,10 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const [selectedAgendaDate, setSelectedAgendaDate] = useState(() => getDateKey(new Date()));
+  const [agendaDismissed, setAgendaDismissed] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem("agenda_dismissed");
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
 
   const handleNewAgendamento = useCallback((newAg: any) => {
     setAgendamentos((prev) => [newAg, ...prev]);
