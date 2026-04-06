@@ -108,6 +108,19 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     supabase.from("servicos").select("duracao_minutos, nome").eq("nome", service).maybeSingle().then(({ data }) => {
       if (data?.duracao_minutos) setServiceDuration(data.duracao_minutos);
     });
+    // Load active gateway payment methods
+    (supabase.from as any)("gateway_configs").select("gateway, pix_enabled, cartao_enabled, boleto_enabled").eq("ativo", true).then(({ data }: any) => {
+      if (data && data.length > 0) {
+        const methods = { pix: false, cartao: false, boleto: false };
+        (data as GatewayInfo[]).forEach((gw) => {
+          if (gw.pix_enabled) methods.pix = true;
+          if (gw.cartao_enabled) methods.cartao = true;
+          if (gw.boleto_enabled) methods.boleto = true;
+        });
+        setAvailableMethods(methods);
+        setGatewayInfo(data[0]);
+      }
+    });
     loadBookedSlots();
   }, []);
 
