@@ -375,7 +375,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const filteredAgendamentos = agendamentos.filter((a) => {
     if (statusFilter !== "todos" && a.status !== statusFilter) return false;
     if (searchTerm) {
-      const name = getClientName(a.user_id).toLowerCase();
+      const name = getClientName(a.user_id, (a as any).cliente_nome).toLowerCase();
       return name.includes(searchTerm.toLowerCase()) || a.servico.toLowerCase().includes(searchTerm.toLowerCase());
     }
     return true;
