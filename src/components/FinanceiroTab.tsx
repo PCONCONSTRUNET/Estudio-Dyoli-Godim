@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface Agendamento {
   id: string; servico: string; variacao: string | null; data_agendamento: string;
   horario: string; valor: number; valor_pago: number | null; status: string;
-  created_at: string; user_id: string;
+  created_at: string; user_id: string; cliente_nome: string | null;
 }
 
 interface Props {

@@ -15,6 +15,7 @@ interface Agendamento {
   status: string;
   user_id: string;
   created_at: string;
+  cliente_nome: string | null;
 }
 
 interface Props {

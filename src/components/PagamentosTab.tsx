@@ -14,6 +14,7 @@ interface Agendamento {
   user_id: string;
   duracao_minutos: number;
   forma_pagamento: string | null;
+  cliente_nome: string | null;
 }
 
 interface Props {
