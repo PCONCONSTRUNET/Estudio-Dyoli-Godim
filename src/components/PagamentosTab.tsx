@@ -14,11 +14,12 @@ interface Agendamento {
   user_id: string;
   duracao_minutos: number;
   forma_pagamento: string | null;
+  cliente_nome: string | null;
 }
 
 interface Props {
   agendamentos: Agendamento[];
-  getClientName: (userId: string) => string;
+  getClientName: (userId: string, clienteNome?: string | null) => string;
 }
 
 const formatCurrency = (v: number) =>
@@ -86,7 +87,7 @@ const PagamentosTab = ({ agendamentos, getClientName }: Props) => {
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter((a) =>
-        getClientName(a.user_id).toLowerCase().includes(q) ||
+        getClientName(a.user_id, a.cliente_nome).toLowerCase().includes(q) ||
         a.servico.toLowerCase().includes(q) ||
         a.id.toLowerCase().includes(q) ||
         (a.forma_pagamento || "").toLowerCase().includes(q)
@@ -98,7 +99,7 @@ const PagamentosTab = ({ agendamentos, getClientName }: Props) => {
       switch (sortField) {
         case "data": cmp = a.data_agendamento.localeCompare(b.data_agendamento); break;
         case "valor": cmp = a.valor - b.valor; break;
-        case "cliente": cmp = getClientName(a.user_id).localeCompare(getClientName(b.user_id)); break;
+        case "cliente": cmp = getClientName(a.user_id, a.cliente_nome).localeCompare(getClientName(b.user_id)); break;
         case "status": cmp = a.status.localeCompare(b.status); break;
       }
       return sortDir === "asc" ? cmp : -cmp;
@@ -228,7 +229,7 @@ const PagamentosTab = ({ agendamentos, getClientName }: Props) => {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-body text-[13px] font-medium text-primary-foreground truncate">
-                    {getClientName(ag.user_id)}
+                    {getClientName(ag.user_id, ag.cliente_nome)}
                   </p>
                   <p className="font-body text-[11px] text-primary-foreground/40 truncate">
                     {ag.servico}{ag.variacao ? ` · ${ag.variacao}` : ""} · {formatDate(ag.data_agendamento)}
