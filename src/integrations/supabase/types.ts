@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       agendamentos: {
         Row: {
+          cliente_nome: string | null
           created_at: string
           data_agendamento: string
           duracao_minutos: number
@@ -31,6 +32,7 @@ export type Database = {
           variacao: string | null
         }
         Insert: {
+          cliente_nome?: string | null
           created_at?: string
           data_agendamento: string
           duracao_minutos?: number
@@ -46,6 +48,7 @@ export type Database = {
           variacao?: string | null
         }
         Update: {
+          cliente_nome?: string | null
           created_at?: string
           data_agendamento?: string
           duracao_minutos?: number
