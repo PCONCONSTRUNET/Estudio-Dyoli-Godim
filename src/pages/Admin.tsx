@@ -304,6 +304,19 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [extendMinutes, setExtendMinutes] = useState("30");
   const [extendSaving, setExtendSaving] = useState(false);
 
+  // Edit client name state
+  const [editingClientId, setEditingClientId] = useState<string | null>(null);
+  const [editClientName, setEditClientName] = useState("");
+
+  const handleSaveClientName = async (agId: string) => {
+    const name = editClientName.trim();
+    const { error } = await supabase.from("agendamentos").update({ cliente_nome: name || null } as any).eq("id", agId);
+    if (error) { toast.error("Erro ao salvar nome"); return; }
+    setAgendamentos(prev => prev.map(a => a.id === agId ? { ...a, cliente_nome: name || null } : a));
+    setEditingClientId(null);
+    toast.success("Nome do cliente atualizado");
+  };
+
   const handleNewAgendamento = useCallback((newAg: any) => {
     setAgendamentos((prev) => [newAg, ...prev]);
     loadData();
@@ -915,7 +928,29 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                               </div>
 
                               <div className="min-w-0 flex-1">
-                                <p className="truncate font-body text-[14px] font-semibold text-primary-foreground">{getClientName(a.user_id, a.cliente_nome)}</p>
+                                {editingClientId === a.id ? (
+                                  <div className="flex items-center gap-1.5">
+                                    <input
+                                      autoFocus
+                                      value={editClientName}
+                                      onChange={(e) => setEditClientName(e.target.value)}
+                                      onKeyDown={(e) => { if (e.key === "Enter") handleSaveClientName(a.id); if (e.key === "Escape") setEditingClientId(null); }}
+                                      className="w-full rounded-lg bg-primary-foreground/[0.06] border border-gold/20 px-2 py-1 font-body text-[13px] text-primary-foreground focus:outline-none focus:ring-1 focus:ring-gold/30"
+                                      placeholder="Nome do cliente"
+                                    />
+                                    <button onClick={() => handleSaveClientName(a.id)} className="rounded-lg p-1 text-green-500/60 hover:text-green-500 hover:bg-green-500/10 transition-all" title="Salvar"><CheckCircle className="h-3.5 w-3.5" /></button>
+                                    <button onClick={() => setEditingClientId(null)} className="rounded-lg p-1 text-primary-foreground/30 hover:text-rose hover:bg-rose/10 transition-all" title="Cancelar"><X className="h-3.5 w-3.5" /></button>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-1.5 group">
+                                    <p className="truncate font-body text-[14px] font-semibold text-primary-foreground">{getClientName(a.user_id, a.cliente_nome)}</p>
+                                    <button
+                                      onClick={() => { setEditingClientId(a.id); setEditClientName(a.cliente_nome || getClientName(a.user_id, a.cliente_nome)); }}
+                                      className="shrink-0 rounded-lg p-1 text-primary-foreground/15 opacity-0 group-hover:opacity-100 hover:text-gold hover:bg-gold/10 transition-all"
+                                      title="Editar nome do cliente"
+                                    ><Edit2 className="h-3 w-3" /></button>
+                                  </div>
+                                )}
                                 <p className="mt-0.5 truncate font-body text-[11px] text-primary-foreground/40">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""} · {a.duracao_minutos || 60}min</p>
                                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
                                   {statusBadge(a.status)}
