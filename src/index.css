@@ -154,3 +154,9 @@
     filter: brightness(0.92);
   }
 }
+
+/* Dark themed native select options */
+select option {
+  background-color: hsl(240 6% 10%);
+  color: hsl(30 15% 95%);
+}
