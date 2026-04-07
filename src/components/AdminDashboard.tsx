@@ -297,6 +297,12 @@ const AdminDashboard = ({
                           }`}>
                             {getClientName(a.user_id)}
                           </span>
+                          {(a as any).foi_estendido && (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 shrink-0">
+                              <Timer className="w-2.5 h-2.5 text-amber-400" />
+                              <span className="font-body text-[9px] font-semibold text-amber-400 uppercase tracking-wider">Estendido</span>
+                            </span>
+                          )}
                         </div>
                         {statusBadge(a.status)}
                       </div>
