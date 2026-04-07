@@ -365,7 +365,10 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     .filter((a) => a.status !== "cancelado" && a.status !== "falta")
     .reduce((sum, a) => sum + (a.valor_pago || 0), 0);
 
-  const getClientName = (userId: string) => clientes.find((c) => c.id === userId)?.nome || "—";
+  const getClientName = (userId: string, clienteNome?: string | null) => {
+    if (clienteNome) return clienteNome;
+    return clientes.find((c) => c.id === userId)?.nome || "Presencial";
+  };
   const formatDate = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
   const formatWhatsapp = (w: string) => (w ? `(${w.slice(0, 2)}) ${w.slice(2, 7)}-${w.slice(7)}` : "—");
 
