@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { Calendar, Clock, User, TrendingUp, Bell, ArrowRight } from "lucide-react";
+import { Calendar, Clock, User, TrendingUp, Bell, ArrowRight, Timer } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 
@@ -15,6 +15,8 @@ interface Agendamento {
   created_at: string;
   user_id: string;
   duracao_minutos: number;
+  foi_estendido?: boolean;
+  cliente_nome?: string | null;
 }
 
 interface Props {
@@ -295,6 +297,12 @@ const AdminDashboard = ({
                           }`}>
                             {getClientName(a.user_id)}
                           </span>
+                          {(a as any).foi_estendido && (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 shrink-0">
+                              <Timer className="w-2.5 h-2.5 text-amber-400" />
+                              <span className="font-body text-[9px] font-semibold text-amber-400 uppercase tracking-wider">Estendido</span>
+                            </span>
+                          )}
                         </div>
                         {statusBadge(a.status)}
                       </div>
