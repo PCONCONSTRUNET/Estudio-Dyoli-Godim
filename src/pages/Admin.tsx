@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
   BarChart3, Calendar, Users, Clock, Settings, LogOut, Search,
   X, Edit2, Trash2, Plus, Save, CheckCircle, Bell, MessageSquare,
-  UserX, DollarSign, CreditCard, ShoppingBag, Download, ChevronLeft, ChevronRight, Receipt, ClipboardList, Wallet
+  UserX, DollarSign, CreditCard, ShoppingBag, Download, ChevronLeft, ChevronRight, Receipt, ClipboardList, Wallet, Timer, PlusCircle
 } from "lucide-react";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription
@@ -282,6 +283,26 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
 
+  // Manual registration state
+  const [showManualRegister, setShowManualRegister] = useState(false);
+  const [manualServicos, setManualServicos] = useState<{ id: string; nome: string; preco: number; duracao_minutos: number; categoria: string }[]>([]);
+  const [manualServico, setManualServico] = useState("");
+  const [manualCliente, setManualCliente] = useState("");
+  const [manualClienteNome, setManualClienteNome] = useState("");
+  const [manualData, setManualData] = useState(() => getDateKey(new Date()));
+  const [manualHorario, setManualHorario] = useState("09:00");
+  const [manualValor, setManualValor] = useState("");
+  const [manualDuracao, setManualDuracao] = useState("60");
+  const [manualFormaPagamento, setManualFormaPagamento] = useState("pix");
+  const [manualPago, setManualPago] = useState(false);
+  const [manualSaving, setManualSaving] = useState(false);
+
+  // Extend appointment state
+  const [showExtendDialog, setShowExtendDialog] = useState(false);
+  const [extendingId, setExtendingId] = useState<string | null>(null);
+  const [extendMinutes, setExtendMinutes] = useState("30");
+  const [extendSaving, setExtendSaving] = useState(false);
+
   const handleNewAgendamento = useCallback((newAg: any) => {
     setAgendamentos((prev) => [newAg, ...prev]);
     loadData();
@@ -382,6 +403,102 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     const newPago = type === "completo" ? valor : valor * 0.5;
     await supabase.from("agendamentos").update({ valor_pago: newPago }).eq("id", id);
     setAgendamentos((prev) => prev.map((item) => (item.id === id ? { ...item, valor_pago: newPago } : item)));
+  };
+
+  // Load services for manual registration
+  const loadManualServicos = async () => {
+    const { data } = await supabase.from("servicos").select("*").eq("ativo", true).order("ordem");
+    if (data) setManualServicos(data.map(s => ({ id: s.id, nome: s.nome, preco: Number(s.preco), duracao_minutos: s.duracao_minutos, categoria: s.categoria })));
+  };
+
+  const openManualRegister = () => {
+    loadManualServicos();
+    setManualServico("");
+    setManualCliente("");
+    setManualClienteNome("");
+    setManualData(selectedAgendaDate);
+    setManualHorario("09:00");
+    setManualValor("");
+    setManualDuracao("60");
+    setManualFormaPagamento("pix");
+    setManualPago(false);
+    setShowManualRegister(true);
+  };
+
+  const handleSelectManualServico = (servicoNome: string) => {
+    setManualServico(servicoNome);
+    const svc = manualServicos.find(s => s.nome === servicoNome);
+    if (svc) {
+      setManualValor(svc.preco.toString());
+      setManualDuracao(svc.duracao_minutos.toString());
+    }
+  };
+
+  const saveManualRegistration = async () => {
+    if (!manualServico || !manualData || !manualHorario || !manualValor) {
+      toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+    setManualSaving(true);
+    try {
+      const userId = manualCliente || "00000000-0000-0000-0000-000000000000";
+      const duracao = Number(manualDuracao) || 60;
+      const valor = Number(manualValor);
+      
+      const { data, error } = await supabase.from("agendamentos").insert({
+        servico: manualServico,
+        data_agendamento: manualData,
+        horario: manualHorario,
+        valor: valor,
+        valor_pago: manualPago ? valor : 0,
+        duracao_minutos: duracao,
+        status: "confirmado",
+        forma_pagamento: manualFormaPagamento,
+        user_id: userId,
+      }).select().single();
+      
+      if (error) throw error;
+      if (data) {
+        setAgendamentos(prev => [data as Agendamento, ...prev]);
+        toast.success("Atendimento registrado com sucesso!");
+        setShowManualRegister(false);
+      }
+    } catch (err: any) {
+      toast.error("Erro ao registrar: " + (err.message || "Tente novamente"));
+    }
+    setManualSaving(false);
+  };
+
+  const openExtendDialog = (id: string) => {
+    setExtendingId(id);
+    setExtendMinutes("30");
+    setShowExtendDialog(true);
+  };
+
+  const saveExtendAppointment = async () => {
+    if (!extendingId) return;
+    const ag = agendamentos.find(a => a.id === extendingId);
+    if (!ag) return;
+    setExtendSaving(true);
+    try {
+      const extraMin = Number(extendMinutes) || 30;
+      const newDuration = (ag.duracao_minutos || 60) + extraMin;
+      
+      // The trigger manage_blocked_slots handles slot recalculation on duration change
+      const { error } = await supabase.from("agendamentos").update({
+        duracao_minutos: newDuration,
+        updated_at: new Date().toISOString(),
+      }).eq("id", extendingId);
+      
+      if (error) throw error;
+      
+      setAgendamentos(prev => prev.map(a => a.id === extendingId ? { ...a, duracao_minutos: newDuration } : a));
+      toast.success(`Duração estendida para ${newDuration} minutos (+${extraMin}min)`);
+      setShowExtendDialog(false);
+    } catch (err: any) {
+      toast.error("Erro ao estender: " + (err.message || "Tente novamente"));
+    }
+    setExtendSaving(false);
   };
 
   const todayAgendaKey = getDateKey(new Date());
@@ -539,7 +656,16 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
           {tab === "agendamentos" && (
             <div className="space-y-4 animate-fade-in">
               <div className="flex items-center justify-between">
-                <h2 className="font-heading text-lg font-semibold text-primary-foreground">Agenda</h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="font-heading text-lg font-semibold text-primary-foreground">Agenda</h2>
+                  <button
+                    onClick={openManualRegister}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-gold/10 text-gold font-body text-[11px] font-medium hover:bg-gold/20 transition-all"
+                  >
+                    <PlusCircle className="w-3.5 h-3.5" />
+                    Registrar
+                  </button>
+                </div>
 
                 {/* Bell */}
                 <Sheet>
@@ -780,7 +906,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
                               <div className="min-w-0 flex-1">
                                 <p className="truncate font-body text-[14px] font-semibold text-primary-foreground">{getClientName(a.user_id)}</p>
-                                <p className="mt-0.5 truncate font-body text-[11px] text-primary-foreground/40">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""}</p>
+                                <p className="mt-0.5 truncate font-body text-[11px] text-primary-foreground/40">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""} · {a.duracao_minutos || 60}min</p>
                                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
                                   {statusBadge(a.status)}
                                   {pagamentoBadge(a)}
@@ -820,6 +946,13 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                   >
                                     Pago
                                   </button>
+                                  <button
+                                    onClick={() => openExtendDialog(a.id)}
+                                    title="Estender duração"
+                                    className="rounded-lg px-2 py-1 font-body text-[10px] font-medium transition-all bg-primary-foreground/[0.03] text-primary-foreground/30 hover:bg-blue-500/10 hover:text-blue-400"
+                                  >
+                                    <span className="flex items-center gap-1"><Timer className="w-3 h-3" />Estender</span>
+                                  </button>
                                 </>
                               )}
                             </div>
@@ -849,6 +982,217 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                   )}
                 </div>
               </section>
+
+              {/* Manual Registration Dialog */}
+              <Dialog open={showManualRegister} onOpenChange={setShowManualRegister}>
+                <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-md max-h-[85dvh] overflow-y-auto overflow-x-hidden bg-charcoal border border-gold/20 rounded-2xl p-4 sm:p-5">
+                  <DialogHeader>
+                    <DialogTitle className="font-heading text-[16px] font-semibold text-primary-foreground flex items-center gap-2">
+                      <PlusCircle className="w-4 h-4 text-gold" />
+                      Registro Manual
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-3 w-full min-w-0">
+                    <div>
+                      <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Serviço *</label>
+                      <select
+                        value={manualServico}
+                        onChange={(e) => handleSelectManualServico(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                      >
+                        <option value="">Selecione o serviço</option>
+                        {manualServicos.map(s => (
+                          <option key={s.id} value={s.nome}>{s.nome} — R$ {s.preco.toFixed(2).replace(".", ",")}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Cliente</label>
+                      <select
+                        value={manualCliente}
+                        onChange={(e) => {
+                          setManualCliente(e.target.value);
+                          const cl = clientes.find(c => c.id === e.target.value);
+                          setManualClienteNome(cl?.nome || "");
+                        }}
+                        className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                      >
+                        <option value="">Sem cliente (presencial)</option>
+                        {clientes.map(c => (
+                          <option key={c.id} value={c.id}>{c.nome} — {c.whatsapp}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Data *</label>
+                        <input
+                          type="date"
+                          value={manualData}
+                          onChange={(e) => setManualData(e.target.value)}
+                          className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Horário *</label>
+                        <input
+                          type="time"
+                          value={manualHorario}
+                          onChange={(e) => setManualHorario(e.target.value)}
+                          className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Valor (R$) *</label>
+                        <input
+                          type="number"
+                          value={manualValor}
+                          onChange={(e) => setManualValor(e.target.value)}
+                          placeholder="0.00"
+                          className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Duração (min)</label>
+                        <input
+                          type="number"
+                          value={manualDuracao}
+                          onChange={(e) => setManualDuracao(e.target.value)}
+                          className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Forma de pagamento</label>
+                      <select
+                        value={manualFormaPagamento}
+                        onChange={(e) => setManualFormaPagamento(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                      >
+                        <option value="pix">PIX</option>
+                        <option value="cartao">Cartão</option>
+                        <option value="dinheiro">Dinheiro</option>
+                        <option value="transferencia">Transferência</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+                      <div>
+                        <p className="font-body text-[13px] text-primary-foreground">Já foi pago?</p>
+                        <p className="font-body text-[10px] text-primary-foreground/30">Marcar como pagamento recebido</p>
+                      </div>
+                      <Switch checked={manualPago} onCheckedChange={setManualPago} />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                      <button
+                        onClick={saveManualRegistration}
+                        disabled={manualSaving}
+                        className="w-full py-2.5 rounded-xl bg-gold/10 text-gold font-body text-[13px] font-medium hover:bg-gold/20 transition-all disabled:opacity-40"
+                      >
+                        {manualSaving ? "Salvando..." : "Registrar"}
+                      </button>
+                      <button
+                        onClick={() => setShowManualRegister(false)}
+                        className="w-full py-2.5 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/40 font-body text-[13px] hover:text-primary-foreground/60 transition-all"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* Extend Duration Dialog */}
+              <Dialog open={showExtendDialog} onOpenChange={setShowExtendDialog}>
+                <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-sm max-h-[85dvh] overflow-y-auto overflow-x-hidden bg-charcoal border border-blue-500/20 rounded-2xl p-4 sm:p-5">
+                  <DialogHeader>
+                    <DialogTitle className="font-heading text-[16px] font-semibold text-primary-foreground flex items-center gap-2">
+                      <Timer className="w-4 h-4 text-blue-400" />
+                      Estender Atendimento
+                    </DialogTitle>
+                  </DialogHeader>
+                  {(() => {
+                    const ag = agendamentos.find(a => a.id === extendingId);
+                    if (!ag) return null;
+                    const extraMin = Number(extendMinutes) || 30;
+                    const newDuration = (ag.duracao_minutos || 60) + extraMin;
+                    const [startH, startM] = ag.horario.split(":").map(Number);
+                    const endTotalMin = startH * 60 + startM + newDuration;
+                    const endH = Math.floor(endTotalMin / 60);
+                    const endMn = endTotalMin % 60;
+                    const newSlotsBlocked = Math.ceil(newDuration / 30);
+                    return (
+                      <div className="space-y-3 w-full">
+                        <div className="p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+                          <p className="font-body text-[13px] font-medium text-primary-foreground">{ag.servico}</p>
+                          <p className="font-body text-[11px] text-primary-foreground/40 mt-0.5">
+                            {ag.horario} · Duração atual: {ag.duracao_minutos || 60} min
+                          </p>
+                        </div>
+
+                        <div>
+                          <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Adicionar minutos</label>
+                          <div className="grid grid-cols-4 gap-1.5">
+                            {["30", "60", "90", "120"].map(m => (
+                              <button
+                                key={m}
+                                onClick={() => setExtendMinutes(m)}
+                                className={`py-2 rounded-xl font-body text-[12px] font-medium transition-all border ${
+                                  extendMinutes === m
+                                    ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                                    : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06] hover:text-primary-foreground/60"
+                                }`}
+                              >
+                                +{m}min
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-blue-500/5 border border-blue-500/15">
+                          <div className="flex items-center justify-between">
+                            <p className="font-body text-[11px] text-blue-400/70">Nova duração</p>
+                            <p className="font-body text-[14px] font-bold text-blue-400">{newDuration} min</p>
+                          </div>
+                          <div className="flex items-center justify-between mt-1">
+                            <p className="font-body text-[11px] text-blue-400/70">Término</p>
+                            <p className="font-body text-[13px] font-medium text-blue-400">
+                              {String(endH).padStart(2, "0")}:{String(endMn).padStart(2, "0")}
+                            </p>
+                          </div>
+                          <div className="flex items-center justify-between mt-1">
+                            <p className="font-body text-[11px] text-blue-400/70">Slots bloqueados</p>
+                            <p className="font-body text-[13px] font-medium text-blue-400">{newSlotsBlocked}</p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 pt-1">
+                          <button
+                            onClick={saveExtendAppointment}
+                            disabled={extendSaving}
+                            className="w-full py-2.5 rounded-xl bg-blue-500/10 text-blue-400 font-body text-[13px] font-medium hover:bg-blue-500/20 transition-all disabled:opacity-40"
+                          >
+                            {extendSaving ? "Salvando..." : "Estender"}
+                          </button>
+                          <button
+                            onClick={() => setShowExtendDialog(false)}
+                            className="w-full py-2.5 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/40 font-body text-[13px] hover:text-primary-foreground/60 transition-all"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </DialogContent>
+              </Dialog>
             </div>
           )}
 
