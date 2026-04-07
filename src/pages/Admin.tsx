@@ -961,6 +961,13 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                   >
                                     Pago
                                   </button>
+                                  <button
+                                    onClick={() => openExtendDialog(a.id)}
+                                    title="Estender duração"
+                                    className="rounded-lg px-2 py-1 font-body text-[10px] font-medium transition-all bg-primary-foreground/[0.03] text-primary-foreground/30 hover:bg-blue-500/10 hover:text-blue-400"
+                                  >
+                                    <span className="flex items-center gap-1"><Timer className="w-3 h-3" />Estender</span>
+                                  </button>
                                 </>
                               )}
                             </div>
