@@ -116,7 +116,7 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
       const term = searchTerm.toLowerCase();
       list = list.filter(
         (a) =>
-          getClientName(a.user_id).toLowerCase().includes(term) ||
+          getClientName(a.user_id, a.cliente_nome).toLowerCase().includes(term) ||
           a.servico.toLowerCase().includes(term) ||
           a.data_agendamento.includes(term)
       );
@@ -125,7 +125,7 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
       let cmp = 0;
       switch (sortField) {
         case "data": cmp = a.data_agendamento.localeCompare(b.data_agendamento) || a.horario.localeCompare(b.horario); break;
-        case "cliente": cmp = getClientName(a.user_id).localeCompare(getClientName(b.user_id)); break;
+        case "cliente": cmp = getClientName(a.user_id, a.cliente_nome).localeCompare(getClientName(b.user_id)); break;
         case "valor": cmp = Number(a.valor) - Number(b.valor); break;
         case "status": cmp = a.status.localeCompare(b.status); break;
       }
@@ -247,7 +247,7 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                         <div className="flex-1 min-w-0">
                           <p className={`font-body text-[11px] font-semibold ${cfg.titleColor}`}>{n.label}</p>
                           <p className="font-body text-[13px] font-medium text-primary-foreground truncate mt-0.5">
-                            {getClientName(n.agendamento.user_id)}
+                            {getClientName(n.agendamento.user_id, n.agendamento.cliente_nome)}
                           </p>
                           <p className="font-body text-[11px] text-primary-foreground/40 truncate">
                             {n.agendamento.servico}{n.agendamento.variacao ? ` · ${n.agendamento.variacao}` : ""}
@@ -386,7 +386,7 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                     <span className="font-heading text-[13px] font-semibold text-primary-foreground">{a.horario}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-body text-[13px] font-medium text-primary-foreground truncate">{getClientName(a.user_id)}</p>
+                    <p className="font-body text-[13px] font-medium text-primary-foreground truncate">{getClientName(a.user_id, a.cliente_nome)}</p>
                     <p className="font-body text-[11px] text-primary-foreground/35 truncate">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">

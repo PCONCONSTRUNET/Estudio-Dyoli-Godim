@@ -142,7 +142,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const exportCSV = () => {
     const header = "Data,Horário,Cliente,Serviço,Valor,Pago,Status\n";
     const rows = filtered.map(a =>
-      `${a.data_agendamento},${a.horario},"${getClientName(a.user_id)}","${a.servico}",${Number(a.valor).toFixed(2)},${Number(a.valor_pago || 0).toFixed(2)},${a.status}`
+      `${a.data_agendamento},${a.horario},"${getClientName(a.user_id, a.cliente_nome)}","${a.servico}",${Number(a.valor).toFixed(2)},${Number(a.valor_pago || 0).toFixed(2)},${a.status}`
     ).join("\n");
     const blob = new Blob([header + rows], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -184,7 +184,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     </div>
     <table>
       <thead><tr><th>Data</th><th>Horário</th><th>Cliente</th><th>Serviço</th><th>Valor</th><th>Pago</th></tr></thead>
-      <tbody>${filtered.map(a => `<tr><td>${new Date(a.data_agendamento + "T12:00:00").toLocaleDateString("pt-BR")}</td><td>${a.horario}</td><td>${getClientName(a.user_id)}</td><td>${a.servico}</td><td class="gold">${formatCurrency(Number(a.valor))}</td><td class="green">${formatCurrency(Number(a.valor_pago || 0))}</td></tr>`).join("")}</tbody>
+      <tbody>${filtered.map(a => `<tr><td>${new Date(a.data_agendamento + "T12:00:00").toLocaleDateString("pt-BR")}</td><td>${a.horario}</td><td>${getClientName(a.user_id, a.cliente_nome)}</td><td>${a.servico}</td><td class="gold">${formatCurrency(Number(a.valor))}</td><td class="green">${formatCurrency(Number(a.valor_pago || 0))}</td></tr>`).join("")}</tbody>
     </table></body></html>`);
     w.document.close();
     w.print();
@@ -500,7 +500,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
               {caixaData.items.map(a => (
                 <div key={a.id} className="flex items-center justify-between p-2.5 rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.03]">
                   <div className="min-w-0 flex-1">
-                    <p className="font-body text-[12px] text-primary-foreground truncate">{getClientName(a.user_id)}</p>
+                    <p className="font-body text-[12px] text-primary-foreground truncate">{getClientName(a.user_id, a.cliente_nome)}</p>
                     <p className="font-body text-[10px] text-primary-foreground/30">{a.horario} · {a.servico}</p>
                   </div>
                   <div className="text-right ml-2">
@@ -526,7 +526,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
           {filtered.map(a => (
             <div key={a.id} className="flex items-center justify-between p-3 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
               <div className="min-w-0 flex-1">
-                <p className="font-body text-[13px] font-medium text-primary-foreground truncate">{getClientName(a.user_id)}</p>
+                <p className="font-body text-[13px] font-medium text-primary-foreground truncate">{getClientName(a.user_id, a.cliente_nome)}</p>
                 <p className="font-body text-[10px] text-primary-foreground/30">{formatDateShort(a.data_agendamento)} · {a.servico}</p>
               </div>
               <div className="text-right ml-2">
