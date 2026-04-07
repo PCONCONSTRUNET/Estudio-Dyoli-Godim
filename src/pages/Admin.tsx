@@ -496,8 +496,9 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
       // The trigger manage_blocked_slots handles slot recalculation on duration change
       const { error } = await supabase.from("agendamentos").update({
         duracao_minutos: newDuration,
+        foi_estendido: true,
         updated_at: new Date().toISOString(),
-      }).eq("id", extendingId);
+      } as any).eq("id", extendingId);
       
       if (error) throw error;
       

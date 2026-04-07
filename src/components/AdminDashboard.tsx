@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { Calendar, Clock, User, TrendingUp, Bell, ArrowRight } from "lucide-react";
+import { Calendar, Clock, User, TrendingUp, Bell, ArrowRight, Timer } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 
@@ -15,6 +15,8 @@ interface Agendamento {
   created_at: string;
   user_id: string;
   duracao_minutos: number;
+  foi_estendido?: boolean;
+  cliente_nome?: string | null;
 }
 
 interface Props {
