@@ -484,28 +484,13 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
       const extraMin = Number(extendMinutes) || 30;
       const newDuration = (ag.duracao_minutos || 60) + extraMin;
       
+      // The trigger manage_blocked_slots handles slot recalculation on duration change
       const { error } = await supabase.from("agendamentos").update({
         duracao_minutos: newDuration,
         updated_at: new Date().toISOString(),
       }).eq("id", extendingId);
       
       if (error) throw error;
-      
-      const [startH, startM] = ag.horario.split(":").map(Number);
-      const oldSlotCount = Math.ceil((ag.duracao_minutos || 60) / 30);
-      const newSlotCount = Math.ceil(newDuration / 30);
-      
-      for (let i = oldSlotCount; i < newSlotCount; i++) {
-        const slotTotalMin = startH * 60 + startM + (i * 30);
-        const slotH = Math.floor(slotTotalMin / 60);
-        const slotMn = slotTotalMin % 60;
-        const slotTime = `${String(slotH).padStart(2, "0")}:${String(slotMn).padStart(2, "0")}`;
-        await supabase.from("horarios_bloqueados").insert({
-          data: ag.data_agendamento,
-          horario: slotTime,
-          motivo: `agendamento:${extendingId}`,
-        });
-      }
       
       setAgendamentos(prev => prev.map(a => a.id === extendingId ? { ...a, duracao_minutos: newDuration } : a));
       toast.success(`Duração estendida para ${newDuration} minutos (+${extraMin}min)`);
