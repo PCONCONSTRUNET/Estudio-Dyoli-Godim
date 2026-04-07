@@ -445,6 +445,10 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
       const duracao = Number(manualDuracao) || 60;
       const valor = Number(manualValor);
       
+      const clienteNome = manualCliente
+        ? (clientes.find(c => c.id === manualCliente)?.nome || "")
+        : manualClienteNome.trim();
+
       const { data, error } = await supabase.from("agendamentos").insert({
         servico: manualServico,
         data_agendamento: manualData,
@@ -455,7 +459,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         status: "confirmado",
         forma_pagamento: manualFormaPagamento,
         user_id: userId,
-      }).select().single();
+        cliente_nome: clienteNome || null,
+      } as any).select().single();
       
       if (error) throw error;
       if (data) {
@@ -1024,6 +1029,19 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                         ))}
                       </select>
                     </div>
+
+                    {!manualCliente && (
+                      <div>
+                        <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Nome do cliente (presencial)</label>
+                        <input
+                          type="text"
+                          placeholder="Ex: Maria Silva"
+                          value={manualClienteNome}
+                          onChange={(e) => setManualClienteNome(e.target.value)}
+                          className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20 placeholder:text-primary-foreground/20"
+                        />
+                      </div>
+                    )}
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
