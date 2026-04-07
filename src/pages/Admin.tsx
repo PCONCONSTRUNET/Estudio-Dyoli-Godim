@@ -731,7 +731,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                 <div className="flex-1 min-w-0">
                                   <p className={`font-body text-[11px] font-semibold ${cfg.titleColor}`}>{n.label}</p>
                                   <p className="font-body text-[13px] font-medium text-primary-foreground truncate mt-0.5">
-                                    {getClientName(n.ag.user_id)}
+                                    {getClientName(n.ag.user_id, (n.ag as any).cliente_nome)}
                                   </p>
                                   <p className="font-body text-[11px] text-primary-foreground/40 truncate">
                                     {n.ag.servico}{n.ag.variacao ? ` · ${n.ag.variacao}` : ""}
@@ -914,7 +914,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                               </div>
 
                               <div className="min-w-0 flex-1">
-                                <p className="truncate font-body text-[14px] font-semibold text-primary-foreground">{getClientName(a.user_id)}</p>
+                                <p className="truncate font-body text-[14px] font-semibold text-primary-foreground">{getClientName(a.user_id, a.cliente_nome)}</p>
                                 <p className="mt-0.5 truncate font-body text-[11px] text-primary-foreground/40">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""} · {a.duracao_minutos || 60}min</p>
                                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
                                   {statusBadge(a.status)}
