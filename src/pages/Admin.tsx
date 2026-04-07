@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
   BarChart3, Calendar, Users, Clock, Settings, LogOut, Search,
