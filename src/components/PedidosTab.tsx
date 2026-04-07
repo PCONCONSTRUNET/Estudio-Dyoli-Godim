@@ -20,7 +20,7 @@ interface Agendamento {
 
 interface Props {
   agendamentos: Agendamento[];
-  getClientName: (userId: string) => string;
+  getClientName: (userId: string, clienteNome?: string | null) => string;
   onUpdate: () => void;
 }
 

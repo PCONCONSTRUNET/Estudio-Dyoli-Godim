@@ -11,7 +11,7 @@ interface Agendamento {
 
 interface Props {
   agendamentos: Agendamento[];
-  getClientName: (userId: string) => string;
+  getClientName: (userId: string, clienteNome?: string | null) => string;
 }
 
 type FilterPeriod = "hoje" | "semana" | "mes" | "personalizado";
