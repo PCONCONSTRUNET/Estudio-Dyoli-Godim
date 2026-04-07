@@ -404,6 +404,117 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setAgendamentos((prev) => prev.map((item) => (item.id === id ? { ...item, valor_pago: newPago } : item)));
   };
 
+  // Load services for manual registration
+  const loadManualServicos = async () => {
+    const { data } = await supabase.from("servicos").select("*").eq("ativo", true).order("ordem");
+    if (data) setManualServicos(data.map(s => ({ id: s.id, nome: s.nome, preco: Number(s.preco), duracao_minutos: s.duracao_minutos, categoria: s.categoria })));
+  };
+
+  const openManualRegister = () => {
+    loadManualServicos();
+    setManualServico("");
+    setManualCliente("");
+    setManualClienteNome("");
+    setManualData(selectedAgendaDate);
+    setManualHorario("09:00");
+    setManualValor("");
+    setManualDuracao("60");
+    setManualFormaPagamento("pix");
+    setManualPago(false);
+    setShowManualRegister(true);
+  };
+
+  const handleSelectManualServico = (servicoNome: string) => {
+    setManualServico(servicoNome);
+    const svc = manualServicos.find(s => s.nome === servicoNome);
+    if (svc) {
+      setManualValor(svc.preco.toString());
+      setManualDuracao(svc.duracao_minutos.toString());
+    }
+  };
+
+  const saveManualRegistration = async () => {
+    if (!manualServico || !manualData || !manualHorario || !manualValor) {
+      toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+    setManualSaving(true);
+    try {
+      const userId = manualCliente || "00000000-0000-0000-0000-000000000000";
+      const duracao = Number(manualDuracao) || 60;
+      const valor = Number(manualValor);
+      
+      const { data, error } = await supabase.from("agendamentos").insert({
+        servico: manualServico,
+        data_agendamento: manualData,
+        horario: manualHorario,
+        valor: valor,
+        valor_pago: manualPago ? valor : 0,
+        duracao_minutos: duracao,
+        status: "confirmado",
+        forma_pagamento: manualFormaPagamento,
+        user_id: userId,
+      }).select().single();
+      
+      if (error) throw error;
+      if (data) {
+        setAgendamentos(prev => [data as Agendamento, ...prev]);
+        toast.success("Atendimento registrado com sucesso!");
+        setShowManualRegister(false);
+      }
+    } catch (err: any) {
+      toast.error("Erro ao registrar: " + (err.message || "Tente novamente"));
+    }
+    setManualSaving(false);
+  };
+
+  const openExtendDialog = (id: string) => {
+    setExtendingId(id);
+    setExtendMinutes("30");
+    setShowExtendDialog(true);
+  };
+
+  const saveExtendAppointment = async () => {
+    if (!extendingId) return;
+    const ag = agendamentos.find(a => a.id === extendingId);
+    if (!ag) return;
+    setExtendSaving(true);
+    try {
+      const extraMin = Number(extendMinutes) || 30;
+      const newDuration = (ag.duracao_minutos || 60) + extraMin;
+      
+      const { error } = await supabase.from("agendamentos").update({
+        duracao_minutos: newDuration,
+        updated_at: new Date().toISOString(),
+      }).eq("id", extendingId);
+      
+      if (error) throw error;
+      
+      const [startH, startM] = ag.horario.split(":").map(Number);
+      const oldSlotCount = Math.ceil((ag.duracao_minutos || 60) / 30);
+      const newSlotCount = Math.ceil(newDuration / 30);
+      
+      for (let i = oldSlotCount; i < newSlotCount; i++) {
+        const slotTotalMin = startH * 60 + startM + (i * 30);
+        const slotH = Math.floor(slotTotalMin / 60);
+        const slotMn = slotTotalMin % 60;
+        const slotTime = `${String(slotH).padStart(2, "0")}:${String(slotMn).padStart(2, "0")}`;
+        await supabase.from("horarios_bloqueados").insert({
+          data: ag.data_agendamento,
+          horario: slotTime,
+          motivo: `agendamento:${extendingId}`,
+        });
+      }
+      
+      setAgendamentos(prev => prev.map(a => a.id === extendingId ? { ...a, duracao_minutos: newDuration } : a));
+      toast.success(`Duração estendida para ${newDuration} minutos (+${extraMin}min)`);
+      setShowExtendDialog(false);
+    } catch (err: any) {
+      toast.error("Erro ao estender: " + (err.message || "Tente novamente"));
+    }
+    setExtendSaving(false);
+  };
+
   const todayAgendaKey = getDateKey(new Date());
   const selectedAgendaDateObj = parseDateKey(selectedAgendaDate);
   const agendaDatesWithAppointments = Array.from(new Set(filteredAgendamentos.map((item) => item.data_agendamento))).sort((a, b) => a.localeCompare(b));
