@@ -304,6 +304,19 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [extendMinutes, setExtendMinutes] = useState("30");
   const [extendSaving, setExtendSaving] = useState(false);
 
+  // Edit client name state
+  const [editingClientId, setEditingClientId] = useState<string | null>(null);
+  const [editClientName, setEditClientName] = useState("");
+
+  const handleSaveClientName = async (agId: string) => {
+    const name = editClientName.trim();
+    const { error } = await supabase.from("agendamentos").update({ cliente_nome: name || null } as any).eq("id", agId);
+    if (error) { toast.error("Erro ao salvar nome"); return; }
+    setAgendamentos(prev => prev.map(a => a.id === agId ? { ...a, cliente_nome: name || null } : a));
+    setEditingClientId(null);
+    toast.success("Nome do cliente atualizado");
+  };
+
   const handleNewAgendamento = useCallback((newAg: any) => {
     setAgendamentos((prev) => [newAg, ...prev]);
     loadData();
