@@ -1,0 +1,1 @@
+ALTER TABLE public.agendamentos ADD COLUMN cliente_nome TEXT DEFAULT NULL;

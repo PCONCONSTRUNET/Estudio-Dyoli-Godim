@@ -28,6 +28,7 @@ interface Agendamento {
   id: string; servico: string; variacao: string | null; data_agendamento: string;
   horario: string; valor: number; valor_pago: number | null; status: string;
   created_at: string; user_id: string; duracao_minutos: number; forma_pagamento: string | null;
+  cliente_nome: string | null;
 }
 interface Profile { id: string; nome: string; whatsapp: string; created_at: string; }
 interface LembreteConfig { id: string; tipo: string; ativo: boolean; mensagem: string; horas_antes: number; }
@@ -364,14 +365,17 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     .filter((a) => a.status !== "cancelado" && a.status !== "falta")
     .reduce((sum, a) => sum + (a.valor_pago || 0), 0);
 
-  const getClientName = (userId: string) => clientes.find((c) => c.id === userId)?.nome || "—";
+  const getClientName = (userId: string, clienteNome?: string | null) => {
+    if (clienteNome) return clienteNome;
+    return clientes.find((c) => c.id === userId)?.nome || "Presencial";
+  };
   const formatDate = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
   const formatWhatsapp = (w: string) => (w ? `(${w.slice(0, 2)}) ${w.slice(2, 7)}-${w.slice(7)}` : "—");
 
   const filteredAgendamentos = agendamentos.filter((a) => {
     if (statusFilter !== "todos" && a.status !== statusFilter) return false;
     if (searchTerm) {
-      const name = getClientName(a.user_id).toLowerCase();
+      const name = getClientName(a.user_id, (a as any).cliente_nome).toLowerCase();
       return name.includes(searchTerm.toLowerCase()) || a.servico.toLowerCase().includes(searchTerm.toLowerCase());
     }
     return true;
@@ -445,6 +449,10 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
       const duracao = Number(manualDuracao) || 60;
       const valor = Number(manualValor);
       
+      const clienteNome = manualCliente
+        ? (clientes.find(c => c.id === manualCliente)?.nome || "")
+        : manualClienteNome.trim();
+
       const { data, error } = await supabase.from("agendamentos").insert({
         servico: manualServico,
         data_agendamento: manualData,
@@ -455,7 +463,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         status: "confirmado",
         forma_pagamento: manualFormaPagamento,
         user_id: userId,
-      }).select().single();
+        cliente_nome: clienteNome || null,
+      } as any).select().single();
       
       if (error) throw error;
       if (data) {
@@ -722,7 +731,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                 <div className="flex-1 min-w-0">
                                   <p className={`font-body text-[11px] font-semibold ${cfg.titleColor}`}>{n.label}</p>
                                   <p className="font-body text-[13px] font-medium text-primary-foreground truncate mt-0.5">
-                                    {getClientName(n.ag.user_id)}
+                                    {getClientName(n.ag.user_id, (n.ag as any).cliente_nome)}
                                   </p>
                                   <p className="font-body text-[11px] text-primary-foreground/40 truncate">
                                     {n.ag.servico}{n.ag.variacao ? ` · ${n.ag.variacao}` : ""}
@@ -905,7 +914,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                               </div>
 
                               <div className="min-w-0 flex-1">
-                                <p className="truncate font-body text-[14px] font-semibold text-primary-foreground">{getClientName(a.user_id)}</p>
+                                <p className="truncate font-body text-[14px] font-semibold text-primary-foreground">{getClientName(a.user_id, a.cliente_nome)}</p>
                                 <p className="mt-0.5 truncate font-body text-[11px] text-primary-foreground/40">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""} · {a.duracao_minutos || 60}min</p>
                                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
                                   {statusBadge(a.status)}
@@ -1024,6 +1033,19 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                         ))}
                       </select>
                     </div>
+
+                    {!manualCliente && (
+                      <div>
+                        <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Nome do cliente (presencial)</label>
+                        <input
+                          type="text"
+                          placeholder="Ex: Maria Silva"
+                          value={manualClienteNome}
+                          onChange={(e) => setManualClienteNome(e.target.value)}
+                          className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20 placeholder:text-primary-foreground/20"
+                        />
+                      </div>
+                    )}
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
