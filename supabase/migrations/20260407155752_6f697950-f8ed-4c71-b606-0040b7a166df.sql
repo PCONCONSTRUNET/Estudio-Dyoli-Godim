@@ -1,0 +1,1 @@
+ALTER TABLE public.agendamentos ADD COLUMN foi_estendido BOOLEAN NOT NULL DEFAULT false;

@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           data_agendamento: string
           duracao_minutos: number
+          foi_estendido: boolean
           forma_pagamento: string | null
           horario: string
           id: string
@@ -36,6 +37,7 @@ export type Database = {
           created_at?: string
           data_agendamento: string
           duracao_minutos?: number
+          foi_estendido?: boolean
           forma_pagamento?: string | null
           horario: string
           id?: string
@@ -52,6 +54,7 @@ export type Database = {
           created_at?: string
           data_agendamento?: string
           duracao_minutos?: number
+          foi_estendido?: boolean
           forma_pagamento?: string | null
           horario?: string
           id?: string
