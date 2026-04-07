@@ -282,6 +282,26 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
 
+  // Manual registration state
+  const [showManualRegister, setShowManualRegister] = useState(false);
+  const [manualServicos, setManualServicos] = useState<{ id: string; nome: string; preco: number; duracao_minutos: number; categoria: string }[]>([]);
+  const [manualServico, setManualServico] = useState("");
+  const [manualCliente, setManualCliente] = useState("");
+  const [manualClienteNome, setManualClienteNome] = useState("");
+  const [manualData, setManualData] = useState(() => getDateKey(new Date()));
+  const [manualHorario, setManualHorario] = useState("09:00");
+  const [manualValor, setManualValor] = useState("");
+  const [manualDuracao, setManualDuracao] = useState("60");
+  const [manualFormaPagamento, setManualFormaPagamento] = useState("pix");
+  const [manualPago, setManualPago] = useState(false);
+  const [manualSaving, setManualSaving] = useState(false);
+
+  // Extend appointment state
+  const [showExtendDialog, setShowExtendDialog] = useState(false);
+  const [extendingId, setExtendingId] = useState<string | null>(null);
+  const [extendMinutes, setExtendMinutes] = useState("30");
+  const [extendSaving, setExtendSaving] = useState(false);
+
   const handleNewAgendamento = useCallback((newAg: any) => {
     setAgendamentos((prev) => [newAg, ...prev]);
     loadData();
