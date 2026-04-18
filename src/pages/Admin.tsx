@@ -870,41 +870,41 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                 </div>
               </div>
 
-              <section className="overflow-hidden rounded-[28px] border border-primary-foreground/[0.06] bg-primary-foreground/[0.03]">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-primary-foreground/[0.06] px-4 py-4 lg:px-5">
+              <section className="overflow-hidden rounded-[28px] border border-gold/15 bg-gradient-to-br from-primary-foreground/[0.08] to-primary-foreground/[0.04] shadow-[0_8px_32px_-12px_rgba(0,0,0,0.5)]">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gold/10 bg-gradient-to-r from-gold/[0.06] to-transparent px-4 py-4 lg:px-5">
                   <div className="min-w-0">
-                    <p className="font-body text-[11px] uppercase tracking-[0.22em] text-primary-foreground/25">Agenda do dia</p>
+                    <p className="font-body text-[11px] uppercase tracking-[0.22em] text-gold/60">Agenda do dia</p>
                     <div className="mt-1 flex items-center gap-2">
                       <button
                         onClick={() => setSelectedAgendaDate(shiftDate(selectedAgendaDate, -1))}
-                        className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-foreground/[0.06] text-primary-foreground/50 transition-all hover:bg-primary-foreground/[0.12] hover:text-primary-foreground"
+                        className="flex h-8 w-8 items-center justify-center rounded-xl border border-primary-foreground/10 bg-primary-foreground/[0.08] text-primary-foreground/70 transition-all hover:border-gold/30 hover:bg-gold/10 hover:text-gold"
                       >
                         <ChevronLeft className="h-4 w-4" />
                       </button>
                       <h3 className="font-heading text-[22px] font-semibold capitalize text-primary-foreground">{selectedAgendaLabel}</h3>
                       <button
                         onClick={() => setSelectedAgendaDate(shiftDate(selectedAgendaDate, 1))}
-                        className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-foreground/[0.06] text-primary-foreground/50 transition-all hover:bg-primary-foreground/[0.12] hover:text-primary-foreground"
+                        className="flex h-8 w-8 items-center justify-center rounded-xl border border-primary-foreground/10 bg-primary-foreground/[0.08] text-primary-foreground/70 transition-all hover:border-gold/30 hover:bg-gold/10 hover:text-gold"
                       >
                         <ChevronRight className="h-4 w-4" />
                       </button>
                     </div>
-                    <p className="mt-1 font-body text-[11px] text-primary-foreground/35">
+                    <p className="mt-1 font-body text-[11px] text-primary-foreground/55">
                       {selectedAgendaDateObj.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })}
                     </p>
                   </div>
 
                   <div className="grid w-full grid-cols-3 gap-2 lg:w-auto lg:min-w-[360px]">
-                    <div className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.04] px-3 py-2">
-                      <p className="font-body text-[10px] text-primary-foreground/30">Pedidos</p>
+                    <div className="rounded-2xl border border-primary-foreground/10 bg-primary-foreground/[0.06] px-3 py-2">
+                      <p className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/50">Pedidos</p>
                       <p className="font-body text-[15px] font-semibold text-primary-foreground">{selectedAgendaItems.length}</p>
                     </div>
-                    <div className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.04] px-3 py-2">
-                      <p className="font-body text-[10px] text-primary-foreground/30">Previsto</p>
+                    <div className="rounded-2xl border border-primary-foreground/10 bg-primary-foreground/[0.06] px-3 py-2">
+                      <p className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/50">Previsto</p>
                       <p className="font-body text-[13px] font-semibold text-primary-foreground">R$ {selectedAgendaTotal.toFixed(0)}</p>
                     </div>
-                    <div className="rounded-2xl border border-gold/20 bg-gold/10 px-3 py-2">
-                      <p className="font-body text-[10px] text-gold/70">Recebido</p>
+                    <div className="rounded-2xl border border-gold/30 bg-gold/15 px-3 py-2 shadow-[0_2px_12px_-2px_hsl(var(--gold)/0.25)]">
+                      <p className="font-body text-[10px] uppercase tracking-wider text-gold/80">Recebido</p>
                       <p className="font-body text-[13px] font-semibold text-gold">R$ {selectedAgendaPago.toFixed(0)}</p>
                     </div>
                   </div>
@@ -912,19 +912,19 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
                 <div className="p-3 lg:p-4">
                   {selectedAgendaItems.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-primary-foreground/[0.08] bg-primary-foreground/[0.02] px-4 py-10 text-center">
+                    <div className="rounded-2xl border border-dashed border-primary-foreground/15 bg-primary-foreground/[0.03] px-4 py-10 text-center">
                       <p className="font-heading text-[20px] font-semibold text-primary-foreground">Nenhum pedido nessa data</p>
-                      <p className="mt-2 font-body text-[12px] text-primary-foreground/35">Escolha outro dia no calendário ou toque em Hoje para voltar para a agenda atual.</p>
+                      <p className="mt-2 font-body text-[12px] text-primary-foreground/55">Escolha outro dia no calendário ou toque em Hoje para voltar para a agenda atual.</p>
                     </div>
                   ) : (
-                    <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
+                    <div className="space-y-2.5 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
                       {selectedAgendaItems.map((a) => (
-                        <article key={a.id} className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.04] p-4 shadow-sm">
+                        <article key={a.id} className="group/card rounded-2xl border border-primary-foreground/10 bg-gradient-to-br from-primary-foreground/[0.07] to-primary-foreground/[0.03] p-4 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.4)] transition-all hover:border-gold/25 hover:shadow-[0_8px_28px_-10px_hsl(var(--gold)/0.2)]">
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex min-w-0 flex-1 items-start gap-3">
-                              <div className="flex min-w-[54px] flex-col items-center rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] px-2 py-2">
-                                <span className="font-heading text-[16px] font-semibold text-primary-foreground">{a.horario}</span>
-                                <span className="font-body text-[9px] uppercase tracking-[0.18em] text-primary-foreground/25">horário</span>
+                              <div className="flex min-w-[60px] flex-col items-center rounded-2xl border border-gold/25 bg-gradient-to-br from-gold/15 to-gold/5 px-2 py-2.5 shadow-[0_2px_10px_-4px_hsl(var(--gold)/0.3)]">
+                                <span className="font-heading text-[18px] font-semibold leading-tight text-gold">{a.horario}</span>
+                                <span className="mt-0.5 font-body text-[9px] uppercase tracking-[0.18em] text-gold/60">horário</span>
                               </div>
 
                               <div className="min-w-0 flex-1">
@@ -935,23 +935,23 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                       value={editClientName}
                                       onChange={(e) => setEditClientName(e.target.value)}
                                       onKeyDown={(e) => { if (e.key === "Enter") handleSaveClientName(a.id); if (e.key === "Escape") setEditingClientId(null); }}
-                                      className="w-full rounded-lg bg-primary-foreground/[0.06] border border-gold/20 px-2 py-1 font-body text-[13px] text-primary-foreground focus:outline-none focus:ring-1 focus:ring-gold/30"
+                                      className="w-full rounded-lg bg-primary-foreground/[0.08] border border-gold/30 px-2 py-1 font-body text-[13px] text-primary-foreground focus:outline-none focus:ring-1 focus:ring-gold/40"
                                       placeholder="Nome do cliente"
                                     />
-                                    <button onClick={() => handleSaveClientName(a.id)} className="rounded-lg p-1 text-green-500/60 hover:text-green-500 hover:bg-green-500/10 transition-all" title="Salvar"><CheckCircle className="h-3.5 w-3.5" /></button>
-                                    <button onClick={() => setEditingClientId(null)} className="rounded-lg p-1 text-primary-foreground/30 hover:text-rose hover:bg-rose/10 transition-all" title="Cancelar"><X className="h-3.5 w-3.5" /></button>
+                                    <button onClick={() => handleSaveClientName(a.id)} className="rounded-lg p-1 text-green-500/80 hover:text-green-400 hover:bg-green-500/10 transition-all" title="Salvar"><CheckCircle className="h-3.5 w-3.5" /></button>
+                                    <button onClick={() => setEditingClientId(null)} className="rounded-lg p-1 text-primary-foreground/50 hover:text-rose hover:bg-rose/10 transition-all" title="Cancelar"><X className="h-3.5 w-3.5" /></button>
                                   </div>
                                 ) : (
                                   <div className="flex items-center gap-1.5 group">
-                                    <p className="truncate font-body text-[14px] font-semibold text-primary-foreground">{getClientName(a.user_id, a.cliente_nome)}</p>
+                                    <p className="truncate font-body text-[15px] font-semibold text-primary-foreground">{getClientName(a.user_id, a.cliente_nome)}</p>
                                     <button
                                       onClick={() => { setEditingClientId(a.id); setEditClientName(a.cliente_nome || getClientName(a.user_id, a.cliente_nome)); }}
-                                      className="shrink-0 rounded-lg p-1 text-primary-foreground/15 opacity-0 group-hover:opacity-100 hover:text-gold hover:bg-gold/10 transition-all"
+                                      className="shrink-0 rounded-lg p-1 text-primary-foreground/40 opacity-0 group-hover:opacity-100 hover:text-gold hover:bg-gold/10 transition-all"
                                       title="Editar nome do cliente"
                                     ><Edit2 className="h-3 w-3" /></button>
                                   </div>
                                 )}
-                                <p className="mt-0.5 truncate font-body text-[11px] text-primary-foreground/40">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""} · {a.duracao_minutos || 60}min</p>
+                                <p className="mt-0.5 truncate font-body text-[12px] text-primary-foreground/65">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""} · {a.duracao_minutos || 60}min</p>
                                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
                                   {statusBadge(a.status)}
                                   {pagamentoBadge(a)}
@@ -960,41 +960,41 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                             </div>
                           </div>
 
-                          <div className="mt-3 rounded-xl border border-primary-foreground/[0.05] bg-primary-foreground/[0.02] px-3 py-2">
+                          <div className="mt-3 rounded-xl border border-gold/15 bg-gradient-to-r from-gold/[0.08] to-gold/[0.02] px-3 py-2.5">
                             <div className="flex flex-wrap items-center justify-between gap-2">
-                              <p className="font-body text-[11px] text-primary-foreground/35">Valor do atendimento</p>
-                              <p className="font-body text-[13px] font-semibold text-gold">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</p>
+                              <p className="font-body text-[11px] uppercase tracking-wider text-primary-foreground/55">Valor do atendimento</p>
+                              <p className="font-heading text-[16px] font-semibold text-gold">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</p>
                             </div>
                             {Number(a.valor_pago || 0) > 0 && (
-                              <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-                                <p className="font-body text-[11px] text-primary-foreground/35">Já recebido</p>
-                                <p className="font-body text-[12px] font-medium text-primary-foreground">R$ {Number(a.valor_pago || 0).toFixed(2).replace(".", ",")}</p>
+                              <div className="mt-1 flex flex-wrap items-center justify-between gap-2 border-t border-gold/10 pt-1.5">
+                                <p className="font-body text-[11px] text-primary-foreground/55">Já recebido</p>
+                                <p className="font-body text-[12px] font-medium text-green-400">R$ {Number(a.valor_pago || 0).toFixed(2).replace(".", ",")}</p>
                               </div>
                             )}
                           </div>
 
-                          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-primary-foreground/[0.06] pt-3">
-                            <div className="flex flex-wrap items-center gap-1">
+                          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-primary-foreground/10 pt-3">
+                            <div className="flex flex-wrap items-center gap-1.5">
                               {a.status !== "cancelado" && a.status !== "falta" && (
                                 <>
                                   <button
                                     onClick={() => updatePayment(a.id, "sinal")}
                                     title="Marcar sinal (50%)"
-                                    className={`rounded-lg px-2 py-1 font-body text-[10px] font-medium transition-all ${Number(a.valor_pago || 0) > 0 && Number(a.valor_pago || 0) < Number(a.valor) ? "bg-gold/10 text-gold" : "bg-primary-foreground/[0.03] text-primary-foreground/30 hover:bg-gold/10 hover:text-gold"}`}
+                                    className={`rounded-lg border px-2.5 py-1.5 font-body text-[11px] font-medium transition-all ${Number(a.valor_pago || 0) > 0 && Number(a.valor_pago || 0) < Number(a.valor) ? "border-gold/40 bg-gold/15 text-gold shadow-[0_0_10px_-2px_hsl(var(--gold)/0.3)]" : "border-primary-foreground/10 bg-primary-foreground/[0.05] text-primary-foreground/60 hover:border-gold/30 hover:bg-gold/10 hover:text-gold"}`}
                                   >
                                     Sinal
                                   </button>
                                   <button
                                     onClick={() => updatePayment(a.id, "completo")}
                                     title="Marcar pago completo"
-                                    className={`rounded-lg px-2 py-1 font-body text-[10px] font-medium transition-all ${Number(a.valor_pago || 0) >= Number(a.valor) ? "bg-green-500/10 text-green-500" : "bg-primary-foreground/[0.03] text-primary-foreground/30 hover:bg-green-500/10 hover:text-green-500"}`}
+                                    className={`rounded-lg border px-2.5 py-1.5 font-body text-[11px] font-medium transition-all ${Number(a.valor_pago || 0) >= Number(a.valor) ? "border-green-500/40 bg-green-500/15 text-green-400 shadow-[0_0_10px_-2px_rgba(34,197,94,0.3)]" : "border-primary-foreground/10 bg-primary-foreground/[0.05] text-primary-foreground/60 hover:border-green-500/30 hover:bg-green-500/10 hover:text-green-400"}`}
                                   >
                                     Pago
                                   </button>
                                   <button
                                     onClick={() => openExtendDialog(a.id)}
                                     title="Estender duração"
-                                    className="rounded-lg px-2 py-1 font-body text-[10px] font-medium transition-all bg-primary-foreground/[0.03] text-primary-foreground/30 hover:bg-blue-500/10 hover:text-blue-400"
+                                    className="rounded-lg border border-primary-foreground/10 bg-primary-foreground/[0.05] px-2.5 py-1.5 font-body text-[11px] font-medium text-primary-foreground/60 transition-all hover:border-blue-400/30 hover:bg-blue-500/10 hover:text-blue-400"
                                   >
                                     <span className="flex items-center gap-1"><Timer className="w-3 h-3" />Estender</span>
                                   </button>
@@ -1005,18 +1005,18 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                             <div className="flex items-center gap-1 self-end">
                               {a.status === "confirmado" && (
                                 <>
-                                  <button onClick={() => updateStatus(a.id, "concluido")} className="rounded-lg p-1.5 text-green-500/50 transition-all hover:bg-green-500/10 hover:text-green-500" title="Concluir">
+                                  <button onClick={() => updateStatus(a.id, "concluido")} className="rounded-lg p-1.5 text-green-500/70 transition-all hover:bg-green-500/15 hover:text-green-400" title="Concluir">
                                     <CheckCircle className="h-4 w-4" />
                                   </button>
-                                  <button onClick={() => updateStatus(a.id, "falta")} className="rounded-lg p-1.5 text-orange-500/50 transition-all hover:bg-orange-500/10 hover:text-orange-500" title="Marcar falta">
+                                  <button onClick={() => updateStatus(a.id, "falta")} className="rounded-lg p-1.5 text-orange-500/70 transition-all hover:bg-orange-500/15 hover:text-orange-400" title="Marcar falta">
                                     <UserX className="h-4 w-4" />
                                   </button>
-                                  <button onClick={() => updateStatus(a.id, "cancelado")} className="rounded-lg p-1.5 text-rose/50 transition-all hover:bg-rose/10 hover:text-rose" title="Cancelar">
+                                  <button onClick={() => updateStatus(a.id, "cancelado")} className="rounded-lg p-1.5 text-rose/70 transition-all hover:bg-rose/15 hover:text-rose" title="Cancelar">
                                     <X className="h-4 w-4" />
                                   </button>
                                 </>
                               )}
-                              <button onClick={() => deleteAgendamento(a.id)} className="rounded-lg p-1.5 text-primary-foreground/20 transition-all hover:bg-rose/10 hover:text-rose" title="Excluir">
+                              <button onClick={() => deleteAgendamento(a.id)} className="rounded-lg p-1.5 text-primary-foreground/40 transition-all hover:bg-rose/15 hover:text-rose" title="Excluir">
                                 <Trash2 className="h-4 w-4" />
                               </button>
                             </div>
