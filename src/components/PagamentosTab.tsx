@@ -213,11 +213,18 @@ const PagamentosTab = ({ agendamentos, getClientName }: Props) => {
           const cfg = statusConfig[ag.status] || statusConfig.pendente;
           const StatusIcon = cfg.icon;
           const isExpanded = expandedId === ag.id;
+          const isUnpaid =
+            Number(ag.valor_pago || 0) === 0 &&
+            !["cancelado", "falta"].includes(ag.status);
 
           return (
             <div
               key={ag.id}
-              className="rounded-2xl border border-gold/15 bg-gradient-to-br from-gold/[0.05] via-primary-foreground/[0.02] to-nude/[0.03] overflow-hidden transition-all hover:border-gold/25 hover:shadow-[0_4px_16px_-8px_hsl(var(--gold)/0.25)]"
+              className={`rounded-2xl border overflow-hidden transition-all ${
+                isUnpaid
+                  ? "border-amber-500/40 bg-gradient-to-br from-amber-500/[0.08] via-primary-foreground/[0.02] to-amber-500/[0.04] hover:border-amber-500/60 hover:shadow-[0_4px_16px_-8px_rgba(245,158,11,0.4)]"
+                  : "border-gold/15 bg-gradient-to-br from-gold/[0.05] via-primary-foreground/[0.02] to-nude/[0.03] hover:border-gold/25 hover:shadow-[0_4px_16px_-8px_hsl(var(--gold)/0.25)]"
+              }`}
             >
               {/* Main row */}
               <button
@@ -228,15 +235,23 @@ const PagamentosTab = ({ agendamentos, getClientName }: Props) => {
                   <StatusIcon className={`h-4 w-4 ${cfg.text}`} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-body text-[14px] font-medium text-primary-foreground truncate">
-                    {getClientName(ag.user_id, ag.cliente_nome)}
-                  </p>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <p className="font-body text-[14px] font-medium text-primary-foreground truncate">
+                      {getClientName(ag.user_id, ag.cliente_nome)}
+                    </p>
+                    {isUnpaid && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 border border-amber-500/40 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-300 animate-pulse">
+                        <AlertCircle className="h-2.5 w-2.5" />
+                        Não pago
+                      </span>
+                    )}
+                  </div>
                   <p className="font-body text-[11px] text-primary-foreground/45 truncate">
                     {ag.servico}{ag.variacao ? ` · ${ag.variacao}` : ""} · {formatDate(ag.data_agendamento)}
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className="font-heading text-[15px] font-bold text-gold">
+                  <p className={`font-heading text-[15px] font-bold ${isUnpaid ? "text-amber-300" : "text-gold"}`}>
                     {formatCurrency(ag.valor)}
                   </p>
                   <div className="flex items-center justify-end gap-1">
