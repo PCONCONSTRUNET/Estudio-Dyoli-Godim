@@ -89,6 +89,33 @@ const PushToggle = ({ role, userId, variant = "default", showTestButton = false 
         )}
         {subscribed ? "Desativar notificações" : "Ativar notificações"}
       </Button>
+
+      {showTestButton && subscribed && (
+        <Button
+          variant="secondary"
+          className="w-full gap-2"
+          disabled={testing}
+          onClick={async () => {
+            setTesting(true);
+            try {
+              sendPush({
+                role,
+                title: "🔔 Teste de notificação",
+                message: "Se você está vendo isso, push está funcionando!",
+                url: window.location.href,
+              });
+              toast.success("Push de teste enviado. Deve chegar em segundos.");
+            } catch {
+              toast.error("Falha ao enviar teste.");
+            } finally {
+              setTimeout(() => setTesting(false), 1500);
+            }
+          }}
+        >
+          {testing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          Enviar push de teste
+        </Button>
+      )}
     </div>
   );
 };
