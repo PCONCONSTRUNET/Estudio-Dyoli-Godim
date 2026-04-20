@@ -298,17 +298,17 @@ const DoDontGrid = ({ dos, donts }: { dos: string[]; donts: string[] }) => (
       </ul>
     </div>
 
-    <div className="p-5 rounded-xl bg-gradient-to-br from-rose-500/[0.14] to-rose-500/[0.04] border border-rose-500/30 shadow-[0_4px_16px_-8px_rgba(244,63,94,0.2)]">
-      <div className="flex items-center gap-2 mb-3 text-rose-300">
-        <div className="w-7 h-7 rounded-full bg-rose-500/25 flex items-center justify-center">
-          <X className="w-4 h-4" strokeWidth={3} />
+    <div className="p-5 rounded-xl bg-gradient-to-br from-red-600/[0.22] to-red-700/[0.10] border border-red-500/50 shadow-[0_4px_20px_-6px_rgba(220,38,38,0.4)]">
+      <div className="flex items-center gap-2 mb-3 text-red-100">
+        <div className="w-7 h-7 rounded-full bg-red-600 flex items-center justify-center shadow-[0_2px_8px_-2px_rgba(220,38,38,0.6)]">
+          <X className="w-4 h-4 text-white" strokeWidth={3.5} />
         </div>
-        <h3 className="text-sm font-bold uppercase tracking-wider">Evite</h3>
+        <h3 className="text-sm font-extrabold uppercase tracking-wider text-red-100">Evite</h3>
       </div>
       <ul className="space-y-2.5">
         {donts.map((item, i) => (
-          <li key={i} className="text-primary-foreground/95 text-[14px] flex gap-2.5 leading-relaxed">
-            <X className="w-4 h-4 text-rose-300 shrink-0 mt-0.5" strokeWidth={3} />
+          <li key={i} className="text-white text-[14px] flex gap-2.5 leading-relaxed font-medium">
+            <X className="w-4 h-4 text-red-400 shrink-0 mt-0.5" strokeWidth={3.5} />
             <span>{item}</span>
           </li>
         ))}
