@@ -532,15 +532,45 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
 
         <div className="pt-6 pb-4 space-y-3">
           {requiresDeposit && (
-            <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-secondary/40 border border-border/40">
-              <button onClick={() => setPaymentMode("deposit")}
-                className={`ios-press py-3 rounded-xl font-body text-[13px] font-medium transition-all ${paymentMode === "deposit" ? "bg-card shadow text-foreground" : "text-muted-foreground"}`}>
-                Pagar Sinal<span className="block text-[11px] font-normal mt-0.5 text-gold">{depositAmount}</span>
-              </button>
-              <button onClick={() => setPaymentMode("full")}
-                className={`ios-press py-3 rounded-xl font-body text-[13px] font-medium transition-all ${paymentMode === "full" ? "bg-card shadow text-foreground" : "text-muted-foreground"}`}>
-                Valor Completo<span className="block text-[11px] font-normal mt-0.5 text-gold">{price}</span>
-              </button>
+            <div>
+              <p className="font-body text-[11px] text-muted-foreground uppercase tracking-widest font-medium mb-2.5 text-left">
+                Como deseja pagar? <span className="text-rose normal-case tracking-normal text-[11px] font-normal">(toque para escolher)</span>
+              </p>
+              <div className="grid grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMode("deposit")}
+                  aria-pressed={paymentMode === "deposit"}
+                  className={`ios-press relative py-3.5 px-3 rounded-2xl font-body text-[13px] font-semibold transition-all text-left ${
+                    paymentMode === "deposit"
+                      ? "bg-gold/10 border-2 border-gold text-foreground shadow-[0_4px_18px_-6px_hsl(40_40%_55%/0.45)]"
+                      : "bg-card border-2 border-border/60 text-muted-foreground hover:border-gold/40 hover:bg-gold/5"
+                  }`}
+                >
+                  <span className={`absolute top-2.5 right-2.5 w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMode === "deposit" ? "border-gold bg-gold" : "border-muted-foreground/40"}`}>
+                    {paymentMode === "deposit" && <Check className="w-2.5 h-2.5 text-charcoal" strokeWidth={3} />}
+                  </span>
+                  <span className="block">Pagar Sinal</span>
+                  <span className={`block text-[12px] font-normal mt-1 ${paymentMode === "deposit" ? "text-gold" : "text-muted-foreground/80"}`}>{depositAmount}</span>
+                  <span className="absolute -top-2 left-3 px-2 py-0.5 rounded-full bg-rose text-primary-foreground text-[9px] uppercase tracking-wider font-bold">Recomendado</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMode("full")}
+                  aria-pressed={paymentMode === "full"}
+                  className={`ios-press relative py-3.5 px-3 rounded-2xl font-body text-[13px] font-semibold transition-all text-left ${
+                    paymentMode === "full"
+                      ? "bg-gold/10 border-2 border-gold text-foreground shadow-[0_4px_18px_-6px_hsl(40_40%_55%/0.45)]"
+                      : "bg-card border-2 border-border/60 text-muted-foreground hover:border-gold/40 hover:bg-gold/5"
+                  }`}
+                >
+                  <span className={`absolute top-2.5 right-2.5 w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMode === "full" ? "border-gold bg-gold" : "border-muted-foreground/40"}`}>
+                    {paymentMode === "full" && <Check className="w-2.5 h-2.5 text-charcoal" strokeWidth={3} />}
+                  </span>
+                  <span className="block">Valor Completo</span>
+                  <span className={`block text-[12px] font-normal mt-1 ${paymentMode === "full" ? "text-gold" : "text-muted-foreground/80"}`}>{price}</span>
+                </button>
+              </div>
             </div>
           )}
           <button onClick={handleGoToPayment} disabled={paymentLoading}
