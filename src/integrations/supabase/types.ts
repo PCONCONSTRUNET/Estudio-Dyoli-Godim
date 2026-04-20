@@ -296,6 +296,39 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          device_info: Json | null
+          id: string
+          player_id: string
+          role: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          device_info?: Json | null
+          id?: string
+          player_id: string
+          role: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          device_info?: Json | null
+          id?: string
+          player_id?: string
+          role?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       servicos: {
         Row: {
           ativo: boolean
