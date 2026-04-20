@@ -195,6 +195,20 @@ Deno.serve(async (req) => {
 
     if (agendarErr) throw agendarErr;
 
+    // Webhook de confirmação (background, não bloqueia resposta)
+    try {
+      const [y, mo, d] = data.split("-");
+      const dataFmt = `${d}/${mo}/${y}`;
+      const mensagem = `✅ *Agendamento Confirmado no Estudio Dyoli Godim!* 🌸\n\nOlá ${nome}, recebemos a confirmação do seu agendamento para o dia ${dataFmt} às ${horario}. Te esperamos!`;
+      fetch("http://localhost:3000/webhook/notificacao", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ numero: wa, mensagem, token: "dyoli123" }),
+      }).catch((e) => console.log("Erro ao enviar webhook de confirmação", e));
+    } catch (e) {
+      console.log("notify webhook skipped", e);
+    }
+
     return jsonResponse({
       success: true,
       message: "Agendamento criado com sucesso",

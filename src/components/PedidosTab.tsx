@@ -3,6 +3,7 @@ import { Search, Trash2, CheckCircle, X, UserX, ChevronDown, ChevronUp, Bell, Cl
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { notifyAgendamentoConfirmadoById } from "@/lib/notify-webhook";
 
 interface Agendamento {
   id: string;
@@ -143,6 +144,9 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     await supabase.from("agendamentos").update({ status }).eq("id", id);
     onUpdate();
     toast.success(`Status atualizado para ${status}`);
+    if (status === "confirmado") {
+      notifyAgendamentoConfirmadoById(id);
+    }
   };
 
   const deleteAgendamento = async (id: string) => {
