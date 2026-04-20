@@ -720,7 +720,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         </div>
 
         {/* Content */}
-        <div className="mx-auto w-full max-w-md overflow-x-hidden px-3 py-4 sm:px-4 lg:max-w-4xl lg:px-8 lg:py-6">
+        <div className="mx-auto w-full max-w-md overflow-x-hidden px-3 py-4 pb-24 sm:px-4 lg:max-w-4xl lg:px-8 lg:py-6 lg:pb-6">
           {tab === "dashboard" && (
             <AdminDashboard
               agendamentos={agendamentos}
