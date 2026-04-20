@@ -304,7 +304,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
         return;
       }
 
-      // 1. Create agendamento as "pendente"
+      // 1. Create agendamento as "confirmado" (já bloqueia horário)
       const { data: agData, error: agError } = await supabase.from("agendamentos").insert({
         user_id: user.id,
         servico: service,
@@ -314,7 +314,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
         valor: numericPrice,
         valor_pago: 0,
         forma_pagamento: selectedPaymentMethod,
-        status: "pendente",
+        status: "confirmado",
         duracao_minutos: serviceDuration,
       }).select("id").single();
 
@@ -385,7 +385,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       valor: numericPrice,
       valor_pago: 0,
       forma_pagamento: "pix",
-      status: "pendente",
+      status: "confirmado",
       duracao_minutos: serviceDuration,
     }).select("id").single();
 
