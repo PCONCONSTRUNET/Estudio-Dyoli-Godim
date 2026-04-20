@@ -234,17 +234,18 @@ const Cuidados = () => {
         </Tabs>
 
         {/* Alerta */}
-        <div className="mt-8 p-5 rounded-xl bg-gradient-to-br from-red-600/[0.22] to-red-700/[0.10] border border-red-500/50 flex gap-3 shadow-[0_4px_20px_-6px_rgba(220,38,38,0.4)]">
-          <div className="w-9 h-9 rounded-full bg-red-600 flex items-center justify-center shrink-0 shadow-[0_2px_8px_-2px_rgba(220,38,38,0.6)]">
-            <AlertTriangle className="w-5 h-5 text-white" strokeWidth={2.5} />
+        <div className="mt-8 p-5 rounded-xl bg-gradient-to-br from-amber-500/[0.10] to-amber-600/[0.04] border border-amber-500/25 flex gap-3 shadow-[0_4px_16px_-10px_rgba(245,158,11,0.25)]">
+          <div className="w-9 h-9 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shrink-0">
+            <AlertTriangle className="w-4 h-4 text-amber-300" strokeWidth={2.2} />
           </div>
           <div>
-            <h3 className="text-white font-extrabold text-base mb-1.5 uppercase tracking-wide">
+            <h3 className="text-primary-foreground font-semibold text-[15px] mb-1.5">
               Sentiu algo diferente?
             </h3>
-            <p className="text-white text-sm leading-relaxed font-medium">
-              Não trate nada por conta própria com remédio caseiro ou pomada sem orientação. Me
-              chama no WhatsApp ou procure um profissional. A gente cuida juntos! 💛
+            <p className="text-primary-foreground/85 text-[14px] leading-relaxed">
+              Calma, amor — quase tudo é parte da cicatrização. Mas não trate nada sozinha com
+              remédio caseiro ou pomada sem orientação. Me chama no WhatsApp e a gente resolve
+              juntinhas. 💛
             </p>
           </div>
         </div>
