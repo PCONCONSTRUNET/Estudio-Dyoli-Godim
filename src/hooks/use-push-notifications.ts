@@ -37,18 +37,36 @@ async function initOneSignal(): Promise<void> {
   return initPromise;
 }
 
+function isLovablePreview(): boolean {
+  if (typeof window === "undefined") return false;
+  const host = window.location.hostname;
+  return (
+    host.includes("id-preview--") ||
+    host.includes("lovableproject.com") ||
+    host.includes("lovable.app") === false && host.includes("lovable") // any other lovable internal
+      ? false
+      : false
+  ) || host.includes("id-preview--") || host.includes("lovableproject.com");
+}
+
+function isInIframe(): boolean {
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
+}
+
 function isSupported(): boolean {
   if (typeof window === "undefined") return false;
-  // iOS Safari requires PWA installed (standalone) for push. Detect installable.
-  const inIframe = (() => {
-    try {
-      return window.self !== window.top;
-    } catch {
-      return true;
-    }
-  })();
-  if (inIframe) return false;
-  return "Notification" in window && "serviceWorker" in navigator;
+  if (!("Notification" in window) || !("serviceWorker" in navigator)) return false;
+  // Only block the Lovable preview iframe — real domains in iframes (rare) still try.
+  if (isLovablePreview() && isInIframe()) return false;
+  return true;
+}
+
+export function isPushPreviewBlocked(): boolean {
+  return isLovablePreview() && isInIframe();
 }
 
 export function usePushNotifications({ role, userId, autoInit = true }: UsePushOptions) {
