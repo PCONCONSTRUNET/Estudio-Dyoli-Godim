@@ -220,9 +220,35 @@ const Admin = () => {
     document.documentElement.classList.add("admin-mobile-page");
     document.body.classList.add("admin-mobile-page");
 
+    // Swap PWA manifest so "Add to Home Screen" installs the /admin app (not the public site)
+    const link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
+    const previousHref = link?.getAttribute("href") ?? "/manifest.json";
+    if (link) link.setAttribute("href", "/manifest-admin.json");
+
+    // Update tab title + theme so the home-screen icon picks up the right name
+    const previousTitle = document.title;
+    document.title = "Dyoli Godim — Admin";
+    const appleTitle = document.querySelector<HTMLMetaElement>('meta[name="apple-mobile-web-app-title"]');
+    const previousAppleTitle = appleTitle?.getAttribute("content") ?? null;
+    if (appleTitle) {
+      appleTitle.setAttribute("content", "Dyoli Admin");
+    } else {
+      const meta = document.createElement("meta");
+      meta.name = "apple-mobile-web-app-title";
+      meta.content = "Dyoli Admin";
+      document.head.appendChild(meta);
+    }
+
     return () => {
       document.documentElement.classList.remove("admin-mobile-page");
       document.body.classList.remove("admin-mobile-page");
+      if (link) link.setAttribute("href", previousHref);
+      document.title = previousTitle;
+      if (appleTitle && previousAppleTitle !== null) {
+        appleTitle.setAttribute("content", previousAppleTitle);
+      } else {
+        document.querySelector('meta[name="apple-mobile-web-app-title"][content="Dyoli Admin"]')?.remove();
+      }
     };
   }, []);
 
