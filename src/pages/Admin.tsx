@@ -1536,28 +1536,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         </div>
       </div>
 
-      {/* Mobile bottom nav (hidden on desktop) */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-primary-foreground/[0.06] bg-charcoal/95 backdrop-blur-xl pb-[env(safe-area-inset-bottom)] lg:hidden">
-        <div
-          className="flex w-full items-stretch overflow-x-auto px-2 [-webkit-overflow-scrolling:touch]"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        >
-          {tabs.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`flex shrink-0 basis-[68px] flex-col items-center justify-center gap-1 px-1.5 py-2.5 transition-all ${
-                tab === t.id ? "text-gold" : "text-primary-foreground/40"
-              }`}
-            >
-              <t.icon className="h-[18px] w-[18px] shrink-0" />
-              <span className="font-body text-[10px] leading-tight whitespace-nowrap">{t.label}</span>
-            </button>
-          ))}
-        </div>
-      </nav>
-    </div>
-  );
+      {/* Bottom nav removida — agora usamos drawer lateral via botão hambúrguer no topo */}
 };
 
 // ─── Horários Tab ───
