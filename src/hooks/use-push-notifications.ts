@@ -40,13 +40,7 @@ async function initOneSignal(): Promise<void> {
 function isLovablePreview(): boolean {
   if (typeof window === "undefined") return false;
   const host = window.location.hostname;
-  return (
-    host.includes("id-preview--") ||
-    host.includes("lovableproject.com") ||
-    host.includes("lovable.app") === false && host.includes("lovable") // any other lovable internal
-      ? false
-      : false
-  ) || host.includes("id-preview--") || host.includes("lovableproject.com");
+  return host.includes("id-preview--") || host.includes("lovableproject.com");
 }
 
 function isInIframe(): boolean {
