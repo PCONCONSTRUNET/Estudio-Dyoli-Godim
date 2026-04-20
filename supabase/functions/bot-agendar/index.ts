@@ -196,7 +196,7 @@ Deno.serve(async (req) => {
 
     if (agendarErr) throw agendarErr;
 
-    // Webhook de confirmação (background, não bloqueia resposta)
+    // Webhook de confirmação + push pro admin (background, não bloqueia resposta)
     try {
       const [y, mo, d] = data.split("-");
       const dataFmt = `${d}/${mo}/${y}`;
@@ -208,6 +208,28 @@ Deno.serve(async (req) => {
       }).catch((e) => console.log("Erro ao enviar webhook de confirmação", e));
     } catch (e) {
       console.log("notify webhook skipped", e);
+    }
+
+    // Push nativo pro admin (via WhatsApp bot)
+    try {
+      const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+      const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SERVICE_KEY}`,
+          apikey: SERVICE_KEY,
+        },
+        body: JSON.stringify({
+          role: "admin",
+          title: "🔔 Novo Agendamento (WhatsApp)",
+          message: `${nome} — ${servico.nome} em ${data} às ${horario}`,
+          url: "/admin",
+        }),
+      }).catch((e) => console.log("send-push failed", e));
+    } catch (e) {
+      console.log("push skipped", e);
     }
 
     return jsonResponse({
