@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-const WEBHOOK_URL = "http://localhost:3000/webhook/notificacao";
+const WEBHOOK_URL = "https://graffiti-plunging-ravine.ngrok-free.dev/webhook/notificacao";
 const WEBHOOK_TOKEN = "dyoli123";
 
 interface NotifyParams {
