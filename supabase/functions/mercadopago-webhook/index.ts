@@ -54,6 +54,27 @@ Deno.serve(async (req) => {
             console.error("Error updating agendamento:", error);
           } else {
             console.log(`Agendamento ${payment.external_reference} updated with payment`);
+            // Buscar dados do agendamento pra montar a notificação
+            const { data: ag } = await supabase
+              .from("agendamentos")
+              .select("servico, valor_pago, cliente_nome, user_id")
+              .eq("id", payment.external_reference)
+              .single();
+            if (ag) {
+              // Push pra admin
+              try {
+                await supabase.functions.invoke("send-push", {
+                  body: {
+                    role: "admin",
+                    title: "💰 Pagamento confirmado!",
+                    message: `${ag.cliente_nome || "Cliente"} pagou R$ ${Number(ag.valor_pago || 0).toFixed(2)} — ${ag.servico}`,
+                    url: "/admin",
+                  },
+                });
+              } catch (e) {
+                console.warn("send-push failed:", e);
+              }
+            }
           }
         }
       }

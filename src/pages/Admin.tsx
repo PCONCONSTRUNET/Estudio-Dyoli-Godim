@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyAgendamentoConfirmadoById, notifyLembreteById } from "@/lib/notify-webhook";
+import { sendPush } from "@/lib/push-notify";
 import {
   BarChart3, Calendar, Users, Clock, Settings, LogOut, Search,
   X, Edit2, Trash2, Plus, Save, CheckCircle, Bell, MessageSquare,
@@ -350,10 +351,20 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const updateStatus = async (id: string, status: string) => {
     await supabase.from("agendamentos").update({ status }).eq("id", id);
     setAgendamentos((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
+    const ag = agendamentos.find((a) => a.id === id);
     if (status === "confirmado") {
       notifyAgendamentoConfirmadoById(id);
     } else if (status === "cancelado") {
       notifyLembreteById(id, "cancelamento");
+      // Push cliente
+      if (ag?.user_id) {
+        sendPush({
+          role: "cliente",
+          user_id: ag.user_id,
+          title: "Agendamento cancelado",
+          message: `Seu ${ag.servico} de ${ag.data_agendamento} às ${ag.horario} foi cancelado.`,
+        });
+      }
     } else if (status === "concluido") {
       notifyLembreteById(id, "comparecimento");
       notifyLembreteById(id, "pos_atendimento");
@@ -495,6 +506,12 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         toast.success("Atendimento registrado com sucesso!");
         setShowManualRegister(false);
         notifyAgendamentoConfirmadoById((data as Agendamento).id);
+        sendPush({
+          role: "admin",
+          title: "🔔 Novo Agendamento!",
+          message: `${clienteNome || "Presencial"} — ${manualServico} em ${manualData} às ${manualHorario}`,
+          url: "/admin",
+        });
       }
     } catch (err: any) {
       toast.error("Erro ao registrar: " + (err.message || "Tente novamente"));

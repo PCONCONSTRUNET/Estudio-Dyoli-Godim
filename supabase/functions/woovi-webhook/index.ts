@@ -41,6 +41,25 @@ Deno.serve(async (req) => {
           console.error("Error updating agendamento:", error);
         } else {
           console.log("Agendamento updated successfully");
+          const { data: ag } = await supabase
+            .from("agendamentos")
+            .select("servico, cliente_nome")
+            .eq("id", correlationID)
+            .single();
+          if (ag) {
+            try {
+              await supabase.functions.invoke("send-push", {
+                body: {
+                  role: "admin",
+                  title: "💰 Pagamento confirmado!",
+                  message: `${ag.cliente_nome || "Cliente"} pagou R$ ${valuePaid.toFixed(2)} — ${ag.servico}`,
+                  url: "/admin",
+                },
+              });
+            } catch (e) {
+              console.warn("send-push failed:", e);
+            }
+          }
         }
       }
     }
