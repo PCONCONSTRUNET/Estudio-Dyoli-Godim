@@ -5,7 +5,7 @@ import { notifyAgendamentoConfirmadoById, notifyLembreteById } from "@/lib/notif
 import {
   BarChart3, Calendar, Users, Clock, Settings, LogOut, Search,
   X, Edit2, Trash2, Plus, Save, CheckCircle, Bell, MessageSquare,
-  UserX, DollarSign, CreditCard, ShoppingBag, Download, ChevronLeft, ChevronRight, Receipt, ClipboardList, Wallet, Timer, PlusCircle
+  UserX, DollarSign, CreditCard, ShoppingBag, Download, ChevronLeft, ChevronRight, Receipt, ClipboardList, Wallet, Timer, PlusCircle, Menu
 } from "lucide-react";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription
@@ -273,6 +273,7 @@ const Admin = () => {
 // ─── Admin Panel (Mobile First) ───
 const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [tab, setTab] = useState<Tab>("dashboard");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [clientes, setClientes] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -638,15 +639,63 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
       </aside>
 
       {/* ── Main content area ── */}
-      <div className="flex-1 pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-0 lg:ml-56">
+      <div className="flex-1 lg:ml-56">
         {/* Mobile top bar (hidden on desktop) */}
         <div className="sticky top-0 z-20 border-b border-primary-foreground/[0.06] bg-charcoal/90 backdrop-blur-xl lg:hidden">
           <div className="mx-auto flex w-full max-w-md items-center justify-between px-3 py-3 sm:px-4">
-            <div>
-              <h1 className="font-heading text-[16px] font-semibold text-primary-foreground">Admin</h1>
-              <p className="font-body text-[10px] text-primary-foreground/30">Estúdio Dyoli Godim</p>
+            <div className="flex items-center gap-2 min-w-0">
+              <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+                <SheetTrigger asChild>
+                  <button
+                    aria-label="Abrir menu"
+                    className="flex h-11 w-11 items-center justify-center rounded-2xl text-primary-foreground/60 transition-all hover:bg-gold/10 hover:text-gold"
+                  >
+                    <Menu className="h-5 w-5" />
+                  </button>
+                </SheetTrigger>
+                <SheetContent
+                  side="left"
+                  className="w-[82vw] max-w-[18rem] overflow-y-auto border-primary-foreground/[0.06] bg-charcoal p-0 flex flex-col"
+                >
+                  <div className="px-5 pt-5 pb-4 border-b border-primary-foreground/[0.06]">
+                    <h2 className="font-heading text-[16px] font-semibold text-primary-foreground">Admin</h2>
+                    <p className="font-body text-[11px] text-primary-foreground/30">Estúdio Dyoli Godim</p>
+                  </div>
+                  <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
+                    {tabs.map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => { setTab(t.id); setMobileNavOpen(false); }}
+                        className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 font-body text-[14px] font-medium transition-all ${
+                          tab === t.id
+                            ? "bg-gold/10 text-gold"
+                            : "text-primary-foreground/50 hover:bg-primary-foreground/[0.04] hover:text-primary-foreground/80"
+                        }`}
+                      >
+                        <t.icon className="h-[18px] w-[18px] shrink-0" />
+                        {t.label}
+                      </button>
+                    ))}
+                  </nav>
+                  <div className="px-3 py-3 border-t border-primary-foreground/[0.06]">
+                    <button
+                      onClick={() => { setMobileNavOpen(false); onLogout(); }}
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-3 font-body text-[14px] text-rose/70 hover:bg-rose/10 hover:text-rose transition-all"
+                    >
+                      <LogOut className="h-[18px] w-[18px] shrink-0" />
+                      Sair
+                    </button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+              <div className="min-w-0">
+                <h1 className="font-heading text-[15px] font-semibold text-primary-foreground truncate">
+                  {tabs.find(t => t.id === tab)?.label || "Admin"}
+                </h1>
+                <p className="font-body text-[10px] text-primary-foreground/30 truncate">Estúdio Dyoli Godim</p>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 shrink-0">
               <Sheet>
                 <SheetTrigger asChild>
                   <button className="flex h-11 w-11 items-center justify-center rounded-2xl text-primary-foreground/40 transition-all hover:bg-gold/10 hover:text-gold">
@@ -1486,27 +1535,6 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
           {tab === "servicos" && <ServicosTab />}
         </div>
       </div>
-
-      {/* Mobile bottom nav (hidden on desktop) */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-primary-foreground/[0.06] bg-charcoal/95 backdrop-blur-xl pb-[env(safe-area-inset-bottom)] lg:hidden">
-        <div
-          className="flex w-full items-stretch overflow-x-auto px-2 [-webkit-overflow-scrolling:touch]"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        >
-          {tabs.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`flex shrink-0 basis-[68px] flex-col items-center justify-center gap-1 px-1.5 py-2.5 transition-all ${
-                tab === t.id ? "text-gold" : "text-primary-foreground/40"
-              }`}
-            >
-              <t.icon className="h-[18px] w-[18px] shrink-0" />
-              <span className="font-body text-[10px] leading-tight whitespace-nowrap">{t.label}</span>
-            </button>
-          ))}
-        </div>
-      </nav>
     </div>
   );
 };
