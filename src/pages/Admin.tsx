@@ -273,6 +273,7 @@ const Admin = () => {
 // ─── Admin Panel (Mobile First) ───
 const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [tab, setTab] = useState<Tab>("dashboard");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [clientes, setClientes] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
