@@ -4,6 +4,7 @@ import { QRCodeSVG } from "qrcode.react";
 import pixIcon from "@/assets/pix-icon.svg";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { notifyAgendamentoConfirmado } from "@/lib/notify-webhook";
 
 interface BookingFlowProps {
   service: string;
@@ -327,6 +328,23 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       const realAgendamentoId = agData.id;
       setAgendamentoId(realAgendamentoId);
 
+      // Webhook de confirmação (background, não bloqueia o fluxo)
+      try {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("nome, whatsapp")
+          .eq("id", user.id)
+          .maybeSingle();
+        notifyAgendamentoConfirmado({
+          numero: prof?.whatsapp || "",
+          nome: prof?.nome || user.user_metadata?.nome || "",
+          data: selectedDate,
+          horario: selectedTime,
+        });
+      } catch (e) {
+        console.log("notify webhook skipped", e);
+      }
+
       // 2. Create payment with real agendamento_id
       const res = await supabase.functions.invoke("create-payment", {
         body: {
@@ -389,7 +407,24 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       duracao_minutos: serviceDuration,
     }).select("id").single();
 
-    if (agData) setAgendamentoId(agData.id);
+    if (agData) {
+      setAgendamentoId(agData.id);
+      try {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("nome, whatsapp")
+          .eq("id", user.id)
+          .maybeSingle();
+        notifyAgendamentoConfirmado({
+          numero: prof?.whatsapp || "",
+          nome: prof?.nome || user.user_metadata?.nome || "",
+          data: selectedDate,
+          horario: selectedTime,
+        });
+      } catch (e) {
+        console.log("notify webhook skipped", e);
+      }
+    }
     setPaymentData({ gateway: "local", method: "pix" });
     setPaymentExpiry(Date.now() + 5 * 60 * 1000);
     setTimeLeft(300);
