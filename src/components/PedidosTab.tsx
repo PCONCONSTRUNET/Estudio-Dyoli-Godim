@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, Trash2, CheckCircle, X, UserX, ChevronDown, ChevronUp, Bell, Clock, AlertTriangle, Eye } from "lucide-react";
+import { Search, Trash2, CheckCircle, X, UserX, ChevronDown, ChevronUp, Bell, Clock, AlertTriangle, Eye, MessageSquare } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ interface Agendamento {
   user_id: string;
   created_at: string;
   cliente_nome: string | null;
+  origem?: string | null;
 }
 
 interface Props {
@@ -396,7 +397,15 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                     <span className="font-heading text-[14px] font-bold text-gold">{a.horario}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-body text-[14px] font-medium text-primary-foreground truncate">{getClientName(a.user_id, a.cliente_nome)}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-body text-[14px] font-medium text-primary-foreground truncate">{getClientName(a.user_id, a.cliente_nome)}</p>
+                      {a.origem === "whatsapp_bot" && (
+                        <span title="Via WhatsApp" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-green-500/30 bg-green-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-green-400">
+                          <MessageSquare className="h-2.5 w-2.5" />
+                          WA
+                        </span>
+                      )}
+                    </div>
                     <p className="font-body text-[11px] text-primary-foreground/45 truncate">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
