@@ -307,9 +307,9 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
           { key: "cancelado", label: "Cancelados", color: "text-rose" },
           { key: "falta", label: "Faltas", color: "text-orange-400" },
         ] as const).map((s) => (
-          <div key={s.key} className="rounded-xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-2 text-center">
+          <div key={s.key} className="rounded-xl border border-gold/15 bg-gradient-to-br from-gold/[0.06] to-nude/[0.03] p-2 text-center shadow-[0_2px_8px_-4px_hsl(var(--gold)/0.15)]">
             <p className={`font-heading text-[16px] font-bold ${s.color}`}>{counts[s.key]}</p>
-            <p className="font-body text-[8px] text-primary-foreground/30 uppercase tracking-wider">{s.label}</p>
+            <p className="font-body text-[8px] text-primary-foreground/40 uppercase tracking-wider">{s.label}</p>
           </div>
         ))}
       </div>
@@ -377,23 +377,23 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
           {filtered.map((a) => {
             const isExpanded = expandedId === a.id;
             return (
-              <div key={a.id} className="rounded-xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] overflow-hidden transition-all">
+              <div key={a.id} className="rounded-xl border border-gold/15 bg-gradient-to-br from-gold/[0.05] via-primary-foreground/[0.02] to-nude/[0.03] overflow-hidden transition-all hover:border-gold/25 hover:shadow-[0_4px_16px_-8px_hsl(var(--gold)/0.25)]">
                 <button onClick={() => setExpandedId(isExpanded ? null : a.id)} className="flex w-full items-center gap-3 p-3 text-left">
-                  <div className="flex min-w-[52px] flex-col items-center rounded-xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] px-2 py-1.5">
-                    <span className="font-body text-[10px] text-primary-foreground/40">
+                  <div className="flex min-w-[52px] flex-col items-center rounded-xl border border-gold/25 bg-gradient-to-br from-gold/20 to-nude/10 px-2 py-1.5 shadow-[0_2px_10px_-4px_hsl(var(--gold)/0.3)]">
+                    <span className="font-body text-[10px] text-gold/70">
                       {new Date(a.data_agendamento + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
                     </span>
-                    <span className="font-heading text-[13px] font-semibold text-primary-foreground">{a.horario}</span>
+                    <span className="font-heading text-[14px] font-bold text-gold">{a.horario}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-body text-[13px] font-medium text-primary-foreground truncate">{getClientName(a.user_id, a.cliente_nome)}</p>
-                    <p className="font-body text-[11px] text-primary-foreground/35 truncate">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""}</p>
+                    <p className="font-body text-[14px] font-medium text-primary-foreground truncate">{getClientName(a.user_id, a.cliente_nome)}</p>
+                    <p className="font-body text-[11px] text-primary-foreground/45 truncate">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
-                    <p className="font-heading text-[13px] font-semibold text-gold">{formatCurrency(Number(a.valor))}</p>
+                    <p className="font-heading text-[14px] font-bold text-gold">{formatCurrency(Number(a.valor))}</p>
                     {statusBadge(a.status)}
                   </div>
-                  <ChevronDown className={`h-3.5 w-3.5 text-primary-foreground/20 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`h-3.5 w-3.5 text-primary-foreground/30 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                 </button>
 
                 {isExpanded && (
