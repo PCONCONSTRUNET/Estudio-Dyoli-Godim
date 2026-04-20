@@ -202,7 +202,6 @@ const Cuidados = () => {
                 value="m3"
                 question="Quanto tempo dura?"
                 answer="A micropigmentação dura de 1 a 3 anos, dependendo do tipo de pele, exposição solar, cuidados e técnica utilizada. Peles oleosas tendem a durar menos."
-answer
               />
               <FaqItem
                 value="m4"
