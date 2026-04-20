@@ -7,14 +7,30 @@
     <title>Estúdio Dyoli Godim Agenda</title>
     <meta name="description" content="Procedimentos estéticos com segurança e precisão. Micropigmentação fio a fio, labial e perfuração corporal.">
     <meta name="author" content="Studio Dyoli Godim" />
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" id="app-manifest" href="/manifest.json" />
     <meta name="theme-color" content="#d4a0a0" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Dyoli Godim" />
+    <meta name="apple-mobile-web-app-title" id="apple-app-title" content="Dyoli Godim" />
     <meta name="mobile-web-app-capable" content="yes" />
     <link rel="apple-touch-icon" href="/icon-512.png" />
     <link rel="icon" href="/icon-512.png" type="image/png" />
+    <script>
+      // Swap manifest BEFORE the browser parses it for "Add to Home Screen".
+      // Runs synchronously in <head> so Chrome/Safari pick up the right manifest on first read.
+      (function () {
+        try {
+          var path = window.location.pathname || "";
+          if (path.indexOf("/admin") === 0) {
+            var m = document.getElementById("app-manifest");
+            if (m) m.setAttribute("href", "/manifest-admin.json");
+            var t = document.getElementById("apple-app-title");
+            if (t) t.setAttribute("content", "Dyoli Admin");
+            document.title = "Dyoli Godim — Admin";
+          }
+        } catch (e) {}
+      })();
+    </script>
     
     
     <meta property="og:type" content="website" />
