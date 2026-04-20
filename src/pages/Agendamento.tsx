@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ChevronRight, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, ChevronRight, Loader2, Sparkles, Folder } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import BookingFlow from "@/components/BookingFlow";
 import SuccessScreen from "@/components/SuccessScreen";
 import logo from "@/assets/logo.png";
 
-type Step = "identificacao" | "servico" | "booking" | "sucesso";
+type Step = "identificacao" | "categoria" | "servico" | "booking" | "sucesso";
 
 interface Servico {
   id: string;
