@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Sparkles, Droplet, Palette, Heart, AlertTriangle, Check, X } from "lucide-react";
+import { ArrowLeft, Sparkles, Droplet, Palette, Heart, AlertTriangle, Check, X, Siren } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
@@ -95,9 +95,9 @@ const Cuidados = () => {
                 "Use roupas leves de algodão pra pele respirar",
               ]}
               donts={[
-                "Nada de sol direto na região por 30 dias — protetor é seu amigo!",
+                { text: "Nada de sol direto na região por 30 dias — protetor é seu amigo!", critical: true },
                 "Sem piscina, praia ou banheira nos primeiros 15 dias",
-                "Não coce, não cutuque e nem arranque as casquinhas — promete?",
+                { text: "Não coce, não cutuque e nem arranque as casquinhas — promete?", critical: true },
                 "Esqueça bucha, esfoliante e álcool na região",
               ]}
             />
@@ -143,8 +143,8 @@ const Cuidados = () => {
                 "Mantenha cabelo, mãos e maquiagem longe do piercing",
               ]}
               donts={[
-                "Não tire a joia antes da cicatrização completa, mesmo que esteja tudo bem",
-                "Sem álcool, água oxigenada ou pomada por conta própria",
+                { text: "Não tire a joia antes da cicatrização completa, mesmo que esteja tudo bem", critical: true },
+                { text: "Sem álcool, água oxigenada ou pomada por conta própria", critical: true },
                 "Não fique girando, mexendo ou brincando com o piercing",
                 "Evite piscina, mar e banheira nos primeiros 30 dias",
               ]}
@@ -192,9 +192,9 @@ const Cuidados = () => {
               ]}
               donts={[
                 "Não molhe a região por 24h depois do procedimento",
-                "Sol direto por 30 dias é proibido — pode desbotar tudo",
+                { text: "Sol direto por 30 dias é proibido — pode desbotar tudo", critical: true },
                 "Sem maquiagem na região por 7 dias inteiros",
-                "Não puxe as casquinhas, senão arranca o pigmento junto",
+                { text: "Não puxe as casquinhas, senão arranca o pigmento junto", critical: true },
               ]}
             />
 
@@ -281,7 +281,9 @@ const SectionTitle = ({ icon, title }: { icon: React.ReactNode; title: string })
   </div>
 );
 
-const DoDontGrid = ({ dos, donts }: { dos: string[]; donts: string[] }) => (
+type DontItem = string | { text: string; critical?: boolean };
+
+const DoDontGrid = ({ dos, donts }: { dos: string[]; donts: DontItem[] }) => (
   <div className="grid md:grid-cols-2 gap-3">
     <div className="p-5 rounded-xl bg-gradient-to-br from-emerald-500/[0.14] to-emerald-500/[0.04] border border-emerald-500/30 shadow-[0_4px_16px_-8px_rgba(16,185,129,0.2)]">
       <div className="flex items-center gap-2 mb-3 text-emerald-300">
@@ -308,12 +310,36 @@ const DoDontGrid = ({ dos, donts }: { dos: string[]; donts: string[] }) => (
         <h3 className="text-sm font-extrabold uppercase tracking-wider text-red-100">Evite</h3>
       </div>
       <ul className="space-y-2.5">
-        {donts.map((item, i) => (
-          <li key={i} className="text-white text-[14px] flex gap-2.5 leading-relaxed font-medium">
-            <X className="w-4 h-4 text-red-400 shrink-0 mt-0.5" strokeWidth={3.5} />
-            <span>{item}</span>
-          </li>
-        ))}
+        {donts.map((item, i) => {
+          const isObj = typeof item === "object";
+          const text = isObj ? item.text : item;
+          const critical = isObj && item.critical;
+          return (
+            <li
+              key={i}
+              className={`text-white text-[14px] flex gap-2.5 leading-relaxed font-medium ${
+                critical ? "bg-red-600/20 border border-red-500/40 rounded-lg p-2 -mx-1" : ""
+              }`}
+            >
+              {critical ? (
+                <Siren
+                  className="w-4 h-4 text-red-300 shrink-0 mt-0.5 animate-pulse"
+                  strokeWidth={2.5}
+                />
+              ) : (
+                <X className="w-4 h-4 text-red-400 shrink-0 mt-0.5" strokeWidth={3.5} />
+              )}
+              <span>
+                {critical && (
+                  <span className="text-red-300 font-bold uppercase text-[10px] tracking-wider mr-1.5">
+                    Crítico
+                  </span>
+                )}
+                {text}
+              </span>
+            </li>
+          );
+        })}
       </ul>
     </div>
   </div>
