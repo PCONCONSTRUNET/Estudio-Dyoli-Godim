@@ -221,35 +221,35 @@ const Admin = () => {
     document.documentElement.classList.add("admin-mobile-page");
     document.body.classList.add("admin-mobile-page");
 
-    // Swap PWA manifest so "Add to Home Screen" installs the /admin app (not the public site)
     const link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
-    const previousHref = link?.getAttribute("href") ?? "/manifest.json";
-    if (link) link.setAttribute("href", "/manifest-admin.json");
-
-    // Update tab title + theme so the home-screen icon picks up the right name
-    const previousTitle = document.title;
-    document.title = "Dyoli Godim — Admin";
     const appleTitle = document.querySelector<HTMLMetaElement>('meta[name="apple-mobile-web-app-title"]');
+    const applicationName = document.querySelector<HTMLMetaElement>('meta[name="application-name"]');
+    const appleIcon = document.querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]');
+    const appIcon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+
+    const previousHref = link?.getAttribute("href") ?? "/manifest.json";
+    const previousTitle = document.title;
     const previousAppleTitle = appleTitle?.getAttribute("content") ?? null;
-    if (appleTitle) {
-      appleTitle.setAttribute("content", "Dyoli Admin");
-    } else {
-      const meta = document.createElement("meta");
-      meta.name = "apple-mobile-web-app-title";
-      meta.content = "Dyoli Admin";
-      document.head.appendChild(meta);
-    }
+    const previousApplicationName = applicationName?.getAttribute("content") ?? null;
+    const previousAppleIcon = appleIcon?.getAttribute("href") ?? null;
+    const previousAppIcon = appIcon?.getAttribute("href") ?? null;
+
+    if (link) link.setAttribute("href", "/manifest-admin.json?v=2");
+    document.title = "Dyoli Admin";
+    appleTitle?.setAttribute("content", "Dyoli Admin");
+    applicationName?.setAttribute("content", "Dyoli Admin");
+    appleIcon?.setAttribute("href", "/icon-admin-512.png?v=2");
+    appIcon?.setAttribute("href", "/icon-admin-512.png?v=2");
 
     return () => {
       document.documentElement.classList.remove("admin-mobile-page");
       document.body.classList.remove("admin-mobile-page");
       if (link) link.setAttribute("href", previousHref);
       document.title = previousTitle;
-      if (appleTitle && previousAppleTitle !== null) {
-        appleTitle.setAttribute("content", previousAppleTitle);
-      } else {
-        document.querySelector('meta[name="apple-mobile-web-app-title"][content="Dyoli Admin"]')?.remove();
-      }
+      if (appleTitle && previousAppleTitle !== null) appleTitle.setAttribute("content", previousAppleTitle);
+      if (applicationName && previousApplicationName !== null) applicationName.setAttribute("content", previousApplicationName);
+      if (appleIcon && previousAppleIcon !== null) appleIcon.setAttribute("href", previousAppleIcon);
+      if (appIcon && previousAppIcon !== null) appIcon.setAttribute("href", previousAppIcon);
     };
   }, []);
 

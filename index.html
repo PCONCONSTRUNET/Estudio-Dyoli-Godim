@@ -12,21 +12,27 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" id="apple-app-title" content="Dyoli Godim" />
+    <meta name="application-name" id="application-name" content="Dyoli Godim" />
     <meta name="mobile-web-app-capable" content="yes" />
     <link rel="apple-touch-icon" id="apple-touch-icon" href="/icon-512.png" />
-    <link rel="icon" href="/icon-512.png" type="image/png" />
+    <link rel="icon" id="app-icon" href="/icon-512.png" type="image/png" />
     <script>
-      // Swap PWA identity BEFORE Safari/Chrome read the head for "Add to Home Screen".
-      // iOS ignores manifest.json — it uses apple-mobile-web-app-title + apple-touch-icon.
       (function () {
         try {
           var path = window.location.pathname || "";
           var isAdmin = path.indexOf("/admin") === 0;
+          var manifest = document.getElementById("app-manifest");
+          var appleTitle = document.getElementById("apple-app-title");
+          var appName = document.getElementById("application-name");
+          var appleIcon = document.getElementById("apple-touch-icon");
+          var appIcon = document.getElementById("app-icon");
+
           if (isAdmin) {
-            var m = document.getElementById("app-manifest");
-            if (m) m.setAttribute("href", "/manifest-admin.json");
-            var t = document.getElementById("apple-app-title");
-            if (t) t.setAttribute("content", "Dyoli Admin");
+            if (manifest) manifest.setAttribute("href", "/manifest-admin.json?v=2");
+            if (appleTitle) appleTitle.setAttribute("content", "Dyoli Admin");
+            if (appName) appName.setAttribute("content", "Dyoli Admin");
+            if (appleIcon) appleIcon.setAttribute("href", "/icon-admin-512.png?v=2");
+            if (appIcon) appIcon.setAttribute("href", "/icon-admin-512.png?v=2");
             document.title = "Dyoli Admin";
           } else {
             document.title = "Estúdio Dyoli Godim";
