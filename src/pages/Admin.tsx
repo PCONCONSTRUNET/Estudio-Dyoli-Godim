@@ -1085,6 +1085,23 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
                                   {statusBadge(a.status)}
                                   {pagamentoBadge(a)}
+                                  {a.origem === "whatsapp_bot" && (
+                                    <span
+                                      className="inline-flex items-center gap-1 rounded-full border border-green-500/30 bg-green-500/10 px-2 py-0.5 font-body text-[10px] font-semibold uppercase tracking-wide text-green-400"
+                                      title="Agendamento feito pelo chatbot do WhatsApp"
+                                    >
+                                      <MessageSquare className="h-2.5 w-2.5" />
+                                      WhatsApp
+                                    </span>
+                                  )}
+                                  {a.origem === "admin_manual" && (
+                                    <span
+                                      className="inline-flex items-center gap-1 rounded-full border border-gold/30 bg-gold/10 px-2 py-0.5 font-body text-[10px] font-semibold uppercase tracking-wide text-gold"
+                                      title="Cadastro manual feito no admin"
+                                    >
+                                      Presencial
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             </div>
