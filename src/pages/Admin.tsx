@@ -918,8 +918,34 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                     </div>
                   ) : (
                     <div className="space-y-2.5 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
-                      {selectedAgendaItems.map((a) => (
-                        <article key={a.id} className="group/card rounded-2xl border border-primary-foreground/10 bg-gradient-to-br from-primary-foreground/[0.07] to-primary-foreground/[0.03] p-4 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.4)] transition-all hover:border-gold/25 hover:shadow-[0_8px_28px_-10px_hsl(var(--gold)/0.2)]">
+                      {selectedAgendaItems.map((a) => {
+                        const valorPago = Number(a.valor_pago || 0);
+                        const valorTotal = Number(a.valor);
+                        const isCancelado = a.status === "cancelado" || a.status === "falta";
+                        const isPagoIntegral = !isCancelado && valorPago >= valorTotal && valorTotal > 0;
+                        const isPagoParcial = !isCancelado && valorPago > 0 && valorPago < valorTotal;
+                        const isNaoPago = !isCancelado && valorPago === 0;
+
+                        const barColor = isCancelado
+                          ? "bg-primary-foreground/15"
+                          : isPagoIntegral
+                          ? "bg-gradient-to-b from-green-400 to-green-600 shadow-[0_0_12px_-2px_rgba(34,197,94,0.6)]"
+                          : isPagoParcial
+                          ? "bg-gradient-to-b from-gold to-nude shadow-[0_0_12px_-2px_hsl(var(--gold)/0.6)]"
+                          : "bg-gradient-to-b from-red-400 to-red-600 shadow-[0_0_12px_-2px_rgba(239,68,68,0.5)]";
+
+                        const barLabel = isCancelado
+                          ? a.status === "falta" ? "Falta" : "Cancelado"
+                          : isPagoIntegral
+                          ? "Pago"
+                          : isPagoParcial
+                          ? "Sinal"
+                          : "Não pago";
+
+                        return (
+                        <article key={a.id} className="group/card relative overflow-hidden rounded-2xl border border-primary-foreground/10 bg-gradient-to-br from-primary-foreground/[0.07] to-primary-foreground/[0.03] p-4 pl-5 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.4)] transition-all hover:border-gold/25 hover:shadow-[0_8px_28px_-10px_hsl(var(--gold)/0.2)]">
+                          {/* Status bar lateral */}
+                          <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${barColor}`} aria-label={barLabel} title={`Pagamento: ${barLabel}`} />
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex min-w-0 flex-1 items-start gap-3">
                               <div className="flex min-w-[60px] flex-col items-center rounded-2xl border border-gold/25 bg-gradient-to-br from-gold/15 to-gold/5 px-2 py-2.5 shadow-[0_2px_10px_-4px_hsl(var(--gold)/0.3)]">
@@ -1022,7 +1048,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                             </div>
                           </div>
                         </article>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
