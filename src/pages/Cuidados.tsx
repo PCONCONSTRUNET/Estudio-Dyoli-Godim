@@ -4,7 +4,7 @@ import { ArrowLeft, Sparkles, Droplet, Palette, Heart, AlertTriangle, Check, X }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
-const WHATSAPP_NUMBER = "5511999999999"; // ajuste com o WhatsApp real da Dyoli
+const WHATSAPP_NUMBER = "5548999779829"; // WhatsApp da Dyoli
 
 // Ícone oficial do WhatsApp (SVG fiel à marca)
 const WhatsAppIcon = ({ className }: { className?: string }) => (
