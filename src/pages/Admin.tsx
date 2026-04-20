@@ -31,6 +31,7 @@ interface Agendamento {
   horario: string; valor: number; valor_pago: number | null; status: string;
   created_at: string; user_id: string; duracao_minutos: number; forma_pagamento: string | null;
   cliente_nome: string | null;
+  origem?: string | null;
 }
 interface Profile { id: string; nome: string; whatsapp: string; created_at: string; }
 interface LembreteConfig { id: string; tipo: string; ativo: boolean; mensagem: string; horas_antes: number; }
@@ -524,6 +525,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         forma_pagamento: manualFormaPagamento,
         user_id: userId,
         cliente_nome: clienteNome || null,
+        origem: "admin_manual",
       } as any).select().single();
       
       if (error) throw error;

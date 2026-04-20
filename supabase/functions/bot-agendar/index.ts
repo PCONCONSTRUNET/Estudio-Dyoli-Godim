@@ -189,6 +189,7 @@ Deno.serve(async (req) => {
         duracao_minutos: duracao,
         forma_pagamento: forma_pagamento ?? "pix",
         status: "confirmado",
+        origem: "whatsapp_bot",
       })
       .select()
       .single();
