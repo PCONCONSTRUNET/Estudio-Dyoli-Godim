@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, User, Calendar, Clock, LogOut, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { notifyLembreteById } from "@/lib/notify-webhook";
 import professionalImg from "@/assets/professional.png";
 
 interface ProfileScreenProps {
@@ -55,6 +56,7 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
     setCancelling(id);
     await supabase.from("agendamentos").update({ status: "cancelado" }).eq("id", id);
     setAgendamentos(prev => prev.map(a => a.id === id ? { ...a, status: "cancelado" } : a));
+    notifyLembreteById(id, "cancelamento");
     setCancelling(null);
   };
 
