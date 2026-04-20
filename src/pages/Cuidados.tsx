@@ -250,21 +250,19 @@ const Cuidados = () => {
           </div>
         </div>
 
-        {/* CTA WhatsApp - cor oficial e ícone oficial */}
+        {/* CTA Agendamento pelo site */}
         <a
-          href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-            "Oi Dyoli! Tenho uma dúvida sobre os cuidados pós-procedimento."
-          )}`}
+          href="https://www.estudiodyoligodim.com.br"
           target="_blank"
           rel="noopener noreferrer"
-          className="ios-press mt-6 flex items-center justify-center gap-3 w-full py-4 rounded-xl bg-[#25D366] hover:bg-[#1ebe57] text-white font-semibold text-[16px] shadow-[0_8px_30px_-10px_rgba(37,211,102,0.6)] transition-all"
+          className="ios-press mt-6 flex items-center justify-center gap-3 w-full py-4 rounded-xl bg-gradient-to-br from-gold to-nude text-charcoal font-semibold text-[16px] shadow-[0_8px_30px_-10px_hsl(var(--gold)/0.6)] hover:shadow-[0_12px_40px_-10px_hsl(var(--gold)/0.8)] transition-all"
         >
-          <WhatsAppIcon className="w-6 h-6" />
-          Falar com a Dyoli no WhatsApp
+          <Sparkles className="w-5 h-5" />
+          Agende pelo nosso site
         </a>
 
-        <p className="mt-3 text-center text-primary-foreground/60 text-xs">
-          Resposta rápida, geralmente em poucos minutos
+        <p className="mt-3 text-center text-primary-foreground/70 text-xs">
+          www.estudiodyoligodim.com.br
         </p>
 
         <footer className="mt-10 text-center text-primary-foreground/50 text-xs">
