@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { notifyAgendamentoConfirmadoById } from "@/lib/notify-webhook";
+import { notifyAgendamentoConfirmadoById, notifyLembreteById } from "@/lib/notify-webhook";
 import {
   BarChart3, Calendar, Users, Clock, Settings, LogOut, Search,
   X, Edit2, Trash2, Plus, Save, CheckCircle, Bell, MessageSquare,
@@ -351,6 +351,11 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setAgendamentos((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
     if (status === "confirmado") {
       notifyAgendamentoConfirmadoById(id);
+    } else if (status === "cancelado") {
+      notifyLembreteById(id, "cancelamento");
+    } else if (status === "concluido") {
+      notifyLembreteById(id, "comparecimento");
+      notifyLembreteById(id, "pos_atendimento");
     }
   };
 

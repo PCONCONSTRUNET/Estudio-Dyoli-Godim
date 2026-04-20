@@ -3,7 +3,7 @@ import { Search, Trash2, CheckCircle, X, UserX, ChevronDown, ChevronUp, Bell, Cl
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { notifyAgendamentoConfirmadoById } from "@/lib/notify-webhook";
+import { notifyAgendamentoConfirmadoById, notifyLembreteById } from "@/lib/notify-webhook";
 
 interface Agendamento {
   id: string;
@@ -146,6 +146,12 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     toast.success(`Status atualizado para ${status}`);
     if (status === "confirmado") {
       notifyAgendamentoConfirmadoById(id);
+    } else if (status === "cancelado") {
+      notifyLembreteById(id, "cancelamento");
+    } else if (status === "concluido") {
+      notifyLembreteById(id, "comparecimento");
+      // schedule a follow-up message; respects ativo flag in DB
+      notifyLembreteById(id, "pos_atendimento");
     }
   };
 
