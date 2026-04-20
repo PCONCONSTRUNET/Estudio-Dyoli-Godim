@@ -34,6 +34,7 @@ const Agendamento = () => {
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [loadingServicos, setLoadingServicos] = useState(false);
   const [servicoSelecionado, setServicoSelecionado] = useState<Servico | null>(null);
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState<string | null>(null);
 
   // Não mistura com sessão pré-existente do site (cliente público)
   useEffect(() => {
@@ -74,7 +75,7 @@ const Agendamento = () => {
       // Mantém o nome cadastrado se já existia
       if (data.cliente?.nome) setNome(data.cliente.nome);
       await loadServicos();
-      setStep("servico");
+      setStep("categoria");
     } catch (err) {
       console.error(err);
       toast.error("Erro ao identificar. Tente novamente.");
@@ -106,6 +107,19 @@ const Agendamento = () => {
     setServicoSelecionado(null);
     setStep("servico");
   };
+
+  // Lista única de categorias com contagem
+  const categorias = Array.from(
+    servicos.reduce((map, s) => {
+      const cat = s.categoria || "Outros";
+      map.set(cat, (map.get(cat) || 0) + 1);
+      return map;
+    }, new Map<string, number>())
+  ).map(([nome, count]) => ({ nome, count }));
+
+  const servicosDaCategoria = categoriaSelecionada
+    ? servicos.filter((s) => (s.categoria || "Outros") === categoriaSelecionada)
+    : [];
 
   // ─── Sucesso ─────────────────────────────────────────────────────────
   if (step === "sucesso") {
