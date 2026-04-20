@@ -424,6 +424,14 @@ const AdminDashboard = ({
             🔔 Testar som
           </button>
         </div>
+
+        {/* Push nativo no celular (PWA) */}
+        <div className="mt-3 pt-3 border-t border-primary-foreground/[0.06]">
+          <PushToggle role="admin" variant="default" />
+          <p className="font-body text-[10px] text-primary-foreground/30 mt-2">
+            Para receber alertas com o app fechado, instale na tela inicial e ative aqui.
+          </p>
+        </div>
       </div>
     </div>
   );
