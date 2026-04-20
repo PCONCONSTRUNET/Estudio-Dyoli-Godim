@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Calendar, Clock, CheckCircle2, Copy, Check, CreditCard, FileText, Loader2, ExternalLink } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, CheckCircle2, Copy, Check, CreditCard, FileText, Loader2, ExternalLink, Info } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import pixIcon from "@/assets/pix-icon.svg";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { notifyAgendamentoConfirmado } from "@/lib/notify-webhook";
@@ -576,7 +577,31 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
                   <span className={`absolute top-2.5 right-2.5 w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMode === "deposit" ? "border-gold bg-gold" : "border-muted-foreground/40"}`}>
                     {paymentMode === "deposit" && <Check className="w-2.5 h-2.5 text-charcoal" strokeWidth={3} />}
                   </span>
-                  <span className="block">Pagar Sinal</span>
+                  <span className="flex items-center gap-1.5">
+                    <span>Pagar Sinal</span>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <span
+                          role="button"
+                          tabIndex={0}
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => e.stopPropagation()}
+                          className="inline-flex items-center justify-center w-4 h-4 rounded-full text-muted-foreground hover:text-gold transition-colors cursor-pointer"
+                          aria-label="Mais informações sobre o sinal"
+                        >
+                          <Info className="w-3.5 h-3.5" />
+                        </span>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        side="top"
+                        align="start"
+                        className="w-64 text-[12px] font-body font-normal leading-relaxed"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Você paga 30% agora para garantir o horário. Os 70% restantes são pagos no dia do atendimento, no estúdio.
+                      </PopoverContent>
+                    </Popover>
+                  </span>
                   <span className={`block text-[12px] font-normal mt-1 ${paymentMode === "deposit" ? "text-gold" : "text-muted-foreground/80"}`}>{depositAmount}</span>
                 </button>
                 <button
