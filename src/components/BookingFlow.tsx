@@ -6,6 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { notifyAgendamentoConfirmado } from "@/lib/notify-webhook";
+import { sendPush } from "@/lib/push-notify";
 
 interface BookingFlowProps {
   service: string;
@@ -342,6 +343,13 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
           data: selectedDate,
           horario: selectedTime,
         });
+        // Push nativo pra admin
+        sendPush({
+          role: "admin",
+          title: "🔔 Novo Agendamento!",
+          message: `${prof?.nome || "Cliente"} — ${service} em ${selectedDate} às ${selectedTime}`,
+          url: "/admin",
+        });
       } catch (e) {
         console.log("notify webhook skipped", e);
       }
@@ -421,6 +429,12 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
           nome: prof?.nome || user.user_metadata?.nome || "",
           data: selectedDate,
           horario: selectedTime,
+        });
+        sendPush({
+          role: "admin",
+          title: "🔔 Novo Agendamento!",
+          message: `${prof?.nome || "Cliente"} — ${service} em ${selectedDate} às ${selectedTime}`,
+          url: "/admin",
         });
       } catch (e) {
         console.log("notify webhook skipped", e);

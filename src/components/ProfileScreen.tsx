@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { User, Calendar, Clock, LogOut, X, Sparkles, Cake, TrendingUp, Award, Pencil, Check, Heart, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyLembreteById } from "@/lib/notify-webhook";
+import PushToggle from "@/components/PushToggle";
 import professionalImg from "@/assets/professional.png";
 
 interface ProfileScreenProps {
