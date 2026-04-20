@@ -13,20 +13,23 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" id="apple-app-title" content="Dyoli Godim" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <link rel="apple-touch-icon" href="/icon-512.png" />
+    <link rel="apple-touch-icon" id="apple-touch-icon" href="/icon-512.png" />
     <link rel="icon" href="/icon-512.png" type="image/png" />
     <script>
-      // Swap manifest BEFORE the browser parses it for "Add to Home Screen".
-      // Runs synchronously in <head> so Chrome/Safari pick up the right manifest on first read.
+      // Swap PWA identity BEFORE Safari/Chrome read the head for "Add to Home Screen".
+      // iOS ignores manifest.json — it uses apple-mobile-web-app-title + apple-touch-icon.
       (function () {
         try {
           var path = window.location.pathname || "";
-          if (path.indexOf("/admin") === 0) {
+          var isAdmin = path.indexOf("/admin") === 0;
+          if (isAdmin) {
             var m = document.getElementById("app-manifest");
             if (m) m.setAttribute("href", "/manifest-admin.json");
             var t = document.getElementById("apple-app-title");
             if (t) t.setAttribute("content", "Dyoli Admin");
-            document.title = "Dyoli Godim — Admin";
+            document.title = "Dyoli Admin";
+          } else {
+            document.title = "Estúdio Dyoli Godim";
           }
         } catch (e) {}
       })();
