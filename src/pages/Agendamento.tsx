@@ -164,8 +164,8 @@ const Agendamento = () => {
     );
   }
 
-  // ─── Seleção de serviço ──────────────────────────────────────────────
-  if (step === "servico") {
+  // ─── Seleção de categoria ────────────────────────────────────────────
+  if (step === "categoria") {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -183,10 +183,10 @@ const Agendamento = () => {
               Olá, {nome.split(" ")[0]} 🌸
             </p>
             <h2 className="font-heading text-3xl font-semibold text-foreground">
-              Escolha o serviço
+              Escolha a categoria
             </h2>
             <p className="font-body text-[13px] text-muted-foreground">
-              Selecione o procedimento que deseja agendar
+              Comece selecionando o tipo de procedimento
             </p>
           </div>
 
@@ -194,13 +194,76 @@ const Agendamento = () => {
             <div className="flex justify-center py-12">
               <Loader2 className="w-6 h-6 animate-spin text-gold" />
             </div>
-          ) : servicos.length === 0 ? (
+          ) : categorias.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground font-body text-[13px]">
               Nenhum serviço disponível no momento.
             </div>
           ) : (
             <div className="space-y-3">
-              {servicos.map((s) => (
+              {categorias.map((c) => (
+                <button
+                  key={c.nome}
+                  onClick={() => {
+                    setCategoriaSelecionada(c.nome);
+                    setStep("servico");
+                  }}
+                  className="ios-press w-full text-left p-4 rounded-2xl border border-border/60 bg-card/70 hover:border-gold/30 hover:bg-card transition-all flex items-center gap-3"
+                >
+                  <div className="w-11 h-11 rounded-xl bg-gold/10 flex items-center justify-center flex-shrink-0">
+                    <Folder className="w-5 h-5 text-gold" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-body text-[14px] font-medium text-foreground truncate">{c.nome}</p>
+                    <p className="font-body text-[12px] text-muted-foreground mt-0.5">
+                      {c.count} {c.count === 1 ? "serviço" : "serviços"}
+                    </p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+    );
+  }
+
+  // ─── Seleção de serviço ──────────────────────────────────────────────
+  if (step === "servico") {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <section className="mx-auto max-w-md lg:max-w-2xl px-6 py-8">
+          <button
+            onClick={() => {
+              setCategoriaSelecionada(null);
+              setStep("categoria");
+            }}
+            className="ios-press flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="font-body text-[14px]">Voltar</span>
+          </button>
+
+          <div className="space-y-2 mb-7">
+            <p className="font-body text-[11px] tracking-widest uppercase text-gold font-medium">
+              {categoriaSelecionada}
+            </p>
+            <h2 className="font-heading text-3xl font-semibold text-foreground">
+              Escolha o serviço
+            </h2>
+            <p className="font-body text-[13px] text-muted-foreground">
+              Selecione o procedimento que deseja agendar
+            </p>
+          </div>
+
+          {servicosDaCategoria.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground font-body text-[13px]">
+              Nenhum serviço nesta categoria.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {servicosDaCategoria.map((s) => (
                 <button
                   key={s.id}
                   onClick={() => handleSelectService(s)}
