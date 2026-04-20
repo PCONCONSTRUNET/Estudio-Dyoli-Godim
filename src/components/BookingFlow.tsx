@@ -42,7 +42,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [step, setStep] = useState<"date" | "confirm" | "payment" | "waiting">("date");
   const [copied, setCopied] = useState(false);
-  const [paymentMode, setPaymentMode] = useState<"deposit" | "full">("deposit");
+  const [paymentMode, setPaymentMode] = useState<"deposit" | "full">("full");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"pix" | "cartao" | "boleto">("pix");
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentData, setPaymentData] = useState<PaymentResponse | null>(null);
@@ -495,35 +495,61 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
 
         {/* Payment method selector */}
         <div className="w-full max-w-sm mt-6 lg:mx-auto">
-          <p className="font-body text-[11px] text-muted-foreground uppercase tracking-widest font-medium mb-3 text-left">Forma de pagamento</p>
-          <div className="space-y-2">
+          <p className="font-body text-[11px] text-muted-foreground uppercase tracking-widest font-medium mb-2.5 text-left">
+            Forma de pagamento <span className="text-rose normal-case tracking-normal text-[11px] font-normal">(toque para escolher)</span>
+          </p>
+          <div className="space-y-2.5">
             {availableMethods.pix && (
-              <button onClick={() => setSelectedPaymentMethod("pix")}
-                className={`ios-press w-full flex items-center gap-3 p-3.5 rounded-2xl border transition-all ${selectedPaymentMethod === "pix" ? "border-gold/40 bg-gold/5" : "border-border/50 bg-card/60 hover:border-gold/20"}`}>
+              <button
+                type="button"
+                onClick={() => setSelectedPaymentMethod("pix")}
+                aria-pressed={selectedPaymentMethod === "pix"}
+                className={`ios-press w-full flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all ${
+                  selectedPaymentMethod === "pix"
+                    ? "border-gold bg-gold/10 shadow-[0_4px_18px_-6px_hsl(40_40%_55%/0.45)]"
+                    : "border-border/60 bg-card hover:border-gold/40 hover:bg-gold/5"
+                }`}
+              >
                 <img src={pixIcon} alt="PIX" className="w-6 h-6" />
-                <div className="text-left"><p className="font-body text-[13px] font-medium text-foreground">PIX</p><p className="font-body text-[11px] text-muted-foreground">Pagamento instantâneo</p></div>
-                <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedPaymentMethod === "pix" ? "border-gold bg-gold" : "border-muted-foreground/30"}`}>
-                  {selectedPaymentMethod === "pix" && <Check className="w-3 h-3 text-charcoal" />}
+                <div className="text-left"><p className="font-body text-[13px] font-semibold text-foreground">PIX</p><p className="font-body text-[11px] text-muted-foreground">Pagamento instantâneo</p></div>
+                <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedPaymentMethod === "pix" ? "border-gold bg-gold" : "border-muted-foreground/40"}`}>
+                  {selectedPaymentMethod === "pix" && <Check className="w-3 h-3 text-charcoal" strokeWidth={3} />}
                 </div>
               </button>
             )}
             {availableMethods.cartao && (
-              <button onClick={() => setSelectedPaymentMethod("cartao")}
-                className={`ios-press w-full flex items-center gap-3 p-3.5 rounded-2xl border transition-all ${selectedPaymentMethod === "cartao" ? "border-gold/40 bg-gold/5" : "border-border/50 bg-card/60 hover:border-gold/20"}`}>
-                <CreditCard className="w-6 h-6 text-muted-foreground" />
-                <div className="text-left"><p className="font-body text-[13px] font-medium text-foreground">Cartão de Crédito</p><p className="font-body text-[11px] text-muted-foreground">Até 6x sem juros</p></div>
-                <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedPaymentMethod === "cartao" ? "border-gold bg-gold" : "border-muted-foreground/30"}`}>
-                  {selectedPaymentMethod === "cartao" && <Check className="w-3 h-3 text-charcoal" />}
+              <button
+                type="button"
+                onClick={() => setSelectedPaymentMethod("cartao")}
+                aria-pressed={selectedPaymentMethod === "cartao"}
+                className={`ios-press w-full flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all ${
+                  selectedPaymentMethod === "cartao"
+                    ? "border-gold bg-gold/10 shadow-[0_4px_18px_-6px_hsl(40_40%_55%/0.45)]"
+                    : "border-border/60 bg-card hover:border-gold/40 hover:bg-gold/5"
+                }`}
+              >
+                <CreditCard className={`w-6 h-6 ${selectedPaymentMethod === "cartao" ? "text-gold" : "text-muted-foreground"}`} />
+                <div className="text-left"><p className="font-body text-[13px] font-semibold text-foreground">Cartão de Crédito</p><p className="font-body text-[11px] text-muted-foreground">Até 6x sem juros</p></div>
+                <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedPaymentMethod === "cartao" ? "border-gold bg-gold" : "border-muted-foreground/40"}`}>
+                  {selectedPaymentMethod === "cartao" && <Check className="w-3 h-3 text-charcoal" strokeWidth={3} />}
                 </div>
               </button>
             )}
             {availableMethods.boleto && (
-              <button onClick={() => setSelectedPaymentMethod("boleto")}
-                className={`ios-press w-full flex items-center gap-3 p-3.5 rounded-2xl border transition-all ${selectedPaymentMethod === "boleto" ? "border-gold/40 bg-gold/5" : "border-border/50 bg-card/60 hover:border-gold/20"}`}>
-                <FileText className="w-6 h-6 text-muted-foreground" />
-                <div className="text-left"><p className="font-body text-[13px] font-medium text-foreground">Boleto Bancário</p><p className="font-body text-[11px] text-muted-foreground">Compensação em até 3 dias</p></div>
-                <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedPaymentMethod === "boleto" ? "border-gold bg-gold" : "border-muted-foreground/30"}`}>
-                  {selectedPaymentMethod === "boleto" && <Check className="w-3 h-3 text-charcoal" />}
+              <button
+                type="button"
+                onClick={() => setSelectedPaymentMethod("boleto")}
+                aria-pressed={selectedPaymentMethod === "boleto"}
+                className={`ios-press w-full flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all ${
+                  selectedPaymentMethod === "boleto"
+                    ? "border-gold bg-gold/10 shadow-[0_4px_18px_-6px_hsl(40_40%_55%/0.45)]"
+                    : "border-border/60 bg-card hover:border-gold/40 hover:bg-gold/5"
+                }`}
+              >
+                <FileText className={`w-6 h-6 ${selectedPaymentMethod === "boleto" ? "text-gold" : "text-muted-foreground"}`} />
+                <div className="text-left"><p className="font-body text-[13px] font-semibold text-foreground">Boleto Bancário</p><p className="font-body text-[11px] text-muted-foreground">Compensação em até 3 dias</p></div>
+                <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedPaymentMethod === "boleto" ? "border-gold bg-gold" : "border-muted-foreground/40"}`}>
+                  {selectedPaymentMethod === "boleto" && <Check className="w-3 h-3 text-charcoal" strokeWidth={3} />}
                 </div>
               </button>
             )}
@@ -553,6 +579,39 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
                   <span className="block">Pagar Sinal</span>
                   <span className={`block text-[12px] font-normal mt-1 ${paymentMode === "deposit" ? "text-gold" : "text-muted-foreground/80"}`}>{depositAmount}</span>
                   <span className="absolute -top-2 left-3 px-2 py-0.5 rounded-full bg-rose text-primary-foreground text-[9px] uppercase tracking-wider font-bold">Recomendado</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMode("full")}
+                  aria-pressed={paymentMode === "full"}
+                  className={`ios-press relative py-3.5 px-3 rounded-2xl font-body text-[13px] font-semibold transition-all text-left ${
+                    paymentMode === "full"
+                      ? "bg-gold/10 border-2 border-gold text-foreground shadow-[0_4px_18px_-6px_hsl(40_40%_55%/0.45)]"
+                      : "bg-card border-2 border-border/60 text-muted-foreground hover:border-gold/40 hover:bg-gold/5"
+                  }`}
+                >
+                  <span className={`absolute top-2.5 right-2.5 w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMode === "full" ? "border-gold bg-gold" : "border-muted-foreground/40"}`}>
+                    {paymentMode === "full" && <Check className="w-2.5 h-2.5 text-charcoal" strokeWidth={3} />}
+                  </span>
+                  <span className="block">Valor Completo</span>
+                  <span className={`block text-[12px] font-normal mt-1 ${paymentMode === "full" ? "text-gold" : "text-muted-foreground/80"}`}>{price}</span>
+                  <span className="absolute -top-2 left-3 px-2 py-0.5 rounded-full bg-rose text-primary-foreground text-[9px] uppercase tracking-wider font-bold">Recomendado</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMode("deposit")}
+                  aria-pressed={paymentMode === "deposit"}
+                  className={`ios-press relative py-3.5 px-3 rounded-2xl font-body text-[13px] font-semibold transition-all text-left ${
+                    paymentMode === "deposit"
+                      ? "bg-gold/10 border-2 border-gold text-foreground shadow-[0_4px_18px_-6px_hsl(40_40%_55%/0.45)]"
+                      : "bg-card border-2 border-border/60 text-muted-foreground hover:border-gold/40 hover:bg-gold/5"
+                  }`}
+                >
+                  <span className={`absolute top-2.5 right-2.5 w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMode === "deposit" ? "border-gold bg-gold" : "border-muted-foreground/40"}`}>
+                    {paymentMode === "deposit" && <Check className="w-2.5 h-2.5 text-charcoal" strokeWidth={3} />}
+                  </span>
+                  <span className="block">Pagar Sinal</span>
+                  <span className={`block text-[12px] font-normal mt-1 ${paymentMode === "deposit" ? "text-gold" : "text-muted-foreground/80"}`}>{depositAmount}</span>
                 </button>
                 <button
                   type="button"
