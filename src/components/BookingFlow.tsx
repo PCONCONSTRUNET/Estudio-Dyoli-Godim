@@ -350,14 +350,6 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
           message: `${prof?.nome || "Cliente"} — ${service} em ${selectedDate} às ${selectedTime}`,
           url: "/admin",
         });
-        // Push nativo pro próprio cliente
-        sendPush({
-          role: "cliente",
-          user_id: user.id,
-          title: "Agendamento confirmado",
-          message: `${service} confirmado para ${selectedDate} às ${selectedTime}.`,
-          url: "/perfil",
-        });
       } catch (e) {
         console.log("notify webhook skipped", e);
       }
@@ -443,13 +435,6 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
           title: "🔔 Novo Agendamento!",
           message: `${prof?.nome || "Cliente"} — ${service} em ${selectedDate} às ${selectedTime}`,
           url: "/admin",
-        });
-        sendPush({
-          role: "cliente",
-          user_id: user.id,
-          title: "Agendamento confirmado",
-          message: `${service} confirmado para ${selectedDate} às ${selectedTime}.`,
-          url: "/perfil",
         });
       } catch (e) {
         console.log("notify webhook skipped", e);
