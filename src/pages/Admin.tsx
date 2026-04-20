@@ -1535,6 +1535,29 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
           {tab === "servicos" && <ServicosTab />}
         </div>
       </div>
+
+      {/* Bottom nav fixa - mobile only - atalhos do dia a dia */}
+      <nav className="fixed bottom-0 inset-x-0 z-30 border-t border-primary-foreground/[0.06] bg-charcoal/95 backdrop-blur-xl lg:hidden">
+        <div className="mx-auto flex w-full max-w-md items-stretch justify-around px-1 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))]">
+          {tabs
+            .filter((t) => ["dashboard", "agendamentos", "pedidos", "pagamentos"].includes(t.id))
+            .map((t) => {
+              const active = tab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  className={`flex flex-1 flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 transition-all ${
+                    active ? "text-gold" : "text-primary-foreground/45 hover:text-primary-foreground/70"
+                  }`}
+                >
+                  <t.icon className={`h-5 w-5 ${active ? "scale-110" : ""} transition-transform`} />
+                  <span className="font-body text-[10px] font-medium leading-none">{t.label}</span>
+                </button>
+              );
+            })}
+        </div>
+      </nav>
     </div>
   );
 };
