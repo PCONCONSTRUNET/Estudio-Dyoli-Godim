@@ -1,22 +1,30 @@
-import { Bell, BellOff, Loader2 } from "lucide-react";
+import { Bell, BellOff, Loader2, Send } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { usePushNotifications } from "@/hooks/use-push-notifications";
+import { usePushNotifications, isPushPreviewBlocked } from "@/hooks/use-push-notifications";
+import { sendPush } from "@/lib/push-notify";
+import { toast } from "sonner";
 
 interface Props {
   role: "admin" | "cliente";
   userId?: string | null;
   variant?: "default" | "compact";
+  /** Show a "send test push" button (admin only). */
+  showTestButton?: boolean;
 }
 
-const PushToggle = ({ role, userId, variant = "default" }: Props) => {
+const PushToggle = ({ role, userId, variant = "default", showTestButton = false }: Props) => {
   const { supported, subscribed, loading, enable, disable, permission } =
     usePushNotifications({ role, userId });
+  const [testing, setTesting] = useState(false);
+  const previewBlocked = isPushPreviewBlocked();
 
   if (!supported) {
     return variant === "compact" ? null : (
       <p className="text-xs text-muted-foreground">
-        Notificações push não suportadas neste navegador.
-        {" "}Instale o app na tela inicial pra ativar.
+        {previewBlocked
+          ? "Push fica disponível só no domínio publicado (não funciona no preview do editor). Abra estudiodyoli.lovable.app/admin pra ativar."
+          : "Notificações push não suportadas neste navegador. No iPhone, instale o app na tela inicial pra ativar."}
       </p>
     );
   }
