@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, CreditCard, QrCode, Barcode, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, Filter } from "lucide-react";
+import { Search, CreditCard, QrCode, Barcode, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, Filter, AlertCircle } from "lucide-react";
 
 interface Agendamento {
   id: string;
