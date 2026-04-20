@@ -139,13 +139,13 @@ const PagamentosTab = ({ agendamentos, getClientName }: Props) => {
     <div className="space-y-4">
       {/* Summary cards */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-          <p className="font-body text-[11px] text-emerald-400/60">Total Recebido</p>
-          <p className="font-heading text-lg font-bold text-emerald-400">{formatCurrency(totalPago)}</p>
+        <div className="rounded-2xl border border-emerald-500/25 bg-gradient-to-br from-emerald-500/[0.12] via-emerald-500/[0.05] to-transparent p-4 shadow-[0_4px_16px_-8px_hsl(142_76%_45%/0.3)]">
+          <p className="font-body text-[11px] text-emerald-400/70 uppercase tracking-wider">Total Recebido</p>
+          <p className="font-heading text-xl font-bold text-emerald-400 mt-1">{formatCurrency(totalPago)}</p>
         </div>
-        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
-          <p className="font-body text-[11px] text-amber-400/60">Pendente</p>
-          <p className="font-heading text-lg font-bold text-amber-400">{formatCurrency(totalPendente)}</p>
+        <div className="rounded-2xl border border-amber-500/25 bg-gradient-to-br from-amber-500/[0.12] via-amber-500/[0.05] to-transparent p-4 shadow-[0_4px_16px_-8px_hsl(38_92%_50%/0.3)]">
+          <p className="font-body text-[11px] text-amber-400/70 uppercase tracking-wider">Pendente</p>
+          <p className="font-heading text-xl font-bold text-amber-400 mt-1">{formatCurrency(totalPendente)}</p>
         </div>
       </div>
 
@@ -217,33 +217,33 @@ const PagamentosTab = ({ agendamentos, getClientName }: Props) => {
           return (
             <div
               key={ag.id}
-              className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.02] overflow-hidden"
+              className="rounded-2xl border border-gold/15 bg-gradient-to-br from-gold/[0.05] via-primary-foreground/[0.02] to-nude/[0.03] overflow-hidden transition-all hover:border-gold/25 hover:shadow-[0_4px_16px_-8px_hsl(var(--gold)/0.25)]"
             >
               {/* Main row */}
               <button
                 onClick={() => setExpandedId(isExpanded ? null : ag.id)}
                 className="flex w-full items-center gap-3 p-4 text-left"
               >
-                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${cfg.bg} border`}>
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${cfg.bg} border shadow-[0_2px_8px_-4px_hsl(var(--gold)/0.2)]`}>
                   <StatusIcon className={`h-4 w-4 ${cfg.text}`} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-body text-[13px] font-medium text-primary-foreground truncate">
+                  <p className="font-body text-[14px] font-medium text-primary-foreground truncate">
                     {getClientName(ag.user_id, ag.cliente_nome)}
                   </p>
-                  <p className="font-body text-[11px] text-primary-foreground/40 truncate">
+                  <p className="font-body text-[11px] text-primary-foreground/45 truncate">
                     {ag.servico}{ag.variacao ? ` · ${ag.variacao}` : ""} · {formatDate(ag.data_agendamento)}
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className="font-heading text-[14px] font-bold text-primary-foreground">
+                  <p className="font-heading text-[15px] font-bold text-gold">
                     {formatCurrency(ag.valor)}
                   </p>
                   <div className="flex items-center justify-end gap-1">
-                    <span className={`font-body text-[10px] ${cfg.text}`}>{cfg.label}</span>
+                    <span className={`font-body text-[10px] font-medium ${cfg.text}`}>{cfg.label}</span>
                   </div>
                 </div>
-                <ChevronDown className={`h-4 w-4 shrink-0 text-primary-foreground/20 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                <ChevronDown className={`h-4 w-4 shrink-0 text-primary-foreground/30 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
               </button>
 
               {/* Expanded details */}
