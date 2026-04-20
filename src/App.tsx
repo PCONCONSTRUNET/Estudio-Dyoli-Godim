@@ -7,6 +7,7 @@ import Admin from "./pages/Admin";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import Agendar from "./pages/Agendar";
+import Agendamento from "./pages/Agendamento";
 import Servicos from "./pages/Servicos";
 import Produtos from "./pages/Produtos";
 import Confirmar from "./pages/Confirmar";
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/" element={<Home />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/agendar" element={<Agendar />} />
+          <Route path="/agendamento" element={<Agendamento />} />
           <Route path="/servicos" element={<Servicos />} />
           <Route path="/produtos" element={<Produtos />} />
           <Route path="/confirmar" element={<Confirmar />} />

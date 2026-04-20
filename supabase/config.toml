@@ -1,1 +1,4 @@
 project_id = "vlepenxinekoljxecomr"
+
+[functions.public-cliente-signin]
+verify_jwt = false
