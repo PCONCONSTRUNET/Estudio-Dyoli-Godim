@@ -1048,7 +1048,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                             </div>
                           </div>
                         </article>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
