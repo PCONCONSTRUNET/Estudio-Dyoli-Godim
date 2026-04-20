@@ -1,6 +1,7 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import BookingFlow from "@/components/BookingFlow";
+import { notifyAgendamentoConfirmado } from "@/lib/notify-webhook";
 
 const Confirmar = () => {
   const navigate = useNavigate();
@@ -23,6 +24,18 @@ const Confirmar = () => {
           forma_pagamento: "pix",
           status: "confirmado",
           duracao_minutos: bookingData.durationMinutes,
+        });
+
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("nome, whatsapp")
+          .eq("id", user.id)
+          .maybeSingle();
+        notifyAgendamentoConfirmado({
+          numero: prof?.whatsapp || "",
+          nome: prof?.nome || user.user_metadata?.nome || "",
+          data: bookingData.date,
+          horario: bookingData.time,
         });
       }
     }

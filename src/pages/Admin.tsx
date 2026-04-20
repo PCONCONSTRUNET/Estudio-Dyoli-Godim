@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { notifyAgendamentoConfirmadoById } from "@/lib/notify-webhook";
 import {
   BarChart3, Calendar, Users, Clock, Settings, LogOut, Search,
   X, Edit2, Trash2, Plus, Save, CheckCircle, Bell, MessageSquare,
@@ -348,6 +349,9 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const updateStatus = async (id: string, status: string) => {
     await supabase.from("agendamentos").update({ status }).eq("id", id);
     setAgendamentos((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
+    if (status === "confirmado") {
+      notifyAgendamentoConfirmadoById(id);
+    }
   };
 
   const deleteAgendamento = async (id: string) => {
@@ -484,6 +488,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         setAgendamentos(prev => [data as Agendamento, ...prev]);
         toast.success("Atendimento registrado com sucesso!");
         setShowManualRegister(false);
+        notifyAgendamentoConfirmadoById((data as Agendamento).id);
       }
     } catch (err: any) {
       toast.error("Erro ao registrar: " + (err.message || "Tente novamente"));
