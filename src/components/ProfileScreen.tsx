@@ -36,6 +36,7 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   // Inline edit
   const [editingNome, setEditingNome] = useState(false);
@@ -52,6 +53,7 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setLoading(false); return; }
+    setUserId(user.id);
 
     const [profileRes, agendamentosRes] = await Promise.all([
       supabase.from("profiles").select("nome, whatsapp, data_nascimento, created_at").eq("id", user.id).single(),
@@ -410,6 +412,11 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
                     <p className="font-body text-[11px] text-primary-foreground/40">Recomendações para sua pele</p>
                   </div>
                 </a>
+              </div>
+
+              {/* Push notifications */}
+              <div className="pt-2">
+                <PushToggle role="cliente" userId={userId} />
               </div>
 
               {/* Logout */}
