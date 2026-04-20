@@ -14,6 +14,7 @@ import Confirmar from "./pages/Confirmar";
 import Sucesso from "./pages/Sucesso";
 import Cuidados from "./pages/Cuidados";
 import NotFound from "./pages/NotFound";
+import PushPromptModal from "./components/PushPromptModal";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/cuidados" element={<Cuidados />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <PushPromptModal excludePaths={["/admin", "/auth"]} />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
