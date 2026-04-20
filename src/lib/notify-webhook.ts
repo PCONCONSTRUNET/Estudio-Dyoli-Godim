@@ -97,22 +97,30 @@ const sendWebhook = async (numero: string, mensagem: string) => {
  * Never throws.
  */
 export const notifyLembrete = async (tipo: LembreteTipo, params: NotifyParams) => {
-  if (!params.numero) return;
+  if (!params.numero) {
+    console.log(`[webhook:${tipo}] ignorado — sem número de WhatsApp`);
+    return;
+  }
   try {
-    const { data: cfg } = await supabase
+    const { data: cfg, error } = await supabase
       .from("configuracoes_lembretes")
       .select("mensagem, ativo")
       .eq("tipo", tipo)
       .maybeSingle();
 
-    // Respect the on/off toggle from the admin panel
-    if (cfg && cfg.ativo === false) return;
+    if (error) console.log(`[webhook:${tipo}] erro ao ler config`, error);
+
+    if (cfg && cfg.ativo === false) {
+      console.log(`[webhook:${tipo}] desativado nas Configurações de Lembretes`);
+      return;
+    }
 
     const template = (cfg?.mensagem && cfg.mensagem.trim()) || fallbackMessages[tipo];
     const mensagem = interpolate(template, params);
+    console.log(`[webhook:${tipo}] enviando para ${params.numero}`);
     await sendWebhook(params.numero, mensagem);
   } catch (error) {
-    console.log("Erro ao montar webhook de lembrete", error);
+    console.log(`[webhook:${tipo}] erro`, error);
   }
 };
 
