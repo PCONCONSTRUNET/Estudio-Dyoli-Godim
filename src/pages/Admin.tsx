@@ -1535,8 +1535,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
           {tab === "servicos" && <ServicosTab />}
         </div>
       </div>
-
-      {/* Bottom nav removida — agora usamos drawer lateral via botão hambúrguer no topo */}
+    </div>
+  );
 };
 
 // ─── Horários Tab ───
