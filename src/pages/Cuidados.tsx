@@ -234,13 +234,15 @@ const Cuidados = () => {
         </Tabs>
 
         {/* Alerta */}
-        <div className="mt-8 p-5 rounded-xl bg-gradient-to-br from-gold/[0.12] to-nude/[0.06] border border-gold/30 flex gap-3 shadow-[0_4px_20px_-8px_hsl(var(--gold)/0.25)]">
-          <AlertTriangle className="w-5 h-5 text-gold shrink-0 mt-0.5" />
+        <div className="mt-8 p-5 rounded-xl bg-gradient-to-br from-red-600/[0.22] to-red-700/[0.10] border border-red-500/50 flex gap-3 shadow-[0_4px_20px_-6px_rgba(220,38,38,0.4)]">
+          <div className="w-9 h-9 rounded-full bg-red-600 flex items-center justify-center shrink-0 shadow-[0_2px_8px_-2px_rgba(220,38,38,0.6)]">
+            <AlertTriangle className="w-5 h-5 text-white" strokeWidth={2.5} />
+          </div>
           <div>
-            <h3 className="text-primary-foreground font-medium text-base mb-1.5">
+            <h3 className="text-white font-extrabold text-base mb-1.5 uppercase tracking-wide">
               Sentiu algo diferente?
             </h3>
-            <p className="text-primary-foreground/85 text-sm leading-relaxed">
+            <p className="text-white text-sm leading-relaxed font-medium">
               Não trate nada por conta própria com remédio caseiro ou pomada sem orientação. Me
               chama no WhatsApp ou procure um profissional. A gente cuida juntos! 💛
             </p>
