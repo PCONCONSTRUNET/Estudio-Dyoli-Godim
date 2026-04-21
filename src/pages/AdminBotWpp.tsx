@@ -30,6 +30,11 @@ const AdminBotWpp = () => {
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [manualRefreshing, setManualRefreshing] = useState(false);
+  const [connectMode, setConnectMode] = useState<ConnectMode>("qr");
+  const [phone, setPhone] = useState("");
+  const [pairingCode, setPairingCode] = useState<string | null>(null);
+  const [pairingLoading, setPairingLoading] = useState(false);
+  const [pairingError, setPairingError] = useState<string | null>(null);
   const intervalRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -40,9 +45,7 @@ const AdminBotWpp = () => {
     try {
       const res = await fetch(BOT_STATUS_URL, {
         cache: "no-store",
-        headers: {
-          "ngrok-skip-browser-warning": "true",
-        },
+        headers: NGROK_HEADERS,
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: BotStatusResponse = await res.json();
