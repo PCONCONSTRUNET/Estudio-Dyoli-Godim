@@ -13,8 +13,6 @@ interface Agendamento {
   status: string;
 }
 
-const NOTIFICATION_SOUND_URL = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3";
-
 export function useAdminNotifications(
   enabled: boolean,
   onNewAgendamento?: (agendamento: Agendamento) => void
@@ -23,40 +21,12 @@ export function useAdminNotifications(
     const stored = localStorage.getItem("admin-notifications");
     return stored !== null ? stored === "true" : true;
   });
-  const [soundEnabled, setSoundEnabled] = useState(() => {
-    const stored = localStorage.getItem("admin-sound");
-    return stored !== null ? stored === "true" : true;
-  });
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const knownIdsRef = useRef<Set<string>>(new Set());
   const initialLoadDone = useRef(false);
-
-  // Preload audio
-  useEffect(() => {
-    const audio = new Audio(NOTIFICATION_SOUND_URL);
-    audio.volume = 0.7;
-    audio.preload = "auto";
-    audioRef.current = audio;
-    return () => {
-      audio.pause();
-      audio.src = "";
-    };
-  }, []);
-
-  const playSound = useCallback(() => {
-    if (!soundEnabled || !audioRef.current) return;
-    audioRef.current.currentTime = 0;
-    audioRef.current.play().catch(() => {});
-  }, [soundEnabled]);
 
   const toggleNotifications = useCallback((val: boolean) => {
     setNotificationsEnabled(val);
     localStorage.setItem("admin-notifications", String(val));
-  }, []);
-
-  const toggleSound = useCallback((val: boolean) => {
-    setSoundEnabled(val);
-    localStorage.setItem("admin-sound", String(val));
   }, []);
 
   useEffect(() => {
@@ -93,8 +63,6 @@ export function useAdminNotifications(
           knownIdsRef.current.add(newRecord.id);
 
           if (notificationsEnabled) {
-            playSound();
-
             const dateFormatted = new Date(newRecord.data_agendamento + "T12:00:00")
               .toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 
@@ -112,13 +80,10 @@ export function useAdminNotifications(
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [enabled, notificationsEnabled, playSound, onNewAgendamento]);
+  }, [enabled, notificationsEnabled, onNewAgendamento]);
 
   return {
     notificationsEnabled,
-    soundEnabled,
     toggleNotifications,
-    toggleSound,
-    playSound,
   };
 }
