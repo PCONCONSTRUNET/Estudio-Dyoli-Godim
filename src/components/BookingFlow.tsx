@@ -554,7 +554,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
         </div>
 
         <div className="pt-6 pb-4">
-          <button onClick={handleLocalPayment} disabled={paymentLoading}
+          <button onClick={paymentChoice === "pix" ? handleConfirmPixAgora : handleConfirmRecepcao} disabled={paymentLoading}
             className="ios-press w-full py-4 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all flex items-center justify-center gap-2.5 disabled:opacity-50">
             {paymentLoading ? (<><Loader2 className="w-5 h-5 animate-spin" /> Confirmando...</>) : (
               <><CheckCircle2 className="w-5 h-5" /> Confirmar Agendamento</>
