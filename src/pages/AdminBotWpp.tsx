@@ -287,14 +287,25 @@ const AdminBotWpp = () => {
                     Gerar novo QR Code / Atualizar
                   </Button>
 
-                  <button
-                    type="button"
-                    onClick={() => handleSwitchMode("code")}
-                    className="mt-1 inline-flex items-center gap-2 text-sm text-muted-foreground underline-offset-4 hover:text-rose hover:underline transition-colors"
-                  >
-                    <KeyRound className="h-4 w-4" />
-                    Conectar via código (Sem câmera)
-                  </button>
+                  <div className="w-full pt-2 border-t border-gold/10">
+                    <button
+                      type="button"
+                      onClick={() => handleSwitchMode("code")}
+                      className="group w-full flex items-center justify-center gap-3 rounded-2xl border-2 border-rose/40 bg-gradient-to-r from-rose/10 via-gold/10 to-rose/10 px-5 py-4 shadow-[0_8px_30px_-12px_hsl(var(--rose)/0.5)] hover:border-rose hover:shadow-[0_12px_40px_-12px_hsl(var(--rose)/0.7)] hover:scale-[1.02] active:scale-[0.99] transition-all"
+                    >
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-rose text-primary-foreground shadow-md">
+                        <KeyRound className="h-4 w-4" />
+                      </span>
+                      <span className="flex flex-col items-start text-left">
+                        <span className="font-heading text-base font-semibold text-rose">
+                          Conectar via código
+                        </span>
+                        <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                          Sem câmera • Use o número
+                        </span>
+                      </span>
+                    </button>
+                  </div>
                 </>
               ) : pairingCode ? (
                 <>
