@@ -32,7 +32,7 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, onProdutos, isAuthenticat
       )}
 
       {/* Content — mobile: vertical / desktop: side-by-side */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pb-8 pt-12 lg:flex-row lg:justify-center lg:gap-16 lg:px-16">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pb-32 pt-12 lg:flex-row lg:justify-center lg:gap-16 lg:px-16 lg:pb-8">
         {/* 1. IMAGEM */}
         <div className="relative w-56 h-56 mb-6 animate-fade-in lg:w-72 lg:h-72 lg:mb-0 lg:shrink-0">
           <div className="absolute inset-0 rounded-full bg-gold/[0.08] blur-[60px] scale-125 animate-hero-glow" />
@@ -55,14 +55,14 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, onProdutos, isAuthenticat
           </div>
 
           {/* 3. BOTÕES */}
-          <div className="w-full max-w-sm mt-10 space-y-3 px-4 animate-fade-in lg:px-0 lg:max-w-xs" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
+          <div className="w-full max-w-[280px] mt-8 space-y-2.5 px-4 animate-fade-in lg:px-0" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
             {isAuthenticated ? (
               <>
                 <button
                   onClick={onSchedule}
-                  className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[16px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] backdrop-blur-sm"
+                  className="ios-press group flex items-center justify-center gap-2 w-full py-2.5 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[14px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] backdrop-blur-sm"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width={20} viewBox="0 0 24 24" height={20} fill="none" strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+                  <svg xmlns="http://www.w3.org/2000/svg" width={17} viewBox="0 0 24 24" height={17} fill="none" strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="4" width="18" height="18" rx="2"/>
                     <path d="M16 2v4M8 2v4M3 10h18"/>
                     <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
@@ -71,16 +71,16 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, onProdutos, isAuthenticat
                 </button>
                 <button
                   onClick={onProfile}
-                  className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-full bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[16px] tracking-wide hover:bg-primary-foreground/[0.12] hover:border-primary-foreground/[0.18]"
+                  className="ios-press group flex items-center justify-center gap-2 w-full py-2.5 rounded-full bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[14px] tracking-wide hover:bg-primary-foreground/[0.12] hover:border-primary-foreground/[0.18]"
                 >
-                  <User className="w-5 h-5" />
+                  <User className="w-4 h-4" />
                   <span>Meu Perfil</span>
                 </button>
                 <button
                   onClick={onProdutos}
-                  className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-full bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[16px] tracking-wide hover:bg-primary-foreground/[0.12] hover:border-primary-foreground/[0.18]"
+                  className="ios-press group flex items-center justify-center gap-2 w-full py-2.5 rounded-full bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[14px] tracking-wide hover:bg-primary-foreground/[0.12] hover:border-primary-foreground/[0.18]"
                 >
-                  <ShoppingBag className="w-5 h-5" />
+                  <ShoppingBag className="w-4 h-4" />
                   <span>Produtos</span>
                 </button>
               </>
@@ -88,9 +88,9 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, onProdutos, isAuthenticat
               <>
                 <button
                   onClick={onLogin}
-                  className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[16px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] backdrop-blur-sm"
+                  className="ios-press group flex items-center justify-center gap-2 w-full py-2.5 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[14px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] backdrop-blur-sm"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width={20} viewBox="0 0 24 24" height={20} fill="none" strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+                  <svg xmlns="http://www.w3.org/2000/svg" width={17} viewBox="0 0 24 24" height={17} fill="none" strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="8" r="4"/>
                     <path d="M5 20c0-3.3137 3.134-6 7-6s7 2.6863 7 6"/>
                   </svg>
@@ -98,9 +98,9 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, onProdutos, isAuthenticat
                 </button>
                 <button
                   onClick={onSchedule}
-                  className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-full bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[16px] tracking-wide hover:bg-primary-foreground/[0.12] hover:border-primary-foreground/[0.18]"
+                  className="ios-press group flex items-center justify-center gap-2 w-full py-2.5 rounded-full bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[14px] tracking-wide hover:bg-primary-foreground/[0.12] hover:border-primary-foreground/[0.18]"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width={20} viewBox="0 0 24 24" height={20} fill="none" strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+                  <svg xmlns="http://www.w3.org/2000/svg" width={17} viewBox="0 0 24 24" height={17} fill="none" strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="4" width="18" height="18" rx="2"/>
                     <path d="M16 2v4M8 2v4M3 10h18"/>
                     <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
@@ -109,9 +109,9 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, onProdutos, isAuthenticat
                 </button>
                 <button
                   onClick={onProdutos}
-                  className="ios-press group flex items-center justify-center gap-2.5 w-full py-3.5 rounded-full bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[16px] tracking-wide hover:bg-primary-foreground/[0.12] hover:border-primary-foreground/[0.18]"
+                  className="ios-press group flex items-center justify-center gap-2 w-full py-2.5 rounded-full bg-primary-foreground/[0.08] backdrop-blur-md border border-primary-foreground/[0.12] text-primary-foreground/80 font-body font-medium text-[14px] tracking-wide hover:bg-primary-foreground/[0.12] hover:border-primary-foreground/[0.18]"
                 >
-                  <ShoppingBag className="w-5 h-5" />
+                  <ShoppingBag className="w-4 h-4" />
                   <span>Produtos</span>
                 </button>
               </>
