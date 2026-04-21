@@ -2,3 +2,9 @@ project_id = "vlepenxinekoljxecomr"
 
 [functions.public-cliente-signin]
 verify_jwt = false
+
+[functions.request-password-reset]
+verify_jwt = false
+
+[functions.confirm-password-reset]
+verify_jwt = false
