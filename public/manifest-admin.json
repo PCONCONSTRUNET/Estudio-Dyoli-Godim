@@ -1,5 +1,6 @@
 {
-  "name": "Dyoli Godim — Admin",
+  "lang": "pt-BR",
+  "name": "Estúdio Dyoli Godim Admin",
   "short_name": "Dyoli Admin",
   "description": "Painel administrativo do Estúdio Dyoli Godim.",
   "id": "/admin/",

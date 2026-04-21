@@ -1,19 +1,20 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- TODO: Set the document title to the name of your application -->
     <title>Estúdio Dyoli Godim Agenda</title>
     <meta name="description" content="Procedimentos estéticos com segurança e precisão. Micropigmentação fio a fio, labial e perfuração corporal.">
-    <meta name="author" content="Studio Dyoli Godim" />
-    <link rel="manifest" id="app-manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#d4a0a0" />
+    <meta name="author" content="Estúdio Dyoli Godim" />
+    <meta http-equiv="Content-Language" content="pt-BR" />
+    <meta name="language" content="pt-BR" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" id="apple-app-title" content="Dyoli Godim" />
-    <meta name="application-name" id="application-name" content="Dyoli Godim" />
+    <meta name="apple-mobile-web-app-title" id="apple-app-title" content="Estúdio Dyoli" />
+    <meta name="application-name" id="application-name" content="Estúdio Dyoli" />
     <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="manifest" id="app-manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#d4a0a0" />
     <link rel="apple-touch-icon" id="apple-touch-icon" href="/icon-512.png" />
     <link rel="icon" id="app-icon" href="/icon-512.png" type="image/png" />
     <script>
@@ -27,6 +28,7 @@
           var appleIcon = document.getElementById("apple-touch-icon");
           var appIcon = document.getElementById("app-icon");
 
+          document.documentElement.lang = "pt-BR";
           if (isAdmin) {
             if (manifest) manifest.setAttribute("href", "/manifest-admin.json?v=2");
             if (appleTitle) appleTitle.setAttribute("content", "Dyoli Admin");
