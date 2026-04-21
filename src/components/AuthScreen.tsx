@@ -247,7 +247,6 @@ const AuthScreen = ({ onSuccess, onBack, initialMode = "signup" }: AuthScreenPro
           </button>
         </div>
       </div>
-      </div>
 
       <ForgotPasswordModal
         open={showForgot}
