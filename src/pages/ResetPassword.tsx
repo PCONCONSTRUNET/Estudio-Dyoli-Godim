@@ -116,8 +116,8 @@ const ResetPassword = () => {
 
         {status === "done" && (
           <div className="space-y-4 py-2">
-            <div className="flex flex-col items-center gap-3 px-3 py-5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-              <Check className="w-8 h-8 text-emerald-400" />
+            <div className="flex flex-col items-center gap-3 px-3 py-5 rounded-xl bg-success/10 border border-success/20">
+              <Check className="w-8 h-8 text-success" />
               <p className="font-body text-[14px] text-primary-foreground/90 text-center">
                 Senha redefinida com sucesso!
               </p>

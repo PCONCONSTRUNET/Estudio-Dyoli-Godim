@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import professionalImg from "@/assets/professional.png";
+import ForgotPasswordModal from "./ForgotPasswordModal";
 
 interface AuthScreenProps {
   onSuccess: () => void;
@@ -19,6 +20,7 @@ const AuthScreen = ({ onSuccess, onBack, initialMode = "signup" }: AuthScreenPro
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showForgot, setShowForgot] = useState(false);
 
   const formatWhatsapp = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 11);

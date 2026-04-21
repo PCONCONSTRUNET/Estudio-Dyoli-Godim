@@ -87,8 +87,8 @@ const ForgotPasswordModal = ({ open, onClose, initialWhatsapp = "" }: ForgotPass
 
         {sent ? (
           <div className="space-y-4 pt-2">
-            <div className="flex flex-col items-center gap-3 px-3 py-6 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-              <Check className="w-8 h-8 text-emerald-400" />
+            <div className="flex flex-col items-center gap-3 px-3 py-6 rounded-xl bg-success/10 border border-success/20">
+              <Check className="w-8 h-8 text-success" />
               <p className="font-body text-[13px] text-primary-foreground/85 text-center leading-relaxed">
                 Se o WhatsApp estiver cadastrado, o link foi enviado.
                 <br />

@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Admin from "./pages/Admin";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import Agendar from "./pages/Agendar";
 import Agendamento from "./pages/Agendamento";
 import Servicos from "./pages/Servicos";
@@ -30,6 +31,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/agendar" element={<Agendar />} />
           <Route path="/agendamento" element={<Agendamento />} />
           <Route path="/servicos" element={<Servicos />} />
