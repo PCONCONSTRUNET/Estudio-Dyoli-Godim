@@ -46,6 +46,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   const [copied, setCopied] = useState(false);
   const [paymentMode, setPaymentMode] = useState<"deposit" | "full">("full");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"pix" | "cartao" | "boleto">("pix");
+  const [paymentChoice, setPaymentChoice] = useState<"pix" | "recepcao">("pix");
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentData, setPaymentData] = useState<PaymentResponse | null>(null);
   const [availableMethods, setAvailableMethods] = useState<{ pix: boolean; cartao: boolean; boleto: boolean }>({ pix: true, cartao: false, boleto: false });
@@ -403,13 +404,13 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     }
   };
 
-  const handleLocalPayment = async () => {
-    setPaymentLoading(true);
+  // Cria agendamento e dispara notificações; status sempre "confirmado".
+  // forma: "pendente" → pagar na recepção. forma: "pix" → mostra QR local.
+  const createAgendamento = async (forma: "pix" | "pendente") => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Faça login para continuar");
-      setPaymentLoading(false);
-      return;
+      return null;
     }
     const { data: agData, error: agError } = await supabase.from("agendamentos").insert({
       user_id: user.id,
@@ -419,18 +420,18 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       horario: selectedTime,
       valor: numericPrice,
       valor_pago: 0,
-      forma_pagamento: "pendente",
+      forma_pagamento: forma,
       status: "confirmado",
       duracao_minutos: serviceDuration,
     }).select("id").single();
 
     if (agError || !agData) {
       toast.error("Erro ao criar agendamento");
-      setPaymentLoading(false);
-      return;
+      return null;
     }
 
     setAgendamentoId(agData.id);
+
     try {
       const { data: prof } = await supabase
         .from("profiles")
@@ -443,30 +444,37 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
         data: selectedDate,
         horario: selectedTime,
       });
+      const formaTxt = forma === "pix" ? "(PIX online)" : "(pagar na recepção)";
       void sendPush({
         role: "admin",
         title: "🔔 Novo Agendamento!",
-        message: `${prof?.nome || "Cliente"} — ${service} em ${selectedDate} às ${selectedTime} (pagar na recepção)`,
+        message: `${prof?.nome || "Cliente"} — ${service} em ${selectedDate} às ${selectedTime} ${formaTxt}`,
         url: "/admin/",
       }).catch((e) => console.warn("admin push failed", e));
 
+      const clienteMsg = forma === "pix"
+        ? `${service} em ${selectedDate} às ${selectedTime}.`
+        : `${service} em ${selectedDate} às ${selectedTime}. Pagamento na recepção.`;
       await sendPush({
         role: "cliente",
         user_id: user.id,
         title: "✅ Agendamento confirmado!",
-        message: `${service} em ${selectedDate} às ${selectedTime}. Pagamento na recepção.`,
+        message: clienteMsg,
         url: "/",
       });
-
-      showLocalNotification(
-        "✅ Agendamento confirmado!",
-        `${service} em ${selectedDate} às ${selectedTime}. Pagamento na recepção.`
-      );
+      showLocalNotification("✅ Agendamento confirmado!", clienteMsg);
     } catch (e) {
       console.log("notify webhook skipped", e);
     }
 
+    return agData.id;
+  };
+
+  const handleConfirmRecepcao = async () => {
+    setPaymentLoading(true);
+    const id = await createAgendamento("pendente");
     setPaymentLoading(false);
+    if (!id) return;
     onConfirm({
       date: selectedDate,
       time: selectedTime,
@@ -474,6 +482,20 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       paidAmount: 0,
       durationMinutes: serviceDuration,
     });
+  };
+
+  const handleConfirmPixAgora = async () => {
+    setPaymentLoading(true);
+    const id = await createAgendamento("pix");
+    if (!id) {
+      setPaymentLoading(false);
+      return;
+    }
+    setPaymentData({ gateway: "local", method: "pix" });
+    setPaymentExpiry(Date.now() + 5 * 60 * 1000);
+    setTimeLeft(300);
+    setStep("payment");
+    setPaymentLoading(false);
   };
 
   if (step === "confirm") {
