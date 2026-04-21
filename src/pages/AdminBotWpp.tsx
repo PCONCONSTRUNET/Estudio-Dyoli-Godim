@@ -1,77 +1,111 @@
-import { useState, useEffect } from "react";
-import { QRCodeCanvas } from "qrcode.react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Smartphone, Wifi, WifiOff, Loader2 } from "lucide-react";
+import { RefreshCw, Smartphone, Wifi, WifiOff, Loader2, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type ConnectionStatus = "waiting" | "connecting" | "online" | "expired";
+// 🔌 Endpoint do backend local que expõe o status do robô
+const BOT_STATUS_URL = "http://localhost:3000/api/status";
+const POLL_INTERVAL_MS = 3000;
+
+type BotStatus = "WAITING" | "QR_READY" | "CONNECTED" | "ERROR";
+
+interface BotStatusResponse {
+  status: BotStatus;
+  qr?: string; // base64 (data:image/png;base64,... ou só o conteúdo base64)
+}
 
 const AdminBotWpp = () => {
-  // Placeholder QR — substitua por um base64/string vinda da sua VPS
-  const [qrValue, setQrValue] = useState<string>(
-    "https://wa.me/qr/PLACEHOLDER-AGUARDANDO-VPS"
-  );
-  const [status, setStatus] = useState<ConnectionStatus>("waiting");
-  const [refreshing, setRefreshing] = useState(false);
+  const [status, setStatus] = useState<BotStatus>("WAITING");
+  const [qr, setQr] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [manualRefreshing, setManualRefreshing] = useState(false);
+  const intervalRef = useRef<number | null>(null);
 
-  // Define o título da página
   useEffect(() => {
     document.title = "Configuração do Robô de Agendamento";
   }, []);
 
-  /**
-   * 🔌 PONTO DE INTEGRAÇÃO COM A VPS
-   * --------------------------------------------------
-   * Quando a VPS estiver pronta, substitua o conteúdo
-   * de fetchQrFromServer() por uma chamada real, ex:
-   *
-   *   const res = await fetch("https://sua-vps.com/bot/qr");
-   *   const data = await res.json();
-   *   setQrValue(data.qrBase64); // string ou data:image/png;base64,...
-   *   setStatus(data.connected ? "online" : "waiting");
-   *
-   * O componente já aceita tanto strings quanto data-URLs base64.
-   */
-  const fetchQrFromServer = async () => {
-    setRefreshing(true);
+  // Função que faz o GET no backend local
+  const fetchStatus = async () => {
     try {
-      // MOCK: simula uma atualização do QR
-      await new Promise((r) => setTimeout(r, 800));
-      setQrValue(`https://wa.me/qr/MOCK-${Date.now()}`);
-      setStatus("waiting");
+      const res = await fetch(BOT_STATUS_URL, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: BotStatusResponse = await res.json();
+      setStatus(data.status);
+      if (data.qr) setQr(data.qr);
+      setErrorMsg(null);
       setLastUpdate(new Date());
-    } finally {
-      setRefreshing(false);
+    } catch (err) {
+      setErrorMsg(
+        "Não foi possível conectar ao servidor do robô (localhost:3000). Verifique se o backend está rodando."
+      );
     }
   };
 
+  // Polling a cada 3s
+  useEffect(() => {
+    fetchStatus();
+    intervalRef.current = window.setInterval(fetchStatus, POLL_INTERVAL_MS);
+    return () => {
+      if (intervalRef.current) window.clearInterval(intervalRef.current);
+    };
+  }, []);
+
+  // Para o polling quando o robô estiver conectado (economiza requests)
+  useEffect(() => {
+    if (status === "CONNECTED" && intervalRef.current) {
+      window.clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, [status]);
+
+  const handleManualRefresh = async () => {
+    setManualRefreshing(true);
+    await fetchStatus();
+    // Reinicia o polling caso ele tenha parado
+    if (!intervalRef.current && status !== "CONNECTED") {
+      intervalRef.current = window.setInterval(fetchStatus, POLL_INTERVAL_MS);
+    }
+    setTimeout(() => setManualRefreshing(false), 500);
+  };
+
+  // Normaliza o QR base64 — aceita "data:image/...;base64,XXX" ou só "XXX"
+  const qrSrc =
+    qr && (qr.startsWith("data:image") ? qr : `data:image/png;base64,${qr}`);
+
+  // Configuração visual do indicador de status
   const statusConfig: Record<
-    ConnectionStatus,
-    { label: string; dot: string; variant: "default" | "secondary" | "destructive"; icon: typeof Wifi }
+    BotStatus,
+    {
+      label: string;
+      dot: string;
+      variant: "default" | "secondary" | "destructive";
+      icon: typeof Wifi;
+    }
   > = {
-    waiting: {
-      label: "Aguardando Leitura",
-      dot: "bg-orange-500",
+    WAITING: {
+      label: "Iniciando Robô...",
+      dot: "bg-destructive",
+      variant: "destructive",
+      icon: Loader2,
+    },
+    QR_READY: {
+      label: "Aguardando Leitura do QR",
+      dot: "bg-yellow-500",
       variant: "secondary",
       icon: WifiOff,
     },
-    connecting: {
-      label: "Conectando...",
-      dot: "bg-yellow-500",
-      variant: "secondary",
-      icon: Loader2,
-    },
-    online: {
+    CONNECTED: {
       label: "Robô Online",
       dot: "bg-green-500",
       variant: "default",
       icon: Wifi,
     },
-    expired: {
-      label: "QR Code Expirado",
+    ERROR: {
+      label: "Erro de Conexão",
       dot: "bg-destructive",
       variant: "destructive",
       icon: WifiOff,
@@ -80,10 +114,7 @@ const AdminBotWpp = () => {
 
   const current = statusConfig[status];
   const StatusIcon = current.icon;
-
-  // Detecta se o valor é base64/dataURL (vai virar <img>) ou string normal (canvas)
-  const isImageData =
-    qrValue.startsWith("data:image") || qrValue.startsWith("http") === false && qrValue.length > 200;
+  const isConnected = status === "CONNECTED";
 
   return (
     <div className="min-h-screen bg-background py-8 px-4">
@@ -98,140 +129,146 @@ const AdminBotWpp = () => {
           </p>
         </div>
 
-        {/* Status Badge */}
-        <div className="mb-6 flex justify-center">
-          <Badge
-            variant={current.variant}
-            className="gap-2 px-4 py-2 text-sm font-medium shadow-sm"
-          >
-            <span className="relative flex h-2.5 w-2.5">
-              {status === "online" && (
+        {/* Status — versão grande quando online */}
+        {isConnected ? (
+          <div className="mb-6 flex flex-col items-center gap-3 rounded-2xl border-2 border-green-500/30 bg-green-500/10 py-8">
+            <CheckCircle2 className="h-12 w-12 text-green-500" />
+            <h2 className="font-heading text-4xl md:text-5xl font-bold uppercase tracking-wide text-green-500">
+              Robô Online
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              O assistente já está respondendo no WhatsApp
+            </p>
+          </div>
+        ) : (
+          <div className="mb-6 flex justify-center">
+            <Badge
+              variant={current.variant}
+              className="gap-2 px-4 py-2 text-sm font-medium shadow-sm"
+            >
+              <span className="relative flex h-2.5 w-2.5">
                 <span
                   className={cn(
                     "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
                     current.dot
                   )}
                 />
-              )}
-              <span
+                <span
+                  className={cn(
+                    "relative inline-flex h-2.5 w-2.5 rounded-full",
+                    current.dot
+                  )}
+                />
+              </span>
+              <StatusIcon
                 className={cn(
-                  "relative inline-flex h-2.5 w-2.5 rounded-full",
-                  current.dot
+                  "h-3.5 w-3.5",
+                  status === "WAITING" && "animate-spin"
                 )}
               />
-            </span>
-            <StatusIcon
-              className={cn("h-3.5 w-3.5", status === "connecting" && "animate-spin")}
-            />
-            {current.label}
-          </Badge>
-        </div>
+              {current.label}
+            </Badge>
+          </div>
+        )}
 
-        {/* QR Code Card */}
-        <Card className="border-2 shadow-lg">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-center text-lg font-medium">
-              Escaneie o QR Code
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center gap-6">
-            {/* QR Box */}
-            <div className="relative rounded-2xl border-2 border-dashed border-border bg-muted/30 p-6">
-              {status === "online" ? (
-                <div className="flex h-[256px] w-[256px] flex-col items-center justify-center gap-3 text-center">
-                  <Wifi className="h-16 w-16 text-green-500" />
-                  <p className="text-sm font-medium text-foreground">
-                    Conectado com sucesso!
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    O robô já está respondendo no WhatsApp
-                  </p>
-                </div>
-              ) : isImageData ? (
-                // Caso a VPS envie um base64/data URL, exibe como imagem
-                <img
-                  src={qrValue}
-                  alt="QR Code WhatsApp"
-                  className="h-[256px] w-[256px] rounded-lg"
+        {/* QR Card — escondido quando conectado */}
+        {!isConnected && (
+          <Card className="border-2 shadow-lg">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-center text-lg font-medium">
+                {status === "QR_READY"
+                  ? "Escaneie o QR Code"
+                  : "Preparando QR Code..."}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center gap-6">
+              <div className="relative rounded-2xl border-2 border-dashed border-border bg-muted/30 p-6">
+                {status === "QR_READY" && qrSrc ? (
+                  <div className="rounded-lg bg-white p-2">
+                    <img
+                      src={qrSrc}
+                      alt="QR Code WhatsApp"
+                      className="h-[256px] w-[256px] rounded"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex h-[256px] w-[256px] flex-col items-center justify-center gap-3 text-center">
+                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                    <p className="text-sm font-medium text-foreground">
+                      {status === "WAITING"
+                        ? "Iniciando Robô..."
+                        : "Aguardando QR Code"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {errorMsg ?? "Verificando status do servidor a cada 3s"}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Última verificação: {lastUpdate.toLocaleTimeString("pt-BR")}
+              </p>
+
+              <Button
+                onClick={handleManualRefresh}
+                disabled={manualRefreshing}
+                size="lg"
+                className="w-full sm:w-auto"
+              >
+                <RefreshCw
+                  className={cn("h-4 w-4", manualRefreshing && "animate-spin")}
                 />
-              ) : (
-                <div className="rounded-lg bg-white p-2">
-                  <QRCodeCanvas
-                    value={qrValue}
-                    size={240}
-                    level="H"
-                    includeMargin={false}
-                  />
-                </div>
-              )}
+                Gerar novo QR Code / Atualizar
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
-              {refreshing && (
-                <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-background/80 backdrop-blur-sm">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              )}
-            </div>
+        {/* Instruções — só faz sentido quando ainda não conectou */}
+        {!isConnected && (
+          <Card className="mt-6 border bg-muted/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base font-medium">
+                <Smartphone className="h-5 w-5 text-primary" />
+                Como conectar
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ol className="space-y-3 text-sm">
+                <li className="flex gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                    1
+                  </span>
+                  <span className="text-muted-foreground pt-0.5">
+                    Abra o <strong className="text-foreground">WhatsApp</strong> no seu celular
+                  </span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                    2
+                  </span>
+                  <span className="text-muted-foreground pt-0.5">
+                    Toque em <strong className="text-foreground">Configurações</strong> →{" "}
+                    <strong className="text-foreground">Aparelhos conectados</strong>
+                  </span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                    3
+                  </span>
+                  <span className="text-muted-foreground pt-0.5">
+                    Toque em <strong className="text-foreground">Conectar um aparelho</strong> e
+                    aponte a câmera para esta tela
+                  </span>
+                </li>
+              </ol>
+            </CardContent>
+          </Card>
+        )}
 
-            <p className="text-xs text-muted-foreground">
-              Última atualização: {lastUpdate.toLocaleTimeString("pt-BR")}
-            </p>
-
-            {/* Refresh button */}
-            <Button
-              onClick={fetchQrFromServer}
-              disabled={refreshing}
-              size="lg"
-              className="w-full sm:w-auto"
-            >
-              <RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} />
-              Gerar novo QR Code / Atualizar
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Instruções */}
-        <Card className="mt-6 border bg-muted/20">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base font-medium">
-              <Smartphone className="h-5 w-5 text-primary" />
-              Como conectar
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ol className="space-y-3 text-sm">
-              <li className="flex gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                  1
-                </span>
-                <span className="text-muted-foreground pt-0.5">
-                  Abra o <strong className="text-foreground">WhatsApp</strong> no seu celular
-                </span>
-              </li>
-              <li className="flex gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                  2
-                </span>
-                <span className="text-muted-foreground pt-0.5">
-                  Toque em <strong className="text-foreground">Configurações</strong> →{" "}
-                  <strong className="text-foreground">Aparelhos conectados</strong>
-                </span>
-              </li>
-              <li className="flex gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                  3
-                </span>
-                <span className="text-muted-foreground pt-0.5">
-                  Toque em <strong className="text-foreground">Conectar um aparelho</strong> e
-                  aponte a câmera para esta tela
-                </span>
-              </li>
-            </ol>
-          </CardContent>
-        </Card>
-
-        {/* Dev hint — pode remover depois */}
         <p className="mt-6 text-center text-[11px] text-muted-foreground/60">
-          Página privada • Acesso apenas via link direto
+          Página privada • Polling a cada 3s em {BOT_STATUS_URL}
         </p>
       </div>
     </div>
