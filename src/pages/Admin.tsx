@@ -234,16 +234,39 @@ const Admin = () => {
 
   if (!authenticated) {
     return (
-      <div className="admin-mobile-shell min-h-dvh w-screen max-w-full overflow-x-hidden bg-charcoal px-4">
-        <div className="mx-auto flex min-h-dvh w-full max-w-sm items-center justify-center py-6">
-          <div className="w-full rounded-3xl border border-primary-foreground/[0.08] bg-charcoal/70 p-8 shadow-[0_25px_60px_-12px_rgba(0,0,0,0.6)] backdrop-blur-2xl space-y-6">
-            <div className="text-center">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gold/10">
-                <Settings className="h-7 w-7 text-gold" />
+      <div className="admin-mobile-shell relative min-h-dvh w-screen max-w-full overflow-hidden bg-charcoal px-4">
+        {/* Glow decorativo */}
+        <div className="pointer-events-none absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-gold/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-rose/10 blur-3xl" />
+
+        <div className="relative mx-auto flex min-h-dvh w-full max-w-sm items-center justify-center py-6">
+          <div className="w-full rounded-3xl border border-gold/15 bg-charcoal/80 p-8 shadow-[0_25px_60px_-12px_rgba(0,0,0,0.7)] backdrop-blur-2xl space-y-7">
+            {/* Logo + identidade */}
+            <div className="text-center space-y-4">
+              <div className="relative mx-auto h-20 w-20">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-gold/30 to-rose/20 blur-md" />
+                <div className="relative h-20 w-20 overflow-hidden rounded-full border border-gold/30 bg-charcoal shadow-[0_8px_24px_-8px_hsl(var(--gold)/0.4)]">
+                  <img src={logo} alt="Estúdio Dyoli Godim" className="h-full w-full object-cover" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border border-gold/40 bg-charcoal shadow-md">
+                  <Settings className="h-3.5 w-3.5 text-gold" />
+                </div>
               </div>
-              <h1 className="font-heading text-2xl font-semibold text-primary-foreground">Painel Admin</h1>
-              <p className="mt-1 font-body text-[13px] text-primary-foreground/40">Acesso restrito</p>
+
+              <div className="space-y-1">
+                <p className="font-body text-[10px] tracking-[0.25em] uppercase text-gold/80 font-medium">
+                  Estúdio Dyoli Godim
+                </p>
+                <h1 className="font-heading text-2xl font-semibold text-primary-foreground">
+                  Painel Admin
+                </h1>
+                <p className="font-body text-[12px] text-primary-foreground/40">
+                  Acesso restrito · Área administrativa
+                </p>
+              </div>
             </div>
+
+            {/* Form */}
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -254,20 +277,39 @@ const Admin = () => {
                   setError("Senha incorreta");
                 }
               }}
-              className="space-y-4"
+              className="space-y-3"
             >
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Senha de acesso"
-                className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] px-4 py-3 text-primary-foreground font-body text-[15px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
-              />
-              {error && <p className="font-body text-[12px] text-rose text-center">{error}</p>}
-              <button type="submit" className="w-full rounded-2xl bg-rose py-3.5 text-primary-foreground font-body text-[15px] font-semibold shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)]">
-                Entrar
+              <div>
+                <label className="font-body text-[10px] uppercase tracking-widest text-primary-foreground/40 font-medium block mb-2">
+                  Senha
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); if (error) setError(""); }}
+                  placeholder="Digite sua senha"
+                  autoFocus
+                  className="w-full rounded-2xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] px-4 py-3.5 text-primary-foreground font-body text-[15px] placeholder:text-primary-foreground/25 focus:outline-none focus:border-gold/40 focus:ring-2 focus:ring-gold/20 transition-all"
+                />
+              </div>
+
+              {error && (
+                <div className="rounded-xl border border-rose/25 bg-rose/10 px-3 py-2">
+                  <p className="font-body text-[12px] text-rose text-center">{error}</p>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="ios-press w-full rounded-full bg-rose py-4 text-primary-foreground font-body text-[15px] font-semibold tracking-wide shadow-[0_8px_24px_-6px_hsl(340_30%_50%/0.5)] hover:shadow-[0_10px_28px_-6px_hsl(340_30%_50%/0.6)] transition-all"
+              >
+                Entrar no painel
               </button>
             </form>
+
+            <p className="text-center font-body text-[10px] text-primary-foreground/25">
+              🔒 Conexão segura · v1.0
+            </p>
           </div>
         </div>
       </div>
