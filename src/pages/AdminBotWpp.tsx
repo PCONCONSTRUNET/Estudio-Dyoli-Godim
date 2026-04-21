@@ -84,6 +84,45 @@ const AdminBotWpp = () => {
     setTimeout(() => setManualRefreshing(false), 500);
   };
 
+  const handleGeneratePairingCode = async () => {
+    setPairingError(null);
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length < 10 || digits.length > 15) {
+      setPairingError("Digite um número válido com DDD (ex: 11 91234-5678).");
+      return;
+    }
+    setPairingLoading(true);
+    try {
+      const res = await fetch(BOT_PAIRING_URL, {
+        method: "POST",
+        cache: "no-store",
+        headers: {
+          ...NGROK_HEADERS,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ phone: digits }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: { code?: string } = await res.json();
+      if (!data.code) throw new Error("Resposta sem código");
+      setPairingCode(data.code);
+    } catch (err) {
+      setPairingError(
+        "Não foi possível gerar o código. Verifique o servidor e tente novamente."
+      );
+    } finally {
+      setPairingLoading(false);
+    }
+  };
+
+  const handleSwitchMode = (mode: ConnectMode) => {
+    setConnectMode(mode);
+    setPairingError(null);
+    if (mode === "qr") {
+      setPairingCode(null);
+    }
+  };
+
   const qrSrc =
     qr && (qr.startsWith("data:image") ? qr : `data:image/png;base64,${qr}`);
 
