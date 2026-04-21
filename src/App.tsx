@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -18,6 +19,14 @@ import PushPromptModal from "./components/PushPromptModal";
 
 const queryClient = new QueryClient();
 
+const AdminEntryRedirect = () => {
+  useEffect(() => {
+    window.location.replace("/admin/");
+  }, []);
+
+  return null;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -33,7 +42,8 @@ const App = () => (
           <Route path="/produtos" element={<Produtos />} />
           <Route path="/confirmar" element={<Confirmar />} />
           <Route path="/sucesso" element={<Sucesso />} />
-          <Route path="/admin" element={<Admin />} />
+          <Route path="/admin" element={<AdminEntryRedirect />} />
+          <Route path="/admin/*" element={<Admin />} />
           <Route path="/cuidados" element={<Cuidados />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -515,7 +515,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
           role: "admin",
           title: "🔔 Novo Agendamento!",
           message: `${clienteNome || "Presencial"} — ${manualServico} em ${manualData} às ${manualHorario}`,
-          url: "/admin",
+          url: "/admin/",
         });
       }
     } catch (err: any) {

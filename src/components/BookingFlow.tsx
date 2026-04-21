@@ -348,7 +348,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
           role: "admin",
           title: "🔔 Novo Agendamento!",
           message: `${prof?.nome || "Cliente"} — ${service} em ${selectedDate} às ${selectedTime}`,
-          url: "/admin",
+          url: "/admin/",
         });
         // Push de confirmação pro cliente
         sendPush({
@@ -442,7 +442,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
           role: "admin",
           title: "🔔 Novo Agendamento!",
           message: `${prof?.nome || "Cliente"} — ${service} em ${selectedDate} às ${selectedTime}`,
-          url: "/admin",
+          url: "/admin/",
         });
         // Push de confirmação pro cliente
         sendPush({
