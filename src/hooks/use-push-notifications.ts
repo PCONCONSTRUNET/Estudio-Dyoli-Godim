@@ -119,6 +119,19 @@ export function usePushNotifications({ role, userId, autoInit = true }: UsePushO
     [role, userId]
   );
 
+  useEffect(() => {
+    if (!supported || !userId) return;
+
+    const currentId = OneSignal.User?.PushSubscription?.id ?? playerId;
+    const optedIn = OneSignal.User?.PushSubscription?.optedIn ?? subscribed;
+
+    if (!currentId || !optedIn) return;
+
+    savePlayerId(currentId).catch((error) => {
+      console.error("Falha ao vincular player_id ao usuário:", error);
+    });
+  }, [supported, userId, playerId, subscribed, savePlayerId]);
+
   const enable = useCallback(async () => {
     if (!supported) {
       toast.error("Push não suportado neste dispositivo/navegador.");
