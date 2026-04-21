@@ -139,8 +139,8 @@ const AdminBotWpp = () => {
       icon: WifiOff,
     },
     CONNECTED: {
-      label: "Robô Online",
-      dotClass: "bg-rose",
+      label: "Assistente Online",
+      dotClass: "bg-success",
       icon: Wifi,
     },
     ERROR: {
