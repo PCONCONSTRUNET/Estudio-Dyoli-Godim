@@ -220,6 +220,16 @@ const AuthScreen = ({ onSuccess, onBack, initialMode = "signup" }: AuthScreenPro
               ? "Criar Conta"
               : "Entrar"}
           </button>
+
+          {mode === "login" && (
+            <button
+              type="button"
+              onClick={() => setShowForgot(true)}
+              className="block mx-auto pt-1 font-body text-[12px] text-primary-foreground/45 hover:text-gold transition-colors"
+            >
+              Esqueci minha senha
+            </button>
+          )}
         </form>
 
         {/* Toggle mode */}
