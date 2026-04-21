@@ -411,7 +411,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       setPaymentLoading(false);
       return;
     }
-    const { data: agData } = await supabase.from("agendamentos").insert({
+    const { data: agData, error: agError } = await supabase.from("agendamentos").insert({
       user_id: user.id,
       servico: service,
       variacao: variation || null,
@@ -419,48 +419,55 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       horario: selectedTime,
       valor: numericPrice,
       valor_pago: 0,
-      forma_pagamento: "pix",
+      forma_pagamento: "pendente",
       status: "confirmado",
       duracao_minutos: serviceDuration,
     }).select("id").single();
 
-    if (agData) {
-      setAgendamentoId(agData.id);
-      try {
-        const { data: prof } = await supabase
-          .from("profiles")
-          .select("nome, whatsapp")
-          .eq("id", user.id)
-          .maybeSingle();
-        notifyAgendamentoConfirmado({
-          numero: prof?.whatsapp || "",
-          nome: prof?.nome || user.user_metadata?.nome || "",
-          data: selectedDate,
-          horario: selectedTime,
-        });
-        sendPush({
-          role: "admin",
-          title: "🔔 Novo Agendamento!",
-          message: `${prof?.nome || "Cliente"} — ${service} em ${selectedDate} às ${selectedTime}`,
-          url: "/admin/",
-        });
-        // Push de confirmação pro cliente
-        sendPush({
-          role: "cliente",
-          user_id: user.id,
-          title: "✅ Agendamento confirmado!",
-          message: `${service} em ${selectedDate} às ${selectedTime}. Te esperamos!`,
-          url: "/",
-        });
-      } catch (e) {
-        console.log("notify webhook skipped", e);
-      }
+    if (agError || !agData) {
+      toast.error("Erro ao criar agendamento");
+      setPaymentLoading(false);
+      return;
     }
-    setPaymentData({ gateway: "local", method: "pix" });
-    setPaymentExpiry(Date.now() + 5 * 60 * 1000);
-    setTimeLeft(300);
-    setStep("payment");
+
+    setAgendamentoId(agData.id);
+    try {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("nome, whatsapp")
+        .eq("id", user.id)
+        .maybeSingle();
+      notifyAgendamentoConfirmado({
+        numero: prof?.whatsapp || "",
+        nome: prof?.nome || user.user_metadata?.nome || "",
+        data: selectedDate,
+        horario: selectedTime,
+      });
+      sendPush({
+        role: "admin",
+        title: "🔔 Novo Agendamento!",
+        message: `${prof?.nome || "Cliente"} — ${service} em ${selectedDate} às ${selectedTime} (pagar na recepção)`,
+        url: "/admin/",
+      });
+      sendPush({
+        role: "cliente",
+        user_id: user.id,
+        title: "✅ Agendamento confirmado!",
+        message: `${service} em ${selectedDate} às ${selectedTime}. Pagamento na recepção.`,
+        url: "/",
+      });
+    } catch (e) {
+      console.log("notify webhook skipped", e);
+    }
+
     setPaymentLoading(false);
+    onConfirm({
+      date: selectedDate,
+      time: selectedTime,
+      price: numericPrice,
+      paidAmount: 0,
+      durationMinutes: serviceDuration,
+    });
   };
 
   if (step === "confirm") {
