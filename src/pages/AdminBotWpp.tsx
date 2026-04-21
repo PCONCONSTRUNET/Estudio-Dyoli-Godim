@@ -178,10 +178,10 @@ const AdminBotWpp = () => {
             Estúdio Dyoli Godim
           </p>
           <h1 className="mt-2 font-heading text-3xl md:text-4xl font-semibold text-foreground">
-            Configuração do Robô de Agendamento
+            Configuração do Assistente Virtual
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Painel privado de conexão do assistente de WhatsApp
+            Painel privado de conexão do Assistente Virtual de WhatsApp
           </p>
           <div className="mt-3 h-px w-24 bg-gradient-to-r from-transparent via-gold to-transparent" />
         </div>
