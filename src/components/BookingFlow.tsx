@@ -543,11 +543,6 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
                 <p className="font-body text-[13px] text-muted-foreground">Valor total</p>
                 <p className="font-heading text-xl font-bold text-foreground">{price}</p>
               </div>
-              <div className="mt-3 rounded-xl bg-gold/10 border border-gold/30 px-3 py-2">
-                <p className="font-body text-[12px] text-gold font-medium text-center">
-                  💰 Pagamento direto na recepção
-                </p>
-              </div>
             </div>
           </div>
 
