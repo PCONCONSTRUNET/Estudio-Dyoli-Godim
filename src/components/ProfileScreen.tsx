@@ -187,8 +187,8 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
           {/* Photo + name + tier badge */}
           <div className="flex items-center gap-4 mb-4">
             <div className="relative">
-              <div className="w-[68px] h-[68px] rounded-full overflow-hidden border-2 border-gold/20 shadow-[0_4px_16px_-4px_hsl(40_40%_55%/0.2)]">
-                <img src={professionalImg} alt="" className="w-full h-full object-cover object-top" />
+              <div className="w-[68px] h-[68px] rounded-full overflow-hidden border-2 border-gold/20 shadow-[0_4px_16px_-4px_hsl(40_40%_55%/0.2)] bg-primary-foreground/[0.06] flex items-center justify-center">
+                <User className="w-8 h-8 text-primary-foreground/40" strokeWidth={1.5} />
               </div>
               {stats.totalAtendimentos >= 3 && (
                 <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full ${stats.tier.bg} border-2 border-charcoal flex items-center justify-center`}>
