@@ -399,8 +399,8 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     if (gatewayInfo) {
       handleCreatePayment();
     } else {
-      // No gateway — create agendamento as confirmado directly (local PIX)
-      handleLocalPayment();
+      // No external gateway — fallback to local PIX flow
+      handleConfirmPixAgora();
     }
   };
 
