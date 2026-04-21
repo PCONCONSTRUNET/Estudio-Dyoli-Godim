@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw, Smartphone, Wifi, WifiOff, Loader2, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// 🔌 Endpoint do backend local que expõe o status do robô
-const BOT_STATUS_URL = "http://localhost:3000/api/status";
+// 🔌 Endpoint do backend (provisório via Ngrok até subir na VPS definitiva)
+const BOT_STATUS_URL = "https://graffiti-plunging-ravine.ngrok-free.dev/api/status";
 const POLL_INTERVAL_MS = 3000;
 
 type BotStatus = "WAITING" | "QR_READY" | "CONNECTED" | "ERROR";
@@ -31,7 +31,12 @@ const AdminBotWpp = () => {
   // Função que faz o GET no backend local
   const fetchStatus = async () => {
     try {
-      const res = await fetch(BOT_STATUS_URL, { cache: "no-store" });
+      const res = await fetch(BOT_STATUS_URL, {
+        cache: "no-store",
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: BotStatusResponse = await res.json();
       setStatus(data.status);
@@ -40,7 +45,7 @@ const AdminBotWpp = () => {
       setLastUpdate(new Date());
     } catch (err) {
       setErrorMsg(
-        "Não foi possível conectar ao servidor do robô (localhost:3000). Verifique se o backend está rodando."
+        "Não foi possível conectar ao servidor do robô. Verifique se o túnel Ngrok está ativo."
       );
     }
   };
