@@ -46,6 +46,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   const [copied, setCopied] = useState(false);
   const [paymentMode, setPaymentMode] = useState<"deposit" | "full">("full");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"pix" | "cartao" | "boleto">("pix");
+  const [paymentChoice, setPaymentChoice] = useState<"pix" | "recepcao">("pix");
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentData, setPaymentData] = useState<PaymentResponse | null>(null);
   const [availableMethods, setAvailableMethods] = useState<{ pix: boolean; cartao: boolean; boleto: boolean }>({ pix: true, cartao: false, boleto: false });
@@ -398,18 +399,18 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     if (gatewayInfo) {
       handleCreatePayment();
     } else {
-      // No gateway — create agendamento as confirmado directly (local PIX)
-      handleLocalPayment();
+      // No external gateway — fallback to local PIX flow
+      handleConfirmPixAgora();
     }
   };
 
-  const handleLocalPayment = async () => {
-    setPaymentLoading(true);
+  // Cria agendamento e dispara notificações; status sempre "confirmado".
+  // forma: "pendente" → pagar na recepção. forma: "pix" → mostra QR local.
+  const createAgendamento = async (forma: "pix" | "pendente") => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Faça login para continuar");
-      setPaymentLoading(false);
-      return;
+      return null;
     }
     const { data: agData, error: agError } = await supabase.from("agendamentos").insert({
       user_id: user.id,
@@ -419,18 +420,18 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       horario: selectedTime,
       valor: numericPrice,
       valor_pago: 0,
-      forma_pagamento: "pendente",
+      forma_pagamento: forma,
       status: "confirmado",
       duracao_minutos: serviceDuration,
     }).select("id").single();
 
     if (agError || !agData) {
       toast.error("Erro ao criar agendamento");
-      setPaymentLoading(false);
-      return;
+      return null;
     }
 
     setAgendamentoId(agData.id);
+
     try {
       const { data: prof } = await supabase
         .from("profiles")
@@ -443,30 +444,37 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
         data: selectedDate,
         horario: selectedTime,
       });
+      const formaTxt = forma === "pix" ? "(PIX online)" : "(pagar na recepção)";
       void sendPush({
         role: "admin",
         title: "🔔 Novo Agendamento!",
-        message: `${prof?.nome || "Cliente"} — ${service} em ${selectedDate} às ${selectedTime} (pagar na recepção)`,
+        message: `${prof?.nome || "Cliente"} — ${service} em ${selectedDate} às ${selectedTime} ${formaTxt}`,
         url: "/admin/",
       }).catch((e) => console.warn("admin push failed", e));
 
+      const clienteMsg = forma === "pix"
+        ? `${service} em ${selectedDate} às ${selectedTime}.`
+        : `${service} em ${selectedDate} às ${selectedTime}. Pagamento na recepção.`;
       await sendPush({
         role: "cliente",
         user_id: user.id,
         title: "✅ Agendamento confirmado!",
-        message: `${service} em ${selectedDate} às ${selectedTime}. Pagamento na recepção.`,
+        message: clienteMsg,
         url: "/",
       });
-
-      showLocalNotification(
-        "✅ Agendamento confirmado!",
-        `${service} em ${selectedDate} às ${selectedTime}. Pagamento na recepção.`
-      );
+      showLocalNotification("✅ Agendamento confirmado!", clienteMsg);
     } catch (e) {
       console.log("notify webhook skipped", e);
     }
 
+    return agData.id;
+  };
+
+  const handleConfirmRecepcao = async () => {
+    setPaymentLoading(true);
+    const id = await createAgendamento("pendente");
     setPaymentLoading(false);
+    if (!id) return;
     onConfirm({
       date: selectedDate,
       time: selectedTime,
@@ -474,6 +482,20 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       paidAmount: 0,
       durationMinutes: serviceDuration,
     });
+  };
+
+  const handleConfirmPixAgora = async () => {
+    setPaymentLoading(true);
+    const id = await createAgendamento("pix");
+    if (!id) {
+      setPaymentLoading(false);
+      return;
+    }
+    setPaymentData({ gateway: "local", method: "pix" });
+    setPaymentExpiry(Date.now() + 5 * 60 * 1000);
+    setTimeLeft(300);
+    setStep("payment");
+    setPaymentLoading(false);
   };
 
   if (step === "confirm") {
@@ -521,11 +543,6 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
                 <p className="font-body text-[13px] text-muted-foreground">Valor total</p>
                 <p className="font-heading text-xl font-bold text-foreground">{price}</p>
               </div>
-              <div className="mt-3 rounded-xl bg-gold/10 border border-gold/30 px-3 py-2">
-                <p className="font-body text-[12px] text-gold font-medium text-center">
-                  💰 Pagamento direto na recepção
-                </p>
-              </div>
             </div>
           </div>
 
@@ -536,10 +553,62 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
           </div>
         </div>
 
+        {/* Escolha do pagamento */}
+        <div className="w-full max-w-sm mt-6 lg:mx-auto">
+          <p className="font-body text-[11px] text-muted-foreground uppercase tracking-widest font-medium mb-2.5 text-left">
+            Como deseja pagar? <span className="text-rose normal-case tracking-normal text-[11px] font-normal">(toque para escolher)</span>
+          </p>
+          <div className="space-y-2.5">
+            <button
+              type="button"
+              onClick={() => setPaymentChoice("pix")}
+              aria-pressed={paymentChoice === "pix"}
+              className={`ios-press w-full flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all ${
+                paymentChoice === "pix"
+                  ? "border-gold bg-gold/10 shadow-[0_4px_18px_-6px_hsl(40_40%_55%/0.45)]"
+                  : "border-border/60 bg-card hover:border-gold/40 hover:bg-gold/5"
+              }`}
+            >
+              <img src={pixIcon} alt="PIX" className="w-6 h-6" />
+              <div className="text-left">
+                <p className="font-body text-[13px] font-semibold text-foreground">Pagar agora por PIX</p>
+                <p className="font-body text-[11px] text-muted-foreground">QR Code instantâneo</p>
+              </div>
+              <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentChoice === "pix" ? "border-gold bg-gold" : "border-muted-foreground/40"}`}>
+                {paymentChoice === "pix" && <Check className="w-3 h-3 text-charcoal" strokeWidth={3} />}
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setPaymentChoice("recepcao")}
+              aria-pressed={paymentChoice === "recepcao"}
+              className={`ios-press w-full flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all ${
+                paymentChoice === "recepcao"
+                  ? "border-gold bg-gold/10 shadow-[0_4px_18px_-6px_hsl(40_40%_55%/0.45)]"
+                  : "border-border/60 bg-card hover:border-gold/40 hover:bg-gold/5"
+              }`}
+            >
+              <span className="text-xl">💰</span>
+              <div className="text-left">
+                <p className="font-body text-[13px] font-semibold text-foreground">Pagar na recepção</p>
+                <p className="font-body text-[11px] text-muted-foreground">No dia do atendimento</p>
+              </div>
+              <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentChoice === "recepcao" ? "border-gold bg-gold" : "border-muted-foreground/40"}`}>
+                {paymentChoice === "recepcao" && <Check className="w-3 h-3 text-charcoal" strokeWidth={3} />}
+              </div>
+            </button>
+          </div>
+        </div>
+
         <div className="pt-6 pb-4">
-          <button onClick={handleLocalPayment} disabled={paymentLoading}
+          <button onClick={paymentChoice === "pix" ? handleConfirmPixAgora : handleConfirmRecepcao} disabled={paymentLoading}
             className="ios-press w-full py-4 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all flex items-center justify-center gap-2.5 disabled:opacity-50">
-            {paymentLoading ? (<><Loader2 className="w-5 h-5 animate-spin" /> Confirmando...</>) : (
+            {paymentLoading ? (
+              <><Loader2 className="w-5 h-5 animate-spin" /> Confirmando...</>
+            ) : paymentChoice === "pix" ? (
+              <><img src={pixIcon} alt="PIX" className="w-5 h-5" /> Gerar PIX — R$ {paymentAmount}</>
+            ) : (
               <><CheckCircle2 className="w-5 h-5" /> Confirmar Agendamento</>
             )}
           </button>
