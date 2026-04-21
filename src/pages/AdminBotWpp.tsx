@@ -1,13 +1,21 @@
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Smartphone, Wifi, WifiOff, Loader2, CheckCircle2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RefreshCw, Smartphone, Wifi, WifiOff, Loader2, CheckCircle2, KeyRound, QrCode, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
 
-// 🔌 Endpoint do backend (provisório via Ngrok até subir na VPS definitiva)
-const BOT_STATUS_URL = "https://graffiti-plunging-ravine.ngrok-free.dev/api/status";
+// 🔌 Endpoints do backend (provisório via Ngrok até subir na VPS definitiva)
+const BOT_BASE_URL = "https://graffiti-plunging-ravine.ngrok-free.dev";
+const BOT_STATUS_URL = `${BOT_BASE_URL}/api/status`;
+const BOT_PAIRING_URL = `${BOT_BASE_URL}/api/pairing-code`;
 const POLL_INTERVAL_MS = 3000;
+
+const NGROK_HEADERS = { "ngrok-skip-browser-warning": "true" } as const;
+
+type ConnectMode = "qr" | "code";
 
 type BotStatus = "WAITING" | "QR_READY" | "CONNECTED" | "ERROR";
 
