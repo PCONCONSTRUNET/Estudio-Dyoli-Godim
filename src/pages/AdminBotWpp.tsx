@@ -155,14 +155,14 @@ const AdminBotWpp = () => {
                   className="h-[256px] w-[256px] rounded-lg"
                 />
               ) : (
-                <QRCodeCanvas
-                  value={qrValue}
-                  size={256}
-                  level="H"
-                  includeMargin={false}
-                  bgColor="#ffffff"
-                  fgColor="#1a1a1a"
-                />
+                <div className="rounded-lg bg-white p-2">
+                  <QRCodeCanvas
+                    value={qrValue}
+                    size={240}
+                    level="H"
+                    includeMargin={false}
+                  />
+                </div>
               )}
 
               {refreshing && (
