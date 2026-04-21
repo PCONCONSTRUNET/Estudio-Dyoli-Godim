@@ -68,17 +68,11 @@ const AdminBotWpp = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (status === "CONNECTED" && intervalRef.current) {
-      window.clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, [status]);
-
+  // Polling continua ativo mesmo quando conectado, para detectar desconexão em tempo real
   const handleManualRefresh = async () => {
     setManualRefreshing(true);
     await fetchStatus();
-    if (!intervalRef.current && status !== "CONNECTED") {
+    if (!intervalRef.current) {
       intervalRef.current = window.setInterval(fetchStatus, POLL_INTERVAL_MS);
     }
     setTimeout(() => setManualRefreshing(false), 500);
