@@ -66,7 +66,7 @@ const SuccessScreen = ({ onHome, onProfile }: SuccessScreenProps) => {
             Agendamento Confirmado!
           </h2>
           <p className="font-body text-[13px] text-primary-foreground/45 font-light max-w-[260px] mx-auto leading-relaxed">
-            Você receberá uma confirmação via WhatsApp e um lembrete 24h antes do procedimento.
+            Você receberá uma confirmação via WhatsApp e um lembrete 24h antes. O pagamento será feito diretamente na recepção.
           </p>
         </div>
 
