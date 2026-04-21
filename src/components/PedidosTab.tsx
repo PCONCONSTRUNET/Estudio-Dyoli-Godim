@@ -402,7 +402,7 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                       <p className="font-body text-[14px] font-medium text-primary-foreground truncate">{getClientName(a.user_id, a.cliente_nome)}</p>
                       {a.origem === "whatsapp_bot" && (
                         <span title="Via WhatsApp" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-green-500/30 bg-green-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-green-400">
-                          <MessageSquare className="h-2.5 w-2.5" />
+                          <WhatsAppIcon className="h-2.5 w-2.5" />
                           WA
                         </span>
                       )}
