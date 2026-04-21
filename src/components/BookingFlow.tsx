@@ -553,10 +553,62 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
           </div>
         </div>
 
+        {/* Escolha do pagamento */}
+        <div className="w-full max-w-sm mt-6 lg:mx-auto">
+          <p className="font-body text-[11px] text-muted-foreground uppercase tracking-widest font-medium mb-2.5 text-left">
+            Como deseja pagar? <span className="text-rose normal-case tracking-normal text-[11px] font-normal">(toque para escolher)</span>
+          </p>
+          <div className="space-y-2.5">
+            <button
+              type="button"
+              onClick={() => setPaymentChoice("pix")}
+              aria-pressed={paymentChoice === "pix"}
+              className={`ios-press w-full flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all ${
+                paymentChoice === "pix"
+                  ? "border-gold bg-gold/10 shadow-[0_4px_18px_-6px_hsl(40_40%_55%/0.45)]"
+                  : "border-border/60 bg-card hover:border-gold/40 hover:bg-gold/5"
+              }`}
+            >
+              <img src={pixIcon} alt="PIX" className="w-6 h-6" />
+              <div className="text-left">
+                <p className="font-body text-[13px] font-semibold text-foreground">Pagar agora por PIX</p>
+                <p className="font-body text-[11px] text-muted-foreground">QR Code instantâneo</p>
+              </div>
+              <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentChoice === "pix" ? "border-gold bg-gold" : "border-muted-foreground/40"}`}>
+                {paymentChoice === "pix" && <Check className="w-3 h-3 text-charcoal" strokeWidth={3} />}
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setPaymentChoice("recepcao")}
+              aria-pressed={paymentChoice === "recepcao"}
+              className={`ios-press w-full flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all ${
+                paymentChoice === "recepcao"
+                  ? "border-gold bg-gold/10 shadow-[0_4px_18px_-6px_hsl(40_40%_55%/0.45)]"
+                  : "border-border/60 bg-card hover:border-gold/40 hover:bg-gold/5"
+              }`}
+            >
+              <span className="text-xl">💰</span>
+              <div className="text-left">
+                <p className="font-body text-[13px] font-semibold text-foreground">Pagar na recepção</p>
+                <p className="font-body text-[11px] text-muted-foreground">No dia do atendimento</p>
+              </div>
+              <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentChoice === "recepcao" ? "border-gold bg-gold" : "border-muted-foreground/40"}`}>
+                {paymentChoice === "recepcao" && <Check className="w-3 h-3 text-charcoal" strokeWidth={3} />}
+              </div>
+            </button>
+          </div>
+        </div>
+
         <div className="pt-6 pb-4">
           <button onClick={paymentChoice === "pix" ? handleConfirmPixAgora : handleConfirmRecepcao} disabled={paymentLoading}
             className="ios-press w-full py-4 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all flex items-center justify-center gap-2.5 disabled:opacity-50">
-            {paymentLoading ? (<><Loader2 className="w-5 h-5 animate-spin" /> Confirmando...</>) : (
+            {paymentLoading ? (
+              <><Loader2 className="w-5 h-5 animate-spin" /> Confirmando...</>
+            ) : paymentChoice === "pix" ? (
+              <><img src={pixIcon} alt="PIX" className="w-5 h-5" /> Gerar PIX — R$ {paymentAmount}</>
+            ) : (
               <><CheckCircle2 className="w-5 h-5" /> Confirmar Agendamento</>
             )}
           </button>
