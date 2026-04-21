@@ -24,10 +24,7 @@ interface Props {
   agendamentos: Agendamento[];
   getClientName: (userId: string) => string;
   notificationsEnabled: boolean;
-  soundEnabled: boolean;
   toggleNotifications: (val: boolean) => void;
-  toggleSound: (val: boolean) => void;
-  playSound: () => void;
   statusBadge: (s: string) => JSX.Element;
   onGoToAgenda: () => void;
 }
@@ -38,10 +35,7 @@ const AdminDashboard = ({
   agendamentos,
   getClientName,
   notificationsEnabled,
-  soundEnabled,
   toggleNotifications,
-  toggleSound,
-  playSound,
   statusBadge,
   onGoToAgenda,
 }: Props) => {
@@ -403,7 +397,7 @@ const AdminDashboard = ({
             Notificações
           </h3>
         </div>
-        <div className="grid gap-3 lg:grid-cols-3">
+        <div className="grid gap-3 lg:grid-cols-2">
           <div className="flex items-center justify-between lg:flex-col lg:items-start lg:gap-2">
             <div>
               <p className="font-body text-[13px] text-primary-foreground">Pop-up de pedidos</p>
@@ -411,19 +405,6 @@ const AdminDashboard = ({
             </div>
             <Switch checked={notificationsEnabled} onCheckedChange={toggleNotifications} />
           </div>
-          <div className="flex items-center justify-between lg:flex-col lg:items-start lg:gap-2">
-            <div>
-              <p className="font-body text-[13px] text-primary-foreground">Som</p>
-              <p className="font-body text-[10px] text-primary-foreground/30">Toque sonoro ao receber</p>
-            </div>
-            <Switch checked={soundEnabled} onCheckedChange={toggleSound} />
-          </div>
-          <button
-            onClick={() => playSound()}
-            className="py-2.5 rounded-xl bg-gold/10 border border-gold/20 text-gold font-body text-[12px] font-medium hover:bg-gold/15 transition-all"
-          >
-            🔔 Testar som
-          </button>
         </div>
 
         {/* Push nativo (PWA + desktop) */}

@@ -331,10 +331,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
   const {
     notificationsEnabled,
-    soundEnabled,
     toggleNotifications,
-    toggleSound,
-    playSound,
   } = useAdminNotifications(true, handleNewAgendamento);
 
   useEffect(() => {
@@ -358,6 +355,15 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     const ag = agendamentos.find((a) => a.id === id);
     if (status === "confirmado") {
       notifyAgendamentoConfirmadoById(id);
+      if (ag?.user_id) {
+        sendPush({
+          role: "cliente",
+          user_id: ag.user_id,
+          title: "✅ Agendamento confirmado!",
+          message: `Seu ${ag.servico} de ${ag.data_agendamento} às ${ag.horario} foi confirmado.`,
+          url: "/",
+        });
+      }
     } else if (status === "cancelado") {
       notifyLembreteById(id, "cancelamento");
       // Push cliente
@@ -748,10 +754,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
               agendamentos={agendamentos}
               getClientName={getClientName}
               notificationsEnabled={notificationsEnabled}
-              soundEnabled={soundEnabled}
               toggleNotifications={toggleNotifications}
-              toggleSound={toggleSound}
-              playSound={playSound}
               statusBadge={statusBadge}
               onGoToAgenda={() => setTab("agendamentos")}
             />
