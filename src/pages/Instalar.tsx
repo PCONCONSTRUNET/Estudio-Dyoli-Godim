@@ -88,7 +88,7 @@ const Instalar = () => {
           </p>
 
           {installed && (
-            <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-sm font-medium text-emerald-300">
+            <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/15 px-4 py-2 text-sm font-medium text-gold">
               <CheckCircle2 className="h-4 w-4" />
               App já instalado neste dispositivo
             </div>
