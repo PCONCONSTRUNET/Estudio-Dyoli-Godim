@@ -9,9 +9,23 @@ export interface PushPayload {
   data?: Record<string, unknown>;
 }
 
-/** Fire-and-forget — never blocks UI on push delivery. */
-export function sendPush(payload: PushPayload): void {
-  supabase.functions
-    .invoke("send-push", { body: payload })
-    .catch((e) => console.warn("send-push failed:", e));
+export async function sendPush(payload: PushPayload): Promise<void> {
+  const { error } = await supabase.functions.invoke("send-push", { body: payload });
+  if (error) throw error;
+}
+
+export function showLocalNotification(title: string, message: string): void {
+  if (typeof window === "undefined" || typeof Notification === "undefined") return;
+  if (Notification.permission !== "granted") return;
+
+  try {
+    new Notification(title, {
+      body: message,
+      icon: "/favicon.ico",
+      badge: "/favicon.ico",
+      silent: true,
+    });
+  } catch (e) {
+    console.warn("local notification failed:", e);
+  }
 }
