@@ -54,17 +54,17 @@ const InstallAppBanner = () => {
   };
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 px-4 pb-4 pt-2 pointer-events-none animate-fade-in">
-      <div className="pointer-events-auto mx-auto flex max-w-md items-center gap-3 rounded-2xl border border-gold/30 bg-charcoal/90 p-3 pr-2 shadow-[0_15px_40px_-10px_rgba(0,0,0,0.6)] backdrop-blur-xl">
-        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-gold/30 bg-charcoal">
+    <div className="fixed inset-x-0 bottom-0 z-40 px-4 pb-3 pt-2 pointer-events-none animate-fade-in">
+      <div className="pointer-events-auto mx-auto flex max-w-[340px] items-center gap-2.5 rounded-2xl border border-gold/30 bg-charcoal/90 p-2 pr-1.5 shadow-[0_15px_40px_-10px_rgba(0,0,0,0.6)] backdrop-blur-xl">
+        <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-gold/30 bg-charcoal">
           <img src={logo} alt="" className="h-full w-full object-cover" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-heading text-[15px] font-semibold leading-tight text-primary-foreground">
-            Instale o app no seu celular
+          <p className="font-heading text-[12.5px] font-semibold leading-tight text-primary-foreground">
+            Instale o app no celular
           </p>
-          <p className="mt-0.5 font-body text-[11px] text-primary-foreground/55">
-            Acesso rápido e lembretes na palma da mão.
+          <p className="mt-0.5 font-body text-[10px] leading-tight text-primary-foreground/55">
+            Acesso rápido e lembretes.
           </p>
         </div>
         <button
@@ -72,17 +72,17 @@ const InstallAppBanner = () => {
             dismiss();
             navigate("/instalar");
           }}
-          className="ios-press flex shrink-0 items-center gap-1.5 rounded-full bg-gold px-3 py-2 text-[12px] font-semibold text-charcoal shadow-sm hover:bg-gold/90"
+          className="ios-press flex shrink-0 items-center gap-1 rounded-full bg-gold px-2.5 py-1.5 text-[11px] font-semibold text-charcoal shadow-sm hover:bg-gold/90"
         >
-          <Download className="h-3.5 w-3.5" />
+          <Download className="h-3 w-3" />
           <span>Instalar</span>
         </button>
         <button
           onClick={dismiss}
           aria-label="Fechar"
-          className="ios-press flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-primary-foreground/50 hover:bg-primary-foreground/10 hover:text-primary-foreground/80"
+          className="ios-press flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-primary-foreground/50 hover:bg-primary-foreground/10 hover:text-primary-foreground/80"
         >
-          <X className="h-4 w-4" />
+          <X className="h-3.5 w-3.5" />
         </button>
       </div>
     </div>
