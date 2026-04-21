@@ -15,7 +15,7 @@ const json = (data: unknown, status = 200) =>
 const normalizeWhatsapp = (input: string) => (input || "").replace(/\D/g, "");
 const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
-const FROM_EMAIL = "Estúdio Dyoli <no-reply@estudiodyoligodim.com.br>";
+const FROM_EMAIL = "Dyoli Godim <no-reply@estudiodyoligodim.com.br>";
 const APP_BASE_URL = "https://estudiodyoli.lovable.app";
 
 Deno.serve(async (req) => {
