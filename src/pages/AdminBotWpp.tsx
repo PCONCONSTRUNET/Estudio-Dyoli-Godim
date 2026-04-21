@@ -1,13 +1,21 @@
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Smartphone, Wifi, WifiOff, Loader2, CheckCircle2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RefreshCw, Smartphone, Wifi, WifiOff, Loader2, CheckCircle2, KeyRound, QrCode, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
 
-// 🔌 Endpoint do backend (provisório via Ngrok até subir na VPS definitiva)
-const BOT_STATUS_URL = "https://graffiti-plunging-ravine.ngrok-free.dev/api/status";
+// 🔌 Endpoints do backend (provisório via Ngrok até subir na VPS definitiva)
+const BOT_BASE_URL = "https://graffiti-plunging-ravine.ngrok-free.dev";
+const BOT_STATUS_URL = `${BOT_BASE_URL}/api/status`;
+const BOT_PAIRING_URL = `${BOT_BASE_URL}/api/pairing-code`;
 const POLL_INTERVAL_MS = 3000;
+
+const NGROK_HEADERS = { "ngrok-skip-browser-warning": "true" } as const;
+
+type ConnectMode = "qr" | "code";
 
 type BotStatus = "WAITING" | "QR_READY" | "CONNECTED" | "ERROR";
 
@@ -22,6 +30,11 @@ const AdminBotWpp = () => {
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [manualRefreshing, setManualRefreshing] = useState(false);
+  const [connectMode, setConnectMode] = useState<ConnectMode>("qr");
+  const [phone, setPhone] = useState("");
+  const [pairingCode, setPairingCode] = useState<string | null>(null);
+  const [pairingLoading, setPairingLoading] = useState(false);
+  const [pairingError, setPairingError] = useState<string | null>(null);
   const intervalRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -32,9 +45,7 @@ const AdminBotWpp = () => {
     try {
       const res = await fetch(BOT_STATUS_URL, {
         cache: "no-store",
-        headers: {
-          "ngrok-skip-browser-warning": "true",
-        },
+        headers: NGROK_HEADERS,
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: BotStatusResponse = await res.json();
@@ -71,6 +82,45 @@ const AdminBotWpp = () => {
       intervalRef.current = window.setInterval(fetchStatus, POLL_INTERVAL_MS);
     }
     setTimeout(() => setManualRefreshing(false), 500);
+  };
+
+  const handleGeneratePairingCode = async () => {
+    setPairingError(null);
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length < 10 || digits.length > 15) {
+      setPairingError("Digite um número válido com DDD (ex: 11 91234-5678).");
+      return;
+    }
+    setPairingLoading(true);
+    try {
+      const res = await fetch(BOT_PAIRING_URL, {
+        method: "POST",
+        cache: "no-store",
+        headers: {
+          ...NGROK_HEADERS,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ phone: digits }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: { code?: string } = await res.json();
+      if (!data.code) throw new Error("Resposta sem código");
+      setPairingCode(data.code);
+    } catch (err) {
+      setPairingError(
+        "Não foi possível gerar o código. Verifique o servidor e tente novamente."
+      );
+    } finally {
+      setPairingLoading(false);
+    }
+  };
+
+  const handleSwitchMode = (mode: ConnectMode) => {
+    setConnectMode(mode);
+    setPairingError(null);
+    if (mode === "qr") {
+      setPairingCode(null);
+    }
   };
 
   const qrSrc =
@@ -180,56 +230,164 @@ const AdminBotWpp = () => {
           </div>
         )}
 
-        {/* QR Card tematizado */}
+        {/* Card de conexão tematizado: QR ou Código */}
         {!isConnected && (
           <Card className="border border-gold/20 bg-card/80 shadow-[0_20px_60px_-25px_hsl(var(--rose)/0.3)] backdrop-blur-sm rounded-3xl overflow-hidden">
             <CardHeader className="pb-4 border-b border-gold/10">
               <CardTitle className="text-center font-heading text-xl font-medium text-foreground">
-                {status === "QR_READY"
-                  ? "Escaneie o QR Code"
-                  : "Preparando QR Code..."}
+                {connectMode === "qr"
+                  ? status === "QR_READY"
+                    ? "Escaneie o QR Code"
+                    : "Preparando QR Code..."
+                  : pairingCode
+                    ? "Seu código exclusivo"
+                    : "Conectar via código"}
               </CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col items-center gap-6 pt-6">
-              <div className="relative rounded-2xl border-2 border-dashed border-gold/40 bg-nude/40 p-6">
-                {status === "QR_READY" && qrSrc ? (
-                  <div className="rounded-xl bg-white p-3 shadow-md">
-                    <img
-                      src={qrSrc}
-                      alt="QR Code WhatsApp"
-                      className="h-[256px] w-[256px] rounded"
+              {connectMode === "qr" ? (
+                <>
+                  <div className="relative rounded-2xl border-2 border-dashed border-gold/40 bg-nude/40 p-6">
+                    {status === "QR_READY" && qrSrc ? (
+                      <div className="rounded-xl bg-white p-3 shadow-md">
+                        <img
+                          src={qrSrc}
+                          alt="QR Code WhatsApp"
+                          className="h-[256px] w-[256px] rounded"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex h-[256px] w-[256px] flex-col items-center justify-center gap-3 text-center">
+                        <Loader2 className="h-12 w-12 animate-spin text-rose" />
+                        <p className="font-heading text-base font-medium text-foreground">
+                          {status === "WAITING"
+                            ? "Iniciando Robô..."
+                            : "Aguardando QR Code"}
+                        </p>
+                        <p className="text-xs text-muted-foreground px-4">
+                          {errorMsg ?? "Verificando status do servidor a cada 3s"}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <p className="text-xs text-muted-foreground">
+                    Última verificação: {lastUpdate.toLocaleTimeString("pt-BR")}
+                  </p>
+
+                  <Button
+                    onClick={handleManualRefresh}
+                    disabled={manualRefreshing}
+                    size="lg"
+                    className="w-full sm:w-auto rounded-full bg-rose hover:bg-rose/90 text-primary-foreground shadow-md"
+                  >
+                    <RefreshCw
+                      className={cn("h-4 w-4", manualRefreshing && "animate-spin")}
                     />
-                  </div>
-                ) : (
-                  <div className="flex h-[256px] w-[256px] flex-col items-center justify-center gap-3 text-center">
-                    <Loader2 className="h-12 w-12 animate-spin text-rose" />
-                    <p className="font-heading text-base font-medium text-foreground">
-                      {status === "WAITING"
-                        ? "Iniciando Robô..."
-                        : "Aguardando QR Code"}
-                    </p>
-                    <p className="text-xs text-muted-foreground px-4">
-                      {errorMsg ?? "Verificando status do servidor a cada 3s"}
-                    </p>
-                  </div>
-                )}
-              </div>
+                    Gerar novo QR Code / Atualizar
+                  </Button>
 
-              <p className="text-xs text-muted-foreground">
-                Última verificação: {lastUpdate.toLocaleTimeString("pt-BR")}
-              </p>
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchMode("code")}
+                    className="mt-1 inline-flex items-center gap-2 text-sm text-muted-foreground underline-offset-4 hover:text-rose hover:underline transition-colors"
+                  >
+                    <KeyRound className="h-4 w-4" />
+                    Conectar via código (Sem câmera)
+                  </button>
+                </>
+              ) : pairingCode ? (
+                <>
+                  <div className="w-full rounded-2xl border-2 border-rose/40 bg-gradient-to-br from-rose/10 via-nude/40 to-gold/10 p-8 text-center shadow-inner">
+                    <p className="font-body text-[11px] uppercase tracking-[0.3em] text-gold mb-3">
+                      Código de pareamento
+                    </p>
+                    <p className="font-heading text-5xl md:text-6xl font-bold tracking-[0.25em] text-rose drop-shadow-sm break-all">
+                      {pairingCode}
+                    </p>
+                  </div>
 
-              <Button
-                onClick={handleManualRefresh}
-                disabled={manualRefreshing}
-                size="lg"
-                className="w-full sm:w-auto rounded-full bg-rose hover:bg-rose/90 text-primary-foreground shadow-md"
-              >
-                <RefreshCw
-                  className={cn("h-4 w-4", manualRefreshing && "animate-spin")}
-                />
-                Gerar novo QR Code / Atualizar
-              </Button>
+                  <p className="text-center text-sm text-muted-foreground px-2">
+                    Abra o <strong className="text-foreground">WhatsApp do Studio</strong> →{" "}
+                    <strong className="text-foreground">Aparelhos Conectados</strong> →{" "}
+                    <strong className="text-foreground">Vincular com Número de Telefone</strong> e digite o código acima.
+                  </p>
+
+                  <p className="text-xs text-muted-foreground">
+                    Aguardando confirmação no celular... Última verificação: {lastUpdate.toLocaleTimeString("pt-BR")}
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setPairingCode(null);
+                        setPairingError(null);
+                      }}
+                      className="rounded-full border-gold/40"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                      Gerar outro código
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => handleSwitchMode("qr")}
+                      className="rounded-full"
+                    >
+                      <QrCode className="h-4 w-4" />
+                      Voltar para QR Code
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="w-full max-w-sm space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="bot-phone" className="text-sm text-foreground">
+                        Número do WhatsApp (com DDD)
+                      </Label>
+                      <Input
+                        id="bot-phone"
+                        type="tel"
+                        inputMode="tel"
+                        placeholder="Ex: 11 91234-5678"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="rounded-full border-gold/30 bg-background/70 h-11 text-center tracking-wide"
+                      />
+                      {pairingError && (
+                        <p className="text-xs text-destructive text-center">{pairingError}</p>
+                      )}
+                    </div>
+
+                    <Button
+                      type="button"
+                      onClick={handleGeneratePairingCode}
+                      disabled={pairingLoading}
+                      size="lg"
+                      className="w-full rounded-full bg-rose hover:bg-rose/90 text-primary-foreground shadow-md"
+                    >
+                      {pairingLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <KeyRound className="h-4 w-4" />
+                      )}
+                      Gerar Código Exclusivo
+                    </Button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchMode("qr")}
+                    className="inline-flex items-center gap-2 text-sm text-muted-foreground underline-offset-4 hover:text-rose hover:underline transition-colors"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Voltar para o QR Code
+                  </button>
+                </>
+              )}
             </CardContent>
           </Card>
         )}
