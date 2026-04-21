@@ -32,7 +32,10 @@ async function initOneSignal(): Promise<void> {
       allowLocalhostAsSecureOrigin: true,
       serviceWorkerParam: { scope: "/" },
       serviceWorkerPath: "OneSignalSDKWorker.js",
-    });
+      welcomeNotification: {
+        disable: true,
+      },
+    } as any);
   })();
   return initPromise;
 }
