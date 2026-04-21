@@ -54,6 +54,10 @@ export default {
         nude: "hsl(var(--nude))",
         charcoal: "hsl(var(--charcoal))",
         rose: "hsl(var(--rose))",
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
