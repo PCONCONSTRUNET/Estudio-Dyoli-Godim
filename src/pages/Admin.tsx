@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 import { Calendar as DatePickerCalendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import FinanceiroTab from "@/components/FinanceiroTab";
@@ -1070,7 +1071,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                       className="inline-flex items-center gap-1 rounded-full border border-green-500/30 bg-green-500/10 px-2 py-0.5 font-body text-[10px] font-semibold uppercase tracking-wide text-green-400"
                                       title="Agendamento feito pelo chatbot do WhatsApp"
                                     >
-                                      <MessageSquare className="h-2.5 w-2.5" />
+                                      <WhatsAppIcon className="h-3 w-3" />
                                       WhatsApp
                                     </span>
                                   )}
