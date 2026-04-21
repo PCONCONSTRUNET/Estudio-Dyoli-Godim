@@ -13,6 +13,7 @@ import Produtos from "./pages/Produtos";
 import Confirmar from "./pages/Confirmar";
 import Sucesso from "./pages/Sucesso";
 import Cuidados from "./pages/Cuidados";
+import Instalar from "./pages/Instalar";
 import NotFound from "./pages/NotFound";
 import PushPromptModal from "./components/PushPromptModal";
 
@@ -35,6 +36,7 @@ const App = () => (
           <Route path="/sucesso" element={<Sucesso />} />
           <Route path="/admin/*" element={<Admin />} />
           <Route path="/cuidados" element={<Cuidados />} />
+          <Route path="/instalar" element={<Instalar />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <PushPromptModal excludePaths={["/admin", "/auth"]} />
