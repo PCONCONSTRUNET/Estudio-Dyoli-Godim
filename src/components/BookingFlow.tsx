@@ -508,158 +508,26 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
                 <p className="font-body text-[13px] text-muted-foreground">Valor total</p>
                 <p className="font-heading text-xl font-bold text-foreground">{price}</p>
               </div>
-              {requiresDeposit && depositAmount && (
-                <div className="flex justify-between items-center mt-1.5">
-                  <p className="font-body text-[12px] text-rose font-medium">Sinal obrigatório (30%)</p>
-                  <p className="font-body text-[14px] font-semibold text-rose">{depositAmount}</p>
-                </div>
-              )}
+              <div className="mt-3 rounded-xl bg-gold/10 border border-gold/30 px-3 py-2">
+                <p className="font-body text-[12px] text-gold font-medium text-center">
+                  💰 Pagamento direto na recepção
+                </p>
+              </div>
             </div>
           </div>
 
           <div className="mt-4 p-3.5 rounded-2xl bg-secondary/30 backdrop-blur-sm border border-border/30 max-w-sm">
             <p className="font-body text-[12px] text-muted-foreground leading-relaxed">
-              ⚠ Cancelamentos devem ser feitos com no mínimo 24h de antecedência. Caso contrário, o sinal não será reembolsado.
+              ⚠ Cancelamentos devem ser feitos com no mínimo 24h de antecedência.
             </p>
           </div>
         </div>
 
-        {/* Payment method selector */}
-        <div className="w-full max-w-sm mt-6 lg:mx-auto">
-          <p className="font-body text-[11px] text-muted-foreground uppercase tracking-widest font-medium mb-2.5 text-left">
-            Forma de pagamento <span className="text-rose normal-case tracking-normal text-[11px] font-normal">(toque para escolher)</span>
-          </p>
-          <div className="space-y-2.5">
-            {availableMethods.pix && (
-              <button
-                type="button"
-                onClick={() => setSelectedPaymentMethod("pix")}
-                aria-pressed={selectedPaymentMethod === "pix"}
-                className={`ios-press w-full flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all ${
-                  selectedPaymentMethod === "pix"
-                    ? "border-gold bg-gold/10 shadow-[0_4px_18px_-6px_hsl(40_40%_55%/0.45)]"
-                    : "border-border/60 bg-card hover:border-gold/40 hover:bg-gold/5"
-                }`}
-              >
-                <img src={pixIcon} alt="PIX" className="w-6 h-6" />
-                <div className="text-left"><p className="font-body text-[13px] font-semibold text-foreground">PIX</p><p className="font-body text-[11px] text-muted-foreground">Pagamento instantâneo</p></div>
-                <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedPaymentMethod === "pix" ? "border-gold bg-gold" : "border-muted-foreground/40"}`}>
-                  {selectedPaymentMethod === "pix" && <Check className="w-3 h-3 text-charcoal" strokeWidth={3} />}
-                </div>
-              </button>
-            )}
-            {availableMethods.cartao && (
-              <button
-                type="button"
-                onClick={() => setSelectedPaymentMethod("cartao")}
-                aria-pressed={selectedPaymentMethod === "cartao"}
-                className={`ios-press w-full flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all ${
-                  selectedPaymentMethod === "cartao"
-                    ? "border-gold bg-gold/10 shadow-[0_4px_18px_-6px_hsl(40_40%_55%/0.45)]"
-                    : "border-border/60 bg-card hover:border-gold/40 hover:bg-gold/5"
-                }`}
-              >
-                <CreditCard className={`w-6 h-6 ${selectedPaymentMethod === "cartao" ? "text-gold" : "text-muted-foreground"}`} />
-                <div className="text-left"><p className="font-body text-[13px] font-semibold text-foreground">Cartão de Crédito</p><p className="font-body text-[11px] text-muted-foreground">Até 6x sem juros</p></div>
-                <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedPaymentMethod === "cartao" ? "border-gold bg-gold" : "border-muted-foreground/40"}`}>
-                  {selectedPaymentMethod === "cartao" && <Check className="w-3 h-3 text-charcoal" strokeWidth={3} />}
-                </div>
-              </button>
-            )}
-            {availableMethods.boleto && (
-              <button
-                type="button"
-                onClick={() => setSelectedPaymentMethod("boleto")}
-                aria-pressed={selectedPaymentMethod === "boleto"}
-                className={`ios-press w-full flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all ${
-                  selectedPaymentMethod === "boleto"
-                    ? "border-gold bg-gold/10 shadow-[0_4px_18px_-6px_hsl(40_40%_55%/0.45)]"
-                    : "border-border/60 bg-card hover:border-gold/40 hover:bg-gold/5"
-                }`}
-              >
-                <FileText className={`w-6 h-6 ${selectedPaymentMethod === "boleto" ? "text-gold" : "text-muted-foreground"}`} />
-                <div className="text-left"><p className="font-body text-[13px] font-semibold text-foreground">Boleto Bancário</p><p className="font-body text-[11px] text-muted-foreground">Compensação em até 3 dias</p></div>
-                <div className={`ml-auto w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedPaymentMethod === "boleto" ? "border-gold bg-gold" : "border-muted-foreground/40"}`}>
-                  {selectedPaymentMethod === "boleto" && <Check className="w-3 h-3 text-charcoal" strokeWidth={3} />}
-                </div>
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="pt-6 pb-4 space-y-3">
-          {requiresDeposit && (
-            <div>
-              <p className="font-body text-[11px] text-muted-foreground uppercase tracking-widest font-medium mb-2.5 text-left">
-                Como deseja pagar? <span className="text-rose normal-case tracking-normal text-[11px] font-normal">(toque para escolher)</span>
-              </p>
-              <div className="grid grid-cols-2 gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setPaymentMode("deposit")}
-                  aria-pressed={paymentMode === "deposit"}
-                  className={`ios-press relative py-3.5 px-3 rounded-2xl font-body text-[13px] font-semibold transition-all text-left ${
-                    paymentMode === "deposit"
-                      ? "bg-gold/10 border-2 border-gold text-foreground shadow-[0_4px_18px_-6px_hsl(40_40%_55%/0.45)]"
-                      : "bg-card border-2 border-border/60 text-muted-foreground hover:border-gold/40 hover:bg-gold/5"
-                  }`}
-                >
-                  <span className={`absolute top-2.5 right-2.5 w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMode === "deposit" ? "border-gold bg-gold" : "border-muted-foreground/40"}`}>
-                    {paymentMode === "deposit" && <Check className="w-2.5 h-2.5 text-charcoal" strokeWidth={3} />}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <span>Pagar Sinal</span>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <span
-                          role="button"
-                          tabIndex={0}
-                          onClick={(e) => e.stopPropagation()}
-                          onKeyDown={(e) => e.stopPropagation()}
-                          className="inline-flex items-center justify-center w-4 h-4 rounded-full text-muted-foreground hover:text-gold transition-colors cursor-pointer"
-                          aria-label="Mais informações sobre o sinal"
-                        >
-                          <Info className="w-3.5 h-3.5" />
-                        </span>
-                      </PopoverTrigger>
-                      <PopoverContent
-                        side="top"
-                        align="start"
-                        className="w-64 text-[12px] font-body font-normal leading-relaxed"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Você paga 30% agora para garantir o horário. Os 70% restantes são pagos no dia do atendimento, no estúdio.
-                      </PopoverContent>
-                    </Popover>
-                  </span>
-                  <span className={`block text-[12px] font-normal mt-1 ${paymentMode === "deposit" ? "text-gold" : "text-muted-foreground/80"}`}>{depositAmount}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPaymentMode("full")}
-                  aria-pressed={paymentMode === "full"}
-                  className={`ios-press relative py-3.5 px-3 rounded-2xl font-body text-[13px] font-semibold transition-all text-left ${
-                    paymentMode === "full"
-                      ? "bg-gold/10 border-2 border-gold text-foreground shadow-[0_4px_18px_-6px_hsl(40_40%_55%/0.45)]"
-                      : "bg-card border-2 border-border/60 text-muted-foreground hover:border-gold/40 hover:bg-gold/5"
-                  }`}
-                >
-                  <span className={`absolute top-2.5 right-2.5 w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMode === "full" ? "border-gold bg-gold" : "border-muted-foreground/40"}`}>
-                    {paymentMode === "full" && <Check className="w-2.5 h-2.5 text-charcoal" strokeWidth={3} />}
-                  </span>
-                  <span className="block">Valor Completo</span>
-                  <span className={`block text-[12px] font-normal mt-1 ${paymentMode === "full" ? "text-gold" : "text-muted-foreground/80"}`}>{price}</span>
-                </button>
-              </div>
-            </div>
-          )}
-          <button onClick={handleGoToPayment} disabled={paymentLoading}
+        <div className="pt-6 pb-4">
+          <button onClick={handleLocalPayment} disabled={paymentLoading}
             className="ios-press w-full py-4 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all flex items-center justify-center gap-2.5 disabled:opacity-50">
-            {paymentLoading ? (<><Loader2 className="w-5 h-5 animate-spin" /> Processando...</>) : (
-              <>{selectedPaymentMethod === "pix" && <img src={pixIcon} alt="PIX" className="w-5 h-5" />}
-              {selectedPaymentMethod === "cartao" && <CreditCard className="w-5 h-5" />}
-              {selectedPaymentMethod === "boleto" && <FileText className="w-5 h-5" />}
-              Pagar R$ {paymentAmount}</>
+            {paymentLoading ? (<><Loader2 className="w-5 h-5 animate-spin" /> Confirmando...</>) : (
+              <><CheckCircle2 className="w-5 h-5" /> Confirmar Agendamento</>
             )}
           </button>
         </div>
