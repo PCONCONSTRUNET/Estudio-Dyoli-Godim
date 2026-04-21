@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
-import { User, Calendar, Clock, LogOut, X, Sparkles, Cake, TrendingUp, Award, Pencil, Check, Heart, FileText } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { User, Calendar, Clock, LogOut, X, Sparkles, Cake, TrendingUp, Award, Pencil, Check, Heart, FileText, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyLembreteById } from "@/lib/notify-webhook";
 import PushToggle from "@/components/PushToggle";
@@ -30,6 +31,7 @@ interface Profile {
 }
 
 const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
+  const navigate = useNavigate();
   const [tab, setTab] = useState<"dados" | "agendamentos">("dados");
   const [agendamentosTab, setAgendamentosTab] = useState<"proximos" | "historico">("proximos");
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -419,8 +421,19 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
                 <PushToggle role="cliente" userId={userId} />
               </div>
 
-              {/* Logout */}
+              {/* Instalar app */}
               <div className="pt-3">
+                <button
+                  onClick={() => { onBack(); navigate("/instalar"); }}
+                  className="ios-press w-full py-3 rounded-full bg-gold/10 border border-gold/25 text-gold font-body text-[14px] font-medium flex items-center justify-center gap-2 transition-all duration-200 hover:bg-gold/15"
+                >
+                  <Download className="w-4 h-4" />
+                  Instalar app no celular
+                </button>
+              </div>
+
+              {/* Logout */}
+              <div className="pt-2">
                 <button
                   onClick={handleLogout}
                   className="ios-press w-full py-3 rounded-full bg-rose/10 border border-rose/20 text-rose font-body text-[14px] font-medium flex items-center justify-center gap-2 transition-all duration-200 hover:bg-rose/15"

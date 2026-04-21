@@ -16,6 +16,7 @@ import Cuidados from "./pages/Cuidados";
 import Instalar from "./pages/Instalar";
 import NotFound from "./pages/NotFound";
 import PushPromptModal from "./components/PushPromptModal";
+import InstallAppBanner from "./components/InstallAppBanner";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
         <PushPromptModal excludePaths={["/admin", "/auth"]} />
+        <InstallAppBanner />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
