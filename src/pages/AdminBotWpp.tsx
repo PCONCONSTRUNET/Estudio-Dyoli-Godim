@@ -180,17 +180,27 @@ const AdminBotWpp = () => {
           <div className="mt-3 h-px w-24 bg-gradient-to-r from-transparent via-gold to-transparent" />
         </div>
 
-        {/* Estado: Robô Online */}
+        {/* Estado: Assistente Online */}
         {isConnected ? (
-          <div className="mb-6 flex flex-col items-center gap-3 rounded-3xl border border-rose/30 bg-card/80 py-10 px-6 shadow-[0_20px_60px_-20px_hsl(var(--rose)/0.4)] backdrop-blur-sm">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-rose/10 border border-rose/30">
-              <CheckCircle2 className="h-9 w-9 text-rose" />
+          <div className="mb-6 flex flex-col items-center gap-3 rounded-3xl border border-success/40 bg-card/80 py-10 px-6 shadow-[0_20px_60px_-20px_hsl(var(--success)/0.4)] backdrop-blur-sm">
+            <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-success/10 border border-success/40">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success/30" />
+              <CheckCircle2 className="relative h-9 w-9 text-success" />
             </div>
-            <h2 className="font-heading text-4xl md:text-5xl font-semibold uppercase tracking-wide text-rose">
-              Robô Online
-            </h2>
+            <div className="flex items-center gap-3">
+              <span className="relative flex h-3 w-3">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75" />
+                <span className="relative inline-flex h-3 w-3 rounded-full bg-success shadow-[0_0_12px_hsl(var(--success))]" />
+              </span>
+              <h2 className="font-heading text-4xl md:text-5xl font-semibold uppercase tracking-wide text-success">
+                Assistente Online
+              </h2>
+            </div>
             <p className="text-sm text-muted-foreground">
               O assistente já está respondendo no WhatsApp
+            </p>
+            <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground/70">
+              Monitorando conexão • Última verificação: {lastUpdate.toLocaleTimeString("pt-BR")}
             </p>
           </div>
         ) : (
