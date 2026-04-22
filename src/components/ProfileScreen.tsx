@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { User, Calendar, Clock, LogOut, X, Sparkles, Cake, TrendingUp, Award, Pencil, Check, Heart, FileText, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyLembreteById } from "@/lib/notify-webhook";
+import { sendPush } from "@/lib/push-notify";
 import PushToggle from "@/components/PushToggle";
 import professionalImg from "@/assets/professional.png";
 
@@ -73,9 +74,34 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
 
   const handleCancel = async (id: string) => {
     setCancelling(id);
+    // Snapshot do agendamento antes do update pra montar a mensagem
+    const ag = agendamentos.find((a) => a.id === id);
+    const clienteNome = profile?.nome || "Cliente";
+
     await supabase.from("agendamentos").update({ status: "cancelado" }).eq("id", id);
     setAgendamentos(prev => prev.map(a => a.id === id ? { ...a, status: "cancelado" } : a));
     notifyLembreteById(id, "cancelamento");
+
+    // Push pro admin avisando do cancelamento
+    if (ag) {
+      try {
+        const dataFmt = new Date(ag.data_agendamento + "T12:00:00").toLocaleDateString("pt-BR", {
+          day: "2-digit",
+          month: "2-digit",
+        });
+        const variacaoTxt = ag.variacao ? ` (${ag.variacao})` : "";
+        await sendPush({
+          role: "admin",
+          title: "❌ Agendamento cancelado",
+          message: `${clienteNome} cancelou ${ag.servico}${variacaoTxt} de ${dataFmt} às ${ag.horario}`,
+          url: "/admin",
+          data: { agendamento_id: id, tipo: "cancelamento_cliente" },
+        });
+      } catch (e) {
+        console.warn("Push de cancelamento falhou:", e);
+      }
+    }
+
     setCancelling(null);
   };
 
