@@ -2362,7 +2362,6 @@ const ServicosTab = () => {
           👁 desativa toda a categoria para os clientes (mantém histórico). Excluir só é permitido em categorias vazias.
         </p>
       </div>
-      </div>
 
       <div className="h-px bg-gradient-to-r from-transparent via-primary-foreground/[0.08] to-transparent" />
 
