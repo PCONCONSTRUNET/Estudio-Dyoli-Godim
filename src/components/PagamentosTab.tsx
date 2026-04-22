@@ -164,19 +164,28 @@ const PagamentosTab = ({ agendamentos, getClientName }: Props) => {
       {/* Status filters */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
         <Filter className="h-3.5 w-3.5 shrink-0 text-primary-foreground/30" />
-        {(["todos", "pendente", "confirmado", "concluido", "cancelado", "falta"] as StatusFilter[]).map((s) => (
-          <button
-            key={s}
-            onClick={() => setStatusFilter(s)}
-            className={`shrink-0 rounded-lg px-3 py-1.5 font-body text-[11px] font-medium transition-all ${
-              statusFilter === s
-                ? "bg-gold/15 text-gold border border-gold/30"
-                : "bg-primary-foreground/[0.04] text-primary-foreground/40 border border-transparent hover:text-primary-foreground/60"
-            }`}
-          >
-            {s === "todos" ? "Todos" : s.charAt(0).toUpperCase() + s.slice(1)} ({counts[s]})
-          </button>
-        ))}
+        {(["todos", "pendente", "confirmado", "concluido", "cancelado", "falta"] as StatusFilter[]).map((s) => {
+          const colors: Record<StatusFilter, { active: string; inactive: string }> = {
+            todos: { active: "bg-gold/15 text-gold border-gold/40", inactive: "bg-gold/[0.04] text-gold/60 border-gold/20 hover:bg-gold/10 hover:text-gold/80" },
+            pendente: { active: "bg-red-500/15 text-red-400 border-red-500/40", inactive: "bg-red-500/[0.05] text-red-400/70 border-red-500/20 hover:bg-red-500/10 hover:text-red-400" },
+            confirmado: { active: "bg-blue-500/15 text-blue-400 border-blue-500/40", inactive: "bg-blue-500/[0.05] text-blue-400/70 border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400" },
+            concluido: { active: "bg-green-500/15 text-green-400 border-green-500/40", inactive: "bg-green-500/[0.05] text-green-400/70 border-green-500/20 hover:bg-green-500/10 hover:text-green-400" },
+            cancelado: { active: "bg-rose/15 text-rose border-rose/40", inactive: "bg-rose/[0.05] text-rose/70 border-rose/20 hover:bg-rose/10 hover:text-rose" },
+            falta: { active: "bg-orange-500/15 text-orange-400 border-orange-500/40", inactive: "bg-orange-500/[0.05] text-orange-400/70 border-orange-500/20 hover:bg-orange-500/10 hover:text-orange-400" },
+          };
+          const c = colors[s];
+          return (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={`shrink-0 rounded-lg px-3 py-1.5 font-body text-[11px] font-medium border transition-all ${
+                statusFilter === s ? c.active : c.inactive
+              }`}
+            >
+              {s === "todos" ? "Todos" : s.charAt(0).toUpperCase() + s.slice(1)} ({counts[s]})
+            </button>
+          );
+        })}
       </div>
 
       {/* Sort bar */}
