@@ -1649,10 +1649,52 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                 ))}
                             </div>
                           </div>
+
+                          <div className="border-t border-red-500/15 pt-3">
+                            <button
+                              onClick={() => setClienteParaExcluir(selProfile)}
+                              className="w-full flex items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 font-body text-[12px] font-medium text-red-400 hover:bg-red-500/20 transition-all"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              Excluir cliente permanentemente
+                            </button>
+                          </div>
                         </div>
                       )}
                     </DialogContent>
                   </Dialog>
+
+                  <AlertDialog open={!!clienteParaExcluir} onOpenChange={(o) => !o && !excluindoCliente && setClienteParaExcluir(null)}>
+                    <AlertDialogContent className="w-[calc(100vw-1rem)] max-w-md rounded-2xl border-red-500/30 bg-charcoal">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="font-heading text-primary-foreground">
+                          Excluir {clienteParaExcluir?.nome}?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="font-body text-[13px] text-primary-foreground/60">
+                          Esta ação é <strong className="text-red-400">permanente e não pode ser desfeita</strong>.
+                          Serão excluídos do banco de dados:
+                          <ul className="mt-2 list-disc pl-5 space-y-0.5 text-[12px]">
+                            <li>O perfil do cliente</li>
+                            <li>Todos os agendamentos dele</li>
+                            <li>A conta de login (auth)</li>
+                            <li>Tokens de senha e notificações push</li>
+                          </ul>
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel disabled={excluindoCliente} className="bg-primary-foreground/[0.05] border-primary-foreground/[0.1] text-primary-foreground hover:bg-primary-foreground/[0.1]">
+                          Cancelar
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          disabled={excluindoCliente}
+                          onClick={(e) => { e.preventDefault(); handleExcluirCliente(); }}
+                          className="bg-red-500 text-white hover:bg-red-600"
+                        >
+                          {excluindoCliente ? "Excluindo..." : "Excluir tudo"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               );
             })()}
