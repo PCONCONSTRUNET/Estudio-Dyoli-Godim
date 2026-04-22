@@ -30,6 +30,7 @@ const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
 
 const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const [period, setPeriod] = useState<FilterPeriod>("mes");
+  const [analiseOpen, setAnaliseOpen] = useState(false);
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [comissaoPct, setComissaoPct] = useState(() => {
@@ -807,6 +808,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
         )}
       </div>
 
+      <AnaliseCancelamentosModal open={analiseOpen} onClose={() => setAnaliseOpen(false)} />
     </div>
   );
 };
