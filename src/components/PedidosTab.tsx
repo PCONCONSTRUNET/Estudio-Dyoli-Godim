@@ -471,6 +471,15 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                         <p className="text-primary-foreground/30">Serviço</p>
                         <p className="text-primary-foreground font-medium">{a.servico}</p>
                       </div>
+                      <div className="col-span-2">
+                        <p className="text-primary-foreground/30">Forma de pagamento</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <p className="text-primary-foreground font-medium capitalize">
+                            {a.forma_pagamento || "—"}
+                          </p>
+                          {paymentBadge(a)}
+                        </div>
+                      </div>
                     </div>
                     <div className="border-t border-primary-foreground/[0.06] pt-3 space-y-2">
                       <p className="font-body text-[10px] text-primary-foreground/30 uppercase tracking-wider">Alterar status</p>
