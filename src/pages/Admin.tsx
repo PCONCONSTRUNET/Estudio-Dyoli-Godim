@@ -1963,12 +1963,35 @@ const ServicosTab = () => {
     try { localStorage.setItem(CATEGORIAS_STORAGE_KEY, JSON.stringify(lista)); } catch { /* ignore */ }
   };
 
-  useEffect(() => {
-    supabase.from("servicos").select("*").order("ordem").then(({ data }) => {
-      if (data) setServices(data.map(s => ({ id: s.id, name: s.nome, price: Number(s.preco), category: s.categoria, active: s.ativo, duration: s.duracao_minutos || 60 })));
-      setLoading(false);
-    });
+  const reloadServicos = useCallback(async () => {
+    const { data } = await supabase.from("servicos").select("*").order("ordem");
+    if (data) setServices(data.map(s => ({ id: s.id, name: s.nome, price: Number(s.preco), category: s.categoria, active: s.ativo, duration: s.duracao_minutos || 60 })));
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    reloadServicos();
+  }, [reloadServicos]);
+
+  // ─── Realtime: sincroniza entre múltiplos admins/abas ───
+  const reloadDebounceRef = useRef<number | null>(null);
+  useEffect(() => {
+    const channel = supabase
+      .channel("servicos-realtime-admin")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "servicos" },
+        () => {
+          if (reloadDebounceRef.current) window.clearTimeout(reloadDebounceRef.current);
+          reloadDebounceRef.current = window.setTimeout(() => reloadServicos(), 250);
+        }
+      )
+      .subscribe();
+    return () => {
+      if (reloadDebounceRef.current) window.clearTimeout(reloadDebounceRef.current);
+      supabase.removeChannel(channel);
+    };
+  }, [reloadServicos]);
 
   // Lista única de categorias (combina as usadas pelos serviços + extras criadas vazias)
   const categorias = useMemo(() => {
