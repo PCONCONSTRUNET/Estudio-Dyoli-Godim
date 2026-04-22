@@ -184,7 +184,13 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     const pago = Number(a.valor_pago || 0);
     const isPago = pago >= valor && valor > 0;
     const forma = (a.forma_pagamento || "").toLowerCase();
-    const isRecepcao = forma.includes("recep") || forma === "presencial" || forma === "local";
+    const isRecepcao =
+      forma.includes("recep") ||
+      forma.includes("salao") ||
+      forma.includes("salão") ||
+      forma === "presencial" ||
+      forma === "local" ||
+      forma === "dinheiro";
 
     if (isPago) {
       return (
