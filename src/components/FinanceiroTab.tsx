@@ -76,9 +76,9 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   }, [diaCorte, cicloOffset]);
 
   // Load despesas
-  const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string }[]>([]);
+  const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string; categoria: string; descricao: string; data_pagamento: string | null }[]>([]);
   useEffect(() => {
-    (supabase.from as any)("despesas").select("valor,pago,data_vencimento").then(({ data }: any) => {
+    (supabase.from as any)("despesas").select("valor,pago,data_vencimento,categoria,descricao,data_pagamento").then(({ data }: any) => {
       if (data) setDespesas(data);
     });
   }, []);
