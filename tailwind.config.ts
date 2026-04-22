@@ -127,6 +127,10 @@ export default {
           "0%, 50%, 52%, 56%, 90%, 94%, 98%, 100%": { opacity: "1" },
           "54%, 92%, 96%, 99%": { opacity: "0" },
         },
+        "shimmer": {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(200%)" },
+        },
         "bg-drift": {
           "0%": { backgroundPosition: "0% 50%" },
           "50%": { backgroundPosition: "100% 50%" },
