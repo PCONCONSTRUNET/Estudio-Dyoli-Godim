@@ -203,8 +203,8 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
       );
     }
     return (
-      <span title="Pagamento pendente" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-red-400">
-        <AlertTriangle className="h-2.5 w-2.5" /> Pendente
+      <span title="Não pago" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-red-400">
+        <AlertTriangle className="h-2.5 w-2.5" /> Não pago
       </span>
     );
   };
