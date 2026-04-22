@@ -474,39 +474,74 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
         {showCaixa && (
           <div className="relative px-5 pb-5 space-y-5 animate-fade-in">
             {/* Date navigator */}
-            <div className="flex items-center justify-between gap-2 p-1.5 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-              <button
-                onClick={() => {
-                  const d = new Date(caixaDate + "T12:00:00");
-                  d.setDate(d.getDate() - 1);
-                  setCaixaDate(d.toISOString().split("T")[0]);
-                }}
-                className="w-9 h-9 rounded-xl hover:bg-primary-foreground/[0.05] flex items-center justify-center text-primary-foreground/50 hover:text-primary-foreground transition-all"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <div className="flex-1 text-center relative">
-                <p className="font-heading text-[15px] font-semibold text-primary-foreground capitalize">
-                  {new Date(caixaDate + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" })}
-                </p>
-                <input
-                  type="date"
-                  value={caixaDate}
-                  onChange={e => setCaixaDate(e.target.value)}
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full"
-                />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2 p-1.5 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+                <button
+                  onClick={() => {
+                    const d = new Date(caixaDate + "T12:00:00");
+                    d.setDate(d.getDate() - 1);
+                    setCaixaDate(d.toISOString().split("T")[0]);
+                  }}
+                  className="w-9 h-9 rounded-xl hover:bg-primary-foreground/[0.05] flex items-center justify-center text-primary-foreground/50 hover:text-primary-foreground transition-all"
+                  aria-label="Dia anterior"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <label className="flex-1 text-center relative cursor-pointer group">
+                  <span className="inline-flex items-center gap-2">
+                    <Calendar className="w-3.5 h-3.5 text-gold/70 group-hover:text-gold transition-colors" />
+                    <span className="font-heading text-[15px] font-semibold text-primary-foreground capitalize group-hover:text-gold transition-colors">
+                      {new Date(caixaDate + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" })}
+                    </span>
+                  </span>
+                  <input
+                    type="date"
+                    value={caixaDate}
+                    onChange={e => setCaixaDate(e.target.value)}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                  />
+                </label>
+                <button
+                  onClick={() => {
+                    const d = new Date(caixaDate + "T12:00:00");
+                    d.setDate(d.getDate() + 1);
+                    setCaixaDate(d.toISOString().split("T")[0]);
+                  }}
+                  className="w-9 h-9 rounded-xl hover:bg-primary-foreground/[0.05] flex items-center justify-center text-primary-foreground/50 hover:text-primary-foreground transition-all"
+                  aria-label="Próximo dia"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
               </div>
-              <button
-                onClick={() => {
-                  const d = new Date(caixaDate + "T12:00:00");
-                  d.setDate(d.getDate() + 1);
-                  setCaixaDate(d.toISOString().split("T")[0]);
-                }}
-                className="w-9 h-9 rounded-xl hover:bg-primary-foreground/[0.05] flex items-center justify-center text-primary-foreground/50 hover:text-primary-foreground transition-all"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+
+              {/* Quick shortcuts */}
+              <div className="flex gap-1.5 justify-center">
+                {([
+                  { label: "Ontem", offset: -1 },
+                  { label: "Hoje", offset: 0 },
+                  { label: "Amanhã", offset: 1 },
+                ]).map(({ label, offset }) => {
+                  const d = new Date();
+                  d.setDate(d.getDate() + offset);
+                  const dateStr = d.toISOString().split("T")[0];
+                  const active = caixaDate === dateStr;
+                  return (
+                    <button
+                      key={label}
+                      onClick={() => setCaixaDate(dateStr)}
+                      className={`px-3 py-1 rounded-full font-body text-[10px] font-medium border transition-all ${
+                        active
+                          ? "bg-gold/10 text-gold border-gold/30"
+                          : "bg-primary-foreground/[0.02] text-primary-foreground/40 border-primary-foreground/[0.06] hover:border-gold/20 hover:text-primary-foreground/70"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+
 
             {/* Hero number — receita do dia */}
             <div className="text-center py-4">
