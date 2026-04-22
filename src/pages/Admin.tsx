@@ -7,7 +7,7 @@ import {
   BarChart3, Calendar, Users, Clock, Settings, LogOut, Search,
   X, Edit2, Trash2, Plus, Save, CheckCircle, Bell, MessageSquare,
   UserX, DollarSign, CreditCard, ShoppingBag, Download, ChevronLeft, ChevronRight, Receipt, ClipboardList, Wallet, Timer, PlusCircle, Menu,
-  Sparkles, Folder, Filter, TrendingUp, Power
+  Sparkles, Folder, Filter, TrendingUp, Power, Eye, EyeOff
 } from "lucide-react";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription
@@ -1979,6 +1979,13 @@ const ServicosTab = () => {
   }, [services, extraCategorias]);
 
   const contarServicos = (cat: string) => services.filter(s => s.category === cat).length;
+  const contarAtivos = (cat: string) => services.filter(s => s.category === cat && s.active).length;
+  // Categoria está "ativa" se tem ao menos 1 serviço ativo OU se está vazia (recém-criada)
+  const categoriaAtiva = (cat: string) => {
+    const total = contarServicos(cat);
+    if (total === 0) return true;
+    return contarAtivos(cat) > 0;
+  };
 
   const adicionarCategoria = () => {
     const nome = novaCategoria.trim();
@@ -1993,9 +2000,34 @@ const ServicosTab = () => {
     toast.success("Categoria criada");
   };
 
+  // Desativa todos os serviços da categoria — mantém histórico, oculta dos clientes
+  const desativarCategoria = async (cat: string) => {
+    const ids = services.filter(s => s.category === cat && s.active).map(s => s.id);
+    if (ids.length === 0) return;
+    const { error } = await supabase
+      .from("servicos")
+      .update({ ativo: false, updated_at: new Date().toISOString() })
+      .in("id", ids);
+    if (error) { toast.error("Erro ao desativar: " + error.message); return; }
+    setServices(prev => prev.map(s => ids.includes(s.id) ? { ...s, active: false } : s));
+    toast.success(`Categoria "${cat}" desativada — ${ids.length} ${ids.length === 1 ? "serviço oculto" : "serviços ocultos"} dos clientes`);
+  };
+
+  const reativarCategoria = async (cat: string) => {
+    const ids = services.filter(s => s.category === cat && !s.active).map(s => s.id);
+    if (ids.length === 0) return;
+    const { error } = await supabase
+      .from("servicos")
+      .update({ ativo: true, updated_at: new Date().toISOString() })
+      .in("id", ids);
+    if (error) { toast.error("Erro ao reativar: " + error.message); return; }
+    setServices(prev => prev.map(s => ids.includes(s.id) ? { ...s, active: true } : s));
+    toast.success(`Categoria "${cat}" reativada — ${ids.length} ${ids.length === 1 ? "serviço visível" : "serviços visíveis"} para clientes`);
+  };
+
   const removerCategoria = (cat: string) => {
     if (contarServicos(cat) > 0) {
-      toast.error("Mova ou exclua os serviços antes de remover a categoria");
+      toast.error("Categoria com serviços não pode ser excluída. Use o botão 👁 para desativar e ocultar dos clientes mantendo o histórico.", { duration: 5000 });
       return;
     }
     persistExtras(extraCategorias.filter(c => c !== cat));
