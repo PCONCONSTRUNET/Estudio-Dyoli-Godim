@@ -411,6 +411,24 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
         ))}
       </div>
 
+      {/* Pagamento filters */}
+      <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+        {([
+          { value: "todos" as PagamentoFilter, label: "Pgto: Todos", activeClass: "bg-gold/10 text-gold border-gold/20" },
+          { value: "pago" as PagamentoFilter, label: `Pagos (${pagamentoCounts.pago})`, activeClass: "bg-green-500/10 text-green-400 border-green-500/30" },
+          { value: "recepcao" as PagamentoFilter, label: `Recepção (${pagamentoCounts.recepcao})`, activeClass: "bg-blue-500/10 text-blue-400 border-blue-500/30" },
+          { value: "pendente" as PagamentoFilter, label: `Pendentes (${pagamentoCounts.pendente})`, activeClass: "bg-red-500/10 text-red-400 border-red-500/30" },
+        ]).map((f) => (
+          <button key={f.value} onClick={() => setPagamentoFilter(f.value)}
+            className={`shrink-0 rounded-full border px-3 py-1.5 font-body text-[11px] font-medium transition-all ${
+              pagamentoFilter === f.value
+                ? f.activeClass
+                : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06] hover:text-primary-foreground/60"
+            }`}>
+            {f.label}
+          </button>
+        ))}
+
       {/* Sort buttons */}
       <div className="flex gap-1.5">
         {([
