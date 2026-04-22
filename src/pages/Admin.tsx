@@ -456,19 +456,19 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setAgendamentos((prev) => prev.filter((a) => a.id !== id));
   };
 
-  const tabs: { id: Tab; label: string; icon: typeof BarChart3 }[] = [
-    { id: "dashboard", label: "Início", icon: BarChart3 },
-    { id: "agendamentos", label: "Agenda", icon: Calendar },
-    { id: "pedidos", label: "Pedidos", icon: ClipboardList },
-    { id: "financeiro", label: "Financeiro", icon: DollarSign },
-    { id: "caixa", label: "Caixa", icon: Wallet },
-    { id: "pagamentos", label: "Pagamentos", icon: CreditCard },
-    { id: "despesas", label: "Despesas", icon: Receipt },
-    { id: "clientes", label: "Clientes", icon: Users },
-    { id: "produtos", label: "Produtos", icon: ShoppingBag },
-    { id: "gateway", label: "Gateway", icon: Wallet },
-    { id: "horarios", label: "Horários", icon: Clock },
-    { id: "servicos", label: "Serviços", icon: Settings },
+  const tabs: { id: Tab; label: string; icon: typeof BarChart3; anim: string }[] = [
+    { id: "dashboard", label: "Início", icon: BarChart3, anim: "tab-icon-dashboard" },
+    { id: "agendamentos", label: "Agenda", icon: Calendar, anim: "tab-icon-calendar" },
+    { id: "pedidos", label: "Pedidos", icon: ClipboardList, anim: "tab-icon-bounce" },
+    { id: "financeiro", label: "Financeiro", icon: DollarSign, anim: "tab-icon-spin" },
+    { id: "caixa", label: "Caixa", icon: Wallet, anim: "tab-icon-spin" },
+    { id: "pagamentos", label: "Pagamentos", icon: CreditCard, anim: "tab-icon-swipe" },
+    { id: "despesas", label: "Despesas", icon: Receipt, anim: "tab-icon-shake" },
+    { id: "clientes", label: "Clientes", icon: Users, anim: "tab-icon-wave" },
+    { id: "produtos", label: "Produtos", icon: ShoppingBag, anim: "tab-icon-bob" },
+    { id: "gateway", label: "Gateway", icon: Wallet, anim: "tab-icon-spin" },
+    { id: "horarios", label: "Horários", icon: Clock, anim: "tab-icon-tick" },
+    { id: "servicos", label: "Serviços", icon: Settings, anim: "tab-icon-cog" },
   ];
 
   const total = agendamentos.length;
