@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { Calendar, Clock, User, TrendingUp, Bell, ArrowRight, Timer } from "lucide-react";
+import { Calendar, Clock, User, TrendingUp, Bell, ArrowRight, Timer, CheckCircle2, Sparkles, DollarSign, CalendarCheck } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import PushToggle from "@/components/PushToggle";
@@ -135,40 +135,88 @@ const AdminDashboard = ({
 
   return (
     <div className="space-y-5 animate-fade-in">
-      {/* ── Greeting + Today Summary ── */}
-      <div className="rounded-2xl border border-gold/10 bg-gradient-to-br from-gold/[0.06] to-transparent p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="font-heading text-lg font-semibold text-primary-foreground">
-              {now.getHours() < 12 ? "Bom dia ☀️" : now.getHours() < 18 ? "Boa tarde 🌤️" : "Boa noite 🌙"}
-            </h2>
-            <p className="font-body text-[12px] text-primary-foreground/40 mt-0.5">
-              {now.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
-            </p>
+      {/* ── Greeting + Today Summary — Editorial Hero ── */}
+      <div className="relative overflow-hidden rounded-3xl border border-gold/20 bg-gradient-to-br from-gold/[0.08] via-purple-500/[0.04] to-transparent p-5">
+        {/* Animated ambient glows */}
+        <div className="pointer-events-none absolute -top-24 -right-20 w-64 h-64 rounded-full bg-gold/15 blur-3xl animate-[hero-glow_6s_ease-in-out_infinite]" />
+        <div className="pointer-events-none absolute -bottom-24 -left-16 w-56 h-56 rounded-full bg-purple-500/15 blur-3xl animate-[hero-glow-alt_7s_ease-in-out_infinite]" />
+        {/* Floating particles */}
+        <div className="pointer-events-none absolute top-6 right-12 w-1 h-1 rounded-full bg-gold/60 animate-[float-particle_4s_ease-in-out_infinite]" />
+        <div className="pointer-events-none absolute top-16 right-24 w-0.5 h-0.5 rounded-full bg-purple-300/60 animate-[float-particle-delayed_5s_ease-in-out_infinite]" />
+        <div className="pointer-events-none absolute bottom-10 right-8 w-1 h-1 rounded-full bg-gold/40 animate-[float-particle-slow_6s_ease-in-out_infinite]" />
+
+        <div className="relative">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gold/10 border border-gold/20 mb-2">
+                <Sparkles className="w-2.5 h-2.5 text-gold animate-pulse" />
+                <span className="font-body text-[9px] text-gold/80 uppercase tracking-[0.2em] font-medium">
+                  {now.getHours() < 12 ? "Manhã" : now.getHours() < 18 ? "Tarde" : "Noite"}
+                </span>
+              </div>
+              <h2 className="font-heading text-xl font-semibold text-primary-foreground tracking-tight">
+                {now.getHours() < 12 ? "Bom dia ☀️" : now.getHours() < 18 ? "Boa tarde 🌤️" : "Boa noite 🌙"}
+              </h2>
+              <p className="font-body text-[12px] text-primary-foreground/45 mt-0.5 capitalize">
+                {now.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="font-heading text-2xl font-bold text-gold tabular-nums tracking-tight drop-shadow-[0_0_12px_hsl(40_60%_60%/0.4)]">
+                {brasiliaTime.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                <span className="text-base text-gold/60 ml-0.5 animate-pulse">
+                  :{brasiliaTime.toLocaleTimeString("pt-BR", { second: "2-digit" }).slice(-2)}
+                </span>
+              </p>
+              <p className="font-body text-[9px] text-primary-foreground/30 uppercase tracking-[0.2em] mt-0.5 flex items-center justify-end gap-1">
+                <span className="w-1 h-1 rounded-full bg-green-400 animate-pulse" /> Brasília
+              </p>
+            </div>
           </div>
-          <div className="text-right">
-            <p className="font-heading text-2xl font-bold text-gold tabular-nums tracking-tight">
-              {brasiliaTime.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-            </p>
-            <p className="font-body text-[9px] text-primary-foreground/25 uppercase tracking-wider">Brasília</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-4 gap-3">
-          <div className="text-center">
-            <p className="font-heading text-lg font-bold text-gold">{totalHoje}</p>
-            <p className="font-body text-[10px] text-primary-foreground/35">Hoje</p>
-          </div>
-          <div className="text-center">
-            <p className="font-heading text-lg font-bold text-primary-foreground">{confirmadosHoje}</p>
-            <p className="font-body text-[10px] text-primary-foreground/35">Pendentes</p>
-          </div>
-          <div className="text-center">
-            <p className="font-heading text-lg font-bold text-green-500">{concluidosHoje}</p>
-            <p className="font-body text-[10px] text-primary-foreground/35">Concluídos</p>
-          </div>
-          <div className="text-center">
-            <p className="font-heading text-lg font-bold text-gold">{formatCurrency(recebidoHoje)}</p>
-            <p className="font-body text-[10px] text-primary-foreground/35">Recebido</p>
+
+          {/* Day progress bar */}
+          {(() => {
+            const dayPct = Math.round(((now.getHours() * 60 + now.getMinutes()) / (24 * 60)) * 100);
+            return (
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="font-body text-[9px] text-primary-foreground/35 uppercase tracking-[0.2em]">Progresso do dia</span>
+                  <span className="font-heading text-[10px] font-bold text-gold tabular-nums">{dayPct}%</span>
+                </div>
+                <div className="relative h-1.5 rounded-full bg-primary-foreground/[0.06] overflow-hidden">
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-gold via-gold/90 to-purple-400 transition-all duration-1000 shadow-[0_0_8px_hsl(40_60%_60%/0.5)]"
+                    style={{ width: `${dayPct}%` }}
+                  >
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-white/30 to-transparent" style={{ animation: "shimmer 2.5s ease-in-out infinite" }} />
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          <div className="grid grid-cols-4 gap-2">
+            <div className="group relative p-2.5 rounded-2xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06] hover:border-gold/20 hover:bg-gold/[0.04] transition-all">
+              <CalendarCheck className="w-3 h-3 text-gold/60 mb-1 group-hover:scale-110 transition-transform" />
+              <p className="font-heading text-lg font-bold text-gold tabular-nums leading-none">{totalHoje}</p>
+              <p className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-wider mt-1">Hoje</p>
+            </div>
+            <div className="group relative p-2.5 rounded-2xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06] hover:border-primary-foreground/15 transition-all">
+              <Clock className="w-3 h-3 text-primary-foreground/40 mb-1 group-hover:scale-110 transition-transform" />
+              <p className="font-heading text-lg font-bold text-primary-foreground tabular-nums leading-none">{confirmadosHoje}</p>
+              <p className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-wider mt-1">Pendentes</p>
+            </div>
+            <div className="group relative p-2.5 rounded-2xl bg-green-500/[0.04] border border-green-500/[0.08] hover:border-green-500/20 transition-all">
+              <CheckCircle2 className="w-3 h-3 text-green-400/70 mb-1 group-hover:scale-110 transition-transform" />
+              <p className="font-heading text-lg font-bold text-green-400 tabular-nums leading-none">{concluidosHoje}</p>
+              <p className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-wider mt-1">Feitos</p>
+            </div>
+            <div className="group relative p-2.5 rounded-2xl bg-gold/[0.05] border border-gold/[0.12] hover:border-gold/25 transition-all overflow-hidden">
+              <div className="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-gold/10 blur-xl group-hover:bg-gold/20 transition-all" />
+              <DollarSign className="relative w-3 h-3 text-gold/70 mb-1 group-hover:scale-110 transition-transform" />
+              <p className="relative font-heading text-sm font-bold text-gold tabular-nums leading-none truncate">{formatCurrency(recebidoHoje)}</p>
+              <p className="relative font-body text-[9px] text-primary-foreground/40 uppercase tracking-wider mt-1">Recebido</p>
+            </div>
           </div>
         </div>
       </div>
