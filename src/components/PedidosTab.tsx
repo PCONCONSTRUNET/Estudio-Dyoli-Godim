@@ -57,8 +57,9 @@ const getPagamentoStatus = (a: { valor: number; valor_pago: number | null; forma
 const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("todos");
+  const [pagamentoFilter, setPagamentoFilter] = useState<PagamentoFilter>("todos");
   const [sortField, setSortField] = useState<SortField>("data");
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => {
     const saved = localStorage.getItem("pedidos_dismissed");
