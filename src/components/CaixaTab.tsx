@@ -1,0 +1,482 @@
+import { useState, useMemo, useEffect } from "react";
+import {
+  Calendar,
+  Wallet,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+  CheckCircle2,
+  Clock,
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Agendamento {
+  id: string;
+  servico: string;
+  variacao: string | null;
+  data_agendamento: string;
+  horario: string;
+  valor: number;
+  valor_pago: number | null;
+  status: string;
+  created_at: string;
+  user_id: string;
+  cliente_nome: string | null;
+}
+
+interface Props {
+  agendamentos: Agendamento[];
+  getClientName: (userId: string, clienteNome?: string | null) => string;
+}
+
+type FilterPeriod = "hoje" | "semana" | "mes" | "personalizado";
+
+const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
+const formatDateShort = (d: string) =>
+  new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+
+const CaixaTab = ({ agendamentos, getClientName }: Props) => {
+  const [caixaDate, setCaixaDate] = useState(new Date().toISOString().split("T")[0]);
+  const [period, setPeriod] = useState<FilterPeriod>("mes");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+
+  const [comissaoPct] = useState(() => {
+    const saved = localStorage.getItem("dyoli_comissao_pct");
+    return saved ? Number(saved) : 40;
+  });
+
+  // Dia de corte do ciclo mensal (1-28)
+  const [diaCorte, setDiaCorte] = useState<number>(() => {
+    const saved = localStorage.getItem("dyoli_dia_corte");
+    return saved ? Math.min(28, Math.max(1, Number(saved))) : 1;
+  });
+  const [showCorteConfig, setShowCorteConfig] = useState(false);
+  const [tempCorte, setTempCorte] = useState(diaCorte.toString());
+  const [cicloOffset, setCicloOffset] = useState(0);
+
+  const ciclo = useMemo(() => {
+    const today = new Date();
+    today.setHours(12, 0, 0, 0);
+    const startCurrent = new Date(today);
+    if (today.getDate() >= diaCorte) {
+      startCurrent.setDate(diaCorte);
+    } else {
+      startCurrent.setMonth(startCurrent.getMonth() - 1);
+      startCurrent.setDate(diaCorte);
+    }
+    const start = new Date(startCurrent);
+    start.setMonth(start.getMonth() + cicloOffset);
+    const end = new Date(start);
+    end.setMonth(end.getMonth() + 1);
+    end.setDate(end.getDate() - 1);
+    const toISO = (d: Date) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    };
+    return { startISO: toISO(start), endISO: toISO(end), startDate: start, endDate: end };
+  }, [diaCorte, cicloOffset]);
+
+  // Despesas (para lucro do ciclo)
+  const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string }[]>([]);
+  useEffect(() => {
+    (supabase.from as any)("despesas").select("valor,pago,data_vencimento").then(({ data }: any) => {
+      if (data) setDespesas(data);
+    });
+  }, []);
+
+  // Fechamento do dia
+  const caixaData = useMemo(() => {
+    const dayAgs = agendamentos.filter((a) => a.data_agendamento === caixaDate && a.status !== "cancelado");
+    const total = dayAgs.reduce((s, a) => s + Number(a.valor), 0);
+    const recebido = dayAgs.reduce((s, a) => s + Number(a.valor_pago || 0), 0);
+    const faltas = agendamentos.filter((a) => a.data_agendamento === caixaDate && a.status === "falta").length;
+    return { items: dayAgs, total, recebido, pendente: total - recebido, qtd: dayAgs.length, faltas };
+  }, [agendamentos, caixaDate]);
+
+  // Lista de pagamentos por período
+  const periodRange = useMemo(() => {
+    const now = new Date();
+    const todayISO = now.toISOString().split("T")[0];
+    if (period === "hoje") return { start: todayISO, end: todayISO };
+    if (period === "semana") {
+      const wa = new Date(now); wa.setDate(wa.getDate() - 7);
+      const wh = new Date(now); wh.setDate(wh.getDate() + 7);
+      return { start: wa.toISOString().split("T")[0], end: wh.toISOString().split("T")[0] };
+    }
+    if (period === "mes") return { start: ciclo.startISO, end: ciclo.endISO };
+    if (period === "personalizado" && customStart && customEnd) return { start: customStart, end: customEnd };
+    return { start: "0000-01-01", end: "9999-12-31" };
+  }, [period, ciclo, customStart, customEnd]);
+
+  const filtered = useMemo(() => {
+    return agendamentos.filter((a) => {
+      if (a.status === "cancelado" || a.status === "falta") return false;
+      const d = a.data_agendamento;
+      return d >= periodRange.start && d <= periodRange.end;
+    });
+  }, [agendamentos, periodRange]);
+
+  return (
+    <div className="space-y-5">
+      {/* Fechamento de caixa — editorial */}
+      <div className="relative overflow-hidden rounded-3xl border border-gold/15 bg-gradient-to-br from-gold/[0.04] via-primary-foreground/[0.02] to-transparent">
+        <div className="pointer-events-none absolute -top-20 -right-20 w-60 h-60 rounded-full bg-gold/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -left-16 w-52 h-52 rounded-full bg-purple-500/10 blur-3xl" />
+
+        <div className="relative p-5 flex items-center gap-3">
+          <span className="w-9 h-9 rounded-2xl bg-gold/10 border border-gold/20 flex items-center justify-center">
+            <Wallet className="w-4 h-4 text-gold" />
+          </span>
+          <div>
+            <span className="block font-heading text-[15px] font-semibold text-primary-foreground tracking-tight">Fechamento de Caixa</span>
+            <span className="block font-body text-[10px] text-primary-foreground/40 uppercase tracking-[0.2em] mt-0.5">Resumo do dia</span>
+          </div>
+        </div>
+
+        <div className="relative px-5 pb-5 space-y-5 animate-fade-in">
+          {/* Ciclo Mensal */}
+          {(() => {
+            const cicloAgs = agendamentos.filter(
+              (a) => a.status !== "cancelado" && a.status !== "falta" &&
+                a.data_agendamento >= ciclo.startISO && a.data_agendamento <= ciclo.endISO,
+            );
+            const cicloRecebido = cicloAgs.reduce((s, a) => s + Number(a.valor_pago || 0), 0);
+            const cicloTotal = cicloAgs.reduce((s, a) => s + Number(a.valor), 0);
+            const cicloDespesas = despesas
+              .filter((d) => d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO)
+              .reduce((s, d) => s + Number(d.valor), 0);
+            const cicloLucro = cicloRecebido - cicloDespesas;
+            const cicloComissao = cicloRecebido * (comissaoPct / 100);
+            const fmtShort = (d: Date) => d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+            const today = new Date(); today.setHours(12, 0, 0, 0);
+            const totalDays = Math.round((ciclo.endDate.getTime() - ciclo.startDate.getTime()) / 86400000) + 1;
+            const elapsedDays = Math.max(0, Math.min(totalDays, Math.round((today.getTime() - ciclo.startDate.getTime()) / 86400000) + 1));
+            const cicloProgress = cicloOffset === 0 ? Math.round((elapsedDays / totalDays) * 100) : (cicloOffset < 0 ? 100 : 0);
+
+            return (
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-foreground/[0.04] to-primary-foreground/[0.01] border border-primary-foreground/[0.08]">
+                <div className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => setCicloOffset((o) => o - 1)} className="w-7 h-7 rounded-lg hover:bg-primary-foreground/[0.05] flex items-center justify-center text-primary-foreground/50 hover:text-primary-foreground transition-all" aria-label="Ciclo anterior">
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                      </button>
+                      <div className="text-center">
+                        <p className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-[0.25em]">
+                          {cicloOffset === 0 ? "Ciclo atual" : cicloOffset < 0 ? `${Math.abs(cicloOffset)} ciclo(s) atrás` : `+${cicloOffset} ciclo(s)`}
+                        </p>
+                        <p className="font-heading text-[13px] font-semibold text-primary-foreground tabular-nums">
+                          {fmtShort(ciclo.startDate)} → {fmtShort(ciclo.endDate)}
+                        </p>
+                      </div>
+                      <button onClick={() => setCicloOffset((o) => o + 1)} className="w-7 h-7 rounded-lg hover:bg-primary-foreground/[0.05] flex items-center justify-center text-primary-foreground/50 hover:text-primary-foreground transition-all" aria-label="Próximo ciclo">
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {cicloOffset !== 0 && (
+                        <button onClick={() => setCicloOffset(0)} className="px-2 py-1 rounded-md bg-gold/10 text-gold font-body text-[9px] font-medium uppercase tracking-wider hover:bg-gold/20 transition-all">
+                          Atual
+                        </button>
+                      )}
+                      <button onClick={() => { setShowCorteConfig(!showCorteConfig); setTempCorte(diaCorte.toString()); }} className="p-1.5 rounded-lg hover:bg-primary-foreground/[0.05] text-primary-foreground/40 hover:text-gold transition-all" aria-label="Configurar dia de corte">
+                        <Settings className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="h-1 rounded-full bg-primary-foreground/[0.06] overflow-hidden">
+                      <div className="h-full rounded-full bg-gradient-to-r from-gold/70 to-purple-400/70 transition-all duration-700" style={{ width: `${cicloProgress}%` }} />
+                    </div>
+                    <p className="font-body text-[9px] text-primary-foreground/35 mt-1.5 text-center">
+                      {cicloOffset === 0 ? `Dia ${elapsedDays} de ${totalDays} · corte todo dia ${diaCorte}` : `Período fechado · ${totalDays} dias`}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="p-2.5 rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.04]">
+                      <p className="font-body text-[8.5px] text-primary-foreground/35 uppercase tracking-widest">Recebido</p>
+                      <p className="font-heading text-base font-bold text-green-400 tabular-nums">{formatCurrency(cicloRecebido)}</p>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.04]">
+                      <p className="font-body text-[8.5px] text-primary-foreground/35 uppercase tracking-widest">Previsto</p>
+                      <p className="font-heading text-base font-bold text-gold tabular-nums">{formatCurrency(cicloTotal)}</p>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.04]">
+                      <p className="font-body text-[8.5px] text-primary-foreground/35 uppercase tracking-widest">Despesas</p>
+                      <p className="font-heading text-base font-bold text-red-400 tabular-nums">- {formatCurrency(cicloDespesas)}</p>
+                    </div>
+                    <div className={`p-2.5 rounded-xl border ${cicloLucro >= 0 ? "bg-green-500/5 border-green-500/15" : "bg-red-500/5 border-red-500/15"}`}>
+                      <p className="font-body text-[8.5px] text-primary-foreground/35 uppercase tracking-widest">Lucro</p>
+                      <p className={`font-heading text-base font-bold tabular-nums ${cicloLucro >= 0 ? "text-green-400" : "text-red-400"}`}>{formatCurrency(cicloLucro)}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-purple-500/5 border border-purple-500/15">
+                    <span className="font-body text-[10px] text-purple-400/70 uppercase tracking-widest flex items-center gap-1.5">
+                      <Sparkles className="w-3 h-3" /> Comissão {comissaoPct}%
+                    </span>
+                    <span className="font-heading text-[14px] font-bold text-purple-300 tabular-nums">{formatCurrency(cicloComissao)}</span>
+                  </div>
+
+                  {showCorteConfig && (
+                    <div className="pt-3 border-t border-primary-foreground/[0.06] space-y-2 animate-fade-in">
+                      <label className="font-body text-[10px] text-primary-foreground/50 uppercase tracking-wider">Dia que fecha o mês (1 a 28)</label>
+                      <div className="flex gap-2">
+                        <input type="number" min="1" max="28" value={tempCorte} onChange={(e) => setTempCorte(e.target.value)} className="flex-1 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-gold/20 text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/30 tabular-nums" />
+                        <button onClick={() => {
+                          const val = Math.min(28, Math.max(1, Number(tempCorte) || 1));
+                          setDiaCorte(val);
+                          localStorage.setItem("dyoli_dia_corte", val.toString());
+                          setCicloOffset(0);
+                          setShowCorteConfig(false);
+                        }} className="px-4 py-2 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all">
+                          Salvar
+                        </button>
+                      </div>
+                      <div className="flex gap-1.5 flex-wrap">
+                        {[1, 5, 10, 15, 20, 25].map((d) => (
+                          <button key={d} onClick={() => setTempCorte(d.toString())} className={`px-2.5 py-1 rounded-full font-body text-[10px] border transition-all tabular-nums ${Number(tempCorte) === d ? "bg-gold/15 text-gold border-gold/30" : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06] hover:border-gold/20"}`}>
+                            dia {d}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="font-body text-[10px] text-primary-foreground/35 leading-relaxed">
+                        O ciclo do "Mês" começa neste dia e termina um dia antes do próximo corte. Ao virar, as finanças do período zeram automaticamente e um novo ciclo começa.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Navegador de dia */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2 p-1.5 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+              <button onClick={() => { const d = new Date(caixaDate + "T12:00:00"); d.setDate(d.getDate() - 1); setCaixaDate(d.toISOString().split("T")[0]); }} className="w-9 h-9 rounded-xl hover:bg-primary-foreground/[0.05] flex items-center justify-center text-primary-foreground/50 hover:text-primary-foreground transition-all" aria-label="Dia anterior">
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <label className="flex-1 text-center relative cursor-pointer group">
+                <span className="inline-flex items-center gap-2">
+                  <Calendar className="w-3.5 h-3.5 text-gold/70 group-hover:text-gold transition-colors" />
+                  <span className="font-heading text-[15px] font-semibold text-primary-foreground capitalize group-hover:text-gold transition-colors">
+                    {new Date(caixaDate + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" })}
+                  </span>
+                </span>
+                <input type="date" value={caixaDate} onChange={(e) => setCaixaDate(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer w-full" />
+              </label>
+              <button onClick={() => { const d = new Date(caixaDate + "T12:00:00"); d.setDate(d.getDate() + 1); setCaixaDate(d.toISOString().split("T")[0]); }} className="w-9 h-9 rounded-xl hover:bg-primary-foreground/[0.05] flex items-center justify-center text-primary-foreground/50 hover:text-primary-foreground transition-all" aria-label="Próximo dia">
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex gap-1.5 justify-center">
+              {([{ label: "Ontem", offset: -1 }, { label: "Hoje", offset: 0 }, { label: "Amanhã", offset: 1 }]).map(({ label, offset }) => {
+                const d = new Date(); d.setDate(d.getDate() + offset);
+                const dateStr = d.toISOString().split("T")[0];
+                const active = caixaDate === dateStr;
+                return (
+                  <button key={label} onClick={() => setCaixaDate(dateStr)} className={`px-3 py-1 rounded-full font-body text-[10px] font-medium border transition-all ${active ? "bg-gold/10 text-gold border-gold/30" : "bg-primary-foreground/[0.02] text-primary-foreground/40 border-primary-foreground/[0.06] hover:border-gold/20 hover:text-primary-foreground/70"}`}>
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Hero number — recebido do dia */}
+          <div className="text-center py-4">
+            <p className="font-body text-[10px] text-primary-foreground/40 uppercase tracking-[0.3em] mb-2">Recebido hoje</p>
+            <p className="font-heading text-5xl font-bold bg-gradient-to-br from-gold via-gold to-gold/60 bg-clip-text text-transparent leading-none">
+              {formatCurrency(caixaData.recebido)}
+            </p>
+            <p className="font-body text-[11px] text-primary-foreground/35 mt-2">
+              de <span className="text-primary-foreground/60 font-medium">{formatCurrency(caixaData.total)}</span> previstos
+            </p>
+            <div className="mt-4 max-w-[240px] mx-auto">
+              <div className="h-1 rounded-full bg-primary-foreground/[0.06] overflow-hidden">
+                <div className="h-full rounded-full bg-gradient-to-r from-gold/80 to-green-500/80 transition-all duration-700" style={{ width: `${caixaData.total > 0 ? Math.min(100, (caixaData.recebido / caixaData.total) * 100) : 0}%` }} />
+              </div>
+              <p className="font-body text-[9px] text-primary-foreground/35 uppercase tracking-[0.2em] mt-2">
+                {caixaData.total > 0 ? Math.round((caixaData.recebido / caixaData.total) * 100) : 0}% do dia recebido
+              </p>
+            </div>
+          </div>
+
+          {/* Ticker */}
+          <div className="grid grid-cols-3 rounded-2xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.06] divide-x divide-primary-foreground/[0.06]">
+            <div className="text-center py-3 px-2">
+              <p className="font-heading text-xl font-bold text-primary-foreground">{caixaData.qtd}</p>
+              <p className="font-body text-[9px] text-primary-foreground/35 uppercase tracking-widest mt-0.5">Atend.</p>
+            </div>
+            <div className="text-center py-3 px-2">
+              <p className="font-heading text-xl font-bold text-rose">{formatCurrency(caixaData.pendente)}</p>
+              <p className="font-body text-[9px] text-primary-foreground/35 uppercase tracking-widest mt-0.5">Pendente</p>
+            </div>
+            <div className="text-center py-3 px-2">
+              <p className="font-heading text-xl font-bold text-orange-500">{caixaData.faltas}</p>
+              <p className="font-body text-[9px] text-primary-foreground/35 uppercase tracking-widest mt-0.5">Faltas</p>
+            </div>
+          </div>
+
+          {/* Comissão do dia */}
+          <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-purple-500/10 via-purple-500/[0.03] to-transparent border border-purple-500/20">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl" />
+            <div className="relative flex items-center justify-between">
+              <div>
+                <p className="font-body text-[9px] text-purple-400/70 uppercase tracking-[0.25em] flex items-center gap-1.5">
+                  <Sparkles className="w-3 h-3" /> Sua comissão · {comissaoPct}%
+                </p>
+                <p className="font-heading text-2xl font-bold text-purple-300 mt-1">
+                  {formatCurrency(caixaData.recebido * (comissaoPct / 100))}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="font-body text-[9px] text-purple-400/50 uppercase tracking-widest">A retirar</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Atendimentos do dia */}
+          {caixaData.items.length > 0 ? (
+            <div>
+              <p className="font-body text-[9px] text-primary-foreground/35 uppercase tracking-[0.25em] mb-3 px-1">Atendimentos do dia</p>
+              <div className="space-y-1.5">
+                {[...caixaData.items].sort((a, b) => a.horario.localeCompare(b.horario)).map((a) => {
+                  const pago = Number(a.valor_pago || 0) >= Number(a.valor);
+                  const parcial = Number(a.valor_pago || 0) > 0 && !pago;
+                  return (
+                    <div key={a.id} className="group relative flex items-center gap-3 p-3 rounded-2xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.04] hover:border-gold/20 transition-all">
+                      <div className="flex flex-col items-center w-12 shrink-0">
+                        <span className="font-heading text-[13px] font-bold text-primary-foreground tabular-nums leading-none">{a.horario.slice(0, 5)}</span>
+                        <span className={`mt-1.5 w-1.5 h-1.5 rounded-full ${pago ? "bg-green-500" : parcial ? "bg-gold" : "bg-primary-foreground/20"}`} />
+                      </div>
+                      <div className="w-px h-10 bg-primary-foreground/[0.06]" />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-body text-[12.5px] font-medium text-primary-foreground truncate">{getClientName(a.user_id, a.cliente_nome)}</p>
+                        <p className="font-body text-[10.5px] text-primary-foreground/40 truncate">{a.servico}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="font-heading text-[13px] font-bold text-gold tabular-nums">{formatCurrency(Number(a.valor))}</p>
+                        {pago ? (
+                          <p className="font-body text-[9px] text-green-500 flex items-center justify-end gap-0.5 mt-0.5">
+                            <CheckCircle2 className="w-2.5 h-2.5" /> Pago
+                          </p>
+                        ) : parcial ? (
+                          <p className="font-body text-[9px] text-gold/80 mt-0.5">Sinal {formatCurrency(Number(a.valor_pago))}</p>
+                        ) : (
+                          <p className="font-body text-[9px] text-primary-foreground/30 flex items-center justify-end gap-0.5 mt-0.5">
+                            <Clock className="w-2.5 h-2.5" /> Pendente
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8 rounded-2xl bg-primary-foreground/[0.02] border border-dashed border-primary-foreground/[0.08]">
+              <p className="font-body text-[12px] text-primary-foreground/30">Nenhum atendimento neste dia</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Filtro de período para a lista de pagamentos */}
+      <div role="tablist" aria-label="Filtrar período dos pagamentos" className="flex gap-2 overflow-x-auto pb-1">
+        {(() => {
+          const filters = [
+            { value: "hoje" as const, label: "Hoje" },
+            { value: "semana" as const, label: "Semana" },
+            { value: "mes" as const, label: "Mês" },
+            { value: "personalizado" as const, label: "Custom" },
+          ];
+          return filters.map((f, idx) => {
+            const active = period === f.value;
+            return (
+              <button
+                key={f.value}
+                role="tab"
+                type="button"
+                aria-pressed={active}
+                aria-selected={active}
+                aria-label={`Filtrar por ${f.label}`}
+                tabIndex={active ? 0 : -1}
+                onClick={() => setPeriod(f.value)}
+                onKeyDown={(e) => {
+                  const tabs = e.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+                  if (!tabs) return;
+                  if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+                    e.preventDefault();
+                    const dir = e.key === "ArrowRight" ? 1 : -1;
+                    const nextIdx = (idx + dir + filters.length) % filters.length;
+                    setPeriod(filters[nextIdx].value);
+                    tabs[nextIdx]?.focus();
+                  }
+                }}
+                className={`relative px-4 py-2 rounded-full font-body text-[12px] font-semibold whitespace-nowrap border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                  active
+                    ? "bg-gradient-to-br from-gold/30 to-gold/10 text-gold border-gold/50 shadow-[0_0_18px_-4px_hsl(40_40%_55%/0.5)]"
+                    : "bg-primary-foreground/[0.04] text-primary-foreground/55 border-primary-foreground/[0.1] hover:border-gold/25 hover:text-primary-foreground hover:bg-primary-foreground/[0.06]"
+                }`}
+              >
+                {f.label}
+              </button>
+            );
+          });
+        })()}
+      </div>
+
+      {period === "personalizado" && (
+        <div className="flex gap-2 animate-fade-in">
+          <input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)}
+            className="flex-1 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[12px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+          <input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)}
+            className="flex-1 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[12px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+        </div>
+      )}
+
+      {/* Lista de pagamentos */}
+      <div className="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-primary-foreground/[0.05] via-primary-foreground/[0.02] to-transparent border border-primary-foreground/[0.1]">
+        <div className="pointer-events-none absolute -top-16 -right-16 w-44 h-44 rounded-full bg-gold/5 blur-3xl" />
+        <div className="relative flex items-center justify-between mb-3">
+          <p className="font-body text-[12px] font-medium text-primary-foreground/65 uppercase tracking-[0.2em]">Todos os pagamentos</p>
+          {filtered.length > 0 && (
+            <span className="font-body text-[10px] font-medium text-primary-foreground/45 tabular-nums px-2 py-0.5 rounded-full bg-primary-foreground/[0.05] border border-primary-foreground/[0.08]">
+              {filtered.length} {filtered.length === 1 ? "registro" : "registros"}
+            </span>
+          )}
+        </div>
+        <div
+          className="relative space-y-1.5 max-h-[420px] overflow-y-auto pr-1.5 -mr-1.5 scrollbar-thin"
+          style={{ scrollbarWidth: "thin", scrollbarColor: "hsl(var(--primary-foreground) / 0.15) transparent" }}
+        >
+          {filtered.map((a) => (
+            <div key={a.id} className="flex items-center justify-between p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06] hover:border-gold/20 transition-all">
+              <div className="min-w-0 flex-1">
+                <p className="font-body text-[14px] font-semibold text-primary-foreground truncate">{getClientName(a.user_id, a.cliente_nome)}</p>
+                <p className="font-body text-[11px] text-primary-foreground/45">{formatDateShort(a.data_agendamento)} · {a.servico}</p>
+              </div>
+              <div className="text-right ml-2">
+                <p className="font-heading text-[14px] text-gold font-bold tabular-nums">{formatCurrency(Number(a.valor))}</p>
+                <p className={`font-body text-[11px] font-medium ${Number(a.valor_pago || 0) >= Number(a.valor) ? "text-green-400" : Number(a.valor_pago || 0) > 0 ? "text-gold" : "text-primary-foreground/40"}`}>
+                  {Number(a.valor_pago || 0) >= Number(a.valor) ? "Pago" : Number(a.valor_pago || 0) > 0 ? `Sinal: ${formatCurrency(Number(a.valor_pago))}` : "Pendente"}
+                </p>
+              </div>
+            </div>
+          ))}
+          {filtered.length === 0 && <p className="font-body text-[13px] text-primary-foreground/30 text-center py-6">Nenhum registro no período</p>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CaixaTab;

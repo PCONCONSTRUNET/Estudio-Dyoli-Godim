@@ -22,6 +22,7 @@ import logo from "@/assets/logo.png";
 import { Calendar as DatePickerCalendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import FinanceiroTab from "@/components/FinanceiroTab";
+import CaixaTab from "@/components/CaixaTab";
 import DespesasTab from "@/components/DespesasTab";
 import PedidosTab from "@/components/PedidosTab";
 import GatewayTab from "@/components/GatewayTab";
@@ -42,7 +43,7 @@ interface Agendamento {
 interface Profile { id: string; nome: string; whatsapp: string; created_at: string; }
 interface LembreteConfig { id: string; tipo: string; ativo: boolean; mensagem: string; horas_antes: number; }
 
-type Tab = "dashboard" | "agendamentos" | "pedidos" | "clientes" | "horarios" | "servicos" | "financeiro" | "pagamentos" | "produtos" | "despesas" | "gateway";
+type Tab = "dashboard" | "agendamentos" | "pedidos" | "clientes" | "horarios" | "servicos" | "financeiro" | "caixa" | "pagamentos" | "produtos" | "despesas" | "gateway";
 
 const ADMIN_PASSWORD = "dyoliadmin";
 
@@ -459,6 +460,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     { id: "agendamentos", label: "Agenda", icon: Calendar },
     { id: "pedidos", label: "Pedidos", icon: ClipboardList },
     { id: "financeiro", label: "Financeiro", icon: DollarSign },
+    { id: "caixa", label: "Caixa", icon: Wallet },
     { id: "pagamentos", label: "Pagamentos", icon: CreditCard },
     { id: "despesas", label: "Despesas", icon: Receipt },
     { id: "clientes", label: "Clientes", icon: Users },
@@ -1700,6 +1702,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
             })()}
 
           {tab === "financeiro" && <FinanceiroTab agendamentos={agendamentos} getClientName={getClientName} />}
+          {tab === "caixa" && <CaixaTab agendamentos={agendamentos} getClientName={getClientName} />}
           {tab === "pagamentos" && <PagamentosTab agendamentos={agendamentos} getClientName={getClientName} />}
           {tab === "pedidos" && <PedidosTab agendamentos={agendamentos} getClientName={getClientName} onUpdate={loadData} />}
           {tab === "despesas" && <DespesasTab />}
