@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ChevronRight, Loader2, Sparkles, Folder } from "lucide-react";
 import { toast } from "sonner";
@@ -83,16 +83,56 @@ const Agendamento = () => {
     setLoading(false);
   };
 
-  const loadServicos = async () => {
-    setLoadingServicos(true);
+  const loadServicos = useCallback(async (showLoader = true) => {
+    if (showLoader) setLoadingServicos(true);
     const { data } = await supabase
       .from("servicos")
       .select("id, nome, preco, duracao_minutos, categoria")
       .eq("ativo", true)
       .order("ordem", { ascending: true });
     setServicos((data as Servico[]) || []);
-    setLoadingServicos(false);
-  };
+    if (showLoader) setLoadingServicos(false);
+  }, []);
+
+  // ─── Realtime: sincroniza serviços/categorias instantaneamente ───
+  const reloadTimerRef = useRef<number | null>(null);
+  useEffect(() => {
+    // Só ativa o realtime depois que o cliente se identificou (existe sessão)
+    if (step === "identificacao") return;
+
+    const scheduleReload = () => {
+      if (reloadTimerRef.current) window.clearTimeout(reloadTimerRef.current);
+      // Debounce 250ms — agrupa updates em massa (ex: renomear categoria afeta vários serviços)
+      reloadTimerRef.current = window.setTimeout(() => {
+        loadServicos(false);
+      }, 250);
+    };
+
+    const channel = supabase
+      .channel("servicos-realtime-cliente")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "servicos" },
+        () => scheduleReload()
+      )
+      .subscribe();
+
+    return () => {
+      if (reloadTimerRef.current) window.clearTimeout(reloadTimerRef.current);
+      supabase.removeChannel(channel);
+    };
+  }, [step, loadServicos]);
+
+  // Se a categoria selecionada deixar de existir (foi renomeada/excluída), volta pro passo de categoria
+  useEffect(() => {
+    if (step !== "servico" || !categoriaSelecionada) return;
+    const aindaExiste = servicos.some((s) => (s.categoria || "Outros") === categoriaSelecionada);
+    if (!aindaExiste) {
+      toast.info("A categoria foi atualizada. Escolha novamente 🌸");
+      setCategoriaSelecionada(null);
+      setStep("categoria");
+    }
+  }, [servicos, step, categoriaSelecionada]);
 
   const handleSelectService = (s: Servico) => {
     setServicoSelecionado(s);
