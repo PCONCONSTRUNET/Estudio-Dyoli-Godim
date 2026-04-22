@@ -428,7 +428,7 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                     <span className="font-heading text-[14px] font-bold text-gold">{a.horario}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       <p className="font-body text-[14px] font-medium text-primary-foreground truncate">{getClientName(a.user_id, a.cliente_nome)}</p>
                       {a.origem === "whatsapp_bot" && (
                         <span title="Via WhatsApp" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-green-500/30 bg-green-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-green-400">
@@ -436,6 +436,7 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                           WA
                         </span>
                       )}
+                      {paymentBadge(a)}
                     </div>
                     <p className="font-body text-[11px] text-primary-foreground/45 truncate">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""}</p>
                   </div>
