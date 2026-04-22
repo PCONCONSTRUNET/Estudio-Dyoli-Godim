@@ -146,23 +146,13 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
           a.data_agendamento.includes(term)
       );
     }
-    list.sort((a, b) => {
-      let cmp = 0;
-      switch (sortField) {
-        case "data": cmp = a.data_agendamento.localeCompare(b.data_agendamento) || a.horario.localeCompare(b.horario); break;
-        case "cliente": cmp = getClientName(a.user_id, a.cliente_nome).localeCompare(getClientName(b.user_id)); break;
-        case "valor": cmp = Number(a.valor) - Number(b.valor); break;
-        case "status": cmp = a.status.localeCompare(b.status); break;
-      }
-      return sortDir === "desc" ? -cmp : cmp;
-    });
+    list.sort(
+      (a, b) =>
+        a.data_agendamento.localeCompare(b.data_agendamento) ||
+        a.horario.localeCompare(b.horario)
+    );
     return list;
-  }, [agendamentos, statusFilter, pagamentoFilter, searchTerm, sortField, sortDir, getClientName]);
-
-  const toggleSort = (field: SortField) => {
-    if (sortField === field) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    else { setSortField(field); setSortDir("asc"); }
-  };
+  }, [agendamentos, statusFilter, pagamentoFilter, searchTerm, getClientName]);
 
   const updateStatus = async (id: string, status: string) => {
     await supabase.from("agendamentos").update({ status }).eq("id", id);
