@@ -8,10 +8,14 @@ import {
   Sparkles,
   CheckCircle2,
   Clock,
+  Info,
+  Calculator,
+  TrendingUp,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ptBR } from "date-fns/locale";
 
 interface Agendamento {
