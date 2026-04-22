@@ -123,16 +123,194 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
     });
   }, [agendamentos, periodRange]);
 
+  // Cálculos do ciclo (compartilhados)
+  const cicloStats = useMemo(() => {
+    const cicloAgs = agendamentos.filter(
+      (a) => a.status !== "cancelado" && a.status !== "falta" &&
+        a.data_agendamento >= ciclo.startISO && a.data_agendamento <= ciclo.endISO,
+    );
+    const recebido = cicloAgs.reduce((s, a) => s + Number(a.valor_pago || 0), 0);
+    const total = cicloAgs.reduce((s, a) => s + Number(a.valor), 0);
+    const desp = despesas
+      .filter((d) => d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO)
+      .reduce((s, d) => s + Number(d.valor), 0);
+    const lucro = recebido - desp;
+    const comissao = recebido * (comissaoPct / 100);
+    const today = new Date(); today.setHours(12, 0, 0, 0);
+    const totalDays = Math.round((ciclo.endDate.getTime() - ciclo.startDate.getTime()) / 86400000) + 1;
+    const elapsedDays = Math.max(0, Math.min(totalDays, Math.round((today.getTime() - ciclo.startDate.getTime()) / 86400000) + 1));
+    const progress = cicloOffset === 0 ? Math.round((elapsedDays / totalDays) * 100) : (cicloOffset < 0 ? 100 : 0);
+    return { recebido, total, desp, lucro, comissao, totalDays, elapsedDays, progress, qtd: cicloAgs.length };
+  }, [agendamentos, ciclo, despesas, comissaoPct, cicloOffset]);
+
+  const fmtShort = (d: Date) => d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+
   return (
     <div className="space-y-5">
-      {/* Fechamento de caixa — editorial */}
-      <div className="relative overflow-hidden rounded-3xl border border-gold/15 bg-gradient-to-br from-gold/[0.04] via-primary-foreground/[0.02] to-transparent">
-        <div className="pointer-events-none absolute -top-20 -right-20 w-60 h-60 rounded-full bg-gold/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 -left-16 w-52 h-52 rounded-full bg-purple-500/10 blur-3xl" />
+      {/* ═══════════ HERO: CICLO ATUAL ═══════════ */}
+      <div className="relative overflow-hidden rounded-3xl border border-gold/25 bg-gradient-to-br from-gold/[0.10] via-purple-500/[0.05] to-transparent">
+        {/* Glows ambientes */}
+        <div className="pointer-events-none absolute -top-24 -right-20 w-72 h-72 rounded-full bg-gold/15 blur-3xl animate-[hero-glow_6s_ease-in-out_infinite]" />
+        <div className="pointer-events-none absolute -bottom-28 -left-20 w-64 h-64 rounded-full bg-purple-500/15 blur-3xl animate-[hero-glow-alt_7s_ease-in-out_infinite]" />
+        <div className="pointer-events-none absolute top-8 right-16 w-1 h-1 rounded-full bg-gold/60 animate-[float-particle_4s_ease-in-out_infinite]" />
+        <div className="pointer-events-none absolute top-20 right-32 w-0.5 h-0.5 rounded-full bg-purple-300/60 animate-[float-particle-delayed_5s_ease-in-out_infinite]" />
 
+        <div className="relative p-5 space-y-4">
+          {/* Header com navegação */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-9 h-9 rounded-2xl bg-gold/15 border border-gold/25 flex items-center justify-center shadow-[0_0_16px_-4px_hsl(40_60%_60%/0.4)]">
+                <Wallet className="w-4 h-4 text-gold" />
+              </span>
+              <div>
+                <p className="font-body text-[9px] text-gold/70 uppercase tracking-[0.25em] font-semibold flex items-center gap-1">
+                  <Sparkles className="w-2.5 h-2.5 animate-pulse" />
+                  {cicloOffset === 0 ? "Ciclo atual" : cicloOffset < 0 ? `${Math.abs(cicloOffset)} ciclo(s) atrás` : `+${cicloOffset} ciclo(s)`}
+                </p>
+                <p className="font-heading text-[15px] font-bold text-primary-foreground tabular-nums tracking-tight">
+                  {fmtShort(ciclo.startDate)} → {fmtShort(ciclo.endDate)}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1">
+              <button onClick={() => setCicloOffset((o) => o - 1)} className="w-8 h-8 rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06] hover:bg-gold/10 hover:border-gold/20 hover:text-gold flex items-center justify-center text-primary-foreground/50 transition-all" aria-label="Ciclo anterior">
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button onClick={() => setCicloOffset((o) => o + 1)} className="w-8 h-8 rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06] hover:bg-gold/10 hover:border-gold/20 hover:text-gold flex items-center justify-center text-primary-foreground/50 transition-all" aria-label="Próximo ciclo">
+                <ChevronRight className="w-4 h-4" />
+              </button>
+              {cicloOffset !== 0 && (
+                <button onClick={() => setCicloOffset(0)} className="px-2.5 py-1.5 rounded-xl bg-gold/15 text-gold font-body text-[10px] font-bold uppercase tracking-wider hover:bg-gold/25 transition-all border border-gold/20">
+                  Hoje
+                </button>
+              )}
+              <button onClick={() => { setShowCorteConfig(!showCorteConfig); setTempCorte(diaCorte.toString()); }} className="w-8 h-8 rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06] hover:bg-gold/10 hover:border-gold/20 hover:text-gold flex items-center justify-center text-primary-foreground/40 transition-all" aria-label="Configurar dia de corte">
+                <Settings className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Número-herói: LUCRO */}
+          <div className="text-center py-2">
+            <p className="font-body text-[10px] text-primary-foreground/40 uppercase tracking-[0.3em] mb-1 flex items-center justify-center gap-1.5">
+              <span className={`w-1.5 h-1.5 rounded-full ${cicloStats.lucro >= 0 ? "bg-green-400 animate-pulse" : "bg-red-400 animate-pulse"}`} />
+              Lucro do ciclo
+            </p>
+            <p className={`font-heading text-4xl sm:text-5xl font-bold tabular-nums tracking-tight ${cicloStats.lucro >= 0 ? "text-green-400 drop-shadow-[0_0_18px_hsl(142_70%_55%/0.45)]" : "text-red-400 drop-shadow-[0_0_18px_hsl(0_70%_55%/0.4)]"}`}>
+              {formatCurrency(cicloStats.lucro)}
+            </p>
+            <div className="inline-flex items-center gap-2 mt-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20">
+              <Sparkles className="w-3 h-3 text-purple-300" />
+              <span className="font-body text-[10px] text-purple-300/80 uppercase tracking-wider font-medium">
+                Comissão {comissaoPct}%
+              </span>
+              <span className="font-heading text-[12px] font-bold text-purple-200 tabular-nums">
+                {formatCurrency(cicloStats.comissao)}
+              </span>
+            </div>
+          </div>
+
+          {/* Barra de progresso */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5 px-0.5">
+              <span className="font-body text-[10px] text-primary-foreground/45 uppercase tracking-[0.2em] flex items-center gap-1 font-medium">
+                <Clock className="w-3 h-3 text-gold/60" />
+                {cicloOffset === 0 ? `Dia ${cicloStats.elapsedDays}` : "Fechado"}
+                <span className="text-primary-foreground/25">/ {cicloStats.totalDays}</span>
+              </span>
+              <span className="font-heading text-[11px] font-bold text-gold tabular-nums tracking-tight">
+                {cicloStats.progress}%
+              </span>
+            </div>
+            <div className="relative h-2.5 rounded-full bg-primary-foreground/[0.06] overflow-hidden border border-primary-foreground/[0.04]">
+              <div
+                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-gold via-gold/90 to-purple-400 transition-all duration-1000 ease-out shadow-[0_0_14px_hsl(40_60%_60%/0.6)]"
+                style={{ width: `${cicloStats.progress}%` }}
+              >
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-white/30 to-transparent" style={{ animation: "shimmer 2.5s ease-in-out infinite" }} />
+              </div>
+              {cicloOffset === 0 && cicloStats.progress > 2 && cicloStats.progress < 98 && (
+                <div
+                  className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-gold border-2 border-background shadow-[0_0_12px_hsl(40_70%_60%/0.9)] animate-pulse"
+                  style={{ left: `calc(${cicloStats.progress}% - 7px)` }}
+                />
+              )}
+            </div>
+            <div className="flex items-center justify-between mt-1.5 px-0.5">
+              <span className="font-body text-[9px] text-primary-foreground/40 tabular-nums">
+                {fmtShort(ciclo.startDate)}
+              </span>
+              {cicloOffset === 0 ? (
+                <span className="font-body text-[9px] text-purple-300/80 tabular-nums flex items-center gap-1 font-medium">
+                  <span className="w-1 h-1 rounded-full bg-purple-400 animate-pulse" />
+                  {Math.max(0, cicloStats.totalDays - cicloStats.elapsedDays)} {cicloStats.totalDays - cicloStats.elapsedDays === 1 ? "dia restante" : "dias restantes"}
+                </span>
+              ) : (
+                <span className="font-body text-[9px] text-primary-foreground/40">
+                  corte dia {diaCorte}
+                </span>
+              )}
+              <span className="font-body text-[9px] text-primary-foreground/40 tabular-nums">
+                {fmtShort(ciclo.endDate)}
+              </span>
+            </div>
+          </div>
+
+          {/* Cards de métricas */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="p-3 rounded-2xl bg-green-500/[0.06] border border-green-500/15 hover:border-green-500/25 transition-all">
+              <p className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-widest font-medium">Recebido</p>
+              <p className="font-heading text-[15px] font-bold text-green-400 tabular-nums mt-1 leading-tight">{formatCurrency(cicloStats.recebido)}</p>
+              <p className="font-body text-[9px] text-primary-foreground/30 mt-0.5">{cicloStats.qtd} atend.</p>
+            </div>
+            <div className="p-3 rounded-2xl bg-gold/[0.06] border border-gold/15 hover:border-gold/25 transition-all">
+              <p className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-widest font-medium">Previsto</p>
+              <p className="font-heading text-[15px] font-bold text-gold tabular-nums mt-1 leading-tight">{formatCurrency(cicloStats.total)}</p>
+              <p className="font-body text-[9px] text-primary-foreground/30 mt-0.5">total bruto</p>
+            </div>
+            <div className="p-3 rounded-2xl bg-red-500/[0.05] border border-red-500/15 hover:border-red-500/25 transition-all">
+              <p className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-widest font-medium">Despesas</p>
+              <p className="font-heading text-[15px] font-bold text-red-400 tabular-nums mt-1 leading-tight">- {formatCurrency(cicloStats.desp)}</p>
+              <p className="font-body text-[9px] text-primary-foreground/30 mt-0.5">no período</p>
+            </div>
+          </div>
+
+          {/* Config dia de corte */}
+          {showCorteConfig && (
+            <div className="pt-3 border-t border-primary-foreground/[0.08] space-y-2 animate-fade-in">
+              <label className="font-body text-[10px] text-primary-foreground/50 uppercase tracking-wider">Dia que fecha o mês (1 a 28)</label>
+              <div className="flex gap-2">
+                <input type="number" min="1" max="28" value={tempCorte} onChange={(e) => setTempCorte(e.target.value)} className="flex-1 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-gold/20 text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/30 tabular-nums" />
+                <button onClick={() => {
+                  const val = Math.min(28, Math.max(1, Number(tempCorte) || 1));
+                  setDiaCorte(val);
+                  localStorage.setItem("dyoli_dia_corte", val.toString());
+                  setCicloOffset(0);
+                  setShowCorteConfig(false);
+                }} className="px-4 py-2 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all">
+                  Salvar
+                </button>
+              </div>
+              <div className="flex gap-1.5 flex-wrap">
+                {[1, 5, 10, 15, 20, 25].map((d) => (
+                  <button key={d} onClick={() => setTempCorte(d.toString())} className={`px-2.5 py-1 rounded-full font-body text-[10px] border transition-all tabular-nums ${Number(tempCorte) === d ? "bg-gold/15 text-gold border-gold/30" : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06] hover:border-gold/20"}`}>
+                    dia {d}
+                  </button>
+                ))}
+              </div>
+              <p className="font-body text-[10px] text-primary-foreground/35 leading-relaxed">
+                O ciclo do "Mês" começa neste dia e termina um dia antes do próximo corte. Ao virar, as finanças do período zeram automaticamente e um novo ciclo começa.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ═══════════ FECHAMENTO DE CAIXA (DIA) ═══════════ */}
+      <div className="relative overflow-hidden rounded-3xl border border-primary-foreground/[0.08] bg-gradient-to-br from-primary-foreground/[0.03] to-transparent">
         <div className="relative p-5 flex items-center gap-3">
-          <span className="w-9 h-9 rounded-2xl bg-gold/10 border border-gold/20 flex items-center justify-center">
-            <Wallet className="w-4 h-4 text-gold" />
+          <span className="w-9 h-9 rounded-2xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.08] flex items-center justify-center">
+            <Wallet className="w-4 h-4 text-primary-foreground/60" />
           </span>
           <div>
             <span className="block font-heading text-[15px] font-semibold text-primary-foreground tracking-tight">Fechamento de Caixa</span>
@@ -141,160 +319,6 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
         </div>
 
         <div className="relative px-5 pb-5 space-y-5 animate-fade-in">
-          {/* Ciclo Mensal */}
-          {(() => {
-            const cicloAgs = agendamentos.filter(
-              (a) => a.status !== "cancelado" && a.status !== "falta" &&
-                a.data_agendamento >= ciclo.startISO && a.data_agendamento <= ciclo.endISO,
-            );
-            const cicloRecebido = cicloAgs.reduce((s, a) => s + Number(a.valor_pago || 0), 0);
-            const cicloTotal = cicloAgs.reduce((s, a) => s + Number(a.valor), 0);
-            const cicloDespesas = despesas
-              .filter((d) => d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO)
-              .reduce((s, d) => s + Number(d.valor), 0);
-            const cicloLucro = cicloRecebido - cicloDespesas;
-            const cicloComissao = cicloRecebido * (comissaoPct / 100);
-            const fmtShort = (d: Date) => d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
-            const today = new Date(); today.setHours(12, 0, 0, 0);
-            const totalDays = Math.round((ciclo.endDate.getTime() - ciclo.startDate.getTime()) / 86400000) + 1;
-            const elapsedDays = Math.max(0, Math.min(totalDays, Math.round((today.getTime() - ciclo.startDate.getTime()) / 86400000) + 1));
-            const cicloProgress = cicloOffset === 0 ? Math.round((elapsedDays / totalDays) * 100) : (cicloOffset < 0 ? 100 : 0);
-
-            return (
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-foreground/[0.04] to-primary-foreground/[0.01] border border-primary-foreground/[0.08]">
-                <div className="p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => setCicloOffset((o) => o - 1)} className="w-7 h-7 rounded-lg hover:bg-primary-foreground/[0.05] flex items-center justify-center text-primary-foreground/50 hover:text-primary-foreground transition-all" aria-label="Ciclo anterior">
-                        <ChevronLeft className="w-3.5 h-3.5" />
-                      </button>
-                      <div className="text-center">
-                        <p className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-[0.25em]">
-                          {cicloOffset === 0 ? "Ciclo atual" : cicloOffset < 0 ? `${Math.abs(cicloOffset)} ciclo(s) atrás` : `+${cicloOffset} ciclo(s)`}
-                        </p>
-                        <p className="font-heading text-[13px] font-semibold text-primary-foreground tabular-nums">
-                          {fmtShort(ciclo.startDate)} → {fmtShort(ciclo.endDate)}
-                        </p>
-                      </div>
-                      <button onClick={() => setCicloOffset((o) => o + 1)} className="w-7 h-7 rounded-lg hover:bg-primary-foreground/[0.05] flex items-center justify-center text-primary-foreground/50 hover:text-primary-foreground transition-all" aria-label="Próximo ciclo">
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {cicloOffset !== 0 && (
-                        <button onClick={() => setCicloOffset(0)} className="px-2 py-1 rounded-md bg-gold/10 text-gold font-body text-[9px] font-medium uppercase tracking-wider hover:bg-gold/20 transition-all">
-                          Atual
-                        </button>
-                      )}
-                      <button onClick={() => { setShowCorteConfig(!showCorteConfig); setTempCorte(diaCorte.toString()); }} className="p-1.5 rounded-lg hover:bg-primary-foreground/[0.05] text-primary-foreground/40 hover:text-gold transition-all" aria-label="Configurar dia de corte">
-                        <Settings className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5 px-0.5">
-                      <span className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-[0.2em] flex items-center gap-1">
-                        <Clock className="w-2.5 h-2.5 text-gold/60" />
-                        {cicloOffset === 0 ? `Dia ${elapsedDays}` : "Fechado"}
-                        <span className="text-primary-foreground/25">/ {totalDays}</span>
-                      </span>
-                      <span className="font-heading text-[10px] font-bold text-gold tabular-nums tracking-tight">
-                        {cicloProgress}%
-                      </span>
-                    </div>
-                    <div className="relative h-2 rounded-full bg-primary-foreground/[0.06] overflow-hidden border border-primary-foreground/[0.04]">
-                      <div
-                        className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-gold via-gold/90 to-purple-400 transition-all duration-1000 ease-out shadow-[0_0_12px_hsl(40_60%_60%/0.5)]"
-                        style={{ width: `${cicloProgress}%` }}
-                      >
-                        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2.5s_ease-in-out_infinite] -translate-x-full" style={{ animation: "shimmer 2.5s ease-in-out infinite" }} />
-                      </div>
-                      {cicloOffset === 0 && cicloProgress > 2 && cicloProgress < 98 && (
-                        <div
-                          className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-gold border-2 border-background shadow-[0_0_10px_hsl(40_70%_60%/0.8)] animate-pulse"
-                          style={{ left: `calc(${cicloProgress}% - 6px)` }}
-                        />
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between mt-1.5 px-0.5">
-                      <span className="font-body text-[9px] text-primary-foreground/35 tabular-nums">
-                        {fmtShort(ciclo.startDate)}
-                      </span>
-                      {cicloOffset === 0 ? (
-                        <span className="font-body text-[9px] text-purple-300/70 tabular-nums flex items-center gap-1">
-                          <span className="w-1 h-1 rounded-full bg-purple-400 animate-pulse" />
-                          {Math.max(0, totalDays - elapsedDays)} {totalDays - elapsedDays === 1 ? "dia restante" : "dias restantes"}
-                        </span>
-                      ) : (
-                        <span className="font-body text-[9px] text-primary-foreground/35">
-                          corte dia {diaCorte}
-                        </span>
-                      )}
-                      <span className="font-body text-[9px] text-primary-foreground/35 tabular-nums">
-                        {fmtShort(ciclo.endDate)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="p-2.5 rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.04]">
-                      <p className="font-body text-[8.5px] text-primary-foreground/35 uppercase tracking-widest">Recebido</p>
-                      <p className="font-heading text-base font-bold text-green-400 tabular-nums">{formatCurrency(cicloRecebido)}</p>
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.04]">
-                      <p className="font-body text-[8.5px] text-primary-foreground/35 uppercase tracking-widest">Previsto</p>
-                      <p className="font-heading text-base font-bold text-gold tabular-nums">{formatCurrency(cicloTotal)}</p>
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.04]">
-                      <p className="font-body text-[8.5px] text-primary-foreground/35 uppercase tracking-widest">Despesas</p>
-                      <p className="font-heading text-base font-bold text-red-400 tabular-nums">- {formatCurrency(cicloDespesas)}</p>
-                    </div>
-                    <div className={`p-2.5 rounded-xl border ${cicloLucro >= 0 ? "bg-green-500/5 border-green-500/15" : "bg-red-500/5 border-red-500/15"}`}>
-                      <p className="font-body text-[8.5px] text-primary-foreground/35 uppercase tracking-widest">Lucro</p>
-                      <p className={`font-heading text-base font-bold tabular-nums ${cicloLucro >= 0 ? "text-green-400" : "text-red-400"}`}>{formatCurrency(cicloLucro)}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-purple-500/5 border border-purple-500/15">
-                    <span className="font-body text-[10px] text-purple-400/70 uppercase tracking-widest flex items-center gap-1.5">
-                      <Sparkles className="w-3 h-3" /> Comissão {comissaoPct}%
-                    </span>
-                    <span className="font-heading text-[14px] font-bold text-purple-300 tabular-nums">{formatCurrency(cicloComissao)}</span>
-                  </div>
-
-                  {showCorteConfig && (
-                    <div className="pt-3 border-t border-primary-foreground/[0.06] space-y-2 animate-fade-in">
-                      <label className="font-body text-[10px] text-primary-foreground/50 uppercase tracking-wider">Dia que fecha o mês (1 a 28)</label>
-                      <div className="flex gap-2">
-                        <input type="number" min="1" max="28" value={tempCorte} onChange={(e) => setTempCorte(e.target.value)} className="flex-1 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-gold/20 text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/30 tabular-nums" />
-                        <button onClick={() => {
-                          const val = Math.min(28, Math.max(1, Number(tempCorte) || 1));
-                          setDiaCorte(val);
-                          localStorage.setItem("dyoli_dia_corte", val.toString());
-                          setCicloOffset(0);
-                          setShowCorteConfig(false);
-                        }} className="px-4 py-2 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all">
-                          Salvar
-                        </button>
-                      </div>
-                      <div className="flex gap-1.5 flex-wrap">
-                        {[1, 5, 10, 15, 20, 25].map((d) => (
-                          <button key={d} onClick={() => setTempCorte(d.toString())} className={`px-2.5 py-1 rounded-full font-body text-[10px] border transition-all tabular-nums ${Number(tempCorte) === d ? "bg-gold/15 text-gold border-gold/30" : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06] hover:border-gold/20"}`}>
-                            dia {d}
-                          </button>
-                        ))}
-                      </div>
-                      <p className="font-body text-[10px] text-primary-foreground/35 leading-relaxed">
-                        O ciclo do "Mês" começa neste dia e termina um dia antes do próximo corte. Ao virar, as finanças do período zeram automaticamente e um novo ciclo começa.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })()}
-
           {/* Navegador de dia */}
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2 p-1.5 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
