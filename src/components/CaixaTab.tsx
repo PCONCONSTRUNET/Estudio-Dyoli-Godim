@@ -590,6 +590,141 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
           {filtered.length === 0 && <p className="font-body text-[13px] text-primary-foreground/30 text-center py-6">Nenhum registro no período</p>}
         </div>
       </div>
+
+      {/* ═══════════ MODAL: DETALHE DA COMISSÃO ═══════════ */}
+      <Dialog open={showComissaoDetail} onOpenChange={setShowComissaoDetail}>
+        <DialogContent className="max-w-md max-h-[85vh] overflow-hidden flex flex-col bg-background border-purple-500/20 p-0">
+          <div className="relative overflow-hidden">
+            <div className="pointer-events-none absolute -top-16 -right-12 w-48 h-48 rounded-full bg-purple-500/15 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-16 -left-12 w-40 h-40 rounded-full bg-gold/10 blur-3xl" />
+            <DialogHeader className="relative px-5 pt-5 pb-3 border-b border-primary-foreground/[0.06]">
+              <div className="flex items-center gap-3">
+                <span className="w-10 h-10 rounded-2xl bg-purple-500/15 border border-purple-500/25 flex items-center justify-center shadow-[0_0_18px_-4px_hsl(280_70%_60%/0.5)]">
+                  <Calculator className="w-4 h-4 text-purple-300" />
+                </span>
+                <div>
+                  <DialogTitle className="font-heading text-[16px] font-bold text-primary-foreground tracking-tight">
+                    Cálculo da Comissão
+                  </DialogTitle>
+                  <p className="font-body text-[10px] text-purple-300/70 uppercase tracking-[0.2em] mt-0.5">
+                    {fmtShort(ciclo.startDate)} → {fmtShort(ciclo.endDate)}
+                  </p>
+                </div>
+              </div>
+            </DialogHeader>
+          </div>
+
+          <div className="overflow-y-auto px-5 py-4 space-y-4">
+            {/* Resumo principal */}
+            <div className="rounded-2xl bg-gradient-to-br from-purple-500/[0.10] to-purple-500/[0.02] border border-purple-500/20 p-4 text-center">
+              <p className="font-body text-[10px] text-purple-300/70 uppercase tracking-[0.25em] mb-1">Comissão do ciclo</p>
+              <p className="font-heading text-3xl font-bold text-purple-200 tabular-nums tracking-tight drop-shadow-[0_0_18px_hsl(280_70%_60%/0.4)]">
+                {formatCurrency(cicloStats.comissao)}
+              </p>
+              <p className="font-body text-[11px] text-primary-foreground/40 mt-2 tabular-nums">
+                {formatCurrency(cicloStats.recebido)} × <span className="text-purple-300 font-bold">{comissaoPct}%</span>
+              </p>
+            </div>
+
+            {/* Regras */}
+            <div>
+              <p className="font-body text-[10px] text-primary-foreground/45 uppercase tracking-[0.2em] font-medium mb-2 flex items-center gap-1.5">
+                <Info className="w-3 h-3 text-gold/70" /> Como é calculado
+              </p>
+              <div className="space-y-2">
+                <div className="flex items-start gap-2 p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+                  <span className="font-heading text-[11px] font-bold text-gold w-5 h-5 rounded-full bg-gold/15 flex items-center justify-center shrink-0 mt-0.5">1</span>
+                  <p className="font-body text-[12px] text-primary-foreground/70 leading-relaxed">
+                    A comissão é <span className="text-purple-300 font-semibold">{comissaoPct}%</span> sobre o <span className="text-green-400 font-semibold">valor recebido</span> (apenas pagamentos confirmados, não o previsto).
+                  </p>
+                </div>
+                <div className="flex items-start gap-2 p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+                  <span className="font-heading text-[11px] font-bold text-gold w-5 h-5 rounded-full bg-gold/15 flex items-center justify-center shrink-0 mt-0.5">2</span>
+                  <p className="font-body text-[12px] text-primary-foreground/70 leading-relaxed">
+                    O ciclo vai do <span className="text-gold font-semibold">dia {diaCorte}</span> até um dia antes do próximo corte. Cancelamentos e faltas <span className="text-red-400 font-semibold">não entram</span>.
+                  </p>
+                </div>
+                <div className="flex items-start gap-2 p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+                  <span className="font-heading text-[11px] font-bold text-gold w-5 h-5 rounded-full bg-gold/15 flex items-center justify-center shrink-0 mt-0.5">3</span>
+                  <p className="font-body text-[12px] text-primary-foreground/70 leading-relaxed">
+                    Sinais e pagamentos parciais contam pelo valor efetivamente pago. Despesas <span className="text-primary-foreground/80 font-semibold">não afetam</span> a comissão (apenas o lucro).
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Métricas do cálculo */}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="p-2.5 rounded-xl bg-green-500/[0.06] border border-green-500/15">
+                <p className="font-body text-[8.5px] text-primary-foreground/40 uppercase tracking-wider">Base</p>
+                <p className="font-heading text-[13px] font-bold text-green-400 tabular-nums leading-tight mt-0.5">{formatCurrency(cicloStats.recebido)}</p>
+              </div>
+              <div className="p-2.5 rounded-xl bg-purple-500/[0.06] border border-purple-500/15">
+                <p className="font-body text-[8.5px] text-primary-foreground/40 uppercase tracking-wider">Taxa</p>
+                <p className="font-heading text-[13px] font-bold text-purple-300 tabular-nums leading-tight mt-0.5">{comissaoPct}%</p>
+              </div>
+              <div className="p-2.5 rounded-xl bg-gold/[0.06] border border-gold/15">
+                <p className="font-body text-[8.5px] text-primary-foreground/40 uppercase tracking-wider">Dias</p>
+                <p className="font-heading text-[13px] font-bold text-gold tabular-nums leading-tight mt-0.5">{comissaoBreakdown.length}</p>
+              </div>
+            </div>
+
+            {/* Detalhamento por dia */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <p className="font-body text-[10px] text-primary-foreground/45 uppercase tracking-[0.2em] font-medium flex items-center gap-1.5">
+                  <TrendingUp className="w-3 h-3 text-gold/70" /> Dias que entraram
+                </p>
+                <span className="font-body text-[10px] text-primary-foreground/35 tabular-nums">{cicloStats.qtd} atend.</span>
+              </div>
+              {comissaoBreakdown.length === 0 ? (
+                <div className="p-6 rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.06] text-center">
+                  <p className="font-body text-[12px] text-primary-foreground/35">Nenhum pagamento recebido neste ciclo ainda.</p>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  {comissaoBreakdown.map((d) => {
+                    const dayComm = d.recebido * (comissaoPct / 100);
+                    return (
+                      <div key={d.date} className="flex items-center justify-between p-2.5 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.05] hover:border-purple-500/20 transition-all">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="w-7 h-7 rounded-lg bg-gold/10 border border-gold/15 flex items-center justify-center shrink-0">
+                            <Calendar className="w-3 h-3 text-gold/70" />
+                          </span>
+                          <div className="min-w-0">
+                            <p className="font-heading text-[12px] font-semibold text-primary-foreground capitalize tabular-nums leading-tight">
+                              {new Date(d.date + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" })}
+                            </p>
+                            <p className="font-body text-[10px] text-primary-foreground/40 mt-0.5">
+                              {d.qtd} {d.qtd === 1 ? "atend." : "atend."} · <span className="text-green-400/80 tabular-nums">{formatCurrency(d.recebido)}</span>
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="font-body text-[8.5px] text-purple-300/60 uppercase tracking-wider">Comissão</p>
+                          <p className="font-heading text-[13px] font-bold text-purple-300 tabular-nums leading-tight">
+                            {formatCurrency(dayComm)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Total final */}
+            <div className="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-purple-500/15 to-purple-500/5 border border-purple-500/30">
+              <span className="font-body text-[11px] text-purple-200/80 uppercase tracking-widest font-bold flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-purple-300" /> Total
+              </span>
+              <span className="font-heading text-[18px] font-bold text-purple-200 tabular-nums">
+                {formatCurrency(cicloStats.comissao)}
+              </span>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
