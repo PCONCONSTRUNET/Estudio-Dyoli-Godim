@@ -219,15 +219,21 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
             <p className={`font-heading text-4xl sm:text-5xl font-bold tabular-nums tracking-tight ${cicloStats.lucro >= 0 ? "text-green-400 drop-shadow-[0_0_18px_hsl(142_70%_55%/0.45)]" : "text-red-400 drop-shadow-[0_0_18px_hsl(0_70%_55%/0.4)]"}`}>
               {formatCurrency(cicloStats.lucro)}
             </p>
-            <div className="inline-flex items-center gap-2 mt-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20">
-              <Sparkles className="w-3 h-3 text-purple-300" />
+            <button
+              type="button"
+              onClick={() => setShowComissaoDetail(true)}
+              className="inline-flex items-center gap-2 mt-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 hover:border-purple-400/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer group"
+              aria-label="Ver detalhes do cálculo da comissão"
+            >
+              <Sparkles className="w-3 h-3 text-purple-300 group-hover:animate-pulse" />
               <span className="font-body text-[10px] text-purple-300/80 uppercase tracking-wider font-medium">
                 Comissão {comissaoPct}%
               </span>
               <span className="font-heading text-[12px] font-bold text-purple-200 tabular-nums">
                 {formatCurrency(cicloStats.comissao)}
               </span>
-            </div>
+              <Info className="w-3 h-3 text-purple-300/60 group-hover:text-purple-200 transition-colors" />
+            </button>
           </div>
 
           {/* Barra de progresso */}
