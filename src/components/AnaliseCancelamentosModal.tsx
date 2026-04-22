@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Sparkles, X, AlertTriangle, TrendingDown, Lightbulb, Loader2, RefreshCw, CheckCircle2, AlertCircle, Info } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -72,7 +72,7 @@ const AnaliseCancelamentosModal = ({ open, onClose }: Props) => {
   const [result, setResult] = useState<Result | null>(null);
   const [periodo, setPeriodo] = useState<number>(90);
 
-  const runAnalise = async (dias: number = periodo) => {
+  const runAnalise = useCallback(async (dias: number) => {
     setLoading(true);
     setResult(null);
     try {
@@ -92,12 +92,15 @@ const AnaliseCancelamentosModal = ({ open, onClose }: Props) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Auto-run ao abrir
-  if (open && !result && !loading) {
-    runAnalise(periodo);
-  }
+  // Auto-run ao abrir (só uma vez por abertura)
+  useEffect(() => {
+    if (open && !result && !loading) {
+      runAnalise(periodo);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const handleClose = () => {
     onClose();
