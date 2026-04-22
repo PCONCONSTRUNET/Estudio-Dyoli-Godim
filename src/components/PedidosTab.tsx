@@ -36,19 +36,27 @@ const formatCurrency = (v: number) =>
 
 type PagamentoFilter = "todos" | "pago" | "recepcao" | "pendente";
 
-const getPagamentoStatus = (a: { valor: number; valor_pago: number | null; forma_pagamento?: string | null }): "pago" | "recepcao" | "pendente" => {
-  const valor = Number(a.valor || 0);
-  const pago = Number(a.valor_pago || 0);
-  if (pago >= valor && valor > 0) return "pago";
-  const forma = (a.forma_pagamento || "").toLowerCase();
-  if (
+const isFormaRecepcao = (forma_pagamento?: string | null): boolean => {
+  const forma = (forma_pagamento || "").toLowerCase();
+  return (
     forma.includes("recep") ||
     forma.includes("salao") ||
     forma.includes("salão") ||
     forma === "presencial" ||
     forma === "local" ||
     forma === "dinheiro"
-  ) return "recepcao";
+  );
+};
+
+const isPago = (a: { valor: number; valor_pago: number | null }): boolean => {
+  const valor = Number(a.valor || 0);
+  const pago = Number(a.valor_pago || 0);
+  return pago >= valor && valor > 0;
+};
+
+const getPagamentoStatus = (a: { valor: number; valor_pago: number | null; forma_pagamento?: string | null }): "pago" | "recepcao" | "pendente" => {
+  if (isPago(a)) return "pago";
+  if (isFormaRecepcao(a.forma_pagamento)) return "recepcao";
   return "pendente";
 };
 
@@ -186,25 +194,28 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     );
   };
 
+  const paidBadge = (pago: boolean) => pago ? (
+    <span title="Pago" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-green-500/30 bg-green-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-green-400">
+      <CheckCircle className="h-2.5 w-2.5" /> Pago
+    </span>
+  ) : (
+    <span title="Não pago" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-red-400">
+      <AlertTriangle className="h-2.5 w-2.5" /> Não pago
+    </span>
+  );
+
   const paymentBadge = (a: Agendamento) => {
-    const tipo = getPagamentoStatus(a);
-    if (tipo === "pago") {
-      return (
-        <span title="Pagamento confirmado" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-green-500/30 bg-green-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-green-400">
-          <CheckCircle className="h-2.5 w-2.5" /> Pago
-        </span>
-      );
-    }
-    if (tipo === "recepcao") {
-      return (
-        <span title="Pagar na recepção" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-blue-400">
-          <Clock className="h-2.5 w-2.5" /> Recepção
-        </span>
-      );
-    }
+    const pago = isPago(a);
+    const recepcao = isFormaRecepcao(a.forma_pagamento);
+
     return (
-      <span title="Não pago" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-red-400">
-        <AlertTriangle className="h-2.5 w-2.5" /> Não pago
+      <span className="inline-flex flex-wrap items-center gap-1">
+        {recepcao && (
+          <span title="Pagar na recepção" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-blue-400">
+            <Clock className="h-2.5 w-2.5" /> Recepção
+          </span>
+        )}
+        {paidBadge(pago)}
       </span>
     );
   };
