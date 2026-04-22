@@ -179,7 +179,35 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     );
   };
 
-  const SortIcon = ({ field }: { field: SortField }) => {
+  const paymentBadge = (a: Agendamento) => {
+    const valor = Number(a.valor || 0);
+    const pago = Number(a.valor_pago || 0);
+    const isPago = pago >= valor && valor > 0;
+    const forma = (a.forma_pagamento || "").toLowerCase();
+    const isRecepcao = forma.includes("recep") || forma === "presencial" || forma === "local";
+
+    if (isPago) {
+      return (
+        <span title="Pagamento confirmado" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-green-500/30 bg-green-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-green-400">
+          <CheckCircle className="h-2.5 w-2.5" /> Pago
+        </span>
+      );
+    }
+    if (isRecepcao) {
+      return (
+        <span title="Pagar na recepção" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-blue-400">
+          <Clock className="h-2.5 w-2.5" /> Recepção
+        </span>
+      );
+    }
+    return (
+      <span title="Pagamento pendente" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-red-400">
+        <AlertTriangle className="h-2.5 w-2.5" /> Pendente
+      </span>
+    );
+  };
+
+
     if (sortField !== field) return null;
     return sortDir === "desc" ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />;
   };
