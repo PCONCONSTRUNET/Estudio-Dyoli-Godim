@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, Trash2, CheckCircle, X, UserX, ChevronDown, ChevronUp, Bell, Clock, AlertTriangle, Eye, MessageSquare } from "lucide-react";
+import { Search, Trash2, CheckCircle, X, UserX, ChevronDown, Bell, Clock, AlertTriangle, Eye } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -34,8 +34,6 @@ const formatDate = (d: string) =>
 const formatCurrency = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-type SortField = "data" | "cliente" | "valor" | "status";
-type SortDir = "asc" | "desc";
 type PagamentoFilter = "todos" | "pago" | "recepcao" | "pendente";
 
 const getPagamentoStatus = (a: { valor: number; valor_pago: number | null; forma_pagamento?: string | null }): "pago" | "recepcao" | "pendente" => {
@@ -58,8 +56,6 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("todos");
   const [pagamentoFilter, setPagamentoFilter] = useState<PagamentoFilter>("todos");
-  const [sortField, setSortField] = useState<SortField>("data");
-  const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => {
     const saved = localStorage.getItem("pedidos_dismissed");
@@ -146,23 +142,13 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
           a.data_agendamento.includes(term)
       );
     }
-    list.sort((a, b) => {
-      let cmp = 0;
-      switch (sortField) {
-        case "data": cmp = a.data_agendamento.localeCompare(b.data_agendamento) || a.horario.localeCompare(b.horario); break;
-        case "cliente": cmp = getClientName(a.user_id, a.cliente_nome).localeCompare(getClientName(b.user_id)); break;
-        case "valor": cmp = Number(a.valor) - Number(b.valor); break;
-        case "status": cmp = a.status.localeCompare(b.status); break;
-      }
-      return sortDir === "desc" ? -cmp : cmp;
-    });
+    list.sort(
+      (a, b) =>
+        a.data_agendamento.localeCompare(b.data_agendamento) ||
+        a.horario.localeCompare(b.horario)
+    );
     return list;
-  }, [agendamentos, statusFilter, pagamentoFilter, searchTerm, sortField, sortDir, getClientName]);
-
-  const toggleSort = (field: SortField) => {
-    if (sortField === field) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    else { setSortField(field); setSortDir("asc"); }
-  };
+  }, [agendamentos, statusFilter, pagamentoFilter, searchTerm, getClientName]);
 
   const updateStatus = async (id: string, status: string) => {
     await supabase.from("agendamentos").update({ status }).eq("id", id);
@@ -221,11 +207,6 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
         <AlertTriangle className="h-2.5 w-2.5" /> Pendente
       </span>
     );
-  };
-
-  const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return null;
-    return sortDir === "desc" ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />;
   };
 
 
@@ -424,23 +405,11 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
         </div>
       </div>
 
-      {/* Sort buttons */}
-      <div className="flex items-center gap-1">
-        <span className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/30 mr-1">Ordenar:</span>
-        {([
-          { field: "data" as SortField, label: "Data" },
-          { field: "cliente" as SortField, label: "Cliente" },
-          { field: "valor" as SortField, label: "Valor" },
-          { field: "status" as SortField, label: "Status" },
-        ]).map((s) => (
-          <button key={s.field} onClick={() => toggleSort(s.field)}
-            className={`flex items-center gap-0.5 rounded-lg px-2 py-1 font-body text-[10px] font-medium transition-all ${
-              sortField === s.field ? "bg-gold/10 text-gold" : "text-primary-foreground/30 hover:text-primary-foreground/50"
-            }`}>
-            {s.label}
-            <SortIcon field={s.field} />
-          </button>
-        ))}
+      <div className="flex items-center gap-2 rounded-lg border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] px-3 py-2">
+        <Clock className="h-3.5 w-3.5 text-gold" />
+        <p className="font-body text-[11px] text-primary-foreground/50">
+          Lista em ordem de <span className="text-primary-foreground font-medium">data mais próxima</span> para a <span className="text-primary-foreground font-medium">mais distante</span>
+        </p>
       </div>
 
       <p className="font-body text-[11px] text-primary-foreground/30">
