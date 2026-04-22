@@ -481,8 +481,9 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
       </div>
 
       {/* Pie Chart - Status pagamento */}
-      <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-        <p className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest mb-3">Status de pagamento</p>
+      <div className="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-purple-500/[0.05] via-primary-foreground/[0.02] to-transparent border border-purple-500/15">
+        <div className="pointer-events-none absolute -top-16 -right-16 w-44 h-44 rounded-full bg-purple-500/10 blur-3xl" />
+        <p className="relative font-body text-[12px] font-medium text-primary-foreground/65 uppercase tracking-[0.2em] mb-3">Status de pagamento</p>
         {paymentStatus.length > 0 ? (
           <>
             <div className="h-[180px] [&_.recharts-wrapper]:!bg-transparent [&_.recharts-surface]:!bg-transparent [&_svg]:!bg-transparent">
