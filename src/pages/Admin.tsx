@@ -787,13 +787,13 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                       <button
                         key={t.id}
                         onClick={() => { setTab(t.id); setMobileNavOpen(false); }}
-                        className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 font-body text-[14px] font-medium transition-all ${
+                        className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3 font-body text-[14px] font-medium transition-all ${
                           tab === t.id
-                            ? "bg-gold/10 text-gold"
+                            ? "tab-active bg-gold/10 text-gold"
                             : "text-primary-foreground/50 hover:bg-primary-foreground/[0.04] hover:text-primary-foreground/80"
                         }`}
                       >
-                        <t.icon className="h-[18px] w-[18px] shrink-0" />
+                        <t.icon className={`h-[18px] w-[18px] shrink-0 tab-icon ${t.anim}`} />
                         {t.label}
                       </button>
                     ))}
