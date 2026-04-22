@@ -145,8 +145,23 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
     const totalDays = Math.round((ciclo.endDate.getTime() - ciclo.startDate.getTime()) / 86400000) + 1;
     const elapsedDays = Math.max(0, Math.min(totalDays, Math.round((today.getTime() - ciclo.startDate.getTime()) / 86400000) + 1));
     const progress = cicloOffset === 0 ? Math.round((elapsedDays / totalDays) * 100) : (cicloOffset < 0 ? 100 : 0);
-    return { recebido, total, desp, lucro, comissao, totalDays, elapsedDays, progress, qtd: cicloAgs.length };
+    return { recebido, total, desp, lucro, comissao, totalDays, elapsedDays, progress, qtd: cicloAgs.length, items: cicloAgs };
   }, [agendamentos, ciclo, despesas, comissaoPct, cicloOffset]);
+
+  // Detalhamento da comissão por dia (apenas dias com valor recebido)
+  const comissaoBreakdown = useMemo(() => {
+    const byDay: Record<string, { date: string; recebido: number; qtd: number }> = {};
+    cicloStats.items.forEach((a) => {
+      const pago = Number(a.valor_pago || 0);
+      if (pago <= 0) return;
+      if (!byDay[a.data_agendamento]) {
+        byDay[a.data_agendamento] = { date: a.data_agendamento, recebido: 0, qtd: 0 };
+      }
+      byDay[a.data_agendamento].recebido += pago;
+      byDay[a.data_agendamento].qtd += 1;
+    });
+    return Object.values(byDay).sort((a, b) => b.date.localeCompare(a.date));
+  }, [cicloStats.items]);
 
   const fmtShort = (d: Date) => d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 
