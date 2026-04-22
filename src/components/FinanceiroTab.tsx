@@ -438,12 +438,50 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
           <TrendingUp className="w-5 h-5 text-gold" /> Financeiro
         </h2>
         <div className="flex gap-1.5">
-          <button onClick={exportCSV} className="p-2 rounded-xl hover:bg-green-500/10 text-primary-foreground/30 hover:text-green-500 transition-all" title="Exportar planilha">
+          <button onClick={exportCSV} className="p-2 rounded-xl hover:bg-green-500/10 text-primary-foreground/30 hover:text-green-500 transition-all" title="Exportar planilha de agendamentos">
             <Table2 className="w-4 h-4" />
           </button>
-          <button onClick={exportPDF} className="p-2 rounded-xl hover:bg-rose/10 text-primary-foreground/30 hover:text-rose transition-all" title="Exportar PDF">
+          <button onClick={exportPDF} className="p-2 rounded-xl hover:bg-rose/10 text-primary-foreground/30 hover:text-rose transition-all" title="Exportar PDF resumo">
             <FileText className="w-4 h-4" />
           </button>
+          <button
+            onClick={exportDRE}
+            className="px-3 py-2 rounded-xl bg-gradient-to-br from-blue-500/15 to-purple-500/10 border border-blue-500/30 text-blue-300 hover:from-blue-500/25 hover:to-purple-500/15 transition-all flex items-center gap-1.5"
+            title="DRE — Relatório contábil mensal"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            <span className="font-body text-[11px] font-semibold uppercase tracking-wider">DRE</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Banner DRE contábil */}
+      <div className="relative overflow-hidden p-4 rounded-2xl border border-blue-500/20 bg-gradient-to-br from-blue-500/[0.08] via-purple-500/[0.04] to-transparent">
+        <div className="pointer-events-none absolute -top-12 -right-12 w-32 h-32 rounded-full bg-blue-500/10 blur-3xl" />
+        <div className="relative flex items-start gap-3">
+          <div className="p-2 rounded-xl bg-blue-500/15 border border-blue-500/20 flex-shrink-0">
+            <FileSpreadsheet className="w-4 h-4 text-blue-300" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-body text-[12px] font-semibold text-blue-200 uppercase tracking-[0.15em]">Relatório Contábil — DRE</p>
+            <p className="font-body text-[11px] text-primary-foreground/55 mt-1 leading-relaxed">
+              Demonstrativo pronto para o contador: receitas por serviço, despesas por categoria, comissão, resultado líquido e indicadores do período selecionado.
+            </p>
+            <div className="flex gap-2 mt-2.5 flex-wrap">
+              <button
+                onClick={exportDRE}
+                className="px-3 py-1.5 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 text-blue-200 font-body text-[11px] font-semibold transition-all flex items-center gap-1.5"
+              >
+                <FileText className="w-3 h-3" /> Gerar PDF
+              </button>
+              <button
+                onClick={exportDRECsv}
+                className="px-3 py-1.5 rounded-lg bg-primary-foreground/[0.04] hover:bg-primary-foreground/[0.08] border border-primary-foreground/[0.1] text-primary-foreground/70 font-body text-[11px] font-semibold transition-all flex items-center gap-1.5"
+              >
+                <FileSpreadsheet className="w-3 h-3" /> Planilha CSV
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
