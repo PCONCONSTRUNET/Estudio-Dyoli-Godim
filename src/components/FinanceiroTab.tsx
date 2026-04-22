@@ -111,13 +111,30 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   }, [agendamentos, period, customStart, customEnd, ciclo]);
 
 
+  // Intervalo ativo do filtro (para também filtrar despesas pelo mesmo período)
+  const periodRange = useMemo(() => {
+    const now = new Date();
+    const todayISO = now.toISOString().split("T")[0];
+    if (period === "hoje") return { start: todayISO, end: todayISO };
+    if (period === "semana") {
+      const wa = new Date(now); wa.setDate(wa.getDate() - 7);
+      const wh = new Date(now); wh.setDate(wh.getDate() + 7);
+      return { start: wa.toISOString().split("T")[0], end: wh.toISOString().split("T")[0] };
+    }
+    if (period === "mes") return { start: ciclo.startISO, end: ciclo.endISO };
+    if (period === "personalizado" && customStart && customEnd) return { start: customStart, end: customEnd };
+    return { start: "0000-01-01", end: "9999-12-31" };
+  }, [period, ciclo, customStart, customEnd]);
+
   // Metrics
   const totalReceita = filtered.reduce((s, a) => s + Number(a.valor), 0);
   const totalRecebido = filtered.reduce((s, a) => s + Number(a.valor_pago || 0), 0);
   const totalPendente = totalReceita - totalRecebido;
   const qtdAtendimentos = filtered.length;
   const comissaoValor = totalRecebido * (comissaoPct / 100);
-  const totalDespesas = despesas.reduce((s, d) => s + Number(d.valor), 0);
+  const totalDespesas = despesas
+    .filter(d => d.data_vencimento >= periodRange.start && d.data_vencimento <= periodRange.end)
+    .reduce((s, d) => s + Number(d.valor), 0);
   const lucroLiquido = totalRecebido - totalDespesas;
 
   // Chart: receita por dia
