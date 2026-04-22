@@ -34,8 +34,6 @@ const formatDate = (d: string) =>
 const formatCurrency = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-type SortField = "data" | "cliente" | "valor" | "status";
-type SortDir = "asc" | "desc";
 type PagamentoFilter = "todos" | "pago" | "recepcao" | "pendente";
 
 const getPagamentoStatus = (a: { valor: number; valor_pago: number | null; forma_pagamento?: string | null }): "pago" | "recepcao" | "pendente" => {
