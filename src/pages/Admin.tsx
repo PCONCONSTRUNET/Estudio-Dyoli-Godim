@@ -289,7 +289,7 @@ const Admin = () => {
               onSubmit={(e) => {
                 e.preventDefault();
                 if (password === ADMIN_PASSWORD) {
-                  setAuthenticated(true);
+                  handleLogin();
                   setError("");
                 } else {
                   setError("Senha incorreta");
