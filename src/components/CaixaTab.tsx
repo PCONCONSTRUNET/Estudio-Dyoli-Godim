@@ -193,12 +193,48 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
                   </div>
 
                   <div>
-                    <div className="h-1 rounded-full bg-primary-foreground/[0.06] overflow-hidden">
-                      <div className="h-full rounded-full bg-gradient-to-r from-gold/70 to-purple-400/70 transition-all duration-700" style={{ width: `${cicloProgress}%` }} />
+                    <div className="flex items-center justify-between mb-1.5 px-0.5">
+                      <span className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-[0.2em] flex items-center gap-1">
+                        <Clock className="w-2.5 h-2.5 text-gold/60" />
+                        {cicloOffset === 0 ? `Dia ${elapsedDays}` : "Fechado"}
+                        <span className="text-primary-foreground/25">/ {totalDays}</span>
+                      </span>
+                      <span className="font-heading text-[10px] font-bold text-gold tabular-nums tracking-tight">
+                        {cicloProgress}%
+                      </span>
                     </div>
-                    <p className="font-body text-[9px] text-primary-foreground/35 mt-1.5 text-center">
-                      {cicloOffset === 0 ? `Dia ${elapsedDays} de ${totalDays} · corte todo dia ${diaCorte}` : `Período fechado · ${totalDays} dias`}
-                    </p>
+                    <div className="relative h-2 rounded-full bg-primary-foreground/[0.06] overflow-hidden border border-primary-foreground/[0.04]">
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-gold via-gold/90 to-purple-400 transition-all duration-1000 ease-out shadow-[0_0_12px_hsl(40_60%_60%/0.5)]"
+                        style={{ width: `${cicloProgress}%` }}
+                      >
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2.5s_ease-in-out_infinite] -translate-x-full" style={{ animation: "shimmer 2.5s ease-in-out infinite" }} />
+                      </div>
+                      {cicloOffset === 0 && cicloProgress > 2 && cicloProgress < 98 && (
+                        <div
+                          className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-gold border-2 border-background shadow-[0_0_10px_hsl(40_70%_60%/0.8)] animate-pulse"
+                          style={{ left: `calc(${cicloProgress}% - 6px)` }}
+                        />
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between mt-1.5 px-0.5">
+                      <span className="font-body text-[9px] text-primary-foreground/35 tabular-nums">
+                        {fmtShort(ciclo.startDate)}
+                      </span>
+                      {cicloOffset === 0 ? (
+                        <span className="font-body text-[9px] text-purple-300/70 tabular-nums flex items-center gap-1">
+                          <span className="w-1 h-1 rounded-full bg-purple-400 animate-pulse" />
+                          {Math.max(0, totalDays - elapsedDays)} {totalDays - elapsedDays === 1 ? "dia restante" : "dias restantes"}
+                        </span>
+                      ) : (
+                        <span className="font-body text-[9px] text-primary-foreground/35">
+                          corte dia {diaCorte}
+                        </span>
+                      )}
+                      <span className="font-body text-[9px] text-primary-foreground/35 tabular-nums">
+                        {fmtShort(ciclo.endDate)}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
