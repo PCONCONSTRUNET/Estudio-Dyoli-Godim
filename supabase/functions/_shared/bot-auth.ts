@@ -82,3 +82,17 @@ export function whatsappToEmail(whatsapp: string): string {
 }
 
 export const DEFAULT_BOT_PASSWORD = "123123";
+
+// Build all legacy variations of a canonical BR WhatsApp so we can find
+// profiles created before normalization (without country code, without 9 digit, etc.)
+export function whatsappVariations(canonical: string): string[] {
+  const set = new Set<string>([canonical]);
+  if (canonical.length === 13 && canonical.startsWith("55")) {
+    const ddd = canonical.slice(2, 4);
+    const after9 = canonical.slice(5); // 8 digits after the leading 9
+    set.add(canonical.slice(2)); // 11 digits: DDD + 9 + 8
+    set.add(`${ddd}${after9}`); // 10 digits: DDD + 8 (no 9)
+    set.add(`55${ddd}${after9}`); // 12 digits: 55 + DDD + 8 (no 9)
+  }
+  return Array.from(set);
+}
