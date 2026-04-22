@@ -2209,29 +2209,6 @@ const ServicosTab = () => {
     );
   };
 
-  // Filtro / busca
-  const [filtroCat, setFiltroCat] = useState<string>("todas");
-  const [busca, setBusca] = useState("");
-
-  const servicosFiltrados = useMemo(() => {
-    return services.filter(s => {
-      if (filtroCat !== "todas" && s.category !== filtroCat) return false;
-      if (busca && !s.name.toLowerCase().includes(busca.toLowerCase())) return false;
-      return true;
-    });
-  }, [services, filtroCat, busca]);
-
-  // Stats agregadas
-  const stats = useMemo(() => {
-    const ativos = services.filter(s => s.active);
-    const ticketMedio = ativos.length ? ativos.reduce((acc, s) => acc + s.price, 0) / ativos.length : 0;
-    return {
-      total: services.length,
-      ativos: ativos.length,
-      categorias: categorias.length,
-      ticketMedio,
-    };
-  }, [services, categorias]);
 
   // Cor sutil por categoria (determinístico via hash) — só tokens do design system
   const corCategoria = (cat: string) => {
