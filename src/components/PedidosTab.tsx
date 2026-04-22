@@ -54,10 +54,15 @@ const isPago = (a: { valor: number; valor_pago: number | null }): boolean => {
   return pago >= valor && valor > 0;
 };
 
-const getPagamentoStatus = (a: { valor: number; valor_pago: number | null; forma_pagamento?: string | null }): "pago" | "recepcao" | "pendente" => {
-  if (isPago(a)) return "pago";
-  if (isFormaRecepcao(a.forma_pagamento)) return "recepcao";
-  return "pendente";
+const matchesPagamentoFilter = (
+  a: { valor: number; valor_pago: number | null; forma_pagamento?: string | null },
+  filter: PagamentoFilter
+): boolean => {
+  if (filter === "todos") return true;
+  if (filter === "pago") return isPago(a);
+  if (filter === "pendente") return !isPago(a);
+  if (filter === "recepcao") return isFormaRecepcao(a.forma_pagamento);
+  return true;
 };
 
 const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
