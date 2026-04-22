@@ -405,18 +405,16 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
 
         <div className="flex items-center gap-1 ml-auto">
           {([
-            { value: "todos" as PagamentoFilter, label: "Tudo", activeClass: "bg-gold/10 text-gold border-gold/25", count: pagamentoCounts.todos },
-            { value: "pago" as PagamentoFilter, label: "Pago", activeClass: "bg-green-500/10 text-green-400 border-green-500/30", count: pagamentoCounts.pago },
-            { value: "recepcao" as PagamentoFilter, label: "Recepção", activeClass: "bg-blue-500/10 text-blue-400 border-blue-500/30", count: pagamentoCounts.recepcao },
-            { value: "pendente" as PagamentoFilter, label: "Não pago", activeClass: "bg-red-500/10 text-red-400 border-red-500/30", count: pagamentoCounts.pendente },
+            { value: "todos" as PagamentoFilter, label: "Tudo", activeClass: "bg-gold/15 text-gold border-gold/40 shadow-[0_0_0_1px_hsl(var(--gold)/0.2)]", inactiveClass: "bg-gold/[0.04] text-gold/60 border-gold/20 hover:bg-gold/10 hover:text-gold/80", count: pagamentoCounts.todos },
+            { value: "pago" as PagamentoFilter, label: "Pago", activeClass: "bg-green-500/15 text-green-400 border-green-500/40 shadow-[0_0_0_1px_rgb(34_197_94_/_0.2)]", inactiveClass: "bg-green-500/[0.05] text-green-400/70 border-green-500/20 hover:bg-green-500/10 hover:text-green-400", count: pagamentoCounts.pago },
+            { value: "recepcao" as PagamentoFilter, label: "Recepção", activeClass: "bg-blue-500/15 text-blue-400 border-blue-500/40 shadow-[0_0_0_1px_rgb(59_130_246_/_0.2)]", inactiveClass: "bg-blue-500/[0.05] text-blue-400/70 border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400", count: pagamentoCounts.recepcao },
+            { value: "pendente" as PagamentoFilter, label: "Não pago", activeClass: "bg-red-500/15 text-red-400 border-red-500/40 shadow-[0_0_0_1px_rgb(239_68_68_/_0.2)]", inactiveClass: "bg-red-500/[0.05] text-red-400/70 border-red-500/20 hover:bg-red-500/10 hover:text-red-400", count: pagamentoCounts.pendente },
           ]).map((f) => (
             <button key={f.value} onClick={() => setPagamentoFilter(f.value)}
               className={`shrink-0 rounded-full border px-2.5 py-1 font-body text-[10px] font-medium transition-all ${
-                pagamentoFilter === f.value
-                  ? f.activeClass
-                  : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06] hover:text-primary-foreground/60"
+                pagamentoFilter === f.value ? f.activeClass : f.inactiveClass
               }`}>
-              {f.label} <span className="opacity-60">{f.count}</span>
+              {f.label} <span className="opacity-70">{f.count}</span>
             </button>
           ))}
         </div>
