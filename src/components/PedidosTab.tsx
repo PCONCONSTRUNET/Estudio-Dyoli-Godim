@@ -134,6 +134,9 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
   const filtered = useMemo(() => {
     let list = [...agendamentos];
     if (statusFilter !== "todos") list = list.filter((a) => a.status === statusFilter);
+    if (pagamentoFilter !== "todos") {
+      list = list.filter((a) => getPagamentoStatus(a) === pagamentoFilter);
+    }
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       list = list.filter(
@@ -154,7 +157,7 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
       return sortDir === "desc" ? -cmp : cmp;
     });
     return list;
-  }, [agendamentos, statusFilter, searchTerm, sortField, sortDir, getClientName]);
+  }, [agendamentos, statusFilter, pagamentoFilter, searchTerm, sortField, sortDir, getClientName]);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
