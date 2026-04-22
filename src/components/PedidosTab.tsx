@@ -36,6 +36,23 @@ const formatCurrency = (v: number) =>
 
 type SortField = "data" | "cliente" | "valor" | "status";
 type SortDir = "asc" | "desc";
+type PagamentoFilter = "todos" | "pago" | "recepcao" | "pendente";
+
+const getPagamentoStatus = (a: { valor: number; valor_pago: number | null; forma_pagamento?: string | null }): "pago" | "recepcao" | "pendente" => {
+  const valor = Number(a.valor || 0);
+  const pago = Number(a.valor_pago || 0);
+  if (pago >= valor && valor > 0) return "pago";
+  const forma = (a.forma_pagamento || "").toLowerCase();
+  if (
+    forma.includes("recep") ||
+    forma.includes("salao") ||
+    forma.includes("salão") ||
+    forma === "presencial" ||
+    forma === "local" ||
+    forma === "dinheiro"
+  ) return "recepcao";
+  return "pendente";
+};
 
 const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
   const [searchTerm, setSearchTerm] = useState("");
