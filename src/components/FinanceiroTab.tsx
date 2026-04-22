@@ -273,29 +273,62 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
       </div>
 
       {/* Period filters */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {([
-          { value: "hoje" as const, label: "Hoje" },
-          { value: "semana" as const, label: "Semana" },
-          { value: "mes" as const, label: "Mês" },
-          { value: "personalizado" as const, label: "Custom" },
-        ]).map(f => {
-          const active = period === f.value;
-          return (
-            <button
-              key={f.value}
-              onClick={() => setPeriod(f.value)}
-              className={`relative px-4 py-2 rounded-full font-body text-[12px] font-semibold whitespace-nowrap border transition-all ${
-                active
-                  ? "bg-gradient-to-br from-gold/30 to-gold/10 text-gold border-gold/50 shadow-[0_0_18px_-4px_hsl(40_40%_55%/0.5)]"
-                  : "bg-primary-foreground/[0.04] text-primary-foreground/55 border-primary-foreground/[0.1] hover:border-gold/25 hover:text-primary-foreground hover:bg-primary-foreground/[0.06]"
-              }`}
-            >
-              {active && <span className="absolute inset-0 rounded-full bg-gold/5 blur-sm -z-10" />}
-              {f.label}
-            </button>
-          );
-        })}
+      <div
+        role="tablist"
+        aria-label="Filtrar período do financeiro"
+        className="flex gap-2 overflow-x-auto pb-1"
+      >
+        {(() => {
+          const filters = [
+            { value: "hoje" as const, label: "Hoje" },
+            { value: "semana" as const, label: "Semana" },
+            { value: "mes" as const, label: "Mês" },
+            { value: "personalizado" as const, label: "Custom" },
+          ];
+          return filters.map((f, idx) => {
+            const active = period === f.value;
+            return (
+              <button
+                key={f.value}
+                role="tab"
+                type="button"
+                aria-pressed={active}
+                aria-selected={active}
+                aria-label={`Filtrar por ${f.label}`}
+                tabIndex={active ? 0 : -1}
+                onClick={() => setPeriod(f.value)}
+                onKeyDown={(e) => {
+                  const tabs = e.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+                  if (!tabs) return;
+                  if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+                    e.preventDefault();
+                    const dir = e.key === "ArrowRight" ? 1 : -1;
+                    const nextIdx = (idx + dir + filters.length) % filters.length;
+                    setPeriod(filters[nextIdx].value);
+                    tabs[nextIdx]?.focus();
+                  } else if (e.key === "Home") {
+                    e.preventDefault();
+                    setPeriod(filters[0].value);
+                    tabs[0]?.focus();
+                  } else if (e.key === "End") {
+                    e.preventDefault();
+                    const last = filters.length - 1;
+                    setPeriod(filters[last].value);
+                    tabs[last]?.focus();
+                  }
+                }}
+                className={`relative px-4 py-2 rounded-full font-body text-[12px] font-semibold whitespace-nowrap border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                  active
+                    ? "bg-gradient-to-br from-gold/30 to-gold/10 text-gold border-gold/50 shadow-[0_0_18px_-4px_hsl(40_40%_55%/0.5)]"
+                    : "bg-primary-foreground/[0.04] text-primary-foreground/55 border-primary-foreground/[0.1] hover:border-gold/25 hover:text-primary-foreground hover:bg-primary-foreground/[0.06]"
+                }`}
+              >
+                {active && <span className="absolute inset-0 rounded-full bg-gold/5 blur-sm -z-10" />}
+                {f.label}
+              </button>
+            );
+          });
+        })()}
       </div>
 
       {period === "personalizado" && (
