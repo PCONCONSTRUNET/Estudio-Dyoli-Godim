@@ -31,8 +31,6 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const [period, setPeriod] = useState<FilterPeriod>("mes");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
-  const [showCaixa, setShowCaixa] = useState(false);
-  const [caixaDate, setCaixaDate] = useState(new Date().toISOString().split("T")[0]);
   const [comissaoPct, setComissaoPct] = useState(() => {
     const saved = localStorage.getItem("dyoli_comissao_pct");
     return saved ? Number(saved) : 40;
@@ -179,14 +177,6 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     ].filter(d => d.value > 0);
   }, [filtered]);
 
-  // Fechamento de caixa
-  const caixaData = useMemo(() => {
-    const dayAgs = agendamentos.filter(a => a.data_agendamento === caixaDate && a.status !== "cancelado");
-    const total = dayAgs.reduce((s, a) => s + Number(a.valor), 0);
-    const recebido = dayAgs.reduce((s, a) => s + Number(a.valor_pago || 0), 0);
-    const faltas = agendamentos.filter(a => a.data_agendamento === caixaDate && a.status === "falta").length;
-    return { items: dayAgs, total, recebido, pendente: total - recebido, qtd: dayAgs.length, faltas };
-  }, [agendamentos, caixaDate]);
 
   // Export CSV
   const exportCSV = () => {
