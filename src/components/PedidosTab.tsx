@@ -405,23 +405,11 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
         </div>
       </div>
 
-      {/* Sort buttons */}
-      <div className="flex items-center gap-1">
-        <span className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/30 mr-1">Ordenar:</span>
-        {([
-          { field: "data" as SortField, label: "Data" },
-          { field: "cliente" as SortField, label: "Cliente" },
-          { field: "valor" as SortField, label: "Valor" },
-          { field: "status" as SortField, label: "Status" },
-        ]).map((s) => (
-          <button key={s.field} onClick={() => toggleSort(s.field)}
-            className={`flex items-center gap-0.5 rounded-lg px-2 py-1 font-body text-[10px] font-medium transition-all ${
-              sortField === s.field ? "bg-gold/10 text-gold" : "text-primary-foreground/30 hover:text-primary-foreground/50"
-            }`}>
-            {s.label}
-            <SortIcon field={s.field} />
-          </button>
-        ))}
+      <div className="flex items-center gap-2 rounded-lg border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] px-3 py-2">
+        <Clock className="h-3.5 w-3.5 text-gold" />
+        <p className="font-body text-[11px] text-primary-foreground/50">
+          Lista em ordem de <span className="text-primary-foreground font-medium">data mais próxima</span> para a <span className="text-primary-foreground font-medium">mais distante</span>
+        </p>
       </div>
 
       <p className="font-body text-[11px] text-primary-foreground/30">
