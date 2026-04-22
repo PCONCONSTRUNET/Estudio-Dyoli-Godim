@@ -2154,15 +2154,15 @@ const ServicosTab = () => {
     };
   }, [services, categorias]);
 
-  // Cor sutil por categoria (determinístico via hash)
+  // Cor sutil por categoria (determinístico via hash) — só tokens do design system
   const corCategoria = (cat: string) => {
     const palette = [
-      "from-rose/15 to-rose/5 border-rose/20 text-rose",
       "from-gold/15 to-gold/5 border-gold/20 text-gold",
-      "from-sky-400/15 to-sky-400/5 border-sky-400/20 text-sky-400",
-      "from-emerald-400/15 to-emerald-400/5 border-emerald-400/20 text-emerald-400",
-      "from-violet-400/15 to-violet-400/5 border-violet-400/20 text-violet-400",
-      "from-amber-400/15 to-amber-400/5 border-amber-400/20 text-amber-400",
+      "from-rose/15 to-rose/5 border-rose/20 text-rose",
+      "from-gold/10 to-rose/5 border-gold/15 text-gold/90",
+      "from-rose/10 to-gold/5 border-rose/15 text-rose/90",
+      "from-primary-foreground/10 to-gold/5 border-primary-foreground/15 text-primary-foreground/80",
+      "from-primary-foreground/10 to-rose/5 border-primary-foreground/15 text-primary-foreground/80",
     ];
     let hash = 0;
     for (let i = 0; i < cat.length; i++) hash = (hash * 31 + cat.charCodeAt(i)) >>> 0;
