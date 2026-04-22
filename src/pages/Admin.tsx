@@ -956,16 +956,16 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
                   <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}>
                     {[
-                      { value: "todos", label: "Todos" },
-                      { value: "confirmado", label: "Confirmados" },
-                      { value: "concluido", label: "Concluídos" },
-                      { value: "cancelado", label: "Cancelados" },
-                      { value: "falta", label: "Faltas" },
+                      { value: "todos", label: "Todos", active: "bg-gold/15 text-gold border-gold/40 shadow-[0_0_0_1px_hsl(var(--gold)/0.2)]", inactive: "bg-gold/[0.04] text-gold/60 border-gold/20 hover:bg-gold/10 hover:text-gold/80" },
+                      { value: "confirmado", label: "Confirmados", active: "bg-blue-500/15 text-blue-400 border-blue-500/40 shadow-[0_0_0_1px_rgb(59_130_246_/_0.2)]", inactive: "bg-blue-500/[0.05] text-blue-400/70 border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400" },
+                      { value: "concluido", label: "Concluídos", active: "bg-green-500/15 text-green-400 border-green-500/40 shadow-[0_0_0_1px_rgb(34_197_94_/_0.2)]", inactive: "bg-green-500/[0.05] text-green-400/70 border-green-500/20 hover:bg-green-500/10 hover:text-green-400" },
+                      { value: "cancelado", label: "Cancelados", active: "bg-rose/15 text-rose border-rose/40 shadow-[0_0_0_1px_hsl(var(--rose)/0.2)]", inactive: "bg-rose/[0.05] text-rose/70 border-rose/20 hover:bg-rose/10 hover:text-rose" },
+                      { value: "falta", label: "Faltas", active: "bg-orange-500/15 text-orange-400 border-orange-500/40 shadow-[0_0_0_1px_rgb(249_115_22_/_0.2)]", inactive: "bg-orange-500/[0.05] text-orange-400/70 border-orange-500/20 hover:bg-orange-500/10 hover:text-orange-400" },
                     ].map((f) => (
                       <button
                         key={f.value}
                         onClick={() => setStatusFilter(f.value)}
-                        className={`px-3 py-1.5 rounded-full font-body text-[11px] font-medium whitespace-nowrap border transition-all ${statusFilter === f.value ? "bg-gold/10 text-gold border-gold/20" : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06]"}`}
+                        className={`px-3 py-1.5 rounded-full font-body text-[11px] font-medium whitespace-nowrap border transition-all ${statusFilter === f.value ? f.active : f.inactive}`}
                       >
                         {f.label}
                       </button>

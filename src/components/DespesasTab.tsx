@@ -395,18 +395,16 @@ const DespesasTab = () => {
       {/* Filters */}
       <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
         {([
-          { value: "todas", label: "Todas" },
-          { value: "atrasadas", label: "Atrasadas" },
-          { value: "pendentes", label: "A vencer" },
-          { value: "pagas", label: "Pagas" },
+          { value: "todas", label: "Todas", active: "bg-gold/15 text-gold border-gold/40 shadow-[0_0_0_1px_hsl(var(--gold)/0.2)]", inactive: "bg-gold/[0.04] text-gold/60 border-gold/20 hover:bg-gold/10 hover:text-gold/80" },
+          { value: "atrasadas", label: "Atrasadas", active: "bg-red-500/15 text-red-400 border-red-500/40 shadow-[0_0_0_1px_rgb(239_68_68_/_0.2)]", inactive: "bg-red-500/[0.05] text-red-400/70 border-red-500/20 hover:bg-red-500/10 hover:text-red-400" },
+          { value: "pendentes", label: "A vencer", active: "bg-orange-500/15 text-orange-400 border-orange-500/40 shadow-[0_0_0_1px_rgb(249_115_22_/_0.2)]", inactive: "bg-orange-500/[0.05] text-orange-400/70 border-orange-500/20 hover:bg-orange-500/10 hover:text-orange-400" },
+          { value: "pagas", label: "Pagas", active: "bg-green-500/15 text-green-400 border-green-500/40 shadow-[0_0_0_1px_rgb(34_197_94_/_0.2)]", inactive: "bg-green-500/[0.05] text-green-400/70 border-green-500/20 hover:bg-green-500/10 hover:text-green-400" },
         ] as const).map((f) => (
           <button
             key={f.value}
             onClick={() => setFilter(f.value)}
             className={`shrink-0 rounded-full border px-3 py-1.5 font-body text-[11px] font-medium transition-all ${
-              filter === f.value
-                ? "bg-gold/10 text-gold border-gold/20"
-                : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06] hover:text-primary-foreground/60"
+              filter === f.value ? f.active : f.inactive
             }`}
           >
             {f.label}
