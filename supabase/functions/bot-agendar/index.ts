@@ -128,22 +128,12 @@ Deno.serve(async (req) => {
     let userId: string | null = null;
 
     // Build legacy variations of the same number to find pre-normalization profiles
-    // wa is canonical: 55 + DDD(2) + 9 + 8 digits = 13 chars
-    const variations = new Set<string>([wa]);
-    if (wa.length === 13 && wa.startsWith("55")) {
-      const without55 = wa.slice(2); // 11 digits: DDD + 9 + 8
-      variations.add(without55);
-      // Without the leading 9 (mobile) -> 10 digits / 12 digits
-      const ddd = wa.slice(2, 4);
-      const rest8 = wa.slice(5); // 8 digits after the 9
-      variations.add(`${ddd}${rest8}`); // 10 digits
-      variations.add(`55${ddd}${rest8}`); // 12 digits
-    }
+    const variations = whatsappVariations(wa);
 
     const { data: existingProfiles } = await admin
       .from("profiles")
       .select("id, whatsapp")
-      .in("whatsapp", Array.from(variations));
+      .in("whatsapp", variations);
 
     const existingProfile = existingProfiles?.[0];
 
