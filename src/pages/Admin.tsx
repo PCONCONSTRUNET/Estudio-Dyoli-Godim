@@ -351,6 +351,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [statusFilter, setStatusFilter] = useState("todos");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
+  const [clienteParaExcluir, setClienteParaExcluir] = useState<Profile | null>(null);
+  const [excluindoCliente, setExcluindoCliente] = useState(false);
   const [selectedAgendaDate, setSelectedAgendaDate] = useState(() => getDateKey(new Date()));
   const [agendaDismissed, setAgendaDismissed] = useState<Set<string>>(() => {
     const saved = localStorage.getItem("agenda_dismissed");
