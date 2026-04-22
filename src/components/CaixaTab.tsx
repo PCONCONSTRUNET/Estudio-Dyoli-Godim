@@ -10,6 +10,9 @@ import {
   Clock,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
+import { ptBR } from "date-fns/locale";
 
 interface Agendamento {
   id: string;
@@ -262,15 +265,41 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
               <button onClick={() => { const d = new Date(caixaDate + "T12:00:00"); d.setDate(d.getDate() - 1); setCaixaDate(d.toISOString().split("T")[0]); }} className="w-9 h-9 rounded-xl hover:bg-primary-foreground/[0.05] flex items-center justify-center text-primary-foreground/50 hover:text-primary-foreground transition-all" aria-label="Dia anterior">
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <label className="flex-1 text-center relative cursor-pointer group">
-                <span className="inline-flex items-center gap-2">
-                  <Calendar className="w-3.5 h-3.5 text-gold/70 group-hover:text-gold transition-colors" />
-                  <span className="font-heading text-[15px] font-semibold text-primary-foreground capitalize group-hover:text-gold transition-colors">
-                    {new Date(caixaDate + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" })}
-                  </span>
-                </span>
-                <input type="date" value={caixaDate} onChange={(e) => setCaixaDate(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer w-full" />
-              </label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Abrir calendário para selecionar dia"
+                    className="flex-1 text-center cursor-pointer group rounded-xl py-1.5 hover:bg-primary-foreground/[0.04] transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/40"
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5 text-gold/70 group-hover:text-gold transition-colors" />
+                      <span className="font-heading text-[15px] font-semibold text-primary-foreground capitalize group-hover:text-gold transition-colors">
+                        {new Date(caixaDate + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" })}
+                      </span>
+                    </span>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent
+                  align="center"
+                  className="w-auto p-0 bg-background border border-gold/20 shadow-[0_20px_60px_-15px_hsl(40_40%_55%/0.35)] rounded-2xl overflow-hidden"
+                >
+                  <CalendarPicker
+                    mode="single"
+                    locale={ptBR}
+                    selected={new Date(caixaDate + "T12:00:00")}
+                    onSelect={(d) => {
+                      if (!d) return;
+                      const y = d.getFullYear();
+                      const m = String(d.getMonth() + 1).padStart(2, "0");
+                      const day = String(d.getDate()).padStart(2, "0");
+                      setCaixaDate(`${y}-${m}-${day}`);
+                    }}
+                    initialFocus
+                    className="bg-background"
+                  />
+                </PopoverContent>
+              </Popover>
               <button onClick={() => { const d = new Date(caixaDate + "T12:00:00"); d.setDate(d.getDate() + 1); setCaixaDate(d.toISOString().split("T")[0]); }} className="w-9 h-9 rounded-xl hover:bg-primary-foreground/[0.05] flex items-center justify-center text-primary-foreground/50 hover:text-primary-foreground transition-all" aria-label="Próximo dia">
                 <ChevronRight className="w-4 h-4" />
               </button>
