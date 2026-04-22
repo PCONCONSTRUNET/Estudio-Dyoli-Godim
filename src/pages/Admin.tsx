@@ -2196,12 +2196,12 @@ const ServicosTab = () => {
             </div>
             <p className="font-heading text-xl font-semibold text-primary-foreground">{stats.total}</p>
           </div>
-          <div className="rounded-2xl bg-emerald-400/[0.06] border border-emerald-400/15 p-3">
-            <div className="flex items-center gap-1.5 text-emerald-400/80 mb-1">
+          <div className="rounded-2xl bg-gold/[0.06] border border-gold/15 p-3">
+            <div className="flex items-center gap-1.5 text-gold/80 mb-1">
               <Power className="w-3 h-3" />
               <span className="font-body text-[9px] uppercase tracking-wider">Ativos</span>
             </div>
-            <p className="font-heading text-xl font-semibold text-emerald-400">{stats.ativos}</p>
+            <p className="font-heading text-xl font-semibold text-gold">{stats.ativos}</p>
           </div>
           <div className="rounded-2xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06] p-3">
             <div className="flex items-center gap-1.5 text-primary-foreground/50 mb-1">
@@ -2426,8 +2426,8 @@ const ServicosTab = () => {
                       </div>
                     </div>
                     <div className="flex items-center justify-end gap-1 mt-3 pt-3 border-t border-primary-foreground/[0.05]">
-                      <button onClick={() => toggleActive(s.id)} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-body text-[11px] font-medium transition-all active:scale-95 ${s.active ? "bg-emerald-400/10 text-emerald-400 hover:bg-emerald-400/15" : "bg-primary-foreground/[0.05] text-primary-foreground/40 hover:bg-primary-foreground/[0.08]"}`}>
-                        <div className={`w-7 h-4 rounded-full relative transition-all ${s.active ? "bg-emerald-400/40" : "bg-primary-foreground/20"}`}>
+                      <button onClick={() => toggleActive(s.id)} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-body text-[11px] font-medium transition-all active:scale-95 ${s.active ? "bg-gold/10 text-gold hover:bg-gold/15" : "bg-primary-foreground/[0.05] text-primary-foreground/40 hover:bg-primary-foreground/[0.08]"}`}>
+                        <div className={`w-7 h-4 rounded-full relative transition-all ${s.active ? "bg-gold/50" : "bg-primary-foreground/20"}`}>
                           <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-all duration-200 ${s.active ? "left-3.5" : "left-0.5"}`} />
                         </div>
                         {s.active ? "Ativo" : "Inativo"}
