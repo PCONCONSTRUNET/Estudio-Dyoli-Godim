@@ -391,47 +391,42 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
         />
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
-        {([
-          { value: "todos", label: "Todos" },
-          { value: "confirmado", label: "Confirmados" },
-          { value: "concluido", label: "Concluídos" },
-          { value: "cancelado", label: "Cancelados" },
-          { value: "falta", label: "Faltas" },
-        ] as const).map((f) => (
-          <button key={f.value} onClick={() => setStatusFilter(f.value)}
-            className={`shrink-0 rounded-full border px-3 py-1.5 font-body text-[11px] font-medium transition-all ${
-              statusFilter === f.value
-                ? "bg-gold/10 text-gold border-gold/20"
-                : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06] hover:text-primary-foreground/60"
-            }`}>
-            {f.label}
-          </button>
-        ))}
-      </div>
+      {/* Filters row: status select + payment chips */}
+      <div className="flex flex-wrap items-center gap-2">
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="shrink-0 rounded-full border border-gold/20 bg-gold/5 px-3 py-1.5 font-body text-[11px] font-medium text-gold focus:outline-none focus:ring-2 focus:ring-gold/20 cursor-pointer"
+        >
+          <option value="todos">Todos os status</option>
+          <option value="confirmado">Confirmados</option>
+          <option value="concluido">Concluídos</option>
+          <option value="cancelado">Cancelados</option>
+          <option value="falta">Faltas</option>
+        </select>
 
-      {/* Pagamento filters */}
-      <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
-        {([
-          { value: "todos" as PagamentoFilter, label: "Pgto: Todos", activeClass: "bg-gold/10 text-gold border-gold/20" },
-          { value: "pago" as PagamentoFilter, label: `Pagos (${pagamentoCounts.pago})`, activeClass: "bg-green-500/10 text-green-400 border-green-500/30" },
-          { value: "recepcao" as PagamentoFilter, label: `Recepção (${pagamentoCounts.recepcao})`, activeClass: "bg-blue-500/10 text-blue-400 border-blue-500/30" },
-          { value: "pendente" as PagamentoFilter, label: `Pendentes (${pagamentoCounts.pendente})`, activeClass: "bg-red-500/10 text-red-400 border-red-500/30" },
-        ]).map((f) => (
-          <button key={f.value} onClick={() => setPagamentoFilter(f.value)}
-            className={`shrink-0 rounded-full border px-3 py-1.5 font-body text-[11px] font-medium transition-all ${
-              pagamentoFilter === f.value
-                ? f.activeClass
-                : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06] hover:text-primary-foreground/60"
-            }`}>
-            {f.label}
-          </button>
-        ))}
+        <div className="flex items-center gap-1 ml-auto">
+          {([
+            { value: "todos" as PagamentoFilter, label: "Tudo", activeClass: "bg-gold/10 text-gold border-gold/25", count: pagamentoCounts.todos },
+            { value: "pago" as PagamentoFilter, label: "Pago", activeClass: "bg-green-500/10 text-green-400 border-green-500/30", count: pagamentoCounts.pago },
+            { value: "recepcao" as PagamentoFilter, label: "Recepção", activeClass: "bg-blue-500/10 text-blue-400 border-blue-500/30", count: pagamentoCounts.recepcao },
+            { value: "pendente" as PagamentoFilter, label: "Pendente", activeClass: "bg-red-500/10 text-red-400 border-red-500/30", count: pagamentoCounts.pendente },
+          ]).map((f) => (
+            <button key={f.value} onClick={() => setPagamentoFilter(f.value)}
+              className={`shrink-0 rounded-full border px-2.5 py-1 font-body text-[10px] font-medium transition-all ${
+                pagamentoFilter === f.value
+                  ? f.activeClass
+                  : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06] hover:text-primary-foreground/60"
+              }`}>
+              {f.label} <span className="opacity-60">{f.count}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Sort buttons */}
-      <div className="flex gap-1.5">
+      <div className="flex items-center gap-1">
+        <span className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/30 mr-1">Ordenar:</span>
         {([
           { field: "data" as SortField, label: "Data" },
           { field: "cliente" as SortField, label: "Cliente" },
