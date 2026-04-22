@@ -937,8 +937,18 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
       {/* Lista de pagamentos */}
       <div className="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-primary-foreground/[0.05] via-primary-foreground/[0.02] to-transparent border border-primary-foreground/[0.1]">
         <div className="pointer-events-none absolute -top-16 -right-16 w-44 h-44 rounded-full bg-gold/5 blur-3xl" />
-        <p className="relative font-body text-[12px] font-medium text-primary-foreground/65 uppercase tracking-[0.2em] mb-3">Todos os pagamentos</p>
-        <div className="relative space-y-1.5">
+        <div className="relative flex items-center justify-between mb-3">
+          <p className="font-body text-[12px] font-medium text-primary-foreground/65 uppercase tracking-[0.2em]">Todos os pagamentos</p>
+          {filtered.length > 0 && (
+            <span className="font-body text-[10px] font-medium text-primary-foreground/45 tabular-nums px-2 py-0.5 rounded-full bg-primary-foreground/[0.05] border border-primary-foreground/[0.08]">
+              {filtered.length} {filtered.length === 1 ? "registro" : "registros"}
+            </span>
+          )}
+        </div>
+        <div
+          className="relative space-y-1.5 max-h-[420px] overflow-y-auto pr-1.5 -mr-1.5 scrollbar-thin"
+          style={{ scrollbarWidth: "thin", scrollbarColor: "hsl(var(--primary-foreground) / 0.15) transparent" }}
+        >
           {filtered.map(a => (
             <div key={a.id} className="flex items-center justify-between p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06] hover:border-gold/20 transition-all">
               <div className="min-w-0 flex-1">
@@ -955,6 +965,9 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
           ))}
           {filtered.length === 0 && <p className="font-body text-[13px] text-primary-foreground/30 text-center py-6">Nenhum registro no período</p>}
         </div>
+        {filtered.length > 6 && (
+          <div className="pointer-events-none absolute bottom-5 left-5 right-5 h-10 bg-gradient-to-t from-background/80 to-transparent rounded-b-2xl" />
+        )}
       </div>
     </div>
   );
