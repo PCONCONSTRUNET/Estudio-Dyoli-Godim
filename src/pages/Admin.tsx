@@ -6,7 +6,8 @@ import { sendPush } from "@/lib/push-notify";
 import {
   BarChart3, Calendar, Users, Clock, Settings, LogOut, Search,
   X, Edit2, Trash2, Plus, Save, CheckCircle, Bell, MessageSquare,
-  UserX, DollarSign, CreditCard, ShoppingBag, Download, ChevronLeft, ChevronRight, Receipt, ClipboardList, Wallet, Timer, PlusCircle, Menu
+  UserX, DollarSign, CreditCard, ShoppingBag, Download, ChevronLeft, ChevronRight, Receipt, ClipboardList, Wallet, Timer, PlusCircle, Menu,
+  Sparkles, Folder, Filter, TrendingUp, Power
 } from "lucide-react";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription
@@ -2129,22 +2130,114 @@ const ServicosTab = () => {
     );
   };
 
+  // Filtro / busca
+  const [filtroCat, setFiltroCat] = useState<string>("todas");
+  const [busca, setBusca] = useState("");
+
+  const servicosFiltrados = useMemo(() => {
+    return services.filter(s => {
+      if (filtroCat !== "todas" && s.category !== filtroCat) return false;
+      if (busca && !s.name.toLowerCase().includes(busca.toLowerCase())) return false;
+      return true;
+    });
+  }, [services, filtroCat, busca]);
+
+  // Stats agregadas
+  const stats = useMemo(() => {
+    const ativos = services.filter(s => s.active);
+    const ticketMedio = ativos.length ? ativos.reduce((acc, s) => acc + s.price, 0) / ativos.length : 0;
+    return {
+      total: services.length,
+      ativos: ativos.length,
+      categorias: categorias.length,
+      ticketMedio,
+    };
+  }, [services, categorias]);
+
+  // Cor sutil por categoria (determinístico via hash) — só tokens do design system
+  const corCategoria = (cat: string) => {
+    const palette = [
+      "from-gold/15 to-gold/5 border-gold/20 text-gold",
+      "from-rose/15 to-rose/5 border-rose/20 text-rose",
+      "from-gold/10 to-rose/5 border-gold/15 text-gold/90",
+      "from-rose/10 to-gold/5 border-rose/15 text-rose/90",
+      "from-primary-foreground/10 to-gold/5 border-primary-foreground/15 text-primary-foreground/80",
+      "from-primary-foreground/10 to-rose/5 border-primary-foreground/15 text-primary-foreground/80",
+    ];
+    let hash = 0;
+    for (let i = 0; i < cat.length; i++) hash = (hash * 31 + cat.charCodeAt(i)) >>> 0;
+    return palette[hash % palette.length];
+  };
+
   return (
-    <div className="space-y-5 animate-fade-in overflow-x-hidden">
+    <div className="space-y-6 animate-fade-in overflow-x-hidden">
+      {/* ─── Hero Header com gradiente ─── */}
+      <div className="relative overflow-hidden rounded-3xl border border-gold/15 bg-gradient-to-br from-gold/[0.08] via-primary-foreground/[0.02] to-transparent p-5">
+        <div className="absolute -top-20 -right-20 w-48 h-48 rounded-full bg-gold/10 blur-3xl pointer-events-none" />
+        <div className="relative flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-xl bg-gold/15 flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-gold" />
+              </div>
+              <span className="font-body text-[10px] tracking-[0.18em] uppercase text-gold/80">Catálogo</span>
+            </div>
+            <h1 className="font-heading text-2xl font-semibold text-primary-foreground leading-tight">Serviços & Categorias</h1>
+            <p className="font-body text-[12px] text-primary-foreground/40 mt-1">Organize seu portfólio e veja sincronizar no agendamento dos clientes</p>
+          </div>
+        </div>
+
+        {/* Stats grid */}
+        <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-2 mt-5">
+          <div className="rounded-2xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06] p-3">
+            <div className="flex items-center gap-1.5 text-primary-foreground/50 mb-1">
+              <Sparkles className="w-3 h-3" />
+              <span className="font-body text-[9px] uppercase tracking-wider">Total</span>
+            </div>
+            <p className="font-heading text-xl font-semibold text-primary-foreground">{stats.total}</p>
+          </div>
+          <div className="rounded-2xl bg-gold/[0.06] border border-gold/15 p-3">
+            <div className="flex items-center gap-1.5 text-gold/80 mb-1">
+              <Power className="w-3 h-3" />
+              <span className="font-body text-[9px] uppercase tracking-wider">Ativos</span>
+            </div>
+            <p className="font-heading text-xl font-semibold text-gold">{stats.ativos}</p>
+          </div>
+          <div className="rounded-2xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06] p-3">
+            <div className="flex items-center gap-1.5 text-primary-foreground/50 mb-1">
+              <Folder className="w-3 h-3" />
+              <span className="font-body text-[9px] uppercase tracking-wider">Categorias</span>
+            </div>
+            <p className="font-heading text-xl font-semibold text-primary-foreground">{stats.categorias}</p>
+          </div>
+          <div className="rounded-2xl bg-gold/[0.06] border border-gold/15 p-3">
+            <div className="flex items-center gap-1.5 text-gold/80 mb-1">
+              <TrendingUp className="w-3 h-3" />
+              <span className="font-body text-[9px] uppercase tracking-wider">Ticket médio</span>
+            </div>
+            <p className="font-heading text-xl font-semibold text-gold">R$ {stats.ticketMedio.toFixed(0)}</p>
+          </div>
+        </div>
+      </div>
+
       {/* ─── Categorias ─── */}
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="font-heading text-lg font-semibold text-primary-foreground">Categorias</h2>
+          <div className="flex items-center gap-2">
+            <Folder className="w-4 h-4 text-gold/70" />
+            <h2 className="font-heading text-base font-semibold text-primary-foreground">Categorias</h2>
+            <span className="font-body text-[10px] text-primary-foreground/30">({categorias.length})</span>
+          </div>
           <button
             onClick={() => setShowNewCatInput(!showNewCatInput)}
-            className="flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/70 font-body text-[12px] font-medium hover:bg-primary-foreground/[0.08] transition-all"
+            className="flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/70 font-body text-[12px] font-medium hover:bg-primary-foreground/[0.08] transition-all active:scale-95"
           >
             <Plus className="w-3.5 h-3.5" />Nova
           </button>
         </div>
 
         {showNewCatInput && (
-          <div className="flex gap-2 min-w-0">
+          <div className="flex gap-2 min-w-0 animate-fade-in">
             <input
               autoFocus
               value={novaCategoria}
@@ -2153,20 +2246,24 @@ const ServicosTab = () => {
               placeholder="Nome da categoria (ex: Sobrancelhas)"
               className="flex-1 min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-gold/30 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
             />
-            <button onClick={adicionarCategoria} className="px-3 py-2.5 rounded-xl bg-gold/10 text-gold font-body text-[12px] hover:bg-gold/20">Criar</button>
+            <button onClick={adicionarCategoria} className="px-3 py-2.5 rounded-xl bg-gold/10 text-gold font-body text-[12px] hover:bg-gold/20 active:scale-95 transition-all">Criar</button>
             <button onClick={() => { setShowNewCatInput(false); setNovaCategoria(""); }} className="px-2.5 py-2.5 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/40 hover:text-primary-foreground/60"><X className="w-3.5 h-3.5" /></button>
           </div>
         )}
 
         {categorias.length === 0 ? (
-          <p className="font-body text-[12px] text-primary-foreground/30 px-1">Nenhuma categoria cadastrada ainda.</p>
+          <div className="rounded-2xl border border-dashed border-primary-foreground/[0.08] p-6 text-center">
+            <Folder className="w-6 h-6 text-primary-foreground/20 mx-auto mb-2" />
+            <p className="font-body text-[12px] text-primary-foreground/40">Nenhuma categoria ainda. Crie a primeira!</p>
+          </div>
         ) : (
           <div className="flex flex-wrap gap-2">
             {categorias.map(cat => {
               const count = contarServicos(cat);
               const editandoEsta = renomeandoCat === cat;
+              const cor = corCategoria(cat);
               return (
-                <div key={cat} className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary-foreground/[0.04] border border-primary-foreground/[0.06]">
+                <div key={cat} className={`group flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-gradient-to-br border ${cor} hover:scale-[1.02] transition-all`}>
                   {editandoEsta ? (
                     <>
                       <input
@@ -2181,10 +2278,13 @@ const ServicosTab = () => {
                     </>
                   ) : (
                     <>
-                      <span className="font-body text-[12px] text-primary-foreground">{cat}</span>
-                      <span className="font-body text-[10px] text-primary-foreground/40">({count})</span>
-                      <button onClick={() => iniciarRenomearCat(cat)} className="ml-1 p-0.5 text-primary-foreground/30 hover:text-gold transition-colors" title="Renomear"><Edit2 className="w-3 h-3" /></button>
-                      <button onClick={() => removerCategoria(cat)} className="p-0.5 text-primary-foreground/20 hover:text-rose transition-colors" title="Remover"><Trash2 className="w-3 h-3" /></button>
+                      <Folder className="w-3 h-3 opacity-70" />
+                      <span className="font-body text-[12px] font-medium text-primary-foreground">{cat}</span>
+                      <span className="font-body text-[10px] opacity-60 ml-0.5">{count}</span>
+                      <div className="flex items-center gap-0.5 ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => iniciarRenomearCat(cat)} className="p-1 rounded-md hover:bg-primary-foreground/[0.08] text-primary-foreground/50 hover:text-primary-foreground transition-colors" title="Renomear"><Edit2 className="w-3 h-3" /></button>
+                        <button onClick={() => removerCategoria(cat)} className="p-1 rounded-md hover:bg-rose/10 text-primary-foreground/30 hover:text-rose transition-colors" title="Remover"><Trash2 className="w-3 h-3" /></button>
+                      </div>
                     </>
                   )}
                 </div>
@@ -2192,25 +2292,62 @@ const ServicosTab = () => {
             })}
           </div>
         )}
-        <p className="font-body text-[10px] text-primary-foreground/30 px-1">Categorias com serviços aparecem automaticamente para os clientes no agendamento.</p>
       </div>
 
-      <div className="h-px bg-primary-foreground/[0.06]" />
+      <div className="h-px bg-gradient-to-r from-transparent via-primary-foreground/[0.08] to-transparent" />
 
-      {/* ─── Serviços ─── */}
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="font-heading text-lg font-semibold text-primary-foreground">Serviços</h2>
-        <button onClick={() => setShowAdd(!showAdd)} className="flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all">
-          <Plus className="w-3.5 h-3.5" />Adicionar
-        </button>
+      {/* ─── Serviços header + busca ─── */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-gold/70" />
+            <h2 className="font-heading text-base font-semibold text-primary-foreground">Serviços</h2>
+            <span className="font-body text-[10px] text-primary-foreground/30">({servicosFiltrados.length}/{services.length})</span>
+          </div>
+          <button onClick={() => setShowAdd(!showAdd)} className="flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-br from-gold/20 to-gold/10 text-gold font-body text-[12px] font-medium hover:from-gold/25 hover:to-gold/15 active:scale-95 transition-all shadow-sm shadow-gold/10">
+            <Plus className="w-3.5 h-3.5" />Adicionar
+          </button>
+        </div>
+
+        {/* Busca + Filtro */}
+        <div className="flex gap-2">
+          <div className="relative flex-1 min-w-0">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-primary-foreground/30" />
+            <input
+              value={busca}
+              onChange={e => setBusca(e.target.value)}
+              placeholder="Buscar serviço…"
+              className="w-full min-w-0 pl-9 pr-3 py-2.5 rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[12px] placeholder:text-primary-foreground/25 focus:outline-none focus:ring-2 focus:ring-gold/20"
+            />
+          </div>
+          {categorias.length > 0 && (
+            <select
+              value={filtroCat}
+              onChange={e => setFiltroCat(e.target.value)}
+              className="shrink-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[12px] focus:outline-none focus:ring-2 focus:ring-gold/20 [&>option]:bg-charcoal [&>option]:text-primary-foreground"
+            >
+              <option value="todas">Todas categorias</option>
+              {categorias.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          )}
+        </div>
       </div>
+
       <Dialog open={showAdd} onOpenChange={setShowAdd}>
         <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-md max-h-[85dvh] overflow-y-auto overflow-x-hidden bg-charcoal border border-gold/20 rounded-2xl p-4 sm:p-5">
           <DialogHeader>
-            <DialogTitle className="font-body text-[14px] font-medium text-primary-foreground">Novo Serviço</DialogTitle>
+            <DialogTitle className="font-body text-[14px] font-medium text-primary-foreground flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-gold/15 flex items-center justify-center">
+                <Sparkles className="w-3.5 h-3.5 text-gold" />
+              </div>
+              Novo Serviço
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 w-full min-w-0 overflow-x-hidden">
-            <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Nome do serviço" className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
+            <div>
+              <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Nome</label>
+              <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Ex: Micropigmentação Fio a Fio" className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
+            </div>
             <div>
               <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Categoria</label>
               <CategoriaSelect value={newCategory} onChange={setNewCategory} idPrefix="new-cat" />
@@ -2225,50 +2362,90 @@ const ServicosTab = () => {
                 <input value={newDuration} onChange={e => setNewDuration(e.target.value)} placeholder="60" type="number" className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2 min-w-0">
-              <button onClick={addService} className="w-full min-w-0 py-2.5 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all">Salvar</button>
+            <div className="grid grid-cols-2 gap-2 min-w-0 pt-1">
+              <button onClick={addService} className="w-full min-w-0 py-2.5 rounded-xl bg-gradient-to-br from-gold/20 to-gold/10 text-gold font-body text-[12px] font-medium hover:from-gold/25 hover:to-gold/15 active:scale-95 transition-all">Salvar serviço</button>
               <button onClick={() => setShowAdd(false)} className="w-full min-w-0 py-2.5 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/40 font-body text-[12px] hover:text-primary-foreground/60 transition-all">Cancelar</button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
-      <div className="space-y-2">
-        {services.map(s => (
-          <div key={s.id} className={`p-4 rounded-2xl border transition-all overflow-x-hidden ${s.active ? "bg-primary-foreground/[0.03] border-primary-foreground/[0.06]" : "bg-primary-foreground/[0.01] border-primary-foreground/[0.03] opacity-50"}`}>
-            {editing === s.id ? (
-              <div className="space-y-2 min-w-0">
-                <input value={editName} onChange={e => setEditName(e.target.value)} className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
-                <CategoriaSelect value={editCategory} onChange={setEditCategory} idPrefix={`edit-cat-${s.id}`} />
-                <div className="grid grid-cols-[1fr_96px] gap-2 min-w-0">
-                  <input value={editPrice} onChange={e => setEditPrice(e.target.value)} type="number" placeholder="Preço" className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
-                  <input value={editDuration} onChange={e => setEditDuration(e.target.value)} type="number" placeholder="Min" className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
-                </div>
-                <div className="grid grid-cols-[1fr_auto] gap-2">
-                  <button onClick={() => saveEdit(s.id)} className="min-w-0 px-3 py-2 rounded-xl bg-gold/10 text-gold hover:bg-gold/20 transition-all font-body text-[12px]"><Save className="w-4 h-4 inline mr-1" />Salvar</button>
-                  <button onClick={() => setEditing(null)} className="px-3 py-2 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/30 hover:text-primary-foreground/50 transition-all"><X className="w-4 h-4" /></button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-body text-[14px] font-medium text-primary-foreground truncate">{s.name}</p>
-                    <p className="font-body text-[10px] text-primary-foreground/30 truncate">{s.category} · {s.duration}min</p>
+
+      {/* ─── Lista de serviços ─── */}
+      {servicosFiltrados.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-primary-foreground/[0.08] p-10 text-center">
+          <Sparkles className="w-8 h-8 text-primary-foreground/20 mx-auto mb-3" />
+          <p className="font-body text-[13px] text-primary-foreground/50 mb-1">
+            {services.length === 0 ? "Nenhum serviço cadastrado" : "Nenhum serviço encontrado"}
+          </p>
+          <p className="font-body text-[11px] text-primary-foreground/30">
+            {services.length === 0 ? "Clique em \"Adicionar\" para criar o primeiro" : "Tente ajustar a busca ou filtro"}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {servicosFiltrados.map(s => {
+            const cor = corCategoria(s.category || "Outros");
+            return (
+              <div key={s.id} className={`group relative p-4 rounded-2xl border transition-all overflow-x-hidden ${s.active ? "bg-gradient-to-br from-primary-foreground/[0.04] to-primary-foreground/[0.02] border-primary-foreground/[0.08] hover:border-gold/20 hover:shadow-lg hover:shadow-gold/5" : "bg-primary-foreground/[0.01] border-primary-foreground/[0.03] opacity-50"}`}>
+                {/* Faixa lateral colorida pela categoria */}
+                {s.active && (
+                  <div className={`absolute left-0 top-3 bottom-3 w-1 rounded-r-full bg-gradient-to-b ${cor.split(" ").filter(c => c.startsWith("from-") || c.startsWith("to-")).join(" ")}`} />
+                )}
+                {editing === s.id ? (
+                  <div className="space-y-2 min-w-0">
+                    <input value={editName} onChange={e => setEditName(e.target.value)} className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                    <CategoriaSelect value={editCategory} onChange={setEditCategory} idPrefix={`edit-cat-${s.id}`} />
+                    <div className="grid grid-cols-[1fr_96px] gap-2 min-w-0">
+                      <input value={editPrice} onChange={e => setEditPrice(e.target.value)} type="number" placeholder="Preço" className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                      <input value={editDuration} onChange={e => setEditDuration(e.target.value)} type="number" placeholder="Min" className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                    </div>
+                    <div className="grid grid-cols-[1fr_auto] gap-2">
+                      <button onClick={() => saveEdit(s.id)} className="min-w-0 px-3 py-2 rounded-xl bg-gradient-to-br from-gold/20 to-gold/10 text-gold hover:from-gold/25 hover:to-gold/15 active:scale-95 transition-all font-body text-[12px]"><Save className="w-4 h-4 inline mr-1" />Salvar</button>
+                      <button onClick={() => setEditing(null)} className="px-3 py-2 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/30 hover:text-primary-foreground/50 transition-all"><X className="w-4 h-4" /></button>
+                    </div>
                   </div>
-                  <p className="font-body text-[14px] font-semibold text-gold ml-2 shrink-0">R$ {s.price.toFixed(2).replace(".", ",")}</p>
-                </div>
-                <div className="flex items-center justify-end gap-2 mt-2">
-                  <button onClick={() => toggleActive(s.id)} className={`w-10 h-6 rounded-full relative transition-all duration-200 ${s.active ? "bg-gold" : "bg-primary-foreground/10"}`}>
-                    <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200 ${s.active ? "left-4" : "left-0.5"}`} />
-                  </button>
-                  <button onClick={() => startEdit(s)} className="p-1.5 rounded-lg hover:bg-primary-foreground/[0.06] text-primary-foreground/30 hover:text-primary-foreground/60 transition-all"><Edit2 className="w-4 h-4" /></button>
-                  <button onClick={() => removeService(s.id)} className="p-1.5 rounded-lg hover:bg-rose/10 text-primary-foreground/20 hover:text-rose transition-all"><Trash2 className="w-4 h-4" /></button>
-                </div>
-              </>
-            )}
-          </div>
-        ))}
-      </div>
+                ) : (
+                  <div className="pl-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-body text-[14px] font-medium text-primary-foreground truncate">{s.name}</p>
+                        <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-body font-medium bg-gradient-to-r border ${cor}`}>
+                            <Folder className="w-2.5 h-2.5" />
+                            {s.category || "Outros"}
+                          </span>
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-body text-primary-foreground/50 bg-primary-foreground/[0.04] border border-primary-foreground/[0.06]">
+                            <Clock className="w-2.5 h-2.5" />
+                            {s.duration}min
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="font-heading text-lg font-semibold text-gold leading-none">R$ {s.price.toFixed(2).replace(".", ",")}</p>
+                        <p className="font-body text-[9px] text-primary-foreground/30 mt-1 uppercase tracking-wider">{s.active ? "Ativo" : "Inativo"}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-end gap-1 mt-3 pt-3 border-t border-primary-foreground/[0.05]">
+                      <button onClick={() => toggleActive(s.id)} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-body text-[11px] font-medium transition-all active:scale-95 ${s.active ? "bg-gold/10 text-gold hover:bg-gold/15" : "bg-primary-foreground/[0.05] text-primary-foreground/40 hover:bg-primary-foreground/[0.08]"}`}>
+                        <div className={`w-7 h-4 rounded-full relative transition-all ${s.active ? "bg-gold/50" : "bg-primary-foreground/20"}`}>
+                          <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-all duration-200 ${s.active ? "left-3.5" : "left-0.5"}`} />
+                        </div>
+                        {s.active ? "Ativo" : "Inativo"}
+                      </button>
+                      <button onClick={() => startEdit(s)} className="p-2 rounded-lg hover:bg-primary-foreground/[0.06] text-primary-foreground/40 hover:text-gold transition-all active:scale-95"><Edit2 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => removeService(s.id)} className="p-2 rounded-lg hover:bg-rose/10 text-primary-foreground/30 hover:text-rose transition-all active:scale-95"><Trash2 className="w-3.5 h-3.5" /></button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <p className="font-body text-[10px] text-primary-foreground/25 text-center pt-2">
+        ✨ Tudo que você criar aqui aparece automaticamente para os clientes no agendamento
+      </p>
     </div>
   );
 };
