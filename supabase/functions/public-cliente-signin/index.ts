@@ -2,6 +2,11 @@
 // devolve uma sessão (access_token/refresh_token) para o front continuar
 // usando o fluxo normal de agendamento autenticado, sem precisar pedir senha.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import {
+  normalizeWhatsapp,
+  whatsappToEmail,
+  whatsappVariations,
+} from "../_shared/bot-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,9 +15,6 @@ const corsHeaders = {
 };
 
 const DEFAULT_PASSWORD = "123123";
-
-const normalizeWhatsapp = (input: string) => (input || "").replace(/\D/g, "");
-const whatsappToEmail = (wpp: string) => `${normalizeWhatsapp(wpp)}@gmail.com`;
 
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), {

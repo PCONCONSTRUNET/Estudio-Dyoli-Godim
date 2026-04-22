@@ -4,6 +4,7 @@ import {
   checkBotAuth,
   jsonResponse,
   normalizeWhatsapp,
+  whatsappVariations,
 } from "../_shared/bot-auth.ts";
 
 Deno.serve(async (req) => {
@@ -29,11 +30,18 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { data: profile } = await admin
+    const { data: profiles } = await admin
       .from("profiles")
-      .select("id, nome")
-      .eq("whatsapp", wa)
-      .maybeSingle();
+      .select("id, nome, whatsapp")
+      .in("whatsapp", whatsappVariations(wa))
+      .limit(1);
+
+    const profile = profiles?.[0];
+
+    // Upgrade to canonical format if found via legacy variation
+    if (profile && profile.whatsapp !== wa) {
+      await admin.from("profiles").update({ whatsapp: wa }).eq("id", profile.id);
+    }
 
     if (!profile) {
       return jsonResponse({

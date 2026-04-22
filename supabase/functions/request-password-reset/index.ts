@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { normalizeWhatsapp, whatsappVariations } from "../_shared/bot-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,7 +13,6 @@ const json = (data: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-const normalizeWhatsapp = (input: string) => (input || "").replace(/\D/g, "");
 const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
 const FROM_EMAIL = "Dyoli Godim <no-reply@estudiodyoligodim.com.br>";
