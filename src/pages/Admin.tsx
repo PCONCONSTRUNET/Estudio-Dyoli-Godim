@@ -2127,6 +2127,30 @@ const ServicosTab = () => {
     setServices(prev => prev.filter(s => s.id !== id));
   };
 
+  // Filtro / busca (hooks devem ficar antes de qualquer early return)
+  const [filtroCat, setFiltroCat] = useState<string>("todas");
+  const [busca, setBusca] = useState("");
+
+  const servicosFiltrados = useMemo(() => {
+    return services.filter(s => {
+      if (filtroCat !== "todas" && s.category !== filtroCat) return false;
+      if (busca && !s.name.toLowerCase().includes(busca.toLowerCase())) return false;
+      return true;
+    });
+  }, [services, filtroCat, busca]);
+
+  // Stats agregadas
+  const stats = useMemo(() => {
+    const ativos = services.filter(s => s.active);
+    const ticketMedio = ativos.length ? ativos.reduce((acc, s) => acc + s.price, 0) / ativos.length : 0;
+    return {
+      total: services.length,
+      ativos: ativos.length,
+      categorias: categorias.length,
+      ticketMedio,
+    };
+  }, [services, categorias]);
+
   if (loading) return <p className="font-body text-[13px] text-primary-foreground/30 text-center py-8">Carregando...</p>;
 
   // Componente reutilizável: select de categoria com opção "+ Nova"
@@ -2185,29 +2209,6 @@ const ServicosTab = () => {
     );
   };
 
-  // Filtro / busca
-  const [filtroCat, setFiltroCat] = useState<string>("todas");
-  const [busca, setBusca] = useState("");
-
-  const servicosFiltrados = useMemo(() => {
-    return services.filter(s => {
-      if (filtroCat !== "todas" && s.category !== filtroCat) return false;
-      if (busca && !s.name.toLowerCase().includes(busca.toLowerCase())) return false;
-      return true;
-    });
-  }, [services, filtroCat, busca]);
-
-  // Stats agregadas
-  const stats = useMemo(() => {
-    const ativos = services.filter(s => s.active);
-    const ticketMedio = ativos.length ? ativos.reduce((acc, s) => acc + s.price, 0) / ativos.length : 0;
-    return {
-      total: services.length,
-      ativos: ativos.length,
-      categorias: categorias.length,
-      ticketMedio,
-    };
-  }, [services, categorias]);
 
   // Cor sutil por categoria (determinístico via hash) — só tokens do design system
   const corCategoria = (cat: string) => {
