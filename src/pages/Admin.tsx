@@ -456,19 +456,19 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setAgendamentos((prev) => prev.filter((a) => a.id !== id));
   };
 
-  const tabs: { id: Tab; label: string; icon: typeof BarChart3 }[] = [
-    { id: "dashboard", label: "Início", icon: BarChart3 },
-    { id: "agendamentos", label: "Agenda", icon: Calendar },
-    { id: "pedidos", label: "Pedidos", icon: ClipboardList },
-    { id: "financeiro", label: "Financeiro", icon: DollarSign },
-    { id: "caixa", label: "Caixa", icon: Wallet },
-    { id: "pagamentos", label: "Pagamentos", icon: CreditCard },
-    { id: "despesas", label: "Despesas", icon: Receipt },
-    { id: "clientes", label: "Clientes", icon: Users },
-    { id: "produtos", label: "Produtos", icon: ShoppingBag },
-    { id: "gateway", label: "Gateway", icon: Wallet },
-    { id: "horarios", label: "Horários", icon: Clock },
-    { id: "servicos", label: "Serviços", icon: Settings },
+  const tabs: { id: Tab; label: string; icon: typeof BarChart3; anim: string }[] = [
+    { id: "dashboard", label: "Início", icon: BarChart3, anim: "tab-icon-dashboard" },
+    { id: "agendamentos", label: "Agenda", icon: Calendar, anim: "tab-icon-calendar" },
+    { id: "pedidos", label: "Pedidos", icon: ClipboardList, anim: "tab-icon-bounce" },
+    { id: "financeiro", label: "Financeiro", icon: DollarSign, anim: "tab-icon-spin" },
+    { id: "caixa", label: "Caixa", icon: Wallet, anim: "tab-icon-spin" },
+    { id: "pagamentos", label: "Pagamentos", icon: CreditCard, anim: "tab-icon-swipe" },
+    { id: "despesas", label: "Despesas", icon: Receipt, anim: "tab-icon-shake" },
+    { id: "clientes", label: "Clientes", icon: Users, anim: "tab-icon-wave" },
+    { id: "produtos", label: "Produtos", icon: ShoppingBag, anim: "tab-icon-bob" },
+    { id: "gateway", label: "Gateway", icon: Wallet, anim: "tab-icon-spin" },
+    { id: "horarios", label: "Horários", icon: Clock, anim: "tab-icon-tick" },
+    { id: "servicos", label: "Serviços", icon: Settings, anim: "tab-icon-cog" },
   ];
 
   const total = agendamentos.length;
@@ -729,13 +729,13 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 font-body text-[13px] font-medium transition-all ${
+              className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 font-body text-[13px] font-medium transition-all ${
                 tab === t.id
-                  ? "bg-gold/10 text-gold"
+                  ? "tab-active bg-gold/10 text-gold"
                   : "text-primary-foreground/40 hover:bg-primary-foreground/[0.04] hover:text-primary-foreground/60"
               }`}
             >
-              <t.icon className="h-4 w-4 shrink-0" />
+              <t.icon className={`h-4 w-4 shrink-0 tab-icon ${t.anim}`} />
               {t.label}
             </button>
           ))}
@@ -787,13 +787,13 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                       <button
                         key={t.id}
                         onClick={() => { setTab(t.id); setMobileNavOpen(false); }}
-                        className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 font-body text-[14px] font-medium transition-all ${
+                        className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3 font-body text-[14px] font-medium transition-all ${
                           tab === t.id
-                            ? "bg-gold/10 text-gold"
+                            ? "tab-active bg-gold/10 text-gold"
                             : "text-primary-foreground/50 hover:bg-primary-foreground/[0.04] hover:text-primary-foreground/80"
                         }`}
                       >
-                        <t.icon className="h-[18px] w-[18px] shrink-0" />
+                        <t.icon className={`h-[18px] w-[18px] shrink-0 tab-icon ${t.anim}`} />
                         {t.label}
                       </button>
                     ))}

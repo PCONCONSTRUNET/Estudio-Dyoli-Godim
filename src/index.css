@@ -164,3 +164,133 @@ select option {
   background-color: hsl(240 6% 10%);
   color: hsl(30 15% 95%);
 }
+
+/* ============================================================
+   Animated tab icons — each tab has its own personality.
+   Triggered on group hover and when the tab is active.
+   ============================================================ */
+@layer utilities {
+  /* Base: icon transitions smoothly */
+  .tab-icon {
+    transition: transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1), filter 300ms ease;
+    transform-origin: center;
+  }
+
+  /* Dashboard — bars rise/breathe */
+  @keyframes icon-pulse-bars {
+    0%, 100% { transform: scaleY(1); }
+    50% { transform: scaleY(1.12); }
+  }
+  .group:hover .tab-icon-dashboard,
+  .tab-active .tab-icon-dashboard {
+    animation: icon-pulse-bars 1.6s ease-in-out infinite;
+  }
+
+  /* Calendar — gentle tilt */
+  @keyframes icon-tilt {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-8deg); }
+    75% { transform: rotate(8deg); }
+  }
+  .group:hover .tab-icon-calendar,
+  .tab-active .tab-icon-calendar {
+    animation: icon-tilt 1.4s ease-in-out infinite;
+  }
+
+  /* Pedidos / clipboard — checkmark bounce */
+  @keyframes icon-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+  .group:hover .tab-icon-bounce,
+  .tab-active .tab-icon-bounce {
+    animation: icon-bounce 1.2s ease-in-out infinite;
+  }
+
+  /* Financeiro / Caixa / Gateway — money spin */
+  @keyframes icon-spin-soft {
+    0% { transform: rotateY(0deg); }
+    100% { transform: rotateY(360deg); }
+  }
+  .group:hover .tab-icon-spin,
+  .tab-active .tab-icon-spin {
+    animation: icon-spin-soft 2.4s ease-in-out infinite;
+  }
+
+  /* Pagamentos — card swipe */
+  @keyframes icon-swipe {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(2px); }
+  }
+  .group:hover .tab-icon-swipe,
+  .tab-active .tab-icon-swipe {
+    animation: icon-swipe 1s ease-in-out infinite;
+  }
+
+  /* Despesas — receipt shake */
+  @keyframes icon-shake {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-4deg); }
+    75% { transform: rotate(4deg); }
+  }
+  .group:hover .tab-icon-shake,
+  .tab-active .tab-icon-shake {
+    animation: icon-shake 0.9s ease-in-out infinite;
+  }
+
+  /* Clientes — gentle wave */
+  @keyframes icon-wave {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-2px) scale(1.06); }
+  }
+  .group:hover .tab-icon-wave,
+  .tab-active .tab-icon-wave {
+    animation: icon-wave 1.5s ease-in-out infinite;
+  }
+
+  /* Produtos — bag bob */
+  @keyframes icon-bob {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-2px) rotate(-3deg); }
+  }
+  .group:hover .tab-icon-bob,
+  .tab-active .tab-icon-bob {
+    animation: icon-bob 1.4s ease-in-out infinite;
+  }
+
+  /* Horários — clock tick */
+  @keyframes icon-tick {
+    0%, 90%, 100% { transform: rotate(0deg); }
+    20% { transform: rotate(30deg); }
+    40% { transform: rotate(60deg); }
+    60% { transform: rotate(90deg); }
+    80% { transform: rotate(120deg); }
+  }
+  .group:hover .tab-icon-tick,
+  .tab-active .tab-icon-tick {
+    animation: icon-tick 2.4s steps(8, end) infinite;
+  }
+
+  /* Serviços — settings spin */
+  @keyframes icon-cog {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .group:hover .tab-icon-cog,
+  .tab-active .tab-icon-cog {
+    animation: icon-cog 4s linear infinite;
+  }
+
+  /* Active state slight glow */
+  .tab-active .tab-icon {
+    filter: drop-shadow(0 0 6px hsl(var(--gold) / 0.45));
+  }
+
+  /* Respect reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .tab-icon,
+    .tab-icon[class*="tab-icon-"] {
+      animation: none !important;
+    }
+  }
+}
