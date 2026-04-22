@@ -2292,10 +2292,19 @@ const ServicosTab = () => {
           <div className="flex flex-wrap gap-2">
             {categorias.map(cat => {
               const count = contarServicos(cat);
+              const ativos = contarAtivos(cat);
+              const ativa = categoriaAtiva(cat);
               const editandoEsta = renomeandoCat === cat;
               const cor = corCategoria(cat);
+              const podeExcluir = count === 0;
               return (
-                <div key={cat} className={`group flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-gradient-to-br border ${cor} hover:scale-[1.02] transition-all`}>
+                <div
+                  key={cat}
+                  className={`group flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-gradient-to-br border transition-all hover:scale-[1.02] ${
+                    ativa ? cor : "from-primary-foreground/[0.02] to-transparent border-primary-foreground/[0.05] text-primary-foreground/40 opacity-60"
+                  }`}
+                  title={ativa ? "Categoria visível para clientes" : "Categoria oculta — todos os serviços estão desativados"}
+                >
                   {editandoEsta ? (
                     <>
                       <input
@@ -2310,12 +2319,37 @@ const ServicosTab = () => {
                     </>
                   ) : (
                     <>
-                      <Folder className="w-3 h-3 opacity-70" />
-                      <span className="font-body text-[12px] font-medium text-primary-foreground">{cat}</span>
-                      <span className="font-body text-[10px] opacity-60 ml-0.5">{count}</span>
-                      <div className="flex items-center gap-0.5 ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {ativa ? (
+                        <Folder className="w-3 h-3 opacity-70" />
+                      ) : (
+                        <EyeOff className="w-3 h-3 opacity-70" />
+                      )}
+                      <span className={`font-body text-[12px] font-medium ${ativa ? "text-primary-foreground" : "text-primary-foreground/50 line-through decoration-primary-foreground/20"}`}>
+                        {cat}
+                      </span>
+                      <span className="font-body text-[10px] opacity-60 ml-0.5">
+                        {count > 0 ? `${ativos}/${count}` : "0"}
+                      </span>
+                      <div className="flex items-center gap-0.5 ml-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                        {count > 0 && (
+                          ativa ? (
+                            <button
+                              onClick={() => desativarCategoria(cat)}
+                              className="p-1 rounded-md hover:bg-rose/10 text-primary-foreground/50 hover:text-rose transition-colors"
+                              title="Desativar — oculta dos clientes mantendo o histórico"
+                            ><EyeOff className="w-3 h-3" /></button>
+                          ) : (
+                            <button
+                              onClick={() => reativarCategoria(cat)}
+                              className="p-1 rounded-md hover:bg-gold/15 text-primary-foreground/50 hover:text-gold transition-colors"
+                              title="Reativar — torna visível para clientes novamente"
+                            ><Eye className="w-3 h-3" /></button>
+                          )
+                        )}
                         <button onClick={() => iniciarRenomearCat(cat)} className="p-1 rounded-md hover:bg-primary-foreground/[0.08] text-primary-foreground/50 hover:text-primary-foreground transition-colors" title="Renomear"><Edit2 className="w-3 h-3" /></button>
-                        <button onClick={() => removerCategoria(cat)} className="p-1 rounded-md hover:bg-rose/10 text-primary-foreground/30 hover:text-rose transition-colors" title="Remover"><Trash2 className="w-3 h-3" /></button>
+                        {podeExcluir && (
+                          <button onClick={() => removerCategoria(cat)} className="p-1 rounded-md hover:bg-rose/10 text-primary-foreground/30 hover:text-rose transition-colors" title="Excluir categoria vazia"><Trash2 className="w-3 h-3" /></button>
+                        )}
                       </div>
                     </>
                   )}
@@ -2324,6 +2358,10 @@ const ServicosTab = () => {
             })}
           </div>
         )}
+        <p className="font-body text-[10px] text-primary-foreground/30 px-1">
+          👁 desativa toda a categoria para os clientes (mantém histórico). Excluir só é permitido em categorias vazias.
+        </p>
+      </div>
       </div>
 
       <div className="h-px bg-gradient-to-r from-transparent via-primary-foreground/[0.08] to-transparent" />
