@@ -194,25 +194,28 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     );
   };
 
+  const paidBadge = (pago: boolean) => pago ? (
+    <span title="Pago" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-green-500/30 bg-green-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-green-400">
+      <CheckCircle className="h-2.5 w-2.5" /> Pago
+    </span>
+  ) : (
+    <span title="Não pago" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-red-400">
+      <AlertTriangle className="h-2.5 w-2.5" /> Não pago
+    </span>
+  );
+
   const paymentBadge = (a: Agendamento) => {
-    const tipo = getPagamentoStatus(a);
-    if (tipo === "pago") {
-      return (
-        <span title="Pagamento confirmado" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-green-500/30 bg-green-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-green-400">
-          <CheckCircle className="h-2.5 w-2.5" /> Pago
-        </span>
-      );
-    }
-    if (tipo === "recepcao") {
-      return (
-        <span title="Pagar na recepção" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-blue-400">
-          <Clock className="h-2.5 w-2.5" /> Recepção
-        </span>
-      );
-    }
+    const pago = isPago(a);
+    const recepcao = isFormaRecepcao(a.forma_pagamento);
+
     return (
-      <span title="Não pago" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-red-400">
-        <AlertTriangle className="h-2.5 w-2.5" /> Não pago
+      <span className="inline-flex flex-wrap items-center gap-1">
+        {recepcao && (
+          <span title="Pagar na recepção" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-blue-400">
+            <Clock className="h-2.5 w-2.5" /> Recepção
+          </span>
+        )}
+        {paidBadge(pago)}
       </span>
     );
   };
