@@ -19,6 +19,7 @@ interface Agendamento {
   created_at: string;
   cliente_nome: string | null;
   origem?: string | null;
+  forma_pagamento?: string | null;
 }
 
 interface Props {
@@ -178,10 +179,39 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     );
   };
 
+  const paymentBadge = (a: Agendamento) => {
+    const valor = Number(a.valor || 0);
+    const pago = Number(a.valor_pago || 0);
+    const isPago = pago >= valor && valor > 0;
+    const forma = (a.forma_pagamento || "").toLowerCase();
+    const isRecepcao = forma.includes("recep") || forma === "presencial" || forma === "local";
+
+    if (isPago) {
+      return (
+        <span title="Pagamento confirmado" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-green-500/30 bg-green-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-green-400">
+          <CheckCircle className="h-2.5 w-2.5" /> Pago
+        </span>
+      );
+    }
+    if (isRecepcao) {
+      return (
+        <span title="Pagar na recepção" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-blue-400">
+          <Clock className="h-2.5 w-2.5" /> Recepção
+        </span>
+      );
+    }
+    return (
+      <span title="Pagamento pendente" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-red-400">
+        <AlertTriangle className="h-2.5 w-2.5" /> Pendente
+      </span>
+    );
+  };
+
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return null;
     return sortDir === "desc" ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />;
   };
+
 
   const counts = useMemo(() => ({
     todos: agendamentos.length,
@@ -398,7 +428,7 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                     <span className="font-heading text-[14px] font-bold text-gold">{a.horario}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       <p className="font-body text-[14px] font-medium text-primary-foreground truncate">{getClientName(a.user_id, a.cliente_nome)}</p>
                       {a.origem === "whatsapp_bot" && (
                         <span title="Via WhatsApp" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-green-500/30 bg-green-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-green-400">
@@ -406,6 +436,7 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                           WA
                         </span>
                       )}
+                      {paymentBadge(a)}
                     </div>
                     <p className="font-body text-[11px] text-primary-foreground/45 truncate">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""}</p>
                   </div>
@@ -439,6 +470,15 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                       <div>
                         <p className="text-primary-foreground/30">Serviço</p>
                         <p className="text-primary-foreground font-medium">{a.servico}</p>
+                      </div>
+                      <div className="col-span-2">
+                        <p className="text-primary-foreground/30">Forma de pagamento</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <p className="text-primary-foreground font-medium capitalize">
+                            {a.forma_pagamento || "—"}
+                          </p>
+                          {paymentBadge(a)}
+                        </div>
                       </div>
                     </div>
                     <div className="border-t border-primary-foreground/[0.06] pt-3 space-y-2">
