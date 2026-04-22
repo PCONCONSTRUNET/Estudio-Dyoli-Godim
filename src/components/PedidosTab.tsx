@@ -237,6 +237,14 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     falta: agendamentos.filter((a) => a.status === "falta").length,
   }), [agendamentos]);
 
+  const pagamentoCounts = useMemo(() => {
+    const counts = { todos: agendamentos.length, pago: 0, recepcao: 0, pendente: 0 };
+    agendamentos.forEach((a) => {
+      counts[getPagamentoStatus(a)]++;
+    });
+    return counts;
+  }, [agendamentos]);
+
   const notifConfig = {
     hoje: { bg: "bg-gold/10 border-gold/25", icon: Clock, iconColor: "text-gold", titleColor: "text-gold" },
     proximo: { bg: "bg-blue-500/10 border-blue-500/25", icon: Clock, iconColor: "text-blue-400", titleColor: "text-blue-400" },
