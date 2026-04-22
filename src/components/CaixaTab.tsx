@@ -593,7 +593,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
 
       {/* ═══════════ MODAL: DETALHE DA COMISSÃO ═══════════ */}
       <Dialog open={showComissaoDetail} onOpenChange={setShowComissaoDetail}>
-        <DialogContent className="max-w-md max-h-[85vh] overflow-hidden flex flex-col bg-background border-purple-500/20 p-0">
+        <DialogContent className="max-w-md max-h-[85vh] overflow-hidden flex flex-col bg-charcoal border-purple-500/20 p-0 [&>button]:text-primary-foreground/60 [&>button]:hover:text-primary-foreground">
           <div className="relative overflow-hidden">
             <div className="pointer-events-none absolute -top-16 -right-12 w-48 h-48 rounded-full bg-purple-500/15 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-16 -left-12 w-40 h-40 rounded-full bg-gold/10 blur-3xl" />
