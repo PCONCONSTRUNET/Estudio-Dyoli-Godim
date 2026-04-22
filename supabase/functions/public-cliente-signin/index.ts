@@ -45,12 +45,13 @@ Deno.serve(async (req) => {
 
     const email = whatsappToEmail(wa);
 
-    // 1) Tenta achar perfil pelo WhatsApp
-    const { data: existingProfile } = await admin
+    // 1) Tenta achar perfil pelo WhatsApp (com variações legadas)
+    const { data: existingProfiles } = await admin
       .from("profiles")
-      .select("id, nome")
-      .eq("whatsapp", wa)
-      .maybeSingle();
+      .select("id, nome, whatsapp")
+      .in("whatsapp", whatsappVariations(wa))
+      .limit(1);
+    const existingProfile = existingProfiles?.[0];
 
     let userId: string | null = existingProfile?.id ?? null;
     let isNew = false;

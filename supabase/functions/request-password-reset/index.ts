@@ -42,12 +42,13 @@ Deno.serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Encontra perfil pelo whatsapp
-    const { data: profile } = await admin
+    // Encontra perfil pelo whatsapp (com variações legadas)
+    const { data: profiles } = await admin
       .from("profiles")
       .select("id, nome, whatsapp")
-      .eq("whatsapp", wpp)
-      .maybeSingle();
+      .in("whatsapp", whatsappVariations(wpp))
+      .limit(1);
+    const profile = profiles?.[0];
 
     // Resposta sempre genérica para não vazar quem está cadastrado
     const successResponse = json({
