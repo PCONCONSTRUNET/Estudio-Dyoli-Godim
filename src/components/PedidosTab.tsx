@@ -36,12 +36,30 @@ const formatCurrency = (v: number) =>
 
 type SortField = "data" | "cliente" | "valor" | "status";
 type SortDir = "asc" | "desc";
+type PagamentoFilter = "todos" | "pago" | "recepcao" | "pendente";
+
+const getPagamentoStatus = (a: { valor: number; valor_pago: number | null; forma_pagamento?: string | null }): "pago" | "recepcao" | "pendente" => {
+  const valor = Number(a.valor || 0);
+  const pago = Number(a.valor_pago || 0);
+  if (pago >= valor && valor > 0) return "pago";
+  const forma = (a.forma_pagamento || "").toLowerCase();
+  if (
+    forma.includes("recep") ||
+    forma.includes("salao") ||
+    forma.includes("salão") ||
+    forma === "presencial" ||
+    forma === "local" ||
+    forma === "dinheiro"
+  ) return "recepcao";
+  return "pendente";
+};
 
 const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("todos");
+  const [pagamentoFilter, setPagamentoFilter] = useState<PagamentoFilter>("todos");
   const [sortField, setSortField] = useState<SortField>("data");
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => {
     const saved = localStorage.getItem("pedidos_dismissed");
@@ -116,6 +134,9 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
   const filtered = useMemo(() => {
     let list = [...agendamentos];
     if (statusFilter !== "todos") list = list.filter((a) => a.status === statusFilter);
+    if (pagamentoFilter !== "todos") {
+      list = list.filter((a) => getPagamentoStatus(a) === pagamentoFilter);
+    }
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       list = list.filter(
@@ -136,7 +157,7 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
       return sortDir === "desc" ? -cmp : cmp;
     });
     return list;
-  }, [agendamentos, statusFilter, searchTerm, sortField, sortDir, getClientName]);
+  }, [agendamentos, statusFilter, pagamentoFilter, searchTerm, sortField, sortDir, getClientName]);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -180,26 +201,15 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
   };
 
   const paymentBadge = (a: Agendamento) => {
-    const valor = Number(a.valor || 0);
-    const pago = Number(a.valor_pago || 0);
-    const isPago = pago >= valor && valor > 0;
-    const forma = (a.forma_pagamento || "").toLowerCase();
-    const isRecepcao =
-      forma.includes("recep") ||
-      forma.includes("salao") ||
-      forma.includes("salão") ||
-      forma === "presencial" ||
-      forma === "local" ||
-      forma === "dinheiro";
-
-    if (isPago) {
+    const tipo = getPagamentoStatus(a);
+    if (tipo === "pago") {
       return (
         <span title="Pagamento confirmado" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-green-500/30 bg-green-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-green-400">
           <CheckCircle className="h-2.5 w-2.5" /> Pago
         </span>
       );
     }
-    if (isRecepcao) {
+    if (tipo === "recepcao") {
       return (
         <span title="Pagar na recepção" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-blue-400">
           <Clock className="h-2.5 w-2.5" /> Recepção
@@ -226,6 +236,14 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     cancelado: agendamentos.filter((a) => a.status === "cancelado").length,
     falta: agendamentos.filter((a) => a.status === "falta").length,
   }), [agendamentos]);
+
+  const pagamentoCounts = useMemo(() => {
+    const counts = { todos: agendamentos.length, pago: 0, recepcao: 0, pendente: 0 };
+    agendamentos.forEach((a) => {
+      counts[getPagamentoStatus(a)]++;
+    });
+    return counts;
+  }, [agendamentos]);
 
   const notifConfig = {
     hoje: { bg: "bg-gold/10 border-gold/25", icon: Clock, iconColor: "text-gold", titleColor: "text-gold" },
@@ -386,6 +404,25 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
             className={`shrink-0 rounded-full border px-3 py-1.5 font-body text-[11px] font-medium transition-all ${
               statusFilter === f.value
                 ? "bg-gold/10 text-gold border-gold/20"
+                : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06] hover:text-primary-foreground/60"
+            }`}>
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Pagamento filters */}
+      <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+        {([
+          { value: "todos" as PagamentoFilter, label: "Pgto: Todos", activeClass: "bg-gold/10 text-gold border-gold/20" },
+          { value: "pago" as PagamentoFilter, label: `Pagos (${pagamentoCounts.pago})`, activeClass: "bg-green-500/10 text-green-400 border-green-500/30" },
+          { value: "recepcao" as PagamentoFilter, label: `Recepção (${pagamentoCounts.recepcao})`, activeClass: "bg-blue-500/10 text-blue-400 border-blue-500/30" },
+          { value: "pendente" as PagamentoFilter, label: `Pendentes (${pagamentoCounts.pendente})`, activeClass: "bg-red-500/10 text-red-400 border-red-500/30" },
+        ]).map((f) => (
+          <button key={f.value} onClick={() => setPagamentoFilter(f.value)}
+            className={`shrink-0 rounded-full border px-3 py-1.5 font-body text-[11px] font-medium transition-all ${
+              pagamentoFilter === f.value
+                ? f.activeClass
                 : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06] hover:text-primary-foreground/60"
             }`}>
             {f.label}
