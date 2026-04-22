@@ -888,18 +888,19 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
       </div>
 
       {/* Lista de pagamentos */}
-      <div>
-        <p className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest mb-3">Todos os pagamentos</p>
-        <div className="space-y-1.5">
+      <div className="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-primary-foreground/[0.05] via-primary-foreground/[0.02] to-transparent border border-primary-foreground/[0.1]">
+        <div className="pointer-events-none absolute -top-16 -right-16 w-44 h-44 rounded-full bg-gold/5 blur-3xl" />
+        <p className="relative font-body text-[12px] font-medium text-primary-foreground/65 uppercase tracking-[0.2em] mb-3">Todos os pagamentos</p>
+        <div className="relative space-y-1.5">
           {filtered.map(a => (
-            <div key={a.id} className="flex items-center justify-between p-3 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+            <div key={a.id} className="flex items-center justify-between p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06] hover:border-gold/20 transition-all">
               <div className="min-w-0 flex-1">
-                <p className="font-body text-[13px] font-medium text-primary-foreground truncate">{getClientName(a.user_id, a.cliente_nome)}</p>
-                <p className="font-body text-[10px] text-primary-foreground/30">{formatDateShort(a.data_agendamento)} · {a.servico}</p>
+                <p className="font-body text-[14px] font-semibold text-primary-foreground truncate">{getClientName(a.user_id, a.cliente_nome)}</p>
+                <p className="font-body text-[11px] text-primary-foreground/45">{formatDateShort(a.data_agendamento)} · {a.servico}</p>
               </div>
               <div className="text-right ml-2">
-                <p className="font-body text-[13px] text-gold font-semibold">{formatCurrency(Number(a.valor))}</p>
-                <p className={`font-body text-[10px] font-medium ${Number(a.valor_pago || 0) >= Number(a.valor) ? "text-green-500" : Number(a.valor_pago || 0) > 0 ? "text-gold" : "text-primary-foreground/25"}`}>
+                <p className="font-heading text-[14px] text-gold font-bold tabular-nums">{formatCurrency(Number(a.valor))}</p>
+                <p className={`font-body text-[11px] font-medium ${Number(a.valor_pago || 0) >= Number(a.valor) ? "text-green-400" : Number(a.valor_pago || 0) > 0 ? "text-gold" : "text-primary-foreground/40"}`}>
                   {Number(a.valor_pago || 0) >= Number(a.valor) ? "Pago" : Number(a.valor_pago || 0) > 0 ? `Sinal: ${formatCurrency(Number(a.valor_pago))}` : "Pendente"}
                 </p>
               </div>
