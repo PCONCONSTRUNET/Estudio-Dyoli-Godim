@@ -19,6 +19,7 @@ interface Agendamento {
   created_at: string;
   cliente_nome: string | null;
   origem?: string | null;
+  forma_pagamento?: string | null;
 }
 
 interface Props {
