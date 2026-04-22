@@ -428,6 +428,7 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
             {f.label}
           </button>
         ))}
+      </div>
 
       {/* Sort buttons */}
       <div className="flex gap-1.5">
