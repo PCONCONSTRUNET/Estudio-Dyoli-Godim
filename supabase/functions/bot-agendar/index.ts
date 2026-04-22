@@ -5,6 +5,7 @@ import {
   jsonResponse,
   normalizeWhatsapp,
   whatsappToEmail,
+  whatsappVariations,
   DEFAULT_BOT_PASSWORD,
 } from "../_shared/bot-auth.ts";
 
@@ -126,15 +127,25 @@ Deno.serve(async (req) => {
     const email = whatsappToEmail(wa);
     let userId: string | null = null;
 
-    // Search profiles by whatsapp first
-    const { data: existingProfile } = await admin
+    // Build legacy variations of the same number to find pre-normalization profiles
+    const variations = whatsappVariations(wa);
+
+    const { data: existingProfiles } = await admin
       .from("profiles")
-      .select("id")
-      .eq("whatsapp", wa)
-      .maybeSingle();
+      .select("id, whatsapp")
+      .in("whatsapp", variations);
+
+    const existingProfile = existingProfiles?.[0];
 
     if (existingProfile?.id) {
       userId = existingProfile.id;
+      // Upgrade legacy whatsapp value to canonical format
+      if (existingProfile.whatsapp !== wa) {
+        await admin
+          .from("profiles")
+          .update({ whatsapp: wa })
+          .eq("id", existingProfile.id);
+      }
     } else {
       // Try to create the auth user
       const { data: created, error: createErr } = await admin.auth.admin.createUser({

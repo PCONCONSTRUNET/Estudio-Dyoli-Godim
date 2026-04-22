@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { normalizeWhatsapp, whatsappVariations } from "../_shared/bot-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,7 +13,6 @@ const json = (data: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-const normalizeWhatsapp = (input: string) => (input || "").replace(/\D/g, "");
 const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
 const FROM_EMAIL = "Dyoli Godim <no-reply@estudiodyoligodim.com.br>";
@@ -42,12 +42,13 @@ Deno.serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Encontra perfil pelo whatsapp
-    const { data: profile } = await admin
+    // Encontra perfil pelo whatsapp (com variações legadas)
+    const { data: profiles } = await admin
       .from("profiles")
       .select("id, nome, whatsapp")
-      .eq("whatsapp", wpp)
-      .maybeSingle();
+      .in("whatsapp", whatsappVariations(wpp))
+      .limit(1);
+    const profile = profiles?.[0];
 
     // Resposta sempre genérica para não vazar quem está cadastrado
     const successResponse = json({
