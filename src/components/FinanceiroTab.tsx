@@ -279,12 +279,23 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
           { value: "semana" as const, label: "Semana" },
           { value: "mes" as const, label: "Mês" },
           { value: "personalizado" as const, label: "Custom" },
-        ]).map(f => (
-          <button key={f.value} onClick={() => setPeriod(f.value)}
-            className={`px-3 py-1.5 rounded-full font-body text-[11px] font-medium whitespace-nowrap border transition-all ${period === f.value ? "bg-gold/10 text-gold border-gold/20" : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06]"}`}>
-            {f.label}
-          </button>
-        ))}
+        ]).map(f => {
+          const active = period === f.value;
+          return (
+            <button
+              key={f.value}
+              onClick={() => setPeriod(f.value)}
+              className={`relative px-4 py-2 rounded-full font-body text-[12px] font-semibold whitespace-nowrap border transition-all ${
+                active
+                  ? "bg-gradient-to-br from-gold/30 to-gold/10 text-gold border-gold/50 shadow-[0_0_18px_-4px_hsl(40_40%_55%/0.5)]"
+                  : "bg-primary-foreground/[0.04] text-primary-foreground/55 border-primary-foreground/[0.1] hover:border-gold/25 hover:text-primary-foreground hover:bg-primary-foreground/[0.06]"
+              }`}
+            >
+              {active && <span className="absolute inset-0 rounded-full bg-gold/5 blur-sm -z-10" />}
+              {f.label}
+            </button>
+          );
+        })}
       </div>
 
       {period === "personalizado" && (
