@@ -484,6 +484,28 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const formatDate = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
   const formatWhatsapp = (w: string) => (w ? `(${w.slice(0, 2)}) ${w.slice(2, 7)}-${w.slice(7)}` : "—");
 
+  const handleExcluirCliente = async () => {
+    if (!clienteParaExcluir) return;
+    setExcluindoCliente(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-delete-cliente", {
+        body: { user_id: clienteParaExcluir.id },
+      });
+      if (error || (data && data.error)) {
+        throw new Error(error?.message || data?.error || "Erro desconhecido");
+      }
+      toast.success("Cliente excluído com sucesso");
+      setSelectedClient(null);
+      setClienteParaExcluir(null);
+      await loadData();
+    } catch (e: any) {
+      console.error("Erro ao excluir cliente:", e);
+      toast.error(`Erro ao excluir: ${e.message || "tente novamente"}`);
+    } finally {
+      setExcluindoCliente(false);
+    }
+  };
+
   const filteredAgendamentos = agendamentos.filter((a) => {
     if (statusFilter !== "todos" && a.status !== statusFilter) return false;
     if (searchTerm) {
