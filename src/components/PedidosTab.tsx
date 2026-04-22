@@ -203,8 +203,8 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
       );
     }
     return (
-      <span title="Pagamento pendente" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-red-400">
-        <AlertTriangle className="h-2.5 w-2.5" /> Pendente
+      <span title="Não pago" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-red-400">
+        <AlertTriangle className="h-2.5 w-2.5" /> Não pago
       </span>
     );
   };
@@ -391,7 +391,7 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
             { value: "todos" as PagamentoFilter, label: "Tudo", activeClass: "bg-gold/10 text-gold border-gold/25", count: pagamentoCounts.todos },
             { value: "pago" as PagamentoFilter, label: "Pago", activeClass: "bg-green-500/10 text-green-400 border-green-500/30", count: pagamentoCounts.pago },
             { value: "recepcao" as PagamentoFilter, label: "Recepção", activeClass: "bg-blue-500/10 text-blue-400 border-blue-500/30", count: pagamentoCounts.recepcao },
-            { value: "pendente" as PagamentoFilter, label: "Pendente", activeClass: "bg-red-500/10 text-red-400 border-red-500/30", count: pagamentoCounts.pendente },
+            { value: "pendente" as PagamentoFilter, label: "Não pago", activeClass: "bg-red-500/10 text-red-400 border-red-500/30", count: pagamentoCounts.pendente },
           ]).map((f) => (
             <button key={f.value} onClick={() => setPagamentoFilter(f.value)}
               className={`shrink-0 rounded-full border px-2.5 py-1 font-body text-[10px] font-medium transition-all ${
