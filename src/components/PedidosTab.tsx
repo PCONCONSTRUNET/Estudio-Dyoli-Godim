@@ -201,26 +201,15 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
   };
 
   const paymentBadge = (a: Agendamento) => {
-    const valor = Number(a.valor || 0);
-    const pago = Number(a.valor_pago || 0);
-    const isPago = pago >= valor && valor > 0;
-    const forma = (a.forma_pagamento || "").toLowerCase();
-    const isRecepcao =
-      forma.includes("recep") ||
-      forma.includes("salao") ||
-      forma.includes("salão") ||
-      forma === "presencial" ||
-      forma === "local" ||
-      forma === "dinheiro";
-
-    if (isPago) {
+    const tipo = getPagamentoStatus(a);
+    if (tipo === "pago") {
       return (
         <span title="Pagamento confirmado" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-green-500/30 bg-green-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-green-400">
           <CheckCircle className="h-2.5 w-2.5" /> Pago
         </span>
       );
     }
-    if (isRecepcao) {
+    if (tipo === "recepcao") {
       return (
         <span title="Pagar na recepção" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-blue-400">
           <Clock className="h-2.5 w-2.5" /> Recepção
