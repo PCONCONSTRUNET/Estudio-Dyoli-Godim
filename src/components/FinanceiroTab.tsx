@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
-import { Calendar, Download, FileText, Table2, TrendingUp, Wallet, X, Percent, Settings, ArrowDown } from "lucide-react";
+import { Calendar, Download, FileText, Table2, TrendingUp, Wallet, X, Percent, Settings, ArrowDown, ChevronLeft, ChevronRight, Sparkles, CheckCircle2, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Agendamento {
@@ -447,74 +447,172 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
         )}
       </div>
 
-      {/* Fechamento de caixa */}
-      <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-        <button onClick={() => setShowCaixa(!showCaixa)}
-          className="w-full flex items-center justify-between">
-          <span className="font-body text-[13px] font-medium text-primary-foreground flex items-center gap-2">
-            <Wallet className="w-4 h-4 text-gold" /> Fechamento de Caixa
+      {/* Fechamento de caixa — editorial */}
+      <div className="relative overflow-hidden rounded-3xl border border-gold/15 bg-gradient-to-br from-gold/[0.04] via-primary-foreground/[0.02] to-transparent">
+        {/* glow decorativo */}
+        <div className="pointer-events-none absolute -top-20 -right-20 w-60 h-60 rounded-full bg-gold/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -left-16 w-52 h-52 rounded-full bg-purple-500/10 blur-3xl" />
+
+        <button
+          onClick={() => setShowCaixa(!showCaixa)}
+          className="relative w-full flex items-center justify-between p-5"
+        >
+          <span className="flex items-center gap-3">
+            <span className="w-9 h-9 rounded-2xl bg-gold/10 border border-gold/20 flex items-center justify-center">
+              <Wallet className="w-4 h-4 text-gold" />
+            </span>
+            <span className="text-left">
+              <span className="block font-heading text-[15px] font-semibold text-primary-foreground tracking-tight">Fechamento de Caixa</span>
+              <span className="block font-body text-[10px] text-primary-foreground/40 uppercase tracking-[0.2em] mt-0.5">Resumo do dia</span>
+            </span>
           </span>
-          <span className="font-body text-[10px] text-primary-foreground/30">{showCaixa ? "Fechar" : "Abrir"}</span>
+          <span className={`w-7 h-7 rounded-full border border-primary-foreground/10 flex items-center justify-center transition-transform ${showCaixa ? "rotate-180" : ""}`}>
+            <ChevronRight className="w-3.5 h-3.5 text-primary-foreground/50 rotate-90" />
+          </span>
         </button>
 
         {showCaixa && (
-          <div className="mt-4 space-y-3 animate-fade-in">
-            <input type="date" value={caixaDate} onChange={e => setCaixaDate(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+          <div className="relative px-5 pb-5 space-y-5 animate-fade-in">
+            {/* Date navigator */}
+            <div className="flex items-center justify-between gap-2 p-1.5 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+              <button
+                onClick={() => {
+                  const d = new Date(caixaDate + "T12:00:00");
+                  d.setDate(d.getDate() - 1);
+                  setCaixaDate(d.toISOString().split("T")[0]);
+                }}
+                className="w-9 h-9 rounded-xl hover:bg-primary-foreground/[0.05] flex items-center justify-center text-primary-foreground/50 hover:text-primary-foreground transition-all"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <div className="flex-1 text-center relative">
+                <p className="font-heading text-[15px] font-semibold text-primary-foreground capitalize">
+                  {new Date(caixaDate + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" })}
+                </p>
+                <input
+                  type="date"
+                  value={caixaDate}
+                  onChange={e => setCaixaDate(e.target.value)}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                />
+              </div>
+              <button
+                onClick={() => {
+                  const d = new Date(caixaDate + "T12:00:00");
+                  d.setDate(d.getDate() + 1);
+                  setCaixaDate(d.toISOString().split("T")[0]);
+                }}
+                className="w-9 h-9 rounded-xl hover:bg-primary-foreground/[0.05] flex items-center justify-center text-primary-foreground/50 hover:text-primary-foreground transition-all"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <div className="p-3 rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.04]">
-                <p className="font-body text-[9px] text-primary-foreground/30 uppercase tracking-widest">Atendimentos</p>
-                <p className="font-heading text-lg font-bold text-primary-foreground">{caixaData.qtd}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.04]">
-                <p className="font-body text-[9px] text-primary-foreground/30 uppercase tracking-widest">Faltas</p>
-                <p className="font-heading text-lg font-bold text-orange-500">{caixaData.faltas}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.04]">
-                <p className="font-body text-[9px] text-primary-foreground/30 uppercase tracking-widest">Total</p>
-                <p className="font-heading text-lg font-bold text-gold">{formatCurrency(caixaData.total)}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.04]">
-                <p className="font-body text-[9px] text-primary-foreground/30 uppercase tracking-widest">Recebido</p>
-                <p className="font-heading text-lg font-bold text-green-500">{formatCurrency(caixaData.recebido)}</p>
+            {/* Hero number — receita do dia */}
+            <div className="text-center py-4">
+              <p className="font-body text-[10px] text-primary-foreground/40 uppercase tracking-[0.3em] mb-2">Recebido hoje</p>
+              <p className="font-heading text-5xl font-bold bg-gradient-to-br from-gold via-gold to-gold/60 bg-clip-text text-transparent leading-none">
+                {formatCurrency(caixaData.recebido)}
+              </p>
+              <p className="font-body text-[11px] text-primary-foreground/35 mt-2">
+                de <span className="text-primary-foreground/60 font-medium">{formatCurrency(caixaData.total)}</span> previstos
+              </p>
+
+              {/* Progress bar */}
+              <div className="mt-4 max-w-[240px] mx-auto">
+                <div className="h-1 rounded-full bg-primary-foreground/[0.06] overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-gold/80 to-green-500/80 transition-all duration-700"
+                    style={{ width: `${caixaData.total > 0 ? Math.min(100, (caixaData.recebido / caixaData.total) * 100) : 0}%` }}
+                  />
+                </div>
+                <p className="font-body text-[9px] text-primary-foreground/35 uppercase tracking-[0.2em] mt-2">
+                  {caixaData.total > 0 ? Math.round((caixaData.recebido / caixaData.total) * 100) : 0}% do dia recebido
+                </p>
               </div>
             </div>
 
-            {/* Comissão do dia */}
-            <div className="p-3 rounded-xl bg-purple-500/5 border border-purple-500/10">
-              <div className="flex items-center justify-between">
-                <p className="font-body text-[10px] text-purple-400/60 uppercase tracking-widest">Sua comissão ({comissaoPct}%)</p>
-                <p className="font-heading text-lg font-bold text-purple-400">{formatCurrency(caixaData.recebido * (comissaoPct / 100))}</p>
+            {/* Ticker line — métricas separadas por linha */}
+            <div className="grid grid-cols-3 rounded-2xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.06] divide-x divide-primary-foreground/[0.06]">
+              <div className="text-center py-3 px-2">
+                <p className="font-heading text-xl font-bold text-primary-foreground">{caixaData.qtd}</p>
+                <p className="font-body text-[9px] text-primary-foreground/35 uppercase tracking-widest mt-0.5">Atend.</p>
               </div>
-              <p className="font-body text-[10px] text-purple-400/40 mt-0.5">Valor a retirar sobre o recebido do dia</p>
+              <div className="text-center py-3 px-2">
+                <p className="font-heading text-xl font-bold text-rose">{formatCurrency(caixaData.pendente)}</p>
+                <p className="font-body text-[9px] text-primary-foreground/35 uppercase tracking-widest mt-0.5">Pendente</p>
+              </div>
+              <div className="text-center py-3 px-2">
+                <p className="font-heading text-xl font-bold text-orange-500">{caixaData.faltas}</p>
+                <p className="font-body text-[9px] text-primary-foreground/35 uppercase tracking-widest mt-0.5">Faltas</p>
+              </div>
             </div>
 
-            {caixaData.pendente > 0 && (
-              <div className="p-3 rounded-xl bg-rose/5 border border-rose/10">
-                <p className="font-body text-[11px] text-rose">Pendente: {formatCurrency(caixaData.pendente)}</p>
+            {/* Comissão — destaque */}
+            <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-purple-500/10 via-purple-500/[0.03] to-transparent border border-purple-500/20">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl" />
+              <div className="relative flex items-center justify-between">
+                <div>
+                  <p className="font-body text-[9px] text-purple-400/70 uppercase tracking-[0.25em] flex items-center gap-1.5">
+                    <Sparkles className="w-3 h-3" /> Sua comissão · {comissaoPct}%
+                  </p>
+                  <p className="font-heading text-2xl font-bold text-purple-300 mt-1">
+                    {formatCurrency(caixaData.recebido * (comissaoPct / 100))}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-body text-[9px] text-purple-400/50 uppercase tracking-widest">A retirar</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Lista de atendimentos — timeline */}
+            {caixaData.items.length > 0 ? (
+              <div>
+                <p className="font-body text-[9px] text-primary-foreground/35 uppercase tracking-[0.25em] mb-3 px-1">Atendimentos do dia</p>
+                <div className="space-y-1.5">
+                  {[...caixaData.items].sort((a, b) => a.horario.localeCompare(b.horario)).map((a) => {
+                    const pago = Number(a.valor_pago || 0) >= Number(a.valor);
+                    const parcial = Number(a.valor_pago || 0) > 0 && !pago;
+                    return (
+                      <div key={a.id} className="group relative flex items-center gap-3 p-3 rounded-2xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.04] hover:border-gold/20 transition-all">
+                        {/* Time column */}
+                        <div className="flex flex-col items-center w-12 shrink-0">
+                          <span className="font-heading text-[13px] font-bold text-primary-foreground tabular-nums leading-none">{a.horario.slice(0, 5)}</span>
+                          <span className={`mt-1.5 w-1.5 h-1.5 rounded-full ${pago ? "bg-green-500" : parcial ? "bg-gold" : "bg-primary-foreground/20"}`} />
+                        </div>
+                        {/* Divider */}
+                        <div className="w-px h-10 bg-primary-foreground/[0.06]" />
+                        {/* Content */}
+                        <div className="min-w-0 flex-1">
+                          <p className="font-body text-[12.5px] font-medium text-primary-foreground truncate">{getClientName(a.user_id, a.cliente_nome)}</p>
+                          <p className="font-body text-[10.5px] text-primary-foreground/40 truncate">{a.servico}</p>
+                        </div>
+                        {/* Value */}
+                        <div className="text-right shrink-0">
+                          <p className="font-heading text-[13px] font-bold text-gold tabular-nums">{formatCurrency(Number(a.valor))}</p>
+                          {pago ? (
+                            <p className="font-body text-[9px] text-green-500 flex items-center justify-end gap-0.5 mt-0.5">
+                              <CheckCircle2 className="w-2.5 h-2.5" /> Pago
+                            </p>
+                          ) : parcial ? (
+                            <p className="font-body text-[9px] text-gold/80 mt-0.5">Sinal {formatCurrency(Number(a.valor_pago))}</p>
+                          ) : (
+                            <p className="font-body text-[9px] text-primary-foreground/30 flex items-center justify-end gap-0.5 mt-0.5">
+                              <Clock className="w-2.5 h-2.5" /> Pendente
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 rounded-2xl bg-primary-foreground/[0.02] border border-dashed border-primary-foreground/[0.08]">
+                <p className="font-body text-[12px] text-primary-foreground/30">Nenhum atendimento neste dia</p>
               </div>
             )}
-
-            <div className="space-y-1.5">
-              {caixaData.items.map(a => (
-                <div key={a.id} className="flex items-center justify-between p-2.5 rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.03]">
-                  <div className="min-w-0 flex-1">
-                    <p className="font-body text-[12px] text-primary-foreground truncate">{getClientName(a.user_id, a.cliente_nome)}</p>
-                    <p className="font-body text-[10px] text-primary-foreground/30">{a.horario} · {a.servico}</p>
-                  </div>
-                  <div className="text-right ml-2">
-                    <p className="font-body text-[12px] text-gold font-semibold">{formatCurrency(Number(a.valor))}</p>
-                    {Number(a.valor_pago || 0) > 0 && (
-                      <p className="font-body text-[9px] text-green-500">Pago: {formatCurrency(Number(a.valor_pago))}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {caixaData.items.length === 0 && (
-                <p className="font-body text-[12px] text-primary-foreground/25 text-center py-4">Nenhum atendimento neste dia</p>
-              )}
-            </div>
           </div>
         )}
       </div>
