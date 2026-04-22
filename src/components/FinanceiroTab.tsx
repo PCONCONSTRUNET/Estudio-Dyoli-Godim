@@ -40,6 +40,43 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const [showComissaoConfig, setShowComissaoConfig] = useState(false);
   const [tempComissao, setTempComissao] = useState(comissaoPct.toString());
 
+  // Dia de corte do ciclo mensal (1-28). Ex: 5 = ciclo vai de dia 5 ao dia 4 do mês seguinte.
+  const [diaCorte, setDiaCorte] = useState<number>(() => {
+    const saved = localStorage.getItem("dyoli_dia_corte");
+    return saved ? Math.min(28, Math.max(1, Number(saved))) : 1;
+  });
+  const [showCorteConfig, setShowCorteConfig] = useState(false);
+  const [tempCorte, setTempCorte] = useState(diaCorte.toString());
+  // Offset do ciclo exibido (0 = ciclo atual, -1 = anterior, +1 = próximo)
+  const [cicloOffset, setCicloOffset] = useState(0);
+
+  // Calcula intervalo do ciclo baseado no dia de corte e offset
+  const ciclo = useMemo(() => {
+    const today = new Date();
+    today.setHours(12, 0, 0, 0);
+    // Determina o início do ciclo atual
+    const startCurrent = new Date(today);
+    if (today.getDate() >= diaCorte) {
+      startCurrent.setDate(diaCorte);
+    } else {
+      startCurrent.setMonth(startCurrent.getMonth() - 1);
+      startCurrent.setDate(diaCorte);
+    }
+    // Aplica offset
+    const start = new Date(startCurrent);
+    start.setMonth(start.getMonth() + cicloOffset);
+    const end = new Date(start);
+    end.setMonth(end.getMonth() + 1);
+    end.setDate(end.getDate() - 1);
+    const toISO = (d: Date) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    };
+    return { startISO: toISO(start), endISO: toISO(end), startDate: start, endDate: end };
+  }, [diaCorte, cicloOffset]);
+
   // Load despesas
   const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string }[]>([]);
   useEffect(() => {
@@ -48,7 +85,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     });
   }, []);
 
-  // Filter agendamentos by period
+  // Filter agendamentos by period (Mês = ciclo configurado pelo dia de corte)
   const filtered = useMemo(() => {
     const now = new Date();
     const today = now.toISOString().split("T")[0];
@@ -64,19 +101,15 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
         return d >= weekAgo.toISOString().split("T")[0] && d <= weekAhead.toISOString().split("T")[0];
       }
       if (period === "mes") {
-        const year = now.getFullYear();
-        const month = now.getMonth();
-        const monthStart = `${year}-${String(month + 1).padStart(2, "0")}-01`;
-        const lastDay = new Date(year, month + 1, 0).getDate();
-        const monthEnd = `${year}-${String(month + 1).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
-        return d >= monthStart && d <= monthEnd;
+        return d >= ciclo.startISO && d <= ciclo.endISO;
       }
       if (period === "personalizado" && customStart && customEnd) {
         return d >= customStart && d <= customEnd;
       }
       return true;
     });
-  }, [agendamentos, period, customStart, customEnd]);
+  }, [agendamentos, period, customStart, customEnd, ciclo]);
+
 
   // Metrics
   const totalReceita = filtered.reduce((s, a) => s + Number(a.valor), 0);
