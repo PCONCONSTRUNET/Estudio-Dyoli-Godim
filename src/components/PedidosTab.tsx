@@ -235,11 +235,12 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
   }), [agendamentos]);
 
   const pagamentoCounts = useMemo(() => {
-    const counts = { todos: agendamentos.length, pago: 0, recepcao: 0, pendente: 0 };
-    agendamentos.forEach((a) => {
-      counts[getPagamentoStatus(a)]++;
-    });
-    return counts;
+    return {
+      todos: agendamentos.length,
+      pago: agendamentos.filter((a) => isPago(a)).length,
+      recepcao: agendamentos.filter((a) => isFormaRecepcao(a.forma_pagamento)).length,
+      pendente: agendamentos.filter((a) => !isPago(a)).length,
+    };
   }, [agendamentos]);
 
   const notifConfig = {
