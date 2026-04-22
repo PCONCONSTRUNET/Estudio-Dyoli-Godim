@@ -340,6 +340,20 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
         </div>
       )}
 
+      {/* Faixa de datas do período ativo */}
+      {(period !== "personalizado" || (customStart && customEnd)) && (
+        <div className="flex items-center justify-center animate-fade-in" aria-live="polite">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-gold/[0.08] via-gold/[0.04] to-gold/[0.08] border border-gold/20">
+            <Calendar className="w-3.5 h-3.5 text-gold/70" />
+            <span className="font-body text-[11px] font-medium text-primary-foreground/70 tabular-nums tracking-wide">
+              {formatDateShort(periodRange.start)}
+              <span className="mx-1.5 text-gold/60">→</span>
+              {formatDateShort(periodRange.end)}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Metrics */}
       <div className="grid grid-cols-2 gap-3">
         <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-gold/[0.06] via-primary-foreground/[0.02] to-transparent border border-gold/15">
