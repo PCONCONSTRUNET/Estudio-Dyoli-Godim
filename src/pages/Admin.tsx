@@ -1928,18 +1928,39 @@ const HorariosTab = () => {
 };
 
 // ─── Serviços Tab ───
+const CATEGORIAS_STORAGE_KEY = "admin_custom_categorias_servicos";
+
 const ServicosTab = () => {
   const [services, setServices] = useState<{ id: string; name: string; price: number; category: string; active: boolean; duration: number }[]>([]);
+  const [extraCategorias, setExtraCategorias] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem(CATEGORIAS_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+  });
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editPrice, setEditPrice] = useState("");
   const [editDuration, setEditDuration] = useState("");
+  const [editCategory, setEditCategory] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState("");
   const [newPrice, setNewPrice] = useState("");
   const [newCategory, setNewCategory] = useState("");
   const [newDuration, setNewDuration] = useState("60");
+
+  // Categorias state
+  const [showNewCatInput, setShowNewCatInput] = useState(false);
+  const [novaCategoria, setNovaCategoria] = useState("");
+  const [renomeandoCat, setRenomeandoCat] = useState<string | null>(null);
+  const [renomeCatValor, setRenomeCatValor] = useState("");
+
+  // Persistência das categorias "vazias" (ainda sem serviços)
+  const persistExtras = (lista: string[]) => {
+    setExtraCategorias(lista);
+    try { localStorage.setItem(CATEGORIAS_STORAGE_KEY, JSON.stringify(lista)); } catch { /* ignore */ }
+  };
 
   useEffect(() => {
     supabase.from("servicos").select("*").order("ordem").then(({ data }) => {
@@ -1948,16 +1969,95 @@ const ServicosTab = () => {
     });
   }, []);
 
-  const startEdit = (s: typeof services[0]) => { setEditing(s.id); setEditName(s.name); setEditPrice(s.price.toString()); setEditDuration(s.duration.toString()); };
+  // Lista única de categorias (combina as usadas pelos serviços + extras criadas vazias)
+  const categorias = useMemo(() => {
+    const set = new Set<string>();
+    services.forEach(s => { if (s.category) set.add(s.category); });
+    extraCategorias.forEach(c => set.add(c));
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [services, extraCategorias]);
+
+  const contarServicos = (cat: string) => services.filter(s => s.category === cat).length;
+
+  const adicionarCategoria = () => {
+    const nome = novaCategoria.trim();
+    if (!nome) return;
+    if (categorias.some(c => c.toLowerCase() === nome.toLowerCase())) {
+      toast.error("Essa categoria já existe");
+      return;
+    }
+    persistExtras([...extraCategorias, nome]);
+    setNovaCategoria("");
+    setShowNewCatInput(false);
+    toast.success("Categoria criada");
+  };
+
+  const removerCategoria = (cat: string) => {
+    if (contarServicos(cat) > 0) {
+      toast.error("Mova ou exclua os serviços antes de remover a categoria");
+      return;
+    }
+    persistExtras(extraCategorias.filter(c => c !== cat));
+    toast.success("Categoria removida");
+  };
+
+  const iniciarRenomearCat = (cat: string) => {
+    setRenomeandoCat(cat);
+    setRenomeCatValor(cat);
+  };
+
+  const salvarRenomeCat = async () => {
+    const novo = renomeCatValor.trim();
+    const antigo = renomeandoCat;
+    if (!antigo || !novo || novo === antigo) {
+      setRenomeandoCat(null);
+      return;
+    }
+    if (categorias.some(c => c.toLowerCase() === novo.toLowerCase() && c !== antigo)) {
+      toast.error("Já existe categoria com esse nome");
+      return;
+    }
+    // Atualiza serviços que usavam a categoria antiga
+    const idsAfetados = services.filter(s => s.category === antigo).map(s => s.id);
+    if (idsAfetados.length > 0) {
+      const { error } = await supabase.from("servicos").update({ categoria: novo, updated_at: new Date().toISOString() }).in("id", idsAfetados);
+      if (error) { toast.error("Erro ao renomear: " + error.message); return; }
+      setServices(prev => prev.map(s => s.category === antigo ? { ...s, category: novo } : s));
+    }
+    // Atualiza extras (se aplicável)
+    if (extraCategorias.includes(antigo)) {
+      persistExtras(extraCategorias.map(c => c === antigo ? novo : c));
+    }
+    setRenomeandoCat(null);
+    toast.success("Categoria renomeada");
+  };
+
+  const startEdit = (s: typeof services[0]) => {
+    setEditing(s.id);
+    setEditName(s.name);
+    setEditPrice(s.price.toString());
+    setEditDuration(s.duration.toString());
+    setEditCategory(s.category || "");
+  };
   const saveEdit = async (id: string) => {
-    await supabase.from("servicos").update({ nome: editName, preco: Number(editPrice), duracao_minutos: Number(editDuration), updated_at: new Date().toISOString() }).eq("id", id);
-    setServices(prev => prev.map(s => s.id === id ? { ...s, name: editName, price: Number(editPrice), duration: Number(editDuration) } : s));
+    const finalCategoria = editCategory.trim() || "Outros";
+    await supabase.from("servicos").update({ nome: editName, preco: Number(editPrice), duracao_minutos: Number(editDuration), categoria: finalCategoria, updated_at: new Date().toISOString() }).eq("id", id);
+    setServices(prev => prev.map(s => s.id === id ? { ...s, name: editName, price: Number(editPrice), duration: Number(editDuration), category: finalCategoria } : s));
     setEditing(null);
   };
   const addService = async () => {
-    if (!newName || !newPrice) return;
-    const { data } = await supabase.from("servicos").insert({ nome: newName, preco: Number(newPrice), categoria: newCategory || "Outros", ativo: true, ordem: services.length + 1, duracao_minutos: Number(newDuration) || 60 }).select().single();
-    if (data) setServices(prev => [...prev, { id: data.id, name: data.nome, price: Number(data.preco), category: data.categoria, active: data.ativo, duration: data.duracao_minutos || 60 }]);
+    if (!newName || !newPrice) { toast.error("Preencha nome e preço"); return; }
+    const finalCategoria = (newCategory || "").trim() || "Outros";
+    const { data, error } = await supabase.from("servicos").insert({ nome: newName, preco: Number(newPrice), categoria: finalCategoria, ativo: true, ordem: services.length + 1, duracao_minutos: Number(newDuration) || 60 }).select().single();
+    if (error) { toast.error("Erro: " + error.message); return; }
+    if (data) {
+      setServices(prev => [...prev, { id: data.id, name: data.nome, price: Number(data.preco), category: data.categoria, active: data.ativo, duration: data.duracao_minutos || 60 }]);
+      // Se a categoria estava na lista de "extras", remove (agora ela tem serviço)
+      if (extraCategorias.includes(finalCategoria)) {
+        persistExtras(extraCategorias.filter(c => c !== finalCategoria));
+      }
+      toast.success("Serviço criado");
+    }
     setNewName(""); setNewPrice(""); setNewCategory(""); setNewDuration("60"); setShowAdd(false);
   };
   const toggleActive = async (id: string) => {
@@ -1973,8 +2073,131 @@ const ServicosTab = () => {
 
   if (loading) return <p className="font-body text-[13px] text-primary-foreground/30 text-center py-8">Carregando...</p>;
 
+  // Componente reutilizável: select de categoria com opção "+ Nova"
+  const CategoriaSelect = ({ value, onChange, idPrefix }: { value: string; onChange: (v: string) => void; idPrefix: string }) => {
+    const [criandoInline, setCriandoInline] = useState(false);
+    const [valorInline, setValorInline] = useState("");
+    if (criandoInline) {
+      return (
+        <div className="flex gap-1.5 min-w-0">
+          <input
+            autoFocus
+            value={valorInline}
+            onChange={e => setValorInline(e.target.value)}
+            placeholder="Nova categoria"
+            className="flex-1 min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-gold/30 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
+          />
+          <button
+            type="button"
+            onClick={() => {
+              const v = valorInline.trim();
+              if (v) {
+                if (!categorias.some(c => c.toLowerCase() === v.toLowerCase())) {
+                  persistExtras([...extraCategorias, v]);
+                }
+                onChange(v);
+              }
+              setCriandoInline(false);
+              setValorInline("");
+            }}
+            className="px-3 py-2.5 rounded-xl bg-gold/10 text-gold font-body text-[12px] hover:bg-gold/20"
+          >OK</button>
+          <button
+            type="button"
+            onClick={() => { setCriandoInline(false); setValorInline(""); }}
+            className="px-2.5 py-2.5 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/40 hover:text-primary-foreground/60"
+          ><X className="w-3.5 h-3.5" /></button>
+        </div>
+      );
+    }
+    return (
+      <select
+        id={idPrefix}
+        value={value}
+        onChange={e => {
+          if (e.target.value === "__new__") { setCriandoInline(true); return; }
+          onChange(e.target.value);
+        }}
+        className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20 [&>option]:bg-charcoal [&>option]:text-primary-foreground"
+      >
+        <option value="">Selecione a categoria</option>
+        {categorias.map(c => (
+          <option key={c} value={c}>{c}</option>
+        ))}
+        <option value="__new__">+ Nova categoria…</option>
+      </select>
+    );
+  };
+
   return (
-    <div className="space-y-4 animate-fade-in overflow-x-hidden">
+    <div className="space-y-5 animate-fade-in overflow-x-hidden">
+      {/* ─── Categorias ─── */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-heading text-lg font-semibold text-primary-foreground">Categorias</h2>
+          <button
+            onClick={() => setShowNewCatInput(!showNewCatInput)}
+            className="flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/70 font-body text-[12px] font-medium hover:bg-primary-foreground/[0.08] transition-all"
+          >
+            <Plus className="w-3.5 h-3.5" />Nova
+          </button>
+        </div>
+
+        {showNewCatInput && (
+          <div className="flex gap-2 min-w-0">
+            <input
+              autoFocus
+              value={novaCategoria}
+              onChange={e => setNovaCategoria(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") adicionarCategoria(); }}
+              placeholder="Nome da categoria (ex: Sobrancelhas)"
+              className="flex-1 min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-gold/30 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
+            />
+            <button onClick={adicionarCategoria} className="px-3 py-2.5 rounded-xl bg-gold/10 text-gold font-body text-[12px] hover:bg-gold/20">Criar</button>
+            <button onClick={() => { setShowNewCatInput(false); setNovaCategoria(""); }} className="px-2.5 py-2.5 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/40 hover:text-primary-foreground/60"><X className="w-3.5 h-3.5" /></button>
+          </div>
+        )}
+
+        {categorias.length === 0 ? (
+          <p className="font-body text-[12px] text-primary-foreground/30 px-1">Nenhuma categoria cadastrada ainda.</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {categorias.map(cat => {
+              const count = contarServicos(cat);
+              const editandoEsta = renomeandoCat === cat;
+              return (
+                <div key={cat} className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary-foreground/[0.04] border border-primary-foreground/[0.06]">
+                  {editandoEsta ? (
+                    <>
+                      <input
+                        autoFocus
+                        value={renomeCatValor}
+                        onChange={e => setRenomeCatValor(e.target.value)}
+                        onKeyDown={e => { if (e.key === "Enter") salvarRenomeCat(); if (e.key === "Escape") setRenomeandoCat(null); }}
+                        className="bg-transparent border-b border-gold/30 text-primary-foreground font-body text-[12px] focus:outline-none w-28"
+                      />
+                      <button onClick={salvarRenomeCat} className="text-gold p-0.5"><Save className="w-3 h-3" /></button>
+                      <button onClick={() => setRenomeandoCat(null)} className="text-primary-foreground/40 p-0.5"><X className="w-3 h-3" /></button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-body text-[12px] text-primary-foreground">{cat}</span>
+                      <span className="font-body text-[10px] text-primary-foreground/40">({count})</span>
+                      <button onClick={() => iniciarRenomearCat(cat)} className="ml-1 p-0.5 text-primary-foreground/30 hover:text-gold transition-colors" title="Renomear"><Edit2 className="w-3 h-3" /></button>
+                      <button onClick={() => removerCategoria(cat)} className="p-0.5 text-primary-foreground/20 hover:text-rose transition-colors" title="Remover"><Trash2 className="w-3 h-3" /></button>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <p className="font-body text-[10px] text-primary-foreground/30 px-1">Categorias com serviços aparecem automaticamente para os clientes no agendamento.</p>
+      </div>
+
+      <div className="h-px bg-primary-foreground/[0.06]" />
+
+      {/* ─── Serviços ─── */}
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-heading text-lg font-semibold text-primary-foreground">Serviços</h2>
         <button onClick={() => setShowAdd(!showAdd)} className="flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all">
@@ -1988,13 +2211,19 @@ const ServicosTab = () => {
           </DialogHeader>
           <div className="space-y-3 w-full min-w-0 overflow-x-hidden">
             <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Nome do serviço" className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
-            <div className="grid grid-cols-1 gap-2 min-w-0 sm:grid-cols-2">
-              <input value={newPrice} onChange={e => setNewPrice(e.target.value)} placeholder="Preço" type="number" className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
-              <input value={newCategory} onChange={e => setNewCategory(e.target.value)} placeholder="Categoria" className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
+            <div>
+              <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Categoria</label>
+              <CategoriaSelect value={newCategory} onChange={setNewCategory} idPrefix="new-cat" />
             </div>
-            <div className="min-w-0">
-              <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Duração (minutos)</label>
-              <input value={newDuration} onChange={e => setNewDuration(e.target.value)} placeholder="60" type="number" className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
+            <div className="grid grid-cols-2 gap-2 min-w-0">
+              <div>
+                <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Preço (R$)</label>
+                <input value={newPrice} onChange={e => setNewPrice(e.target.value)} placeholder="0,00" type="number" className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
+              </div>
+              <div>
+                <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Duração (min)</label>
+                <input value={newDuration} onChange={e => setNewDuration(e.target.value)} placeholder="60" type="number" className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-2 min-w-0">
               <button onClick={addService} className="w-full min-w-0 py-2.5 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all">Salvar</button>
@@ -2009,6 +2238,7 @@ const ServicosTab = () => {
             {editing === s.id ? (
               <div className="space-y-2 min-w-0">
                 <input value={editName} onChange={e => setEditName(e.target.value)} className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                <CategoriaSelect value={editCategory} onChange={setEditCategory} idPrefix={`edit-cat-${s.id}`} />
                 <div className="grid grid-cols-[1fr_96px] gap-2 min-w-0">
                   <input value={editPrice} onChange={e => setEditPrice(e.target.value)} type="number" placeholder="Preço" className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
                   <input value={editDuration} onChange={e => setEditDuration(e.target.value)} type="number" placeholder="Min" className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
