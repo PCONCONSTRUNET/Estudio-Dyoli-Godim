@@ -62,6 +62,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
   const [showCorteConfig, setShowCorteConfig] = useState(false);
   const [tempCorte, setTempCorte] = useState(diaCorte.toString());
   const [cicloOffset, setCicloOffset] = useState(0);
+  const [showComissaoDetail, setShowComissaoDetail] = useState(false);
 
   const ciclo = useMemo(() => {
     const today = new Date();
