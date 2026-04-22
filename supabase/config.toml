@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.confirm-password-reset]
 verify_jwt = false
+
+[functions.admin-delete-cliente]
+verify_jwt = false
