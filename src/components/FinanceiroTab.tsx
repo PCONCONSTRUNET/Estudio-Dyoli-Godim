@@ -309,47 +309,55 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
 
       {/* Metrics */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-          <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest">Receita</p>
-          <p className="font-heading text-xl font-bold text-gold mt-1">{formatCurrency(totalReceita)}</p>
+        <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-gold/[0.06] via-primary-foreground/[0.02] to-transparent border border-gold/15">
+          <div className="pointer-events-none absolute -top-10 -right-10 w-24 h-24 rounded-full bg-gold/10 blur-2xl" />
+          <p className="relative font-body text-[11px] font-medium text-primary-foreground/60 uppercase tracking-[0.2em]">Receita</p>
+          <p className="relative font-heading text-2xl font-bold text-gold mt-1.5 tabular-nums">{formatCurrency(totalReceita)}</p>
         </div>
-        <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-          <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest">Recebido</p>
-          <p className="font-heading text-xl font-bold text-green-500 mt-1">{formatCurrency(totalRecebido)}</p>
+        <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-green-500/[0.07] via-primary-foreground/[0.02] to-transparent border border-green-500/15">
+          <div className="pointer-events-none absolute -top-10 -right-10 w-24 h-24 rounded-full bg-green-500/10 blur-2xl" />
+          <p className="relative font-body text-[11px] font-medium text-primary-foreground/60 uppercase tracking-[0.2em]">Recebido</p>
+          <p className="relative font-heading text-2xl font-bold text-green-400 mt-1.5 tabular-nums">{formatCurrency(totalRecebido)}</p>
         </div>
-        <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-          <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest">Pendente</p>
-          <p className="font-heading text-xl font-bold text-rose mt-1">{formatCurrency(totalPendente)}</p>
+        <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-rose/[0.07] via-primary-foreground/[0.02] to-transparent border border-rose/15">
+          <div className="pointer-events-none absolute -top-10 -right-10 w-24 h-24 rounded-full bg-rose/10 blur-2xl" />
+          <p className="relative font-body text-[11px] font-medium text-primary-foreground/60 uppercase tracking-[0.2em]">Pendente</p>
+          <p className="relative font-heading text-2xl font-bold text-rose mt-1.5 tabular-nums">{formatCurrency(totalPendente)}</p>
         </div>
-        <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-          <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest flex items-center gap-1"><ArrowDown className="w-3 h-3" /> Despesas</p>
-          <p className="font-heading text-xl font-bold text-red-400 mt-1">- {formatCurrency(totalDespesas)}</p>
+        <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-red-500/[0.07] via-primary-foreground/[0.02] to-transparent border border-red-500/15">
+          <div className="pointer-events-none absolute -top-10 -right-10 w-24 h-24 rounded-full bg-red-500/10 blur-2xl" />
+          <p className="relative font-body text-[11px] font-medium text-primary-foreground/60 uppercase tracking-[0.2em] flex items-center gap-1"><ArrowDown className="w-3 h-3" /> Despesas</p>
+          <p className="relative font-heading text-2xl font-bold text-red-400 mt-1.5 tabular-nums">- {formatCurrency(totalDespesas)}</p>
         </div>
-        <div className="p-4 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-          <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest">Atendimentos</p>
-          <p className="font-heading text-xl font-bold text-primary-foreground mt-1">{qtdAtendimentos}</p>
+        <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-primary-foreground/[0.06] via-primary-foreground/[0.02] to-transparent border border-primary-foreground/15">
+          <div className="pointer-events-none absolute -top-10 -right-10 w-24 h-24 rounded-full bg-primary-foreground/[0.08] blur-2xl" />
+          <p className="relative font-body text-[11px] font-medium text-primary-foreground/60 uppercase tracking-[0.2em]">Atendimentos</p>
+          <p className="relative font-heading text-2xl font-bold text-primary-foreground mt-1.5 tabular-nums">{qtdAtendimentos}</p>
         </div>
-        <div className={`p-4 rounded-2xl border ${lucroLiquido >= 0 ? "bg-green-500/5 border-green-500/20" : "bg-red-500/5 border-red-500/20"}`}>
-          <p className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest">Lucro Líquido</p>
-          <p className={`font-heading text-xl font-bold mt-1 ${lucroLiquido >= 0 ? "text-green-400" : "text-red-400"}`}>{formatCurrency(lucroLiquido)}</p>
+        <div className={`relative overflow-hidden p-4 rounded-2xl border ${lucroLiquido >= 0 ? "bg-gradient-to-br from-green-500/[0.1] via-green-500/[0.03] to-transparent border-green-500/25" : "bg-gradient-to-br from-red-500/[0.1] via-red-500/[0.03] to-transparent border-red-500/25"}`}>
+          <div className={`pointer-events-none absolute -top-10 -right-10 w-28 h-28 rounded-full blur-2xl ${lucroLiquido >= 0 ? "bg-green-500/15" : "bg-red-500/15"}`} />
+          <p className="relative font-body text-[11px] font-medium text-primary-foreground/60 uppercase tracking-[0.2em]">Lucro Líquido</p>
+          <p className={`relative font-heading text-2xl font-bold mt-1.5 tabular-nums ${lucroLiquido >= 0 ? "text-green-400" : "text-red-400"}`}>{formatCurrency(lucroLiquido)}</p>
         </div>
       </div>
 
       {/* Comissão */}
-      <div className="p-4 rounded-2xl border border-purple-500/20 bg-purple-500/5">
-        <div className="flex items-center justify-between mb-2">
-          <span className="font-body text-[11px] text-purple-400 uppercase tracking-widest flex items-center gap-1.5">
+      <div className="relative overflow-hidden p-5 rounded-2xl border border-purple-500/25 bg-gradient-to-br from-purple-500/[0.1] via-purple-500/[0.03] to-transparent">
+        <div className="pointer-events-none absolute -top-16 -right-16 w-44 h-44 rounded-full bg-purple-500/15 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 -left-12 w-40 h-40 rounded-full bg-purple-500/10 blur-3xl" />
+        <div className="relative flex items-center justify-between mb-2">
+          <span className="font-body text-[12px] font-medium text-purple-300 uppercase tracking-[0.2em] flex items-center gap-1.5">
             <Percent className="w-3.5 h-3.5" /> Minha Comissão ({comissaoPct}%)
           </span>
           <button
             onClick={() => { setShowComissaoConfig(!showComissaoConfig); setTempComissao(comissaoPct.toString()); }}
-            className="p-1.5 rounded-lg hover:bg-purple-500/10 text-purple-400/50 hover:text-purple-400 transition-all"
+            className="p-1.5 rounded-lg hover:bg-purple-500/15 text-purple-300/60 hover:text-purple-300 transition-all"
           >
             <Settings className="w-3.5 h-3.5" />
           </button>
         </div>
-        <p className="font-heading text-2xl font-bold text-purple-400">{formatCurrency(comissaoValor)}</p>
-        <p className="font-body text-[10px] text-purple-400/50 mt-1">
+        <p className="relative font-heading text-3xl font-bold text-purple-300 tabular-nums">{formatCurrency(comissaoValor)}</p>
+        <p className="relative font-body text-[11px] text-purple-300/60 mt-1.5">
           {comissaoPct}% sobre {formatCurrency(totalRecebido)} recebido no período
         </p>
 
