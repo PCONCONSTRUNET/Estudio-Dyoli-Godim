@@ -1,7 +1,8 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
-import { Calendar, Download, FileText, Table2, TrendingUp, Wallet, X, Percent, Settings, ArrowDown, ChevronLeft, ChevronRight, Sparkles, CheckCircle2, Clock, FileSpreadsheet } from "lucide-react";
+import { Calendar, Download, FileText, Table2, TrendingUp, Wallet, X, Percent, Settings, ArrowDown, ChevronLeft, ChevronRight, Sparkles, CheckCircle2, Clock, FileSpreadsheet, Brain } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import AnaliseCancelamentosModal from "@/components/AnaliseCancelamentosModal";
 
 interface Agendamento {
   id: string; servico: string; variacao: string | null; data_agendamento: string;
@@ -29,6 +30,7 @@ const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
 
 const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const [period, setPeriod] = useState<FilterPeriod>("mes");
+  const [analiseOpen, setAnaliseOpen] = useState(false);
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [comissaoPct, setComissaoPct] = useState(() => {
@@ -485,6 +487,33 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
         </div>
       </div>
 
+      {/* Banner Análise IA de Cancelamentos */}
+      <div className="relative overflow-hidden p-4 rounded-2xl border border-purple-500/20 bg-gradient-to-br from-purple-500/[0.08] via-pink-500/[0.04] to-transparent">
+        <div className="pointer-events-none absolute -top-12 -right-12 w-32 h-32 rounded-full bg-purple-500/10 blur-3xl" />
+        <div className="relative flex items-start gap-3">
+          <div className="p-2 rounded-xl bg-purple-500/15 border border-purple-500/20 flex-shrink-0">
+            <Brain className="w-4 h-4 text-purple-300" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <p className="font-body text-[12px] font-semibold text-purple-200 uppercase tracking-[0.15em]">Análise de Cancelamentos</p>
+              <span className="px-1.5 py-0.5 rounded-md bg-purple-500/20 border border-purple-500/30 font-body text-[8px] font-bold text-purple-200 uppercase tracking-wider">IA</span>
+            </div>
+            <p className="font-body text-[11px] text-primary-foreground/55 mt-1 leading-relaxed">
+              Identifica padrões nos seus cancelamentos e faltas (horários, dias, clientes recorrentes) e sugere ações práticas para reduzir a perda de receita.
+            </p>
+            <div className="flex gap-2 mt-2.5 flex-wrap">
+              <button
+                onClick={() => setAnaliseOpen(true)}
+                className="px-3 py-1.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-purple-200 font-body text-[11px] font-semibold transition-all flex items-center gap-1.5"
+              >
+                <Sparkles className="w-3 h-3" /> Analisar com IA
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Period filters */}
       <div
         role="tablist"
@@ -779,6 +808,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
         )}
       </div>
 
+      <AnaliseCancelamentosModal open={analiseOpen} onClose={() => setAnaliseOpen(false)} />
     </div>
   );
 };
