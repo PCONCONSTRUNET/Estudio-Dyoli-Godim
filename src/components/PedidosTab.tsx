@@ -144,7 +144,7 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     let list = [...agendamentos];
     if (statusFilter !== "todos") list = list.filter((a) => a.status === statusFilter);
     if (pagamentoFilter !== "todos") {
-      list = list.filter((a) => getPagamentoStatus(a) === pagamentoFilter);
+      list = list.filter((a) => matchesPagamentoFilter(a, pagamentoFilter));
     }
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
