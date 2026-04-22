@@ -36,19 +36,27 @@ const formatCurrency = (v: number) =>
 
 type PagamentoFilter = "todos" | "pago" | "recepcao" | "pendente";
 
-const getPagamentoStatus = (a: { valor: number; valor_pago: number | null; forma_pagamento?: string | null }): "pago" | "recepcao" | "pendente" => {
-  const valor = Number(a.valor || 0);
-  const pago = Number(a.valor_pago || 0);
-  if (pago >= valor && valor > 0) return "pago";
-  const forma = (a.forma_pagamento || "").toLowerCase();
-  if (
+const isFormaRecepcao = (forma_pagamento?: string | null): boolean => {
+  const forma = (forma_pagamento || "").toLowerCase();
+  return (
     forma.includes("recep") ||
     forma.includes("salao") ||
     forma.includes("salão") ||
     forma === "presencial" ||
     forma === "local" ||
     forma === "dinheiro"
-  ) return "recepcao";
+  );
+};
+
+const isPago = (a: { valor: number; valor_pago: number | null }): boolean => {
+  const valor = Number(a.valor || 0);
+  const pago = Number(a.valor_pago || 0);
+  return pago >= valor && valor > 0;
+};
+
+const getPagamentoStatus = (a: { valor: number; valor_pago: number | null; forma_pagamento?: string | null }): "pago" | "recepcao" | "pendente" => {
+  if (isPago(a)) return "pago";
+  if (isFormaRecepcao(a.forma_pagamento)) return "recepcao";
   return "pendente";
 };
 
