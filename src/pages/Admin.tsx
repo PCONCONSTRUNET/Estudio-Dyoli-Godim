@@ -214,10 +214,28 @@ const LembretesHub = () => {
 };
 
 // ─── Password Gate ───
+const ADMIN_AUTH_KEY = "dyoli_admin_authenticated";
+
 const Admin = () => {
-  const [authenticated, setAuthenticated] = useState(false);
+  const [authenticated, setAuthenticated] = useState(() => {
+    try {
+      return localStorage.getItem(ADMIN_AUTH_KEY) === "true";
+    } catch {
+      return false;
+    }
+  });
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
+  const handleLogin = () => {
+    try { localStorage.setItem(ADMIN_AUTH_KEY, "true"); } catch {}
+    setAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    try { localStorage.removeItem(ADMIN_AUTH_KEY); } catch {}
+    setAuthenticated(false);
+  };
 
   useEffect(() => {
     document.documentElement.classList.add("admin-mobile-page");
