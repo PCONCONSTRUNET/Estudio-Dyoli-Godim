@@ -334,7 +334,7 @@ const Admin = () => {
     );
   }
 
-  return <AdminPanel onLogout={() => setAuthenticated(false)} />;
+  return <AdminPanel onLogout={handleLogout} />;
 };
 
 // ─── Admin Panel (Mobile First) ───
