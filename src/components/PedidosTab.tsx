@@ -161,7 +161,7 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    else { setSortField(field); setSortDir("desc"); }
+    else { setSortField(field); setSortDir("asc"); }
   };
 
   const updateStatus = async (id: string, status: string) => {
