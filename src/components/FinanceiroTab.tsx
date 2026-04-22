@@ -566,7 +566,11 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
         )}
       </div>
 
-      {/* Fechamento de caixa — editorial */}
+    </div>
+  );
+};
+
+export default FinanceiroTab;
       <div className="relative overflow-hidden rounded-3xl border border-gold/15 bg-gradient-to-br from-gold/[0.04] via-primary-foreground/[0.02] to-transparent">
         {/* glow decorativo */}
         <div className="pointer-events-none absolute -top-20 -right-20 w-60 h-60 rounded-full bg-gold/10 blur-3xl" />
