@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
-import { Calendar, Download, FileText, Table2, TrendingUp, Wallet, X, Percent, Settings, ArrowDown, ChevronLeft, ChevronRight, Sparkles, CheckCircle2, Clock } from "lucide-react";
+import { Calendar, Download, FileText, Table2, TrendingUp, Wallet, X, Percent, Settings, ArrowDown, ChevronLeft, ChevronRight, Sparkles, CheckCircle2, Clock, FileSpreadsheet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Agendamento {
@@ -76,9 +76,9 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   }, [diaCorte, cicloOffset]);
 
   // Load despesas
-  const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string }[]>([]);
+  const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string; categoria: string; descricao: string; data_pagamento: string | null }[]>([]);
   useEffect(() => {
-    (supabase.from as any)("despesas").select("valor,pago,data_vencimento").then(({ data }: any) => {
+    (supabase.from as any)("despesas").select("valor,pago,data_vencimento,categoria,descricao,data_pagamento").then(({ data }: any) => {
       if (data) setDespesas(data);
     });
   }, []);
@@ -178,6 +178,38 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   }, [filtered]);
 
 
+  // Despesas no período (com categoria/descrição) para DRE
+  const despesasPeriodo = useMemo(() => {
+    return despesas.filter(d => d.data_vencimento >= periodRange.start && d.data_vencimento <= periodRange.end);
+  }, [despesas, periodRange]);
+
+  // Receita por serviço (DRE - faturamento bruto)
+  const receitaPorServico = useMemo(() => {
+    const map: Record<string, { faturado: number; recebido: number; qtd: number }> = {};
+    filtered.forEach(a => {
+      if (!map[a.servico]) map[a.servico] = { faturado: 0, recebido: 0, qtd: 0 };
+      map[a.servico].faturado += Number(a.valor);
+      map[a.servico].recebido += Number(a.valor_pago || 0);
+      map[a.servico].qtd += 1;
+    });
+    return Object.entries(map).map(([nome, v]) => ({ nome, ...v })).sort((a, b) => b.recebido - a.recebido);
+  }, [filtered]);
+
+  // Despesas agrupadas por categoria (DRE)
+  const despesasPorCategoria = useMemo(() => {
+    const map: Record<string, { total: number; pago: number; pendente: number; qtd: number }> = {};
+    despesasPeriodo.forEach(d => {
+      const cat = d.categoria || "Geral";
+      if (!map[cat]) map[cat] = { total: 0, pago: 0, pendente: 0, qtd: 0 };
+      const v = Number(d.valor);
+      map[cat].total += v;
+      if (d.pago) map[cat].pago += v;
+      else map[cat].pendente += v;
+      map[cat].qtd += 1;
+    });
+    return Object.entries(map).map(([categoria, v]) => ({ categoria, ...v })).sort((a, b) => b.total - a.total);
+  }, [despesasPeriodo]);
+
   // Export CSV
   const exportCSV = () => {
     const header = "Data,Horário,Cliente,Serviço,Valor,Pago,Status\n";
@@ -230,6 +262,159 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     w.print();
   };
 
+  // Export DRE simplificado (relatório contábil mensal)
+  const exportDRE = () => {
+    const w = window.open("", "_blank");
+    if (!w) return;
+    const fmtDate = (iso: string) => new Date(iso + "T12:00:00").toLocaleDateString("pt-BR");
+    const periodLabel = `${fmtDate(periodRange.start)} a ${fmtDate(periodRange.end)}`;
+    const margemPct = totalRecebido > 0 ? ((lucroLiquido / totalRecebido) * 100).toFixed(1) : "0,0";
+    const ticketMedio = qtdAtendimentos > 0 ? totalRecebido / qtdAtendimentos : 0;
+
+    const linhasReceita = receitaPorServico.map(s =>
+      `<tr><td>${s.nome}</td><td style="text-align:center">${s.qtd}</td><td style="text-align:right">${formatCurrency(s.faturado)}</td><td style="text-align:right" class="green">${formatCurrency(s.recebido)}</td></tr>`
+    ).join("");
+
+    const linhasDespesa = despesasPorCategoria.map(c =>
+      `<tr><td>${c.categoria}</td><td style="text-align:center">${c.qtd}</td><td style="text-align:right" class="green">${formatCurrency(c.pago)}</td><td style="text-align:right" class="rose">${formatCurrency(c.pendente)}</td><td style="text-align:right" class="red">${formatCurrency(c.total)}</td></tr>`
+    ).join("");
+
+    const linhasDespesaDetalhe = despesasPeriodo
+      .slice()
+      .sort((a, b) => a.data_vencimento.localeCompare(b.data_vencimento))
+      .map(d => `<tr><td>${fmtDate(d.data_vencimento)}</td><td>${d.categoria || "Geral"}</td><td>${d.descricao || "-"}</td><td style="text-align:center">${d.pago ? '<span class="green">Pago</span>' : '<span class="rose">Pendente</span>'}</td><td style="text-align:right" class="red">${formatCurrency(Number(d.valor))}</td></tr>`)
+      .join("");
+
+    w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>DRE — Estúdio Dyoli</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 40px; color: #1a1a1a; max-width: 900px; margin: 0 auto; }
+      .header { border-bottom: 3px solid #1a1a1a; padding-bottom: 16px; margin-bottom: 24px; }
+      h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: -0.5px; }
+      .sub { color: #666; font-size: 13px; }
+      h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 2px; color: #666; margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 1px solid #ddd; }
+      table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 8px; }
+      th { text-align: left; padding: 8px 10px; background: #f5f5f5; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #555; border-bottom: 1px solid #ddd; }
+      td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; }
+      tr.total td { font-weight: 700; background: #fafafa; border-top: 2px solid #1a1a1a; border-bottom: 2px solid #1a1a1a; font-size: 13px; }
+      tr.subtotal td { font-weight: 600; background: #fafafa; }
+      .green { color: #16a34a; font-weight: 600; }
+      .red { color: #dc2626; font-weight: 600; }
+      .rose { color: #e11d48; font-weight: 600; }
+      .gold { color: #b8860b; font-weight: 600; }
+      .resumo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+      .card { padding: 14px; border: 1px solid #e5e5e5; border-radius: 8px; }
+      .card .lbl { font-size: 10px; text-transform: uppercase; color: #888; letter-spacing: 0.5px; }
+      .card .val { font-size: 20px; font-weight: 700; margin-top: 4px; }
+      .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #ddd; font-size: 10px; color: #888; text-align: center; }
+      @media print { body { padding: 20px; } .resumo { gap: 8px; } }
+    </style></head><body>
+    <div class="header">
+      <h1>DRE — Demonstrativo do Resultado</h1>
+      <p class="sub"><strong>Estúdio Dyoli</strong> · Período: ${periodLabel} · Emitido em ${new Date().toLocaleDateString("pt-BR")}</p>
+    </div>
+
+    <div class="resumo">
+      <div class="card"><div class="lbl">Receita Bruta</div><div class="val gold">${formatCurrency(totalReceita)}</div></div>
+      <div class="card"><div class="lbl">Receita Recebida</div><div class="val green">${formatCurrency(totalRecebido)}</div></div>
+      <div class="card"><div class="lbl">Resultado Líquido</div><div class="val" style="color:${lucroLiquido >= 0 ? '#16a34a' : '#dc2626'}">${formatCurrency(lucroLiquido)}</div></div>
+    </div>
+
+    <h2>1. Receitas por Serviço</h2>
+    <table>
+      <thead><tr><th>Serviço</th><th style="text-align:center">Qtd</th><th style="text-align:right">Faturado</th><th style="text-align:right">Recebido</th></tr></thead>
+      <tbody>
+        ${linhasReceita || '<tr><td colspan="4" style="text-align:center;color:#999;padding:16px">Sem receitas no período</td></tr>'}
+        <tr class="total"><td>(=) Receita Bruta Total</td><td style="text-align:center">${qtdAtendimentos}</td><td style="text-align:right" class="gold">${formatCurrency(totalReceita)}</td><td style="text-align:right" class="green">${formatCurrency(totalRecebido)}</td></tr>
+        <tr><td colspan="3" style="text-align:right;color:#888">(–) Receita Pendente (a receber)</td><td style="text-align:right" class="rose">${formatCurrency(totalPendente)}</td></tr>
+      </tbody>
+    </table>
+
+    <h2>2. Despesas por Categoria</h2>
+    <table>
+      <thead><tr><th>Categoria</th><th style="text-align:center">Qtd</th><th style="text-align:right">Pago</th><th style="text-align:right">Pendente</th><th style="text-align:right">Total</th></tr></thead>
+      <tbody>
+        ${linhasDespesa || '<tr><td colspan="5" style="text-align:center;color:#999;padding:16px">Sem despesas no período</td></tr>'}
+        <tr class="total"><td>(=) Despesas Totais</td><td style="text-align:center">${despesasPeriodo.length}</td><td style="text-align:right" class="green">${formatCurrency(despesasPeriodo.filter(d=>d.pago).reduce((s,d)=>s+Number(d.valor),0))}</td><td style="text-align:right" class="rose">${formatCurrency(despesasPeriodo.filter(d=>!d.pago).reduce((s,d)=>s+Number(d.valor),0))}</td><td style="text-align:right" class="red">${formatCurrency(totalDespesas)}</td></tr>
+      </tbody>
+    </table>
+
+    <h2>3. Apuração do Resultado</h2>
+    <table>
+      <tbody>
+        <tr><td>(+) Receita Recebida no Período</td><td style="text-align:right" class="green">${formatCurrency(totalRecebido)}</td></tr>
+        <tr><td>(–) Despesas do Período</td><td style="text-align:right" class="red">- ${formatCurrency(totalDespesas)}</td></tr>
+        <tr><td>(–) Comissão Profissional (${comissaoPct}% sobre recebido)</td><td style="text-align:right" style="color:#7c3aed">- ${formatCurrency(comissaoValor)}</td></tr>
+        <tr class="subtotal"><td>(=) Resultado Operacional</td><td style="text-align:right">${formatCurrency(totalRecebido - totalDespesas - comissaoValor)}</td></tr>
+        <tr class="total"><td>(=) Resultado Líquido (sem comissão)</td><td style="text-align:right" style="color:${lucroLiquido >= 0 ? '#16a34a' : '#dc2626'}">${formatCurrency(lucroLiquido)}</td></tr>
+      </tbody>
+    </table>
+
+    <h2>4. Indicadores</h2>
+    <table>
+      <tbody>
+        <tr><td>Ticket Médio (recebido/atendimento)</td><td style="text-align:right">${formatCurrency(ticketMedio)}</td></tr>
+        <tr><td>Margem Líquida (Resultado / Receita Recebida)</td><td style="text-align:right">${margemPct}%</td></tr>
+        <tr><td>Total de Atendimentos</td><td style="text-align:right">${qtdAtendimentos}</td></tr>
+        <tr><td>Taxa de Inadimplência (Pendente / Receita Bruta)</td><td style="text-align:right">${totalReceita > 0 ? ((totalPendente / totalReceita) * 100).toFixed(1) : "0,0"}%</td></tr>
+      </tbody>
+    </table>
+
+    ${linhasDespesaDetalhe ? `
+    <h2>5. Detalhamento das Despesas</h2>
+    <table>
+      <thead><tr><th>Vencimento</th><th>Categoria</th><th>Descrição</th><th style="text-align:center">Status</th><th style="text-align:right">Valor</th></tr></thead>
+      <tbody>${linhasDespesaDetalhe}</tbody>
+    </table>` : ""}
+
+    <div class="footer">
+      Documento gerado automaticamente pelo sistema do Estúdio Dyoli — Uso contábil interno.
+    </div>
+    </body></html>`);
+    w.document.close();
+    setTimeout(() => w.print(), 300);
+  };
+
+  // Export DRE em CSV (planilha contábil estruturada)
+  const exportDRECsv = () => {
+    const fmtDate = (iso: string) => new Date(iso + "T12:00:00").toLocaleDateString("pt-BR");
+    const fmtNum = (v: number) => v.toFixed(2).replace(".", ",");
+    const lines: string[] = [];
+    lines.push(`DRE - Estudio Dyoli`);
+    lines.push(`Período;${fmtDate(periodRange.start)} a ${fmtDate(periodRange.end)}`);
+    lines.push(`Emitido em;${new Date().toLocaleDateString("pt-BR")}`);
+    lines.push("");
+    lines.push("RECEITAS POR SERVIÇO");
+    lines.push("Serviço;Qtd;Faturado;Recebido");
+    receitaPorServico.forEach(s => lines.push(`"${s.nome}";${s.qtd};${fmtNum(s.faturado)};${fmtNum(s.recebido)}`));
+    lines.push(`TOTAL RECEITA BRUTA;${qtdAtendimentos};${fmtNum(totalReceita)};${fmtNum(totalRecebido)}`);
+    lines.push(`RECEITA PENDENTE;;;${fmtNum(totalPendente)}`);
+    lines.push("");
+    lines.push("DESPESAS POR CATEGORIA");
+    lines.push("Categoria;Qtd;Pago;Pendente;Total");
+    despesasPorCategoria.forEach(c => lines.push(`"${c.categoria}";${c.qtd};${fmtNum(c.pago)};${fmtNum(c.pendente)};${fmtNum(c.total)}`));
+    lines.push(`TOTAL DESPESAS;${despesasPeriodo.length};;;${fmtNum(totalDespesas)}`);
+    lines.push("");
+    lines.push("APURAÇÃO");
+    lines.push(`(+) Receita Recebida;${fmtNum(totalRecebido)}`);
+    lines.push(`(-) Despesas;${fmtNum(totalDespesas)}`);
+    lines.push(`(-) Comissão (${comissaoPct}%);${fmtNum(comissaoValor)}`);
+    lines.push(`(=) Resultado Operacional;${fmtNum(totalRecebido - totalDespesas - comissaoValor)}`);
+    lines.push(`(=) Resultado Líquido;${fmtNum(lucroLiquido)}`);
+    lines.push("");
+    lines.push("DETALHE DESPESAS");
+    lines.push("Vencimento;Categoria;Descrição;Status;Valor");
+    despesasPeriodo.forEach(d => lines.push(`${fmtDate(d.data_vencimento)};"${d.categoria || "Geral"}";"${(d.descricao || "").replace(/"/g, '""')}";${d.pago ? "Pago" : "Pendente"};${fmtNum(Number(d.valor))}`));
+
+    const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `DRE_${periodRange.start}_a_${periodRange.end}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const formatDateShort = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -253,12 +438,50 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
           <TrendingUp className="w-5 h-5 text-gold" /> Financeiro
         </h2>
         <div className="flex gap-1.5">
-          <button onClick={exportCSV} className="p-2 rounded-xl hover:bg-green-500/10 text-primary-foreground/30 hover:text-green-500 transition-all" title="Exportar planilha">
+          <button onClick={exportCSV} className="p-2 rounded-xl hover:bg-green-500/10 text-primary-foreground/30 hover:text-green-500 transition-all" title="Exportar planilha de agendamentos">
             <Table2 className="w-4 h-4" />
           </button>
-          <button onClick={exportPDF} className="p-2 rounded-xl hover:bg-rose/10 text-primary-foreground/30 hover:text-rose transition-all" title="Exportar PDF">
+          <button onClick={exportPDF} className="p-2 rounded-xl hover:bg-rose/10 text-primary-foreground/30 hover:text-rose transition-all" title="Exportar PDF resumo">
             <FileText className="w-4 h-4" />
           </button>
+          <button
+            onClick={exportDRE}
+            className="px-3 py-2 rounded-xl bg-gradient-to-br from-blue-500/15 to-purple-500/10 border border-blue-500/30 text-blue-300 hover:from-blue-500/25 hover:to-purple-500/15 transition-all flex items-center gap-1.5"
+            title="DRE — Relatório contábil mensal"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            <span className="font-body text-[11px] font-semibold uppercase tracking-wider">DRE</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Banner DRE contábil */}
+      <div className="relative overflow-hidden p-4 rounded-2xl border border-blue-500/20 bg-gradient-to-br from-blue-500/[0.08] via-purple-500/[0.04] to-transparent">
+        <div className="pointer-events-none absolute -top-12 -right-12 w-32 h-32 rounded-full bg-blue-500/10 blur-3xl" />
+        <div className="relative flex items-start gap-3">
+          <div className="p-2 rounded-xl bg-blue-500/15 border border-blue-500/20 flex-shrink-0">
+            <FileSpreadsheet className="w-4 h-4 text-blue-300" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-body text-[12px] font-semibold text-blue-200 uppercase tracking-[0.15em]">Relatório Contábil — DRE</p>
+            <p className="font-body text-[11px] text-primary-foreground/55 mt-1 leading-relaxed">
+              Demonstrativo pronto para o contador: receitas por serviço, despesas por categoria, comissão, resultado líquido e indicadores do período selecionado.
+            </p>
+            <div className="flex gap-2 mt-2.5 flex-wrap">
+              <button
+                onClick={exportDRE}
+                className="px-3 py-1.5 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 text-blue-200 font-body text-[11px] font-semibold transition-all flex items-center gap-1.5"
+              >
+                <FileText className="w-3 h-3" /> Gerar PDF
+              </button>
+              <button
+                onClick={exportDRECsv}
+                className="px-3 py-1.5 rounded-lg bg-primary-foreground/[0.04] hover:bg-primary-foreground/[0.08] border border-primary-foreground/[0.1] text-primary-foreground/70 font-body text-[11px] font-semibold transition-all flex items-center gap-1.5"
+              >
+                <FileSpreadsheet className="w-3 h-3" /> Planilha CSV
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
