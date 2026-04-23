@@ -59,14 +59,17 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
 
         <div className="animate-fade-in">
           {step === "initial" && (
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <p className="font-body text-[11px] tracking-widest uppercase text-gold font-medium">Passo 1</p>
-                <h2 className="font-heading text-3xl font-semibold text-foreground lg:text-4xl">
+            <div className="space-y-7">
+              <div className="space-y-2.5">
+                <p className="font-body text-[11px] tracking-[0.2em] uppercase text-gold font-medium">Passo 1</p>
+                <h2 className="font-heading text-[2rem] leading-[1.1] font-semibold tracking-tight text-foreground lg:text-4xl">
                   O que você deseja melhorar?
                 </h2>
+                <p className="font-body text-[14px] text-muted-foreground/80 max-w-md">
+                  Escolha um serviço para ver detalhes e horários disponíveis.
+                </p>
               </div>
-              <div className="space-y-3 pt-2">
+              <div className="space-y-3 pt-1">
                 <OptionCard
                   title="Sobrancelhas"
                   description="Micropigmentação para realçar o olhar"
@@ -87,14 +90,14 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
           )}
 
           {step === "sobrancelhas" && (
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <p className="font-body text-[11px] tracking-widest uppercase text-gold font-medium">Passo 2</p>
-                <h2 className="font-heading text-3xl font-semibold text-foreground lg:text-4xl">
+            <div className="space-y-7">
+              <div className="space-y-2.5">
+                <p className="font-body text-[11px] tracking-[0.2em] uppercase text-gold font-medium">Passo 2</p>
+                <h2 className="font-heading text-[2rem] leading-[1.1] font-semibold tracking-tight text-foreground lg:text-4xl">
                   Qual resultado você deseja?
                 </h2>
               </div>
-              <div className="space-y-3 pt-2">
+              <div className="space-y-3 pt-1">
                 <OptionCard
                   title="Natural (Fio a Fio)"
                   description="Fios delicados e naturais que harmonizam com o rosto"
@@ -105,14 +108,14 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
           )}
 
           {step === "perfuracao-confirm" && (
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <p className="font-body text-[11px] tracking-widest uppercase text-gold font-medium">Passo 2</p>
-                <h2 className="font-heading text-3xl font-semibold text-foreground lg:text-4xl">
+            <div className="space-y-7">
+              <div className="space-y-2.5">
+                <p className="font-body text-[11px] tracking-[0.2em] uppercase text-gold font-medium">Passo 2</p>
+                <h2 className="font-heading text-[2rem] leading-[1.1] font-semibold tracking-tight text-foreground lg:text-4xl">
                   Você já sabe qual tipo deseja?
                 </h2>
               </div>
-              <div className="space-y-3 pt-2">
+              <div className="space-y-3 pt-1">
                 <OptionCard
                   title="Sim, quero escolher"
                   description="Ver opções de perfuração disponíveis"
@@ -124,7 +127,7 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
                   onClick={() => onSelectService("perfuracao")}
                 />
               </div>
-              <div className="mt-4 p-4 rounded-2xl bg-secondary/40 backdrop-blur-sm border border-border/50">
+              <div className="mt-4 p-5 rounded-2xl bg-card/60 backdrop-blur-sm border border-border/50 shadow-[0_1px_2px_rgba(0,0,0,0.03),0_6px_20px_-12px_rgba(0,0,0,0.1)]">
                 <p className="font-body text-[13px] text-muted-foreground leading-relaxed">
                   Todas as perfurações são realizadas com material esterilizado e joias em titânio grau implante, garantindo segurança e biocompatibilidade.
                 </p>
