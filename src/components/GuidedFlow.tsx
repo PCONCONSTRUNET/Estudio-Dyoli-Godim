@@ -36,7 +36,7 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
   );
 
   return (
-    <section className="relative min-h-screen bg-background px-6 py-8 lg:flex lg:flex-col lg:items-center lg:justify-center lg:px-8">
+    <section className="relative min-h-screen bg-nude px-6 py-8 lg:flex lg:flex-col lg:items-center lg:justify-center lg:px-8">
       {/* Profile button */}
       {onProfile && (
         <button
