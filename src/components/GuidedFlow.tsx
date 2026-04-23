@@ -23,15 +23,16 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
   }) => (
     <button
       onClick={onClick}
-      className="ios-press w-full flex items-center justify-between p-5 rounded-2xl border border-border bg-card shadow-[0_2px_16px_-4px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_24px_-6px_rgba(0,0,0,0.12)] hover:border-gold/40 transition-all duration-200 group"
+      className="ios-press relative w-full flex items-center justify-between gap-4 p-5 rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_-12px_rgba(0,0,0,0.12)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.05),0_12px_32px_-10px_rgba(0,0,0,0.18)] hover:border-gold/40 hover:bg-card transition-all duration-300 group overflow-hidden"
     >
-      <div className="text-left">
-        <h3 className="font-heading text-xl font-semibold text-foreground group-hover:text-rose transition-colors duration-200">
+      <span className="absolute inset-y-0 left-0 w-[2px] bg-gradient-to-b from-transparent via-gold/0 to-transparent group-hover:via-gold/60 transition-all duration-300" />
+      <div className="text-left min-w-0">
+        <h3 className="font-heading text-xl font-semibold tracking-tight text-foreground group-hover:text-rose transition-colors duration-200">
           {title}
         </h3>
-        <p className="font-body text-[13px] text-muted-foreground mt-0.5">{description}</p>
+        <p className="font-body text-[13px] leading-relaxed text-muted-foreground mt-1">{description}</p>
       </div>
-      <ChevronRight className="w-5 h-5 text-muted-foreground/40 group-hover:text-gold/60 group-hover:translate-x-0.5 transition-all duration-200 flex-shrink-0 ml-3" />
+      <ChevronRight className="w-5 h-5 text-muted-foreground/40 group-hover:text-gold group-hover:translate-x-1 transition-all duration-300 flex-shrink-0" />
     </button>
   );
 
