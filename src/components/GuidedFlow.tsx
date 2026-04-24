@@ -37,7 +37,7 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
   );
 
   return (
-    <section className="relative min-h-screen bg-nude px-6 py-8 lg:flex lg:flex-col lg:items-center lg:justify-center lg:px-8">
+    <section className="relative min-h-screen w-full overflow-x-hidden bg-nude px-5 py-8 lg:flex lg:flex-col lg:items-center lg:justify-center lg:px-8">
       {/* Profile button */}
       {onProfile && (
         <button
@@ -62,7 +62,7 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
             <div className="space-y-7">
               <div className="space-y-2.5">
                 <p className="font-body text-[11px] tracking-[0.2em] uppercase text-gold font-medium">Passo 1</p>
-                <h2 className="font-heading text-[2rem] leading-[1.1] font-semibold tracking-tight text-foreground lg:text-4xl">
+                <h2 className="font-heading text-[1.625rem] sm:text-[2rem] leading-[1.15] font-semibold tracking-tight text-foreground lg:text-4xl break-words hyphens-auto">
                   O que você deseja melhorar?
                 </h2>
                 <p className="font-body text-[14px] text-muted-foreground/80 max-w-md">
@@ -93,7 +93,7 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
             <div className="space-y-7">
               <div className="space-y-2.5">
                 <p className="font-body text-[11px] tracking-[0.2em] uppercase text-gold font-medium">Passo 2</p>
-                <h2 className="font-heading text-[2rem] leading-[1.1] font-semibold tracking-tight text-foreground lg:text-4xl">
+                <h2 className="font-heading text-[1.625rem] sm:text-[2rem] leading-[1.15] font-semibold tracking-tight text-foreground lg:text-4xl break-words hyphens-auto">
                   Qual resultado você deseja?
                 </h2>
               </div>
@@ -111,7 +111,7 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
             <div className="space-y-7">
               <div className="space-y-2.5">
                 <p className="font-body text-[11px] tracking-[0.2em] uppercase text-gold font-medium">Passo 2</p>
-                <h2 className="font-heading text-[2rem] leading-[1.1] font-semibold tracking-tight text-foreground lg:text-4xl">
+                <h2 className="font-heading text-[1.625rem] sm:text-[2rem] leading-[1.15] font-semibold tracking-tight text-foreground lg:text-4xl break-words hyphens-auto">
                   Você já sabe qual tipo deseja?
                 </h2>
               </div>
