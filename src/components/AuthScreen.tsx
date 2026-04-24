@@ -240,7 +240,7 @@ const AuthScreen = ({ onSuccess, onBack, initialMode = "signup" }: AuthScreenPro
         </form>
 
         {/* Toggle mode */}
-        <div className="text-center pb-1">
+        <div className="relative text-center pb-1">
           <button
             onClick={() => {
               setMode(mode === "signup" ? "login" : "signup");
