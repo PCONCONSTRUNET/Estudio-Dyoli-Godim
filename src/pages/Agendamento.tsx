@@ -357,7 +357,8 @@ const Agendamento = () => {
               placeholder="Como podemos te chamar?"
               autoComplete="name"
               maxLength={80}
-              className="w-full px-4 py-3.5 rounded-2xl bg-card border border-border focus:border-gold/40 focus:outline-none focus:ring-2 focus:ring-gold/20 font-body text-[14px] text-foreground placeholder:text-muted-foreground/60 transition-all"
+              style={{ fontSize: "16px" }}
+              className="w-full px-4 py-3.5 rounded-2xl bg-card border border-border focus:border-gold/40 focus:outline-none focus:ring-2 focus:ring-gold/20 font-body text-foreground placeholder:text-muted-foreground/60 transition-all"
             />
           </div>
 
@@ -372,7 +373,8 @@ const Agendamento = () => {
               placeholder="(48) 99977-9829"
               autoComplete="tel"
               inputMode="tel"
-              className="w-full px-4 py-3.5 rounded-2xl bg-card border border-border focus:border-gold/40 focus:outline-none focus:ring-2 focus:ring-gold/20 font-body text-[14px] text-foreground placeholder:text-muted-foreground/60 transition-all"
+              style={{ fontSize: "16px" }}
+              className="w-full px-4 py-3.5 rounded-2xl bg-card border border-border focus:border-gold/40 focus:outline-none focus:ring-2 focus:ring-gold/20 font-body text-foreground placeholder:text-muted-foreground/60 transition-all"
             />
           </div>
 

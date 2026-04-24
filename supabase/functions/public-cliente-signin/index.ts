@@ -100,14 +100,28 @@ Deno.serve(async (req) => {
     let signin = await anon.auth.signInWithPassword({ email, password: DEFAULT_PASSWORD });
 
     if (signin.error) {
-      // Reseta a senha via admin e tenta novamente
-      await admin.auth.admin.updateUserById(userId, { password: DEFAULT_PASSWORD });
+      // Reseta a senha via admin (e confirma email caso seja conta legada não confirmada) e tenta novamente
+      const { error: updErr } = await admin.auth.admin.updateUserById(userId, {
+        password: DEFAULT_PASSWORD,
+        email_confirm: true,
+      });
+      if (updErr) {
+        console.error("admin updateUser error", updErr);
+      }
+      // Pequena espera para propagar a alteração no auth
+      await new Promise((r) => setTimeout(r, 250));
       signin = await anon.auth.signInWithPassword({ email, password: DEFAULT_PASSWORD });
+
+      // Se ainda falhar, tenta uma última vez após mais uma espera
+      if (signin.error) {
+        await new Promise((r) => setTimeout(r, 500));
+        signin = await anon.auth.signInWithPassword({ email, password: DEFAULT_PASSWORD });
+      }
     }
 
     if (signin.error || !signin.data.session) {
-      console.error("signin error", signin.error);
-      return json({ error: "Não foi possível iniciar a sessão" }, 500);
+      console.error("signin error", signin.error, "userId:", userId, "email:", email);
+      return json({ error: "Não foi possível iniciar a sessão. Tente novamente em instantes." }, 500);
     }
 
     return json({
