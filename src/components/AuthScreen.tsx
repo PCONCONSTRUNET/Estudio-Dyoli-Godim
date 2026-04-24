@@ -120,29 +120,36 @@ const AuthScreen = ({ onSuccess, onBack, initialMode = "signup" }: AuthScreenPro
       {/* Dark overlay */}
       <div className="absolute inset-0 bg-black/40" onClick={onBack} />
 
-      {/* iOS-style glass modal */}
-      <div className="relative w-full max-w-sm lg:max-w-md rounded-3xl border border-primary-foreground/[0.08] bg-charcoal/70 backdrop-blur-2xl shadow-[0_25px_60px_-12px_rgba(0,0,0,0.6)] px-7 py-6 space-y-4 animate-scale-in">
+      {/* iOS-style glass modal — compact with reflective sheen */}
+      <div className="relative w-full max-w-[340px] lg:max-w-sm rounded-3xl border border-primary-foreground/[0.1] bg-charcoal/70 backdrop-blur-2xl shadow-[0_25px_60px_-12px_rgba(0,0,0,0.6)] px-6 py-5 space-y-3.5 animate-scale-in overflow-hidden">
+        {/* Reflective highlights */}
+        <div className="pointer-events-none absolute inset-0 rounded-3xl bg-gradient-to-br from-primary-foreground/[0.08] via-transparent to-transparent" />
+        <div className="pointer-events-none absolute -top-px left-6 right-6 h-px bg-gradient-to-r from-transparent via-primary-foreground/40 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-3xl bg-gradient-to-b from-primary-foreground/[0.06] to-transparent" />
+        <div className="pointer-events-none absolute -inset-x-10 -top-20 h-40 bg-gradient-to-b from-gold/[0.08] to-transparent blur-2xl" />
+
         {/* Close */}
         <button
           onClick={onBack}
-          className="ios-press absolute top-4 right-4 w-8 h-8 rounded-full bg-primary-foreground/[0.08] flex items-center justify-center text-primary-foreground/40 hover:text-primary-foreground/70 hover:bg-primary-foreground/[0.12] transition-all"
+          className="ios-press absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-primary-foreground/[0.08] flex items-center justify-center text-primary-foreground/40 hover:text-primary-foreground/70 hover:bg-primary-foreground/[0.12] transition-all z-10"
         >
           <ArrowLeft className="w-4 h-4" />
         </button>
 
         {/* Photo */}
-        <div className="flex justify-center">
-          <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-gold/15 shadow-[0_8px_30px_-8px_hsl(40_40%_55%/0.15)]">
+        <div className="relative flex justify-center">
+          <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-gold/20 shadow-[0_8px_30px_-8px_hsl(40_40%_55%/0.2)]">
             <img src={professionalImg} alt="Dyoli Godim" className="w-full h-full object-cover object-top" />
+            <div className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-br from-primary-foreground/20 via-transparent to-transparent" />
           </div>
         </div>
 
         {/* Title */}
-        <div className="text-center space-y-1">
-          <h1 className="font-heading text-2xl font-semibold text-primary-foreground tracking-wide">
+        <div className="relative text-center space-y-0.5">
+          <h1 className="font-heading text-[22px] font-semibold text-primary-foreground tracking-wide">
             {mode === "signup" ? "Criar Conta" : "Entrar"}
           </h1>
-          <p className="font-body text-[13px] text-primary-foreground/45 font-light">
+          <p className="font-body text-[12px] text-primary-foreground/45 font-light">
             {mode === "signup"
               ? "Cadastre-se para agendar seu procedimento"
               : "Acesse sua conta para agendar"}
@@ -150,7 +157,7 @@ const AuthScreen = ({ onSuccess, onBack, initialMode = "signup" }: AuthScreenPro
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="relative space-y-3">
           {mode === "signup" && (
             <div className="space-y-1.5">
               <label className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest font-medium">
@@ -233,7 +240,7 @@ const AuthScreen = ({ onSuccess, onBack, initialMode = "signup" }: AuthScreenPro
         </form>
 
         {/* Toggle mode */}
-        <div className="text-center pb-1">
+        <div className="relative text-center pb-1">
           <button
             onClick={() => {
               setMode(mode === "signup" ? "login" : "signup");
