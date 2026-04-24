@@ -96,31 +96,60 @@ Deno.serve(async (req) => {
       return json({ error: "Falha ao identificar cliente" }, 500);
     }
 
-    // 3) Faz signin para devolver tokens (reseta a senha caso esteja diferente)
-    let signin = await anon.auth.signInWithPassword({ email, password: DEFAULT_PASSWORD });
-
-    if (signin.error) {
-      // Reseta a senha via admin (e confirma email caso seja conta legada não confirmada) e tenta novamente
-      const { error: updErr } = await admin.auth.admin.updateUserById(userId, {
-        password: DEFAULT_PASSWORD,
-        email_confirm: true,
-      });
-      if (updErr) {
-        console.error("admin updateUser error", updErr);
-      }
-      // Pequena espera para propagar a alteração no auth
-      await new Promise((r) => setTimeout(r, 250));
-      signin = await anon.auth.signInWithPassword({ email, password: DEFAULT_PASSWORD });
-
-      // Se ainda falhar, tenta uma última vez após mais uma espera
-      if (signin.error) {
-        await new Promise((r) => setTimeout(r, 500));
-        signin = await anon.auth.signInWithPassword({ email, password: DEFAULT_PASSWORD });
-      }
+    // 3) Sincroniza conta auth legada e faz signin para devolver tokens
+    const { data: authUserData, error: authUserErr } = await admin.auth.admin.getUserById(userId);
+    if (authUserErr) {
+      console.error("getUserById error", authUserErr);
     }
 
-    if (signin.error || !signin.data.session) {
-      console.error("signin error", signin.error, "userId:", userId, "email:", email);
+    const existingAuthEmail = authUserData?.user?.email?.trim().toLowerCase() || null;
+    let preferredEmail = email;
+
+    const syncPayload: {
+      email?: string;
+      password: string;
+      email_confirm: true;
+      user_metadata: { nome: string; whatsapp: string; source: string };
+    } = {
+      password: DEFAULT_PASSWORD,
+      email_confirm: true,
+      user_metadata: { nome: existingProfile?.nome || nome, whatsapp: wa, source: "public_booking" },
+    };
+
+    if (!existingAuthEmail || existingAuthEmail !== email) {
+      syncPayload.email = email;
+    } else {
+      preferredEmail = existingAuthEmail;
+    }
+
+    const { error: syncErr } = await admin.auth.admin.updateUserById(userId, syncPayload);
+    if (syncErr) {
+      console.error("admin sync user error", syncErr);
+      preferredEmail = existingAuthEmail || email;
+    } else if (syncPayload.email) {
+      preferredEmail = email;
+    }
+
+    const candidateEmails = Array.from(new Set([preferredEmail, existingAuthEmail, email].filter(Boolean)));
+
+    let signin = null;
+    let lastSigninError = null;
+
+    for (const candidateEmail of candidateEmails) {
+      await new Promise((r) => setTimeout(r, 250));
+      const result = await anon.auth.signInWithPassword({
+        email: candidateEmail as string,
+        password: DEFAULT_PASSWORD,
+      });
+      if (!result.error && result.data.session) {
+        signin = result;
+        break;
+      }
+      lastSigninError = result.error;
+    }
+
+    if (!signin?.data?.session) {
+      console.error("signin error", lastSigninError, "userId:", userId, "canonicalEmail:", email, "existingAuthEmail:", existingAuthEmail);
       return json({ error: "Não foi possível iniciar a sessão. Tente novamente em instantes." }, 500);
     }
 
@@ -131,7 +160,7 @@ Deno.serve(async (req) => {
         user_id: userId,
         nome: existingProfile?.nome || nome,
         whatsapp: wa,
-        email,
+        email: preferredEmail,
       },
       session: {
         access_token: signin.data.session.access_token,
