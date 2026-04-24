@@ -62,7 +62,7 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
             <div className="space-y-7">
               <div className="space-y-2.5">
                 <p className="font-body text-[11px] tracking-[0.2em] uppercase text-gold font-medium">Passo 1</p>
-                <h2 className="font-heading text-[2rem] leading-[1.1] font-semibold tracking-tight text-foreground lg:text-4xl">
+                <h2 className="font-heading text-[1.625rem] sm:text-[2rem] leading-[1.15] font-semibold tracking-tight text-foreground lg:text-4xl break-words hyphens-auto">
                   O que você deseja melhorar?
                 </h2>
                 <p className="font-body text-[14px] text-muted-foreground/80 max-w-md">
