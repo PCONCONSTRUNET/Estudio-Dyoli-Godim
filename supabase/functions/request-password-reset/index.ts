@@ -16,7 +16,7 @@ const json = (data: unknown, status = 200) =>
 const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
 const FROM_EMAIL = "Dyoli Godim <no-reply@estudiodyoligodim.com.br>";
-const APP_BASE_URL = "https://estudiodyoli.lovable.app";
+const APP_BASE_URL = "https://www.estudiodyoligodim.com.br";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
