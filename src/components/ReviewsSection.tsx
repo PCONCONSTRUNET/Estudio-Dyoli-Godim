@@ -209,7 +209,9 @@ const ReviewsSection = () => {
                   </div>
                   <div className="min-w-0">
                     <p className="truncate font-body text-[12px] font-semibold text-primary-foreground leading-tight">{review.name}</p>
-                    <p className="truncate font-body text-[9px] text-primary-foreground/50 leading-tight">{review.city}</p>
+                    <p className="truncate font-body text-[9px] text-primary-foreground/50 leading-tight">
+                      {review.isReal ? "✨ Cliente Dyoli" : review.city}
+                    </p>
                   </div>
                 </div>
                 <div className="mt-0.5 flex shrink-0 items-center gap-0.5">
