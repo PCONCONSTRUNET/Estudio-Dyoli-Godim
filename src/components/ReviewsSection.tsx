@@ -161,7 +161,7 @@ const ReviewsSection = () => {
         <div>
           <p className="font-body text-[10px] text-gold/70 tracking-[0.25em] uppercase">Avaliações</p>
           <p className="font-heading text-lg font-semibold text-primary-foreground tracking-wide mt-0.5">
-            {avgRating} · {reviews.length * 40}+ clientes
+            {avgRating} · {totalCount}+ clientes
           </p>
         </div>
         <div className="flex items-center gap-1.5">
