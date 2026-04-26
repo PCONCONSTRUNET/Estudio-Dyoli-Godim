@@ -169,6 +169,7 @@ const ReviewsSection = () => {
           WebkitOverflowScrolling: "touch",
           overscrollBehaviorX: "contain",
           scrollSnapType: "none",
+          touchAction: "pan-x",
           userSelect: "none",
         }}
       >
