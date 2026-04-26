@@ -55,6 +55,10 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
   const [nascDraft, setNascDraft] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // Avaliações
+  const [avaliacoes, setAvaliacoes] = useState<Record<string, Avaliacao>>({});
+  const [ratingTarget, setRatingTarget] = useState<Agendamento | null>(null);
+
   useEffect(() => {
     loadData();
   }, []);
@@ -65,9 +69,10 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
     if (!user) { setLoading(false); return; }
     setUserId(user.id);
 
-    const [profileRes, agendamentosRes] = await Promise.all([
+    const [profileRes, agendamentosRes, avaliacoesRes] = await Promise.all([
       supabase.from("profiles").select("nome, whatsapp, data_nascimento, created_at").eq("id", user.id).single(),
       supabase.from("agendamentos").select("*").eq("user_id", user.id).order("data_agendamento", { ascending: false }),
+      supabase.from("avaliacoes").select("agendamento_id, nota, comentario").eq("user_id", user.id),
     ]);
 
     if (profileRes.data) {
