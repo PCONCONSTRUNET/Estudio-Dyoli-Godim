@@ -2,64 +2,73 @@ import { Star } from "lucide-react";
 
 interface Review {
   name: string;
+  city: string;
   rating: number;
   text: string;
-  service: string;
 }
 
 const reviews: Review[] = [
   {
-    name: "Mariana Silva",
+    name: "Mariana S.",
+    city: "Goiânia",
     rating: 5,
-    service: "Micropigmentação de Sobrancelhas",
-    text: "Resultado impecável! A Dyoli é extremamente profissional e cuidadosa. Minhas sobrancelhas ficaram naturais e perfeitas.",
+    text: "Resultado impecável! Sobrancelhas naturais e perfeitas. Super profissional.",
   },
   {
-    name: "Camila Rocha",
+    name: "Camila R.",
+    city: "Aparecida",
     rating: 5,
-    service: "Piercing na Orelha",
-    text: "Ambiente super higienizado e atendimento maravilhoso. Cicatrização tranquila e sem dor. Recomendo demais!",
+    text: "Ambiente higienizado e atendimento maravilhoso. Cicatrização tranquila.",
   },
   {
-    name: "Juliana Mendes",
+    name: "Juliana M.",
+    city: "Goiânia",
     rating: 5,
-    service: "Lábios Aquarela",
-    text: "Apaixonada pelo resultado! Cor linda, técnica perfeita. A Dyoli explica tudo no detalhe, me senti muito segura.",
+    text: "Apaixonada pelo resultado! Cor linda e técnica perfeita. Me senti segura.",
   },
   {
-    name: "Beatriz Almeida",
+    name: "Beatriz A.",
+    city: "Anápolis",
     rating: 5,
-    service: "Micropigmentação",
-    text: "Profissional excepcional. Estúdio aconchegante e o resultado superou minhas expectativas. Voltarei sempre!",
+    text: "Estúdio aconchegante e resultado que superou minhas expectativas.",
   },
   {
-    name: "Larissa Costa",
+    name: "Larissa C.",
+    city: "Goiânia",
     rating: 5,
-    service: "Piercing no Nariz",
-    text: "Atendimento humanizado, muito atenciosa e cuidadosa. Procedimento rápido e sem complicações. Adorei!",
+    text: "Atendimento humanizado, atenciosa e cuidadosa. Sem complicações.",
   },
   {
-    name: "Patrícia Souza",
-    rating: 5,
-    service: "Sobrancelhas Fio a Fio",
-    text: "Trabalho de altíssima qualidade. Naturalidade incrível e durabilidade excelente. Indico de olhos fechados.",
+    name: "Patrícia S.",
+    city: "Trindade",
+    rating: 4,
+    text: "Trabalho de altíssima qualidade. Naturalidade e durabilidade excelentes.",
   },
 ];
+
+const avgRating = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1);
 
 const ReviewsSection = () => {
   return (
     <section className="relative w-full py-10 bg-charcoal">
-      <div className="px-6 mb-5 lg:px-16">
-        <h2 className="font-heading text-2xl font-semibold text-primary-foreground tracking-wide lg:text-3xl">
-          Avaliações
-        </h2>
-        <p className="font-body text-[11px] text-gold/70 tracking-[0.2em] uppercase mt-1">
-          O que dizem nossas clientes
+      {/* Header */}
+      <div className="px-6 mb-4 lg:px-16 flex items-end justify-between">
+        <div>
+          <p className="font-body text-[10px] text-gold/70 tracking-[0.25em] uppercase">
+            Avaliações
+          </p>
+          <p className="font-heading text-xl font-semibold text-primary-foreground tracking-wide mt-1 lg:text-2xl">
+            {avgRating} · {reviews.length * 40}+ clientes
+          </p>
+        </div>
+        <p className="font-body text-[11px] text-primary-foreground/50 tracking-wide italic">
+          deslize →
         </p>
       </div>
 
+      {/* Cards horizontal scroll */}
       <div
-        className="flex gap-4 overflow-x-auto scrollbar-hide px-6 lg:px-16 pb-4 snap-x snap-mandatory"
+        className="flex gap-3 overflow-x-auto scrollbar-hide px-6 lg:px-16 pb-4 snap-x snap-mandatory"
         style={{
           WebkitOverflowScrolling: "touch",
           overscrollBehaviorX: "contain",
@@ -69,28 +78,44 @@ const ReviewsSection = () => {
         {reviews.map((review, idx) => (
           <article
             key={idx}
-            className="snap-start shrink-0 w-[78vw] max-w-[320px] lg:w-[340px] rounded-2xl bg-primary-foreground/[0.04] backdrop-blur-md border border-primary-foreground/[0.08] p-5 shadow-[0_4px_24px_-8px_hsl(0_0%_0%/0.5)]"
+            className="snap-start shrink-0 w-[72vw] max-w-[280px] lg:w-[300px] rounded-xl bg-primary-foreground/[0.03] border border-gold/[0.15] p-4"
           >
-            <div className="flex items-center gap-1 mb-3">
-              {Array.from({ length: review.rating }).map((_, i) => (
-                <Star
-                  key={i}
-                  className="w-3.5 h-3.5 fill-gold text-gold"
-                  strokeWidth={1.5}
-                />
-              ))}
+            {/* Header: avatar + nome/cidade + stars */}
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-gold to-gold/60 flex items-center justify-center">
+                  <span className="font-body text-[13px] font-bold text-charcoal">
+                    {review.name.charAt(0)}
+                  </span>
+                </div>
+                <div className="min-w-0">
+                  <p className="font-body text-[13px] font-semibold text-primary-foreground truncate">
+                    {review.name}
+                  </p>
+                  <p className="font-body text-[10px] text-primary-foreground/50 truncate">
+                    {review.city}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-0.5 shrink-0 mt-0.5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`w-3 h-3 ${
+                      i < review.rating
+                        ? "fill-gold text-gold"
+                        : "fill-primary-foreground/10 text-primary-foreground/10"
+                    }`}
+                    strokeWidth={1.5}
+                  />
+                ))}
+              </div>
             </div>
-            <p className="font-body text-[13px] leading-relaxed text-primary-foreground/85 mb-4 min-h-[80px]">
-              "{review.text}"
+
+            {/* Text */}
+            <p className="font-body text-[12.5px] leading-relaxed text-primary-foreground/75">
+              {review.text}
             </p>
-            <div className="pt-3 border-t border-primary-foreground/[0.08]">
-              <p className="font-body text-[13px] font-semibold text-primary-foreground tracking-wide">
-                {review.name}
-              </p>
-              <p className="font-body text-[10px] text-gold/70 tracking-[0.15em] uppercase mt-0.5">
-                {review.service}
-              </p>
-            </div>
           </article>
         ))}
       </div>
