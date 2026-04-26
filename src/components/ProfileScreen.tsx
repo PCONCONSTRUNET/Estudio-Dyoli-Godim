@@ -81,6 +81,11 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
       setNascDraft(profileRes.data.data_nascimento || "");
     }
     if (agendamentosRes.data) setAgendamentos(agendamentosRes.data as Agendamento[]);
+    if (avaliacoesRes.data) {
+      const map: Record<string, Avaliacao> = {};
+      (avaliacoesRes.data as Avaliacao[]).forEach((a) => { map[a.agendamento_id] = a; });
+      setAvaliacoes(map);
+    }
     setLoading(false);
   };
 
