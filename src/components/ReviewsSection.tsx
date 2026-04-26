@@ -66,6 +66,56 @@ const ReviewsSection = () => {
   const x = useMotionValue(0);
   const [leftLimit, setLeftLimit] = useState(0);
   const [currentX, setCurrentX] = useState(0);
+  const [realReviews, setRealReviews] = useState<Review[]>([]);
+
+  // Carrega avaliações reais (4-5 estrelas, com comentário) e mescla com as estáticas
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("avaliacoes")
+        .select("nota, comentario, user_id, created_at")
+        .gte("nota", 4)
+        .not("comentario", "is", null)
+        .neq("comentario", "")
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (error || !data || cancelled) return;
+
+      const userIds = Array.from(new Set(data.map((r) => r.user_id)));
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, nome")
+        .in("id", userIds);
+
+      if (cancelled) return;
+
+      const nameMap = new Map<string, string>();
+      (profs || []).forEach((p) => nameMap.set(p.id, p.nome));
+
+      const mapped: Review[] = data
+        .filter((r) => (r.comentario || "").trim().length > 0)
+        .map((r) => ({
+          name: formatClientName(nameMap.get(r.user_id) || "Cliente"),
+          city: "",
+          rating: r.nota,
+          text: r.comentario || "",
+          isReal: true,
+        }));
+
+      setRealReviews(mapped);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Avaliações reais primeiro, depois fixas (preenchimento)
+  const reviews = useMemo<Review[]>(() => [...realReviews, ...staticReviews], [realReviews]);
+  const totalCount = realReviews.length + staticReviews.length * 40;
+  const avgRating = useMemo(
+    () => (reviews.reduce((s, r) => s + r.rating, 0) / Math.max(reviews.length, 1)).toFixed(1),
+    [reviews]
+  );
 
   const measure = useCallback(() => {
     const viewport = viewportRef.current;
