@@ -144,6 +144,10 @@ const ReviewsSection = () => {
     };
   }, [measure, x]);
 
+  useEffect(() => {
+    measure();
+  }, [measure, reviews.length]);
+
   const slideBy = (direction: "prev" | "next") => {
     const next = Math.max(leftLimit, Math.min(0, x.get() + (direction === "prev" ? CARD_STEP : -CARD_STEP)));
     x.stop();
