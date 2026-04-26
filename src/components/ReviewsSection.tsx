@@ -53,12 +53,26 @@ const CARD_STEP = 238;
 const ReviewsSection = () => {
   const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const dragRef = useRef({ active: false, startX: 0, startOffset: 0, moved: false });
+  const offsetRef = useRef(0);
+  const maxOffsetRef = useRef(0);
+  const dragRef = useRef({ active: false, startX: 0, startOffset: 0, pointerId: -1, moved: false });
   const [offset, setOffset] = useState(0);
   const [maxOffset, setMaxOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
-  const clampOffset = useCallback((value: number) => Math.min(0, Math.max(maxOffset, value)), [maxOffset]);
+  const clamp = useCallback((value: number) => Math.min(0, Math.max(maxOffsetRef.current, value)), []);
+
+  const applyOffset = useCallback((value: number, animate = false) => {
+    const next = clamp(value);
+    offsetRef.current = next;
+    setOffset(next);
+
+    const track = trackRef.current;
+    if (track) {
+      track.style.transition = animate ? "transform 180ms ease-out" : "none";
+      track.style.transform = `translate3d(${next}px, 0, 0)`;
+    }
+  }, [clamp]);
 
   const measure = useCallback(() => {
     const viewport = viewportRef.current;
@@ -66,9 +80,10 @@ const ReviewsSection = () => {
     if (!viewport || !track) return;
 
     const nextMax = Math.min(0, viewport.clientWidth - track.scrollWidth);
+    maxOffsetRef.current = nextMax;
     setMaxOffset(nextMax);
-    setOffset((current) => Math.min(0, Math.max(nextMax, current)));
-  }, []);
+    applyOffset(offsetRef.current);
+  }, [applyOffset]);
 
   useEffect(() => {
     measure();
@@ -83,48 +98,49 @@ const ReviewsSection = () => {
     };
   }, [measure]);
 
-  const beginDrag = (clientX: number) => {
-    dragRef.current = { active: true, startX: clientX, startOffset: offset, moved: false };
-    setIsDragging(true);
-  };
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
 
-  const moveDrag = (clientX: number) => {
-    if (!dragRef.current.active) return;
-    const delta = clientX - dragRef.current.startX;
-    if (Math.abs(delta) > 2) dragRef.current.moved = true;
-    setOffset(clampOffset(dragRef.current.startOffset + delta));
-  };
+    const viewport = viewportRef.current;
+    const track = trackRef.current;
+    if (!viewport || !track) return;
 
-  const endDrag = () => {
-    dragRef.current.active = false;
-    setIsDragging(false);
-  };
-
-  const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (event.button !== 0) return;
-    event.preventDefault();
-    beginDrag(event.clientX);
-
-    const handleMouseMove = (moveEvent: MouseEvent) => moveDrag(moveEvent.clientX);
-    const handleMouseUp = () => {
-      endDrag();
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
+    dragRef.current = {
+      active: true,
+      startX: event.clientX,
+      startOffset: offsetRef.current,
+      pointerId: event.pointerId,
+      moved: false,
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp, { once: true });
+    track.style.transition = "none";
+    viewport.setPointerCapture(event.pointerId);
+    setIsDragging(true);
+    event.preventDefault();
   };
 
-  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
-    beginDrag(event.touches[0].clientX);
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    if (!drag.active || drag.pointerId !== event.pointerId) return;
+
+    const delta = event.clientX - drag.startX;
+    if (Math.abs(delta) > 2) drag.moved = true;
+    applyOffset(drag.startOffset + delta);
+    event.preventDefault();
   };
 
-  const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
-    moveDrag(event.touches[0].clientX);
-  };
+  const finishDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    if (!drag.active || drag.pointerId !== event.pointerId) return;
 
-  const handleTouchEnd = () => endDrag();
+    const viewport = viewportRef.current;
+    if (viewport?.hasPointerCapture(event.pointerId)) {
+      viewport.releasePointerCapture(event.pointerId);
+    }
+
+    drag.active = false;
+    setIsDragging(false);
+  };
 
   const handleClickCapture = (event: React.MouseEvent) => {
     if (!dragRef.current.moved) return;
@@ -134,7 +150,7 @@ const ReviewsSection = () => {
   };
 
   const slideBy = (direction: "prev" | "next") => {
-    setOffset((current) => clampOffset(current + (direction === "prev" ? CARD_STEP : -CARD_STEP)));
+    applyOffset(offsetRef.current + (direction === "prev" ? CARD_STEP : -CARD_STEP), true);
   };
 
   return (
@@ -170,23 +186,16 @@ const ReviewsSection = () => {
 
       <div
         ref={viewportRef}
-        onMouseDown={handleMouseDown}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onTouchCancel={handleTouchEnd}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={finishDrag}
+        onPointerCancel={finishDrag}
+        onLostPointerCapture={finishDrag}
         onClickCapture={handleClickCapture}
         className={`relative overflow-hidden ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
         style={{ touchAction: "pan-y", userSelect: "none" }}
       >
-        <div
-          ref={trackRef}
-          className="flex w-max gap-3 pb-2 will-change-transform"
-          style={{
-            transform: `translate3d(${offset}px, 0, 0)`,
-            transition: isDragging ? "none" : "transform 180ms ease-out",
-          }}
-        >
+        <div ref={trackRef} className="flex w-max gap-3 pb-2 will-change-transform">
           {reviews.map((review, idx) => (
             <article
               key={idx}
