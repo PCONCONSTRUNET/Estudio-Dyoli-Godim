@@ -71,6 +71,36 @@ export type Database = {
         }
         Relationships: []
       }
+      avaliacoes: {
+        Row: {
+          agendamento_id: string
+          comentario: string | null
+          created_at: string
+          id: string
+          nota: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agendamento_id: string
+          comentario?: string | null
+          created_at?: string
+          id?: string
+          nota: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agendamento_id?: string
+          comentario?: string | null
+          created_at?: string
+          id?: string
+          nota?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       configuracoes_lembretes: {
         Row: {
           ativo: boolean

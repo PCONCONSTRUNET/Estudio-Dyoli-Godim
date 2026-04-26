@@ -1,11 +1,18 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Calendar, Clock, LogOut, X, Sparkles, Cake, TrendingUp, Award, Pencil, Check, Heart, FileText, Download } from "lucide-react";
+import { User, Calendar, Clock, LogOut, X, Sparkles, Cake, TrendingUp, Award, Pencil, Check, Heart, FileText, Download, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyLembreteById } from "@/lib/notify-webhook";
 import { sendPush } from "@/lib/push-notify";
 import PushToggle from "@/components/PushToggle";
+import RatingModal from "@/components/RatingModal";
 import professionalImg from "@/assets/professional.png";
+
+interface Avaliacao {
+  agendamento_id: string;
+  nota: number;
+  comentario: string;
+}
 
 interface ProfileScreenProps {
   onBack: () => void;
@@ -48,6 +55,10 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
   const [nascDraft, setNascDraft] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // Avaliações
+  const [avaliacoes, setAvaliacoes] = useState<Record<string, Avaliacao>>({});
+  const [ratingTarget, setRatingTarget] = useState<Agendamento | null>(null);
+
   useEffect(() => {
     loadData();
   }, []);
@@ -58,9 +69,10 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
     if (!user) { setLoading(false); return; }
     setUserId(user.id);
 
-    const [profileRes, agendamentosRes] = await Promise.all([
+    const [profileRes, agendamentosRes, avaliacoesRes] = await Promise.all([
       supabase.from("profiles").select("nome, whatsapp, data_nascimento, created_at").eq("id", user.id).single(),
       supabase.from("agendamentos").select("*").eq("user_id", user.id).order("data_agendamento", { ascending: false }),
+      supabase.from("avaliacoes").select("agendamento_id, nota, comentario").eq("user_id", user.id),
     ]);
 
     if (profileRes.data) {
@@ -69,6 +81,11 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
       setNascDraft(profileRes.data.data_nascimento || "");
     }
     if (agendamentosRes.data) setAgendamentos(agendamentosRes.data as Agendamento[]);
+    if (avaliacoesRes.data) {
+      const map: Record<string, Avaliacao> = {};
+      (avaliacoesRes.data as Avaliacao[]).forEach((a) => { map[a.agendamento_id] = a; });
+      setAvaliacoes(map);
+    }
     setLoading(false);
   };
 
@@ -551,6 +568,34 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
                             {cancelling === a.id ? "Cancelando..." : "Cancelar"}
                           </button>
                         )}
+                        {a.status === "concluido" && (
+                          avaliacoes[a.id] ? (
+                            <button
+                              onClick={() => setRatingTarget(a)}
+                              className="ios-press flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-body font-medium text-gold bg-gold/10 border border-gold/20 hover:bg-gold/15 transition-all"
+                              title="Editar avaliação"
+                            >
+                              <div className="flex items-center gap-0.5">
+                                {[1, 2, 3, 4, 5].map((n) => (
+                                  <Star
+                                    key={n}
+                                    className={`w-3 h-3 ${n <= avaliacoes[a.id].nota ? "fill-gold text-gold" : "text-gold/25"}`}
+                                    strokeWidth={1.5}
+                                  />
+                                ))}
+                              </div>
+                              <Pencil className="w-2.5 h-2.5 opacity-60" />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setRatingTarget(a)}
+                              className="ios-press flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-body font-medium text-gold bg-gradient-to-r from-gold/15 to-nude/10 border border-gold/25 hover:from-gold/20 hover:to-nude/15 transition-all"
+                            >
+                              <Star className="w-3.5 h-3.5" />
+                              Avaliar
+                            </button>
+                          )
+                        )}
                       </div>
                     </div>
                   ))
@@ -560,6 +605,26 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
           )}
         </div>
       </div>
+
+      {ratingTarget && userId && (
+        <RatingModal
+          agendamentoId={ratingTarget.id}
+          userId={userId}
+          servico={ratingTarget.servico + (ratingTarget.variacao ? ` — ${ratingTarget.variacao}` : "")}
+          clienteNome={profile?.nome || "Cliente"}
+          existingNota={avaliacoes[ratingTarget.id]?.nota}
+          existingComentario={avaliacoes[ratingTarget.id]?.comentario}
+          onClose={() => setRatingTarget(null)}
+          onSaved={(nota, comentario) => {
+            const id = ratingTarget.id;
+            setAvaliacoes((prev) => ({
+              ...prev,
+              [id]: { agendamento_id: id, nota, comentario },
+            }));
+            setRatingTarget(null);
+          }}
+        />
+      )}
     </div>
   );
 };
