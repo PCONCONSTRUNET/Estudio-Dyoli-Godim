@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { Star } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 
 interface Review {
   name: string;
@@ -47,173 +47,178 @@ const reviews: Review[] = [
   },
 ];
 
-const avgRating = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1);
+const avgRating = (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1);
+const CARD_STEP = 238;
 
 const ReviewsSection = () => {
-  const scrollerRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef({ active: false, startX: 0, startOffset: 0, moved: false });
+  const [offset, setOffset] = useState(0);
+  const [maxOffset, setMaxOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const clampOffset = useCallback((value: number) => Math.min(0, Math.max(maxOffset, value)), [maxOffset]);
+
+  const measure = useCallback(() => {
+    const viewport = viewportRef.current;
+    const track = trackRef.current;
+    if (!viewport || !track) return;
+
+    const nextMax = Math.min(0, viewport.clientWidth - track.scrollWidth);
+    setMaxOffset(nextMax);
+    setOffset((current) => Math.min(0, Math.max(nextMax, current)));
+  }, []);
 
   useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
-
-    let isDown = false;
-    let startX = 0;
-    let startScroll = 0;
-    let moved = false;
-    let pointerId: number | null = null;
-
-    const startDrag = (clientX: number) => {
-      isDown = true;
-      moved = false;
-      startX = clientX;
-      startScroll = el.scrollLeft;
-      el.style.cursor = "grabbing";
-    };
-
-    const moveDrag = (clientX: number) => {
-      if (!isDown) return;
-      const dx = clientX - startX;
-      if (Math.abs(dx) > 2) moved = true;
-      el.scrollLeft = startScroll - dx;
-    };
-
-    const stopDrag = () => {
-      if (!isDown) return;
-      isDown = false;
-      pointerId = null;
-      el.style.cursor = "grab";
-    };
-
-    const onPointerDown = (e: PointerEvent) => {
-      if (e.pointerType === "mouse" && e.button !== 0) return;
-      pointerId = e.pointerId;
-      startDrag(e.clientX);
-      try {
-        el.setPointerCapture(e.pointerId);
-      } catch {
-        // ignore
-      }
-    };
-
-    const onPointerMove = (e: PointerEvent) => {
-      if (!isDown || (pointerId !== null && e.pointerId !== pointerId)) return;
-      moveDrag(e.clientX);
-      if (moved) e.preventDefault();
-    };
-
-    const onPointerUp = (e: PointerEvent) => {
-      if (pointerId !== null && e.pointerId !== pointerId) return;
-      try {
-        el.releasePointerCapture(e.pointerId);
-      } catch {
-        // ignore
-      }
-      stopDrag();
-    };
-
-    const onClick = (e: MouseEvent) => {
-      if (moved) {
-        e.preventDefault();
-        e.stopPropagation();
-        moved = false;
-      }
-    };
-
-    const onWheel = (e: WheelEvent) => {
-      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-        el.scrollLeft += e.deltaY;
-      }
-    };
-
-    const onDragStart = (e: DragEvent) => e.preventDefault();
-
-    el.addEventListener("pointerdown", onPointerDown);
-    el.addEventListener("pointermove", onPointerMove, { passive: false });
-    el.addEventListener("pointerup", onPointerUp);
-    el.addEventListener("pointercancel", onPointerUp);
-    el.addEventListener("click", onClick, true);
-    el.addEventListener("wheel", onWheel, { passive: true });
-    el.addEventListener("dragstart", onDragStart);
+    measure();
+    const resizeObserver = new ResizeObserver(measure);
+    if (viewportRef.current) resizeObserver.observe(viewportRef.current);
+    if (trackRef.current) resizeObserver.observe(trackRef.current);
+    window.addEventListener("resize", measure);
 
     return () => {
-      el.removeEventListener("pointerdown", onPointerDown);
-      el.removeEventListener("pointermove", onPointerMove);
-      el.removeEventListener("pointerup", onPointerUp);
-      el.removeEventListener("pointercancel", onPointerUp);
-      el.removeEventListener("click", onClick, true);
-      el.removeEventListener("wheel", onWheel);
-      el.removeEventListener("dragstart", onDragStart);
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", measure);
     };
-  }, []);
+  }, [measure]);
+
+  const beginDrag = (clientX: number) => {
+    dragRef.current = { active: true, startX: clientX, startOffset: offset, moved: false };
+    setIsDragging(true);
+  };
+
+  const moveDrag = (clientX: number) => {
+    if (!dragRef.current.active) return;
+    const delta = clientX - dragRef.current.startX;
+    if (Math.abs(delta) > 2) dragRef.current.moved = true;
+    setOffset(clampOffset(dragRef.current.startOffset + delta));
+  };
+
+  const endDrag = () => {
+    dragRef.current.active = false;
+    setIsDragging(false);
+  };
+
+  const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    beginDrag(event.clientX);
+
+    const handleMouseMove = (moveEvent: MouseEvent) => moveDrag(moveEvent.clientX);
+    const handleMouseUp = () => {
+      endDrag();
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp, { once: true });
+  };
+
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    beginDrag(event.touches[0].clientX);
+  };
+
+  const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+    moveDrag(event.touches[0].clientX);
+  };
+
+  const handleTouchEnd = () => endDrag();
+
+  const handleClickCapture = (event: React.MouseEvent) => {
+    if (!dragRef.current.moved) return;
+    event.preventDefault();
+    event.stopPropagation();
+    dragRef.current.moved = false;
+  };
+
+  const slideBy = (direction: "prev" | "next") => {
+    setOffset((current) => clampOffset(current + (direction === "prev" ? CARD_STEP : -CARD_STEP)));
+  };
 
   return (
     <section className="relative w-full">
-      <div className="mb-3 flex items-end justify-between">
+      <div className="mb-3 flex items-end justify-between gap-3">
         <div>
-          <p className="font-body text-[10px] text-gold/70 tracking-[0.25em] uppercase">
-            Avaliações
-          </p>
+          <p className="font-body text-[10px] text-gold/70 tracking-[0.25em] uppercase">Avaliações</p>
           <p className="font-heading text-lg font-semibold text-primary-foreground tracking-wide mt-0.5">
             {avgRating} · {reviews.length * 40}+ clientes
           </p>
         </div>
-        <p className="font-body text-[10px] text-primary-foreground/50 tracking-wide italic">
-          arraste →
-        </p>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => slideBy("prev")}
+            aria-label="Avaliações anteriores"
+            className="ios-press flex h-7 w-7 items-center justify-center rounded-full border border-primary-foreground/10 bg-primary-foreground/5 text-primary-foreground/70 disabled:opacity-30"
+            disabled={offset >= 0}
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => slideBy("next")}
+            aria-label="Próximas avaliações"
+            className="ios-press flex h-7 w-7 items-center justify-center rounded-full border border-primary-foreground/10 bg-primary-foreground/5 text-primary-foreground/70 disabled:opacity-30"
+            disabled={offset <= maxOffset}
+          >
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </div>
 
       <div
-        ref={scrollerRef}
-        className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-6 px-6 lg:mx-0 lg:px-0 cursor-grab"
-        style={{
-          WebkitOverflowScrolling: "touch",
-          overscrollBehaviorX: "contain",
-          scrollSnapType: "none",
-          touchAction: "pan-x",
-          userSelect: "none",
-        }}
+        ref={viewportRef}
+        onMouseDown={handleMouseDown}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
+        onClickCapture={handleClickCapture}
+        className={`relative overflow-hidden -mx-6 px-6 lg:mx-0 lg:px-0 ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
+        style={{ touchAction: "pan-y", userSelect: "none" }}
       >
-        {reviews.map((review, idx) => (
-          <article
-            key={idx}
-            className="shrink-0 w-[225px] sm:w-[240px] rounded-[22px] bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] backdrop-blur-xl px-3.5 py-3 shadow-[0_8px_24px_-14px_hsl(0_0%_0%/0.55)]"
-          >
-            <div className="mb-2.5 flex items-start justify-between gap-2.5">
-              <div className="flex min-w-0 items-center gap-2.5">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-gold to-gold/60">
-                  <span className="font-body text-[12px] font-bold text-charcoal">
-                    {review.name.charAt(0)}
-                  </span>
+        <div
+          ref={trackRef}
+          className="flex w-max gap-3 pb-2 will-change-transform"
+          style={{
+            transform: `translate3d(${offset}px, 0, 0)`,
+            transition: isDragging ? "none" : "transform 180ms ease-out",
+          }}
+        >
+          {reviews.map((review, idx) => (
+            <article
+              key={idx}
+              className="shrink-0 w-[225px] sm:w-[240px] rounded-[22px] bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] backdrop-blur-xl px-3.5 py-3 shadow-lg"
+            >
+              <div className="mb-2.5 flex items-start justify-between gap-2.5">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-gold to-gold/60">
+                    <span className="font-body text-[12px] font-bold text-charcoal">{review.name.charAt(0)}</span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate font-body text-[12.5px] font-semibold text-primary-foreground">{review.name}</p>
+                    <p className="truncate font-body text-[9.5px] text-primary-foreground/50">{review.city}</p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="truncate font-body text-[12.5px] font-semibold text-primary-foreground">
-                    {review.name}
-                  </p>
-                  <p className="truncate font-body text-[9.5px] text-primary-foreground/50">
-                    {review.city}
-                  </p>
+                <div className="mt-0.5 flex shrink-0 items-center gap-0.5">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`h-2.5 w-2.5 ${
+                        i < review.rating ? "fill-gold text-gold" : "fill-primary-foreground/10 text-primary-foreground/10"
+                      }`}
+                      strokeWidth={1.5}
+                    />
+                  ))}
                 </div>
               </div>
-              <div className="mt-0.5 flex shrink-0 items-center gap-0.5">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`h-2.5 w-2.5 ${
-                      i < review.rating
-                        ? "fill-gold text-gold"
-                        : "fill-primary-foreground/10 text-primary-foreground/10"
-                    }`}
-                    strokeWidth={1.5}
-                  />
-                ))}
-              </div>
-            </div>
 
-            <p className="font-body text-[11.5px] leading-relaxed text-primary-foreground/75">
-              {review.text}
-            </p>
-          </article>
-        ))}
+              <p className="font-body text-[11.5px] leading-relaxed text-primary-foreground/75">{review.text}</p>
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   );
