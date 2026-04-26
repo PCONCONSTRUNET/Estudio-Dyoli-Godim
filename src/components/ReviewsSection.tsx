@@ -55,6 +55,8 @@ const ReviewsSection = () => {
     containScroll: "trimSnaps",
     dragFree: true,
     skipSnaps: true,
+    watchDrag: true,
+    duration: 18,
   });
 
   return (
