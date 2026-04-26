@@ -1,15 +1,17 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, useMotionValue } from "framer-motion";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Review {
   name: string;
   city: string;
   rating: number;
   text: string;
+  isReal?: boolean;
 }
 
-const reviews: Review[] = [
+const staticReviews: Review[] = [
   {
     name: "Mariana S.",
     city: "Goiânia",
@@ -48,8 +50,15 @@ const reviews: Review[] = [
   },
 ];
 
-const avgRating = (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1);
 const CARD_STEP = 238;
+
+// Formata "Maria Silva Souza" -> "Maria S."
+const formatClientName = (full: string): string => {
+  const parts = full.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "Cliente";
+  if (parts.length === 1) return parts[0];
+  return `${parts[0]} ${parts[parts.length - 1].charAt(0).toUpperCase()}.`;
+};
 
 const ReviewsSection = () => {
   const viewportRef = useRef<HTMLDivElement>(null);
