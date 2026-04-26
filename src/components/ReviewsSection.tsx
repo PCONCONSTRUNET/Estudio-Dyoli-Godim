@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Star } from "lucide-react";
 
 interface Review {
@@ -51,36 +51,64 @@ const avgRating = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).t
 
 const ReviewsSection = () => {
   const scrollerRef = useRef<HTMLDivElement>(null);
-  const dragRef = useRef({ startX: 0, startScroll: 0, moved: false });
 
-  const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+  useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
-    e.preventDefault();
-    dragRef.current = { startX: e.clientX, startScroll: el.scrollLeft, moved: false };
-    el.style.cursor = "grabbing";
 
-    const onMove = (ev: MouseEvent) => {
-      const dx = ev.clientX - dragRef.current.startX;
-      if (Math.abs(dx) > 3) dragRef.current.moved = true;
-      el.scrollLeft = dragRef.current.startScroll - dx;
+    let isDown = false;
+    let startX = 0;
+    let startScroll = 0;
+    let moved = false;
+
+    const onDown = (e: MouseEvent) => {
+      // Apenas botão esquerdo
+      if (e.button !== 0) return;
+      isDown = true;
+      moved = false;
+      startX = e.clientX;
+      startScroll = el.scrollLeft;
+      el.style.cursor = "grabbing";
+      e.preventDefault();
     };
+
+    const onMove = (e: MouseEvent) => {
+      if (!isDown) return;
+      const dx = e.clientX - startX;
+      if (Math.abs(dx) > 3) moved = true;
+      el.scrollLeft = startScroll - dx;
+    };
+
     const onUp = () => {
+      if (!isDown) return;
+      isDown = false;
       el.style.cursor = "grab";
+    };
+
+    const onClick = (e: MouseEvent) => {
+      if (moved) {
+        e.preventDefault();
+        e.stopPropagation();
+        moved = false;
+      }
+    };
+
+    const onDragStart = (e: DragEvent) => e.preventDefault();
+
+    el.addEventListener("mousedown", onDown);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    el.addEventListener("click", onClick, true);
+    el.addEventListener("dragstart", onDragStart);
+
+    return () => {
+      el.removeEventListener("mousedown", onDown);
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
+      el.removeEventListener("click", onClick, true);
+      el.removeEventListener("dragstart", onDragStart);
     };
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp, { once: true });
-  };
-
-  const onClickCapture = (e: React.MouseEvent) => {
-    if (dragRef.current.moved) {
-      e.preventDefault();
-      e.stopPropagation();
-      dragRef.current.moved = false;
-    }
-  };
+  }, []);
 
   return (
     <section className="relative w-full">
@@ -100,14 +128,12 @@ const ReviewsSection = () => {
 
       <div
         ref={scrollerRef}
-        onMouseDown={onMouseDown}
-        onClickCapture={onClickCapture}
-        onDragStart={(e) => e.preventDefault()}
-        className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-6 px-6 lg:mx-0 lg:px-0 cursor-grab select-none"
+        className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-6 px-6 lg:mx-0 lg:px-0 cursor-grab"
         style={{
           WebkitOverflowScrolling: "touch",
           overscrollBehaviorX: "contain",
           scrollSnapType: "none",
+          userSelect: "none",
         }}
       >
         {reviews.map((review, idx) => (
