@@ -1,11 +1,18 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Calendar, Clock, LogOut, X, Sparkles, Cake, TrendingUp, Award, Pencil, Check, Heart, FileText, Download } from "lucide-react";
+import { User, Calendar, Clock, LogOut, X, Sparkles, Cake, TrendingUp, Award, Pencil, Check, Heart, FileText, Download, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyLembreteById } from "@/lib/notify-webhook";
 import { sendPush } from "@/lib/push-notify";
 import PushToggle from "@/components/PushToggle";
+import RatingModal from "@/components/RatingModal";
 import professionalImg from "@/assets/professional.png";
+
+interface Avaliacao {
+  agendamento_id: string;
+  nota: number;
+  comentario: string;
+}
 
 interface ProfileScreenProps {
   onBack: () => void;
