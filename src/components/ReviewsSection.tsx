@@ -137,16 +137,16 @@ const ReviewsSection = () => {
           {reviews.map((review, idx) => (
             <article
               key={idx}
-              className="shrink-0 w-[225px] sm:w-[240px] rounded-[22px] bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] backdrop-blur-xl px-3.5 py-3 shadow-lg"
+              className="shrink-0 w-[210px] sm:w-[225px] rounded-[20px] bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] backdrop-blur-xl px-3 py-2.5 shadow-lg"
             >
-              <div className="mb-2.5 flex items-start justify-between gap-2.5">
-                <div className="flex min-w-0 items-center gap-2.5">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-gold to-gold/60">
-                    <span className="font-body text-[12px] font-bold text-charcoal">{review.name.charAt(0)}</span>
+              <div className="mb-2 flex items-start justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-2">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-gold to-gold/60">
+                    <span className="font-body text-[11px] font-bold text-charcoal">{review.name.charAt(0)}</span>
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate font-body text-[12.5px] font-semibold text-primary-foreground">{review.name}</p>
-                    <p className="truncate font-body text-[9.5px] text-primary-foreground/50">{review.city}</p>
+                    <p className="truncate font-body text-[12px] font-semibold text-primary-foreground leading-tight">{review.name}</p>
+                    <p className="truncate font-body text-[9px] text-primary-foreground/50 leading-tight">{review.city}</p>
                   </div>
                 </div>
                 <div className="mt-0.5 flex shrink-0 items-center gap-0.5">
