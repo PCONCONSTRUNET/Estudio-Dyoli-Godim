@@ -1,5 +1,6 @@
 import { User, ShoppingBag } from "lucide-react";
 import professionalImg from "@/assets/professional.png";
+import ReviewsSection from "@/components/ReviewsSection";
 
 interface HeroSectionProps {
   onSchedule: () => void;
@@ -116,6 +117,11 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, onProdutos, isAuthenticat
                 </button>
               </>
             )}
+          </div>
+
+          {/* 4. AVALIAÇÕES — dentro do hero, abaixo dos botões */}
+          <div className="w-full mt-8 animate-fade-in lg:max-w-[640px]" style={{ animationDelay: '0.45s', animationFillMode: 'both' }}>
+            <ReviewsSection />
           </div>
         </div>
       </div>
