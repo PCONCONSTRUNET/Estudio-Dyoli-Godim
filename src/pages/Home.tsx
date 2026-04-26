@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import HeroSection from "@/components/HeroSection";
+import ReviewsSection from "@/components/ReviewsSection";
 import ProfileScreen from "@/components/ProfileScreen";
 
 const Home = () => {
@@ -28,6 +29,7 @@ const Home = () => {
         onProdutos={() => navigate("/produtos")}
         isAuthenticated={isAuthenticated}
       />
+      <ReviewsSection />
       {showProfile && (
         <ProfileScreen
           onBack={() => setShowProfile(false)}
