@@ -1,15 +1,17 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, useMotionValue } from "framer-motion";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Review {
   name: string;
   city: string;
   rating: number;
   text: string;
+  isReal?: boolean;
 }
 
-const reviews: Review[] = [
+const staticReviews: Review[] = [
   {
     name: "Mariana S.",
     city: "Goiânia",
@@ -48,8 +50,15 @@ const reviews: Review[] = [
   },
 ];
 
-const avgRating = (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1);
 const CARD_STEP = 238;
+
+// Formata "Maria Silva Souza" -> "Maria S."
+const formatClientName = (full: string): string => {
+  const parts = full.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "Cliente";
+  if (parts.length === 1) return parts[0];
+  return `${parts[0]} ${parts[parts.length - 1].charAt(0).toUpperCase()}.`;
+};
 
 const ReviewsSection = () => {
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -57,6 +66,56 @@ const ReviewsSection = () => {
   const x = useMotionValue(0);
   const [leftLimit, setLeftLimit] = useState(0);
   const [currentX, setCurrentX] = useState(0);
+  const [realReviews, setRealReviews] = useState<Review[]>([]);
+
+  // Carrega avaliações reais (4-5 estrelas, com comentário) e mescla com as estáticas
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("avaliacoes")
+        .select("nota, comentario, user_id, created_at")
+        .gte("nota", 4)
+        .not("comentario", "is", null)
+        .neq("comentario", "")
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (error || !data || cancelled) return;
+
+      const userIds = Array.from(new Set(data.map((r) => r.user_id)));
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, nome")
+        .in("id", userIds);
+
+      if (cancelled) return;
+
+      const nameMap = new Map<string, string>();
+      (profs || []).forEach((p) => nameMap.set(p.id, p.nome));
+
+      const mapped: Review[] = data
+        .filter((r) => (r.comentario || "").trim().length > 0)
+        .map((r) => ({
+          name: formatClientName(nameMap.get(r.user_id) || "Cliente"),
+          city: "",
+          rating: r.nota,
+          text: r.comentario || "",
+          isReal: true,
+        }));
+
+      setRealReviews(mapped);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Avaliações reais primeiro, depois fixas (preenchimento)
+  const reviews = useMemo<Review[]>(() => [...realReviews, ...staticReviews], [realReviews]);
+  const totalCount = realReviews.length + staticReviews.length * 40;
+  const avgRating = useMemo(
+    () => (reviews.reduce((s, r) => s + r.rating, 0) / Math.max(reviews.length, 1)).toFixed(1),
+    [reviews]
+  );
 
   const measure = useCallback(() => {
     const viewport = viewportRef.current;
@@ -85,6 +144,10 @@ const ReviewsSection = () => {
     };
   }, [measure, x]);
 
+  useEffect(() => {
+    measure();
+  }, [measure, reviews.length]);
+
   const slideBy = (direction: "prev" | "next") => {
     const next = Math.max(leftLimit, Math.min(0, x.get() + (direction === "prev" ? CARD_STEP : -CARD_STEP)));
     x.stop();
@@ -98,7 +161,7 @@ const ReviewsSection = () => {
         <div>
           <p className="font-body text-[10px] text-gold/70 tracking-[0.25em] uppercase">Avaliações</p>
           <p className="font-heading text-lg font-semibold text-primary-foreground tracking-wide mt-0.5">
-            {avgRating} · {reviews.length * 40}+ clientes
+            {avgRating} · {totalCount}+ clientes
           </p>
         </div>
         <div className="flex items-center gap-1.5">
@@ -146,7 +209,9 @@ const ReviewsSection = () => {
                   </div>
                   <div className="min-w-0">
                     <p className="truncate font-body text-[12px] font-semibold text-primary-foreground leading-tight">{review.name}</p>
-                    <p className="truncate font-body text-[9px] text-primary-foreground/50 leading-tight">{review.city}</p>
+                    <p className="truncate font-body text-[9px] text-primary-foreground/50 leading-tight">
+                      {review.isReal ? "✨ Cliente Dyoli" : review.city}
+                    </p>
                   </div>
                 </div>
                 <div className="mt-0.5 flex shrink-0 items-center gap-0.5">
