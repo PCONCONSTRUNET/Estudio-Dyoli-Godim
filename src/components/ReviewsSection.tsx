@@ -51,40 +51,33 @@ const avgRating = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).t
 
 const ReviewsSection = () => {
   const scrollerRef = useRef<HTMLDivElement>(null);
-  const dragState = useRef({ down: false, startX: 0, startScroll: 0, moved: false, pointerId: 0 });
+  const dragState = useRef({ startX: 0, startScroll: 0, moved: false });
   const [dragging, setDragging] = useState(false);
 
-  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    // Apenas mouse — touch usa scroll nativo do iOS
-    if (e.pointerType !== "mouse") return;
+  const startMouseDrag = (e: React.MouseEvent<HTMLDivElement>) => {
     const el = scrollerRef.current;
     if (!el) return;
-    dragState.current = {
-      down: true,
-      startX: e.clientX,
-      startScroll: el.scrollLeft,
-      moved: false,
-      pointerId: e.pointerId,
-    };
-    el.setPointerCapture(e.pointerId);
+
+    e.preventDefault();
+    dragState.current = { startX: e.clientX, startScroll: el.scrollLeft, moved: false };
     setDragging(true);
+
+    const onMove = (event: MouseEvent) => {
+      const dx = event.clientX - dragState.current.startX;
+      if (Math.abs(dx) > 3) dragState.current.moved = true;
+      el.scrollLeft = dragState.current.startScroll - dx;
+    };
+
+    const onUp = () => {
+      setDragging(false);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+
+    window.addEventListener("mousemove", onMove, { passive: true });
+    window.addEventListener("mouseup", onUp, { once: true });
   };
-  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!dragState.current.down) return;
-    const el = scrollerRef.current;
-    if (!el) return;
-    const dx = e.clientX - dragState.current.startX;
-    if (Math.abs(dx) > 4) dragState.current.moved = true;
-    el.scrollLeft = dragState.current.startScroll - dx;
-  };
-  const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
-    const el = scrollerRef.current;
-    if (el && dragState.current.pointerId && el.hasPointerCapture(dragState.current.pointerId)) {
-      try { el.releasePointerCapture(dragState.current.pointerId); } catch { /* noop */ }
-    }
-    dragState.current.down = false;
-    setDragging(false);
-  };
+
   const onClickCapture = (e: React.MouseEvent) => {
     if (dragState.current.moved) {
       e.preventDefault();
@@ -113,24 +106,20 @@ const ReviewsSection = () => {
       {/* Cards horizontal scroll */}
       <div
         ref={scrollerRef}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
-        onPointerLeave={endDrag}
+        onMouseDown={startMouseDrag}
+        onDragStart={(e) => e.preventDefault()}
         onClickCapture={onClickCapture}
-        className={`flex gap-3 overflow-x-auto scrollbar-hide pb-2 snap-x snap-mandatory -mx-6 px-6 lg:mx-0 lg:px-0 ${dragging ? "cursor-grabbing select-none" : "cursor-grab"}`}
+        className={`flex gap-3 overflow-x-auto scrollbar-hide pb-2 snap-x -mx-6 px-6 lg:mx-0 lg:px-0 ${dragging ? "cursor-grabbing select-none snap-none" : "cursor-grab snap-mandatory"}`}
         style={{
           WebkitOverflowScrolling: "touch",
           overscrollBehaviorX: "contain",
           scrollPaddingLeft: "1.5rem",
-          touchAction: "pan-x pan-y",
         }}
       >
         {reviews.map((review, idx) => (
           <article
             key={idx}
-            className="snap-start shrink-0 w-[78vw] max-w-[300px] lg:w-[300px] rounded-[28px] bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] backdrop-blur-xl p-4 shadow-[0_8px_28px_-12px_hsl(0_0%_0%/0.5)]"
+            className="snap-start shrink-0 w-[68vw] max-w-[260px] lg:w-[280px] rounded-[24px] bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] backdrop-blur-xl p-3.5 shadow-[0_8px_24px_-14px_hsl(0_0%_0%/0.55)]"
           >
             {/* Header: avatar + nome/cidade + stars */}
             <div className="flex items-start justify-between gap-3 mb-3">
