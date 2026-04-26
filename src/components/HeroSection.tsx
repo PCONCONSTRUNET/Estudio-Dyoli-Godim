@@ -11,7 +11,7 @@ interface HeroSectionProps {
 
 const HeroSection = ({ onSchedule, onLogin, onProfile, onProdutos, isAuthenticated }: HeroSectionProps) => {
   return (
-    <section className="relative min-h-screen flex flex-col bg-charcoal overflow-hidden">
+    <section className="relative min-h-[88vh] flex flex-col bg-charcoal overflow-hidden">
       {/* Animated premium gradient background */}
       <div className="absolute inset-0 animate-bg-drift" style={{
         background: 'linear-gradient(135deg, hsl(0 0% 8%) 0%, hsl(30 15% 12%) 25%, hsl(20 10% 10%) 50%, hsl(0 0% 9%) 75%, hsl(30 20% 11%) 100%)',
@@ -32,7 +32,7 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, onProdutos, isAuthenticat
       )}
 
       {/* Content — mobile: vertical / desktop: side-by-side */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pb-32 pt-12 lg:flex-row lg:justify-center lg:gap-16 lg:px-16 lg:pb-8">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pb-16 pt-12 lg:flex-row lg:justify-center lg:gap-16 lg:px-16 lg:pb-8">
         {/* 1. IMAGEM */}
         <div className="relative w-56 h-56 mb-6 animate-fade-in lg:w-72 lg:h-72 lg:mb-0 lg:shrink-0">
           <div className="absolute inset-0 rounded-full bg-gold/[0.08] blur-[60px] scale-125 animate-hero-glow" />
