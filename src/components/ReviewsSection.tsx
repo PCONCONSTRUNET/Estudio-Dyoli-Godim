@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { motion, useMotionValue } from "framer-motion";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 
 interface Review {
@@ -53,37 +54,21 @@ const CARD_STEP = 238;
 const ReviewsSection = () => {
   const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const offsetRef = useRef(0);
-  const maxOffsetRef = useRef(0);
-  const dragRef = useRef({ active: false, startX: 0, startOffset: 0, pointerId: -1, moved: false });
-  const [offset, setOffset] = useState(0);
-  const [maxOffset, setMaxOffset] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-
-  const clamp = useCallback((value: number) => Math.min(0, Math.max(maxOffsetRef.current, value)), []);
-
-  const applyOffset = useCallback((value: number, animate = false) => {
-    const next = clamp(value);
-    offsetRef.current = next;
-    setOffset(next);
-
-    const track = trackRef.current;
-    if (track) {
-      track.style.transition = animate ? "transform 180ms ease-out" : "none";
-      track.style.transform = `translate3d(${next}px, 0, 0)`;
-    }
-  }, [clamp]);
+  const x = useMotionValue(0);
+  const [leftLimit, setLeftLimit] = useState(0);
+  const [currentX, setCurrentX] = useState(0);
 
   const measure = useCallback(() => {
     const viewport = viewportRef.current;
     const track = trackRef.current;
     if (!viewport || !track) return;
 
-    const nextMax = Math.min(0, viewport.clientWidth - track.scrollWidth);
-    maxOffsetRef.current = nextMax;
-    setMaxOffset(nextMax);
-    applyOffset(offsetRef.current);
-  }, [applyOffset]);
+    const nextLeftLimit = Math.min(0, viewport.clientWidth - track.scrollWidth);
+    setLeftLimit(nextLeftLimit);
+    const safeX = Math.max(nextLeftLimit, Math.min(0, x.get()));
+    x.set(safeX);
+    setCurrentX(safeX);
+  }, [x]);
 
   useEffect(() => {
     measure();
@@ -91,66 +76,20 @@ const ReviewsSection = () => {
     if (viewportRef.current) resizeObserver.observe(viewportRef.current);
     if (trackRef.current) resizeObserver.observe(trackRef.current);
     window.addEventListener("resize", measure);
+    const unsubscribe = x.on("change", setCurrentX);
 
     return () => {
       resizeObserver.disconnect();
       window.removeEventListener("resize", measure);
+      unsubscribe();
     };
-  }, [measure]);
-
-  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === "mouse" && event.button !== 0) return;
-
-    const viewport = viewportRef.current;
-    const track = trackRef.current;
-    if (!viewport || !track) return;
-
-    dragRef.current = {
-      active: true,
-      startX: event.clientX,
-      startOffset: offsetRef.current,
-      pointerId: event.pointerId,
-      moved: false,
-    };
-
-    track.style.transition = "none";
-    viewport.setPointerCapture(event.pointerId);
-    setIsDragging(true);
-    event.preventDefault();
-  };
-
-  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    const drag = dragRef.current;
-    if (!drag.active || drag.pointerId !== event.pointerId) return;
-
-    const delta = event.clientX - drag.startX;
-    if (Math.abs(delta) > 2) drag.moved = true;
-    applyOffset(drag.startOffset + delta);
-    event.preventDefault();
-  };
-
-  const finishDrag = (event: React.PointerEvent<HTMLDivElement>) => {
-    const drag = dragRef.current;
-    if (!drag.active || drag.pointerId !== event.pointerId) return;
-
-    const viewport = viewportRef.current;
-    if (viewport?.hasPointerCapture(event.pointerId)) {
-      viewport.releasePointerCapture(event.pointerId);
-    }
-
-    drag.active = false;
-    setIsDragging(false);
-  };
-
-  const handleClickCapture = (event: React.MouseEvent) => {
-    if (!dragRef.current.moved) return;
-    event.preventDefault();
-    event.stopPropagation();
-    dragRef.current.moved = false;
-  };
+  }, [measure, x]);
 
   const slideBy = (direction: "prev" | "next") => {
-    applyOffset(offsetRef.current + (direction === "prev" ? CARD_STEP : -CARD_STEP), true);
+    const next = Math.max(leftLimit, Math.min(0, x.get() + (direction === "prev" ? CARD_STEP : -CARD_STEP)));
+    x.stop();
+    x.set(next);
+    setCurrentX(next);
   };
 
   return (
@@ -168,7 +107,7 @@ const ReviewsSection = () => {
             onClick={() => slideBy("prev")}
             aria-label="Avaliações anteriores"
             className="ios-press flex h-7 w-7 items-center justify-center rounded-full border border-primary-foreground/10 bg-primary-foreground/5 text-primary-foreground/70 disabled:opacity-30"
-            disabled={offset >= 0}
+            disabled={currentX >= -1}
           >
             <ChevronLeft className="h-3.5 w-3.5" />
           </button>
@@ -177,25 +116,24 @@ const ReviewsSection = () => {
             onClick={() => slideBy("next")}
             aria-label="Próximas avaliações"
             className="ios-press flex h-7 w-7 items-center justify-center rounded-full border border-primary-foreground/10 bg-primary-foreground/5 text-primary-foreground/70 disabled:opacity-30"
-            disabled={offset <= maxOffset}
+            disabled={currentX <= leftLimit + 1}
           >
             <ChevronRight className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
 
-      <div
-        ref={viewportRef}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={finishDrag}
-        onPointerCancel={finishDrag}
-        onLostPointerCapture={finishDrag}
-        onClickCapture={handleClickCapture}
-        className={`relative overflow-hidden ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
-        style={{ touchAction: "pan-y", userSelect: "none" }}
-      >
-        <div ref={trackRef} className="flex w-max gap-3 pb-2 will-change-transform">
+      <div ref={viewportRef} className="relative overflow-hidden cursor-grab active:cursor-grabbing">
+        <motion.div
+          ref={trackRef}
+          drag="x"
+          dragConstraints={{ left: leftLimit, right: 0 }}
+          dragElastic={0.04}
+          dragMomentum={false}
+          style={{ x, touchAction: "pan-y" }}
+          className="flex w-max gap-3 pb-2 select-none"
+          onDragEnd={() => setCurrentX(x.get())}
+        >
           {reviews.map((review, idx) => (
             <article
               key={idx}
@@ -227,7 +165,7 @@ const ReviewsSection = () => {
               <p className="font-body text-[11.5px] leading-relaxed text-primary-foreground/75">{review.text}</p>
             </article>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
