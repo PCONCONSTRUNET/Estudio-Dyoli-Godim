@@ -568,6 +568,34 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
                             {cancelling === a.id ? "Cancelando..." : "Cancelar"}
                           </button>
                         )}
+                        {a.status === "concluido" && (
+                          avaliacoes[a.id] ? (
+                            <button
+                              onClick={() => setRatingTarget(a)}
+                              className="ios-press flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-body font-medium text-gold bg-gold/10 border border-gold/20 hover:bg-gold/15 transition-all"
+                              title="Editar avaliação"
+                            >
+                              <div className="flex items-center gap-0.5">
+                                {[1, 2, 3, 4, 5].map((n) => (
+                                  <Star
+                                    key={n}
+                                    className={`w-3 h-3 ${n <= avaliacoes[a.id].nota ? "fill-gold text-gold" : "text-gold/25"}`}
+                                    strokeWidth={1.5}
+                                  />
+                                ))}
+                              </div>
+                              <Pencil className="w-2.5 h-2.5 opacity-60" />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setRatingTarget(a)}
+                              className="ios-press flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-body font-medium text-gold bg-gradient-to-r from-gold/15 to-nude/10 border border-gold/25 hover:from-gold/20 hover:to-nude/15 transition-all"
+                            >
+                              <Star className="w-3.5 h-3.5" />
+                              Avaliar
+                            </button>
+                          )
+                        )}
                       </div>
                     </div>
                   ))
