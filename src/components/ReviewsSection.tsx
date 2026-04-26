@@ -1,3 +1,4 @@
+import { useRef, useState } from "react";
 import { Star } from "lucide-react";
 
 interface Review {
@@ -49,6 +50,34 @@ const reviews: Review[] = [
 const avgRating = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1);
 
 const ReviewsSection = () => {
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const dragState = useRef({ down: false, startX: 0, startScroll: 0, moved: false });
+  const [dragging, setDragging] = useState(false);
+
+  const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    dragState.current = { down: true, startX: e.pageX, startScroll: el.scrollLeft, moved: false };
+    setDragging(true);
+  };
+  const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = scrollerRef.current;
+    if (!el || !dragState.current.down) return;
+    const dx = e.pageX - dragState.current.startX;
+    if (Math.abs(dx) > 4) dragState.current.moved = true;
+    el.scrollLeft = dragState.current.startScroll - dx;
+  };
+  const endDrag = () => {
+    dragState.current.down = false;
+    setDragging(false);
+  };
+  const onClickCapture = (e: React.MouseEvent) => {
+    if (dragState.current.moved) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
   return (
     <section className="relative w-full">
       {/* Header */}
@@ -68,7 +97,13 @@ const ReviewsSection = () => {
 
       {/* Cards horizontal scroll */}
       <div
-        className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 snap-x snap-mandatory -mx-6 px-6 lg:mx-0 lg:px-0"
+        ref={scrollerRef}
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={endDrag}
+        onMouseLeave={endDrag}
+        onClickCapture={onClickCapture}
+        className={`flex gap-3 overflow-x-auto scrollbar-hide pb-2 snap-x snap-mandatory -mx-6 px-6 lg:mx-0 lg:px-0 select-none ${dragging ? "cursor-grabbing" : "cursor-grab"}`}
         style={{
           WebkitOverflowScrolling: "touch",
           overscrollBehaviorX: "contain",

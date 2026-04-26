@@ -12,7 +12,7 @@ interface HeroSectionProps {
 
 const HeroSection = ({ onSchedule, onLogin, onProfile, onProdutos, isAuthenticated }: HeroSectionProps) => {
   return (
-    <section className="relative min-h-[88vh] flex flex-col bg-charcoal overflow-hidden">
+    <section className="relative min-h-screen flex flex-col bg-charcoal overflow-hidden">
       {/* Animated premium gradient background */}
       <div className="absolute inset-0 animate-bg-drift" style={{
         background: 'linear-gradient(135deg, hsl(0 0% 8%) 0%, hsl(30 15% 12%) 25%, hsl(20 10% 10%) 50%, hsl(0 0% 9%) 75%, hsl(30 20% 11%) 100%)',
