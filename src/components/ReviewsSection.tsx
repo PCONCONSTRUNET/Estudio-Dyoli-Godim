@@ -60,29 +60,55 @@ const ReviewsSection = () => {
     let startX = 0;
     let startScroll = 0;
     let moved = false;
+    let pointerId: number | null = null;
 
-    const onDown = (e: MouseEvent) => {
-      // Apenas botão esquerdo
-      if (e.button !== 0) return;
+    const startDrag = (clientX: number) => {
       isDown = true;
       moved = false;
-      startX = e.clientX;
+      startX = clientX;
       startScroll = el.scrollLeft;
       el.style.cursor = "grabbing";
-      e.preventDefault();
     };
 
-    const onMove = (e: MouseEvent) => {
+    const moveDrag = (clientX: number) => {
       if (!isDown) return;
-      const dx = e.clientX - startX;
-      if (Math.abs(dx) > 3) moved = true;
+      const dx = clientX - startX;
+      if (Math.abs(dx) > 2) moved = true;
       el.scrollLeft = startScroll - dx;
     };
 
-    const onUp = () => {
+    const stopDrag = () => {
       if (!isDown) return;
       isDown = false;
+      pointerId = null;
       el.style.cursor = "grab";
+    };
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      pointerId = e.pointerId;
+      startDrag(e.clientX);
+      try {
+        el.setPointerCapture(e.pointerId);
+      } catch {
+        // ignore
+      }
+    };
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (!isDown || (pointerId !== null && e.pointerId !== pointerId)) return;
+      moveDrag(e.clientX);
+      if (moved) e.preventDefault();
+    };
+
+    const onPointerUp = (e: PointerEvent) => {
+      if (pointerId !== null && e.pointerId !== pointerId) return;
+      try {
+        el.releasePointerCapture(e.pointerId);
+      } catch {
+        // ignore
+      }
+      stopDrag();
     };
 
     const onClick = (e: MouseEvent) => {
@@ -93,19 +119,29 @@ const ReviewsSection = () => {
       }
     };
 
+    const onWheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        el.scrollLeft += e.deltaY;
+      }
+    };
+
     const onDragStart = (e: DragEvent) => e.preventDefault();
 
-    el.addEventListener("mousedown", onDown);
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
+    el.addEventListener("pointerdown", onPointerDown);
+    el.addEventListener("pointermove", onPointerMove, { passive: false });
+    el.addEventListener("pointerup", onPointerUp);
+    el.addEventListener("pointercancel", onPointerUp);
     el.addEventListener("click", onClick, true);
+    el.addEventListener("wheel", onWheel, { passive: true });
     el.addEventListener("dragstart", onDragStart);
 
     return () => {
-      el.removeEventListener("mousedown", onDown);
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
+      el.removeEventListener("pointerdown", onPointerDown);
+      el.removeEventListener("pointermove", onPointerMove);
+      el.removeEventListener("pointerup", onPointerUp);
+      el.removeEventListener("pointercancel", onPointerUp);
       el.removeEventListener("click", onClick, true);
+      el.removeEventListener("wheel", onWheel);
       el.removeEventListener("dragstart", onDragStart);
     };
   }, []);
