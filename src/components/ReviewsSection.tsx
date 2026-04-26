@@ -50,25 +50,25 @@ const avgRating = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).t
 
 const ReviewsSection = () => {
   return (
-    <section className="relative w-full py-10 bg-charcoal">
+    <section className="relative w-full">
       {/* Header */}
-      <div className="px-6 mb-4 lg:px-16 flex items-end justify-between">
+      <div className="mb-3 flex items-end justify-between">
         <div>
           <p className="font-body text-[10px] text-gold/70 tracking-[0.25em] uppercase">
             Avaliações
           </p>
-          <p className="font-heading text-xl font-semibold text-primary-foreground tracking-wide mt-1 lg:text-2xl">
+          <p className="font-heading text-lg font-semibold text-primary-foreground tracking-wide mt-0.5">
             {avgRating} · {reviews.length * 40}+ clientes
           </p>
         </div>
-        <p className="font-body text-[11px] text-primary-foreground/50 tracking-wide italic">
+        <p className="font-body text-[10px] text-primary-foreground/50 tracking-wide italic">
           deslize →
         </p>
       </div>
 
       {/* Cards horizontal scroll */}
       <div
-        className="flex gap-3 overflow-x-auto scrollbar-hide px-6 lg:px-16 pb-4 snap-x snap-mandatory"
+        className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 snap-x snap-mandatory -mx-6 px-6 lg:mx-0 lg:px-0"
         style={{
           WebkitOverflowScrolling: "touch",
           overscrollBehaviorX: "contain",
