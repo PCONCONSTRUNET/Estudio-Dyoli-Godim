@@ -1,3 +1,4 @@
+import { useRef, useState } from "react";
 import { Star } from "lucide-react";
 
 interface Review {
