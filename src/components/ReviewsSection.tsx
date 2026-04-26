@@ -176,7 +176,7 @@ const ReviewsSection = () => {
         onTouchEnd={handleTouchEnd}
         onTouchCancel={handleTouchEnd}
         onClickCapture={handleClickCapture}
-        className={`relative overflow-hidden -mx-6 px-6 lg:mx-0 lg:px-0 ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
+        className={`relative overflow-hidden ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
         style={{ touchAction: "pan-y", userSelect: "none" }}
       >
         <div
