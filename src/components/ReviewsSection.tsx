@@ -51,23 +51,37 @@ const avgRating = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).t
 
 const ReviewsSection = () => {
   const scrollerRef = useRef<HTMLDivElement>(null);
-  const dragState = useRef({ down: false, startX: 0, startScroll: 0, moved: false });
+  const dragState = useRef({ down: false, startX: 0, startScroll: 0, moved: false, pointerId: 0 });
   const [dragging, setDragging] = useState(false);
 
-  const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    // Apenas mouse — touch usa scroll nativo do iOS
+    if (e.pointerType !== "mouse") return;
     const el = scrollerRef.current;
     if (!el) return;
-    dragState.current = { down: true, startX: e.pageX, startScroll: el.scrollLeft, moved: false };
+    dragState.current = {
+      down: true,
+      startX: e.clientX,
+      startScroll: el.scrollLeft,
+      moved: false,
+      pointerId: e.pointerId,
+    };
+    el.setPointerCapture(e.pointerId);
     setDragging(true);
   };
-  const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragState.current.down) return;
     const el = scrollerRef.current;
-    if (!el || !dragState.current.down) return;
-    const dx = e.pageX - dragState.current.startX;
+    if (!el) return;
+    const dx = e.clientX - dragState.current.startX;
     if (Math.abs(dx) > 4) dragState.current.moved = true;
     el.scrollLeft = dragState.current.startScroll - dx;
   };
-  const endDrag = () => {
+  const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    const el = scrollerRef.current;
+    if (el && dragState.current.pointerId && el.hasPointerCapture(dragState.current.pointerId)) {
+      try { el.releasePointerCapture(dragState.current.pointerId); } catch { /* noop */ }
+    }
     dragState.current.down = false;
     setDragging(false);
   };
@@ -75,6 +89,7 @@ const ReviewsSection = () => {
     if (dragState.current.moved) {
       e.preventDefault();
       e.stopPropagation();
+      dragState.current.moved = false;
     }
   };
 
@@ -98,22 +113,24 @@ const ReviewsSection = () => {
       {/* Cards horizontal scroll */}
       <div
         ref={scrollerRef}
-        onMouseDown={onMouseDown}
-        onMouseMove={onMouseMove}
-        onMouseUp={endDrag}
-        onMouseLeave={endDrag}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onPointerLeave={endDrag}
         onClickCapture={onClickCapture}
-        className={`flex gap-3 overflow-x-auto scrollbar-hide pb-2 snap-x snap-mandatory -mx-6 px-6 lg:mx-0 lg:px-0 select-none ${dragging ? "cursor-grabbing" : "cursor-grab"}`}
+        className={`flex gap-3 overflow-x-auto scrollbar-hide pb-2 snap-x snap-mandatory -mx-6 px-6 lg:mx-0 lg:px-0 ${dragging ? "cursor-grabbing select-none" : "cursor-grab"}`}
         style={{
           WebkitOverflowScrolling: "touch",
           overscrollBehaviorX: "contain",
           scrollPaddingLeft: "1.5rem",
+          touchAction: "pan-x pan-y",
         }}
       >
         {reviews.map((review, idx) => (
           <article
             key={idx}
-            className="snap-start shrink-0 w-[72vw] max-w-[280px] lg:w-[300px] rounded-xl bg-primary-foreground/[0.03] border border-gold/[0.15] p-4"
+            className="snap-start shrink-0 w-[78vw] max-w-[300px] lg:w-[300px] rounded-[28px] bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] backdrop-blur-xl p-4 shadow-[0_8px_28px_-12px_hsl(0_0%_0%/0.5)]"
           >
             {/* Header: avatar + nome/cidade + stars */}
             <div className="flex items-start justify-between gap-3 mb-3">
