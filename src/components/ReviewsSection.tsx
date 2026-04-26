@@ -153,7 +153,7 @@ const ReviewsSection = () => {
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star
                       key={i}
-                      className={`h-2.5 w-2.5 ${
+                      className={`h-2 w-2 ${
                         i < review.rating ? "fill-gold text-gold" : "fill-primary-foreground/10 text-primary-foreground/10"
                       }`}
                       strokeWidth={1.5}
@@ -162,7 +162,7 @@ const ReviewsSection = () => {
                 </div>
               </div>
 
-              <p className="font-body text-[11.5px] leading-relaxed text-primary-foreground/75">{review.text}</p>
+              <p className="font-body text-[11px] leading-snug text-primary-foreground/75 line-clamp-3">{review.text}</p>
             </article>
           ))}
         </motion.div>
