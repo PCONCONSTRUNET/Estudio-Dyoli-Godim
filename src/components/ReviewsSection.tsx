@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { motion, useMotionValue } from "framer-motion";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 
 interface Review {
@@ -53,22 +54,21 @@ const CARD_STEP = 238;
 const ReviewsSection = () => {
   const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
-  const dragRef = useRef({ active: false, startX: 0, startOffset: 0, moved: false });
-  const [offset, setOffset] = useState(0);
-  const [maxOffset, setMaxOffset] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-
-  const clampOffset = useCallback((value: number) => Math.min(0, Math.max(maxOffset, value)), [maxOffset]);
+  const x = useMotionValue(0);
+  const [leftLimit, setLeftLimit] = useState(0);
+  const [currentX, setCurrentX] = useState(0);
 
   const measure = useCallback(() => {
     const viewport = viewportRef.current;
     const track = trackRef.current;
     if (!viewport || !track) return;
 
-    const nextMax = Math.min(0, viewport.clientWidth - track.scrollWidth);
-    setMaxOffset(nextMax);
-    setOffset((current) => Math.min(0, Math.max(nextMax, current)));
-  }, []);
+    const nextLeftLimit = Math.min(0, viewport.clientWidth - track.scrollWidth);
+    setLeftLimit(nextLeftLimit);
+    const safeX = Math.max(nextLeftLimit, Math.min(0, x.get()));
+    x.set(safeX);
+    setCurrentX(safeX);
+  }, [x]);
 
   useEffect(() => {
     measure();
@@ -76,65 +76,20 @@ const ReviewsSection = () => {
     if (viewportRef.current) resizeObserver.observe(viewportRef.current);
     if (trackRef.current) resizeObserver.observe(trackRef.current);
     window.addEventListener("resize", measure);
+    const unsubscribe = x.on("change", setCurrentX);
 
     return () => {
       resizeObserver.disconnect();
       window.removeEventListener("resize", measure);
+      unsubscribe();
     };
-  }, [measure]);
-
-  const beginDrag = (clientX: number) => {
-    dragRef.current = { active: true, startX: clientX, startOffset: offset, moved: false };
-    setIsDragging(true);
-  };
-
-  const moveDrag = (clientX: number) => {
-    if (!dragRef.current.active) return;
-    const delta = clientX - dragRef.current.startX;
-    if (Math.abs(delta) > 2) dragRef.current.moved = true;
-    setOffset(clampOffset(dragRef.current.startOffset + delta));
-  };
-
-  const endDrag = () => {
-    dragRef.current.active = false;
-    setIsDragging(false);
-  };
-
-  const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (event.button !== 0) return;
-    event.preventDefault();
-    beginDrag(event.clientX);
-
-    const handleMouseMove = (moveEvent: MouseEvent) => moveDrag(moveEvent.clientX);
-    const handleMouseUp = () => {
-      endDrag();
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp, { once: true });
-  };
-
-  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
-    beginDrag(event.touches[0].clientX);
-  };
-
-  const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
-    moveDrag(event.touches[0].clientX);
-  };
-
-  const handleTouchEnd = () => endDrag();
-
-  const handleClickCapture = (event: React.MouseEvent) => {
-    if (!dragRef.current.moved) return;
-    event.preventDefault();
-    event.stopPropagation();
-    dragRef.current.moved = false;
-  };
+  }, [measure, x]);
 
   const slideBy = (direction: "prev" | "next") => {
-    setOffset((current) => clampOffset(current + (direction === "prev" ? CARD_STEP : -CARD_STEP)));
+    const next = Math.max(leftLimit, Math.min(0, x.get() + (direction === "prev" ? CARD_STEP : -CARD_STEP)));
+    x.stop();
+    x.set(next);
+    setCurrentX(next);
   };
 
   return (
@@ -152,7 +107,7 @@ const ReviewsSection = () => {
             onClick={() => slideBy("prev")}
             aria-label="Avaliações anteriores"
             className="ios-press flex h-7 w-7 items-center justify-center rounded-full border border-primary-foreground/10 bg-primary-foreground/5 text-primary-foreground/70 disabled:opacity-30"
-            disabled={offset >= 0}
+            disabled={currentX >= -1}
           >
             <ChevronLeft className="h-3.5 w-3.5" />
           </button>
@@ -161,31 +116,23 @@ const ReviewsSection = () => {
             onClick={() => slideBy("next")}
             aria-label="Próximas avaliações"
             className="ios-press flex h-7 w-7 items-center justify-center rounded-full border border-primary-foreground/10 bg-primary-foreground/5 text-primary-foreground/70 disabled:opacity-30"
-            disabled={offset <= maxOffset}
+            disabled={currentX <= leftLimit + 1}
           >
             <ChevronRight className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
 
-      <div
-        ref={viewportRef}
-        onMouseDown={handleMouseDown}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onTouchCancel={handleTouchEnd}
-        onClickCapture={handleClickCapture}
-        className={`relative overflow-hidden -mx-6 px-6 lg:mx-0 lg:px-0 ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
-        style={{ touchAction: "pan-y", userSelect: "none" }}
-      >
-        <div
+      <div ref={viewportRef} className="relative overflow-hidden cursor-grab active:cursor-grabbing">
+        <motion.div
           ref={trackRef}
-          className="flex w-max gap-3 pb-2 will-change-transform"
-          style={{
-            transform: `translate3d(${offset}px, 0, 0)`,
-            transition: isDragging ? "none" : "transform 180ms ease-out",
-          }}
+          drag="x"
+          dragConstraints={{ left: leftLimit, right: 0 }}
+          dragElastic={0.04}
+          dragMomentum={false}
+          style={{ x, touchAction: "pan-y" }}
+          className="flex w-max gap-3 pb-2 select-none"
+          onDragEnd={() => setCurrentX(x.get())}
         >
           {reviews.map((review, idx) => (
             <article
@@ -218,7 +165,7 @@ const ReviewsSection = () => {
               <p className="font-body text-[11.5px] leading-relaxed text-primary-foreground/75">{review.text}</p>
             </article>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

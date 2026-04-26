@@ -120,7 +120,7 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, onProdutos, isAuthenticat
           </div>
 
           {/* 4. AVALIAÇÕES — dentro do hero, abaixo dos botões */}
-          <div className="w-full mt-8 animate-fade-in lg:max-w-[640px]" style={{ animationDelay: '0.45s', animationFillMode: 'both' }}>
+          <div className="w-screen max-w-[100vw] mt-8 px-6 animate-fade-in lg:w-full lg:max-w-[640px] lg:px-0" style={{ animationDelay: '0.45s', animationFillMode: 'both' }}>
             <ReviewsSection />
           </div>
         </div>
