@@ -605,6 +605,26 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
           )}
         </div>
       </div>
+
+      {ratingTarget && userId && (
+        <RatingModal
+          agendamentoId={ratingTarget.id}
+          userId={userId}
+          servico={ratingTarget.servico + (ratingTarget.variacao ? ` — ${ratingTarget.variacao}` : "")}
+          clienteNome={profile?.nome || "Cliente"}
+          existingNota={avaliacoes[ratingTarget.id]?.nota}
+          existingComentario={avaliacoes[ratingTarget.id]?.comentario}
+          onClose={() => setRatingTarget(null)}
+          onSaved={(nota, comentario) => {
+            const id = ratingTarget.id;
+            setAvaliacoes((prev) => ({
+              ...prev,
+              [id]: { agendamento_id: id, nota, comentario },
+            }));
+            setRatingTarget(null);
+          }}
+        />
+      )}
     </div>
   );
 };
