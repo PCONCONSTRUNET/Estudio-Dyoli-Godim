@@ -1735,7 +1735,10 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                     active ? "text-gold" : "text-primary-foreground/45 hover:text-primary-foreground/70"
                   }`}
                 >
-                  <t.icon className={`h-5 w-5 ${active ? "scale-110" : ""} transition-transform`} />
+                  <t.icon
+                    className={`h-5 w-5 tab-icon ${t.anim} ${active ? "scale-110" : ""}`}
+                    style={{ color: active ? undefined : t.color }}
+                  />
                   <span className="font-body text-[10px] font-medium leading-none">{t.label}</span>
                 </button>
               );
