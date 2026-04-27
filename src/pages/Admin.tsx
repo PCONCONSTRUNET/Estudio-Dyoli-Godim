@@ -735,7 +735,10 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                   : "text-primary-foreground/40 hover:bg-primary-foreground/[0.04] hover:text-primary-foreground/60"
               }`}
             >
-              <t.icon className={`h-4 w-4 shrink-0 tab-icon ${t.anim}`} />
+              <t.icon
+                className={`h-4 w-4 shrink-0 tab-icon ${t.anim}`}
+                style={{ color: tab === t.id ? undefined : t.color }}
+              />
               {t.label}
             </button>
           ))}
@@ -793,7 +796,10 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                             : "text-primary-foreground/50 hover:bg-primary-foreground/[0.04] hover:text-primary-foreground/80"
                         }`}
                       >
-                        <t.icon className={`h-[18px] w-[18px] shrink-0 tab-icon ${t.anim}`} />
+                        <t.icon
+                          className={`h-[18px] w-[18px] shrink-0 tab-icon ${t.anim}`}
+                          style={{ color: tab === t.id ? undefined : t.color }}
+                        />
                         {t.label}
                       </button>
                     ))}
