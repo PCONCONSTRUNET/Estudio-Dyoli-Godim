@@ -181,9 +181,12 @@ select option {
     0%, 100% { transform: scaleY(1); }
     50% { transform: scaleY(1.12); }
   }
+  .tab-icon-dashboard {
+    animation: icon-pulse-bars 2.2s ease-in-out infinite;
+  }
   .group:hover .tab-icon-dashboard,
   .tab-active .tab-icon-dashboard {
-    animation: icon-pulse-bars 1.6s ease-in-out infinite;
+    animation-duration: 1.4s;
   }
 
   /* Calendar — gentle tilt */
@@ -192,9 +195,12 @@ select option {
     25% { transform: rotate(-8deg); }
     75% { transform: rotate(8deg); }
   }
+  .tab-icon-calendar {
+    animation: icon-tilt 2.4s ease-in-out infinite;
+  }
   .group:hover .tab-icon-calendar,
   .tab-active .tab-icon-calendar {
-    animation: icon-tilt 1.4s ease-in-out infinite;
+    animation-duration: 1.2s;
   }
 
   /* Pedidos / clipboard — checkmark bounce */
@@ -202,9 +208,12 @@ select option {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-3px); }
   }
+  .tab-icon-bounce {
+    animation: icon-bounce 2s ease-in-out infinite;
+  }
   .group:hover .tab-icon-bounce,
   .tab-active .tab-icon-bounce {
-    animation: icon-bounce 1.2s ease-in-out infinite;
+    animation-duration: 1s;
   }
 
   /* Financeiro / Caixa / Gateway — money spin */
@@ -212,9 +221,12 @@ select option {
     0% { transform: rotateY(0deg); }
     100% { transform: rotateY(360deg); }
   }
+  .tab-icon-spin {
+    animation: icon-spin-soft 4s ease-in-out infinite;
+  }
   .group:hover .tab-icon-spin,
   .tab-active .tab-icon-spin {
-    animation: icon-spin-soft 2.4s ease-in-out infinite;
+    animation-duration: 2s;
   }
 
   /* Pagamentos — card swipe */
@@ -222,9 +234,12 @@ select option {
     0%, 100% { transform: translateX(0); }
     50% { transform: translateX(2px); }
   }
+  .tab-icon-swipe {
+    animation: icon-swipe 1.8s ease-in-out infinite;
+  }
   .group:hover .tab-icon-swipe,
   .tab-active .tab-icon-swipe {
-    animation: icon-swipe 1s ease-in-out infinite;
+    animation-duration: 0.9s;
   }
 
   /* Despesas — receipt shake */
@@ -233,9 +248,12 @@ select option {
     25% { transform: rotate(-4deg); }
     75% { transform: rotate(4deg); }
   }
+  .tab-icon-shake {
+    animation: icon-shake 1.8s ease-in-out infinite;
+  }
   .group:hover .tab-icon-shake,
   .tab-active .tab-icon-shake {
-    animation: icon-shake 0.9s ease-in-out infinite;
+    animation-duration: 0.8s;
   }
 
   /* Clientes — gentle wave */
@@ -243,9 +261,12 @@ select option {
     0%, 100% { transform: translateY(0) scale(1); }
     50% { transform: translateY(-2px) scale(1.06); }
   }
+  .tab-icon-wave {
+    animation: icon-wave 2.4s ease-in-out infinite;
+  }
   .group:hover .tab-icon-wave,
   .tab-active .tab-icon-wave {
-    animation: icon-wave 1.5s ease-in-out infinite;
+    animation-duration: 1.3s;
   }
 
   /* Produtos — bag bob */
@@ -253,9 +274,12 @@ select option {
     0%, 100% { transform: translateY(0) rotate(0deg); }
     50% { transform: translateY(-2px) rotate(-3deg); }
   }
+  .tab-icon-bob {
+    animation: icon-bob 2.2s ease-in-out infinite;
+  }
   .group:hover .tab-icon-bob,
   .tab-active .tab-icon-bob {
-    animation: icon-bob 1.4s ease-in-out infinite;
+    animation-duration: 1.2s;
   }
 
   /* Horários — clock tick */
@@ -266,9 +290,12 @@ select option {
     60% { transform: rotate(90deg); }
     80% { transform: rotate(120deg); }
   }
+  .tab-icon-tick {
+    animation: icon-tick 4s steps(8, end) infinite;
+  }
   .group:hover .tab-icon-tick,
   .tab-active .tab-icon-tick {
-    animation: icon-tick 2.4s steps(8, end) infinite;
+    animation-duration: 2.4s;
   }
 
   /* Serviços — settings spin */
@@ -276,9 +303,12 @@ select option {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
   }
+  .tab-icon-cog {
+    animation: icon-cog 8s linear infinite;
+  }
   .group:hover .tab-icon-cog,
   .tab-active .tab-icon-cog {
-    animation: icon-cog 4s linear infinite;
+    animation-duration: 3s;
   }
 
   /* Active state slight glow */
