@@ -1731,8 +1731,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                 <button
                   key={t.id}
                   onClick={() => setTab(t.id)}
-                  className={`flex flex-1 flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 transition-all ${
-                    active ? "text-gold" : "text-primary-foreground/45 hover:text-primary-foreground/70"
+                  className={`group flex flex-1 flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 transition-all ${
+                    active ? "tab-active text-gold" : "text-primary-foreground/45 hover:text-primary-foreground/70"
                   }`}
                 >
                   <t.icon
