@@ -456,19 +456,19 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setAgendamentos((prev) => prev.filter((a) => a.id !== id));
   };
 
-  const tabs: { id: Tab; label: string; icon: typeof BarChart3; anim: string }[] = [
-    { id: "dashboard", label: "Início", icon: BarChart3, anim: "tab-icon-dashboard" },
-    { id: "agendamentos", label: "Agenda", icon: Calendar, anim: "tab-icon-calendar" },
-    { id: "pedidos", label: "Pedidos", icon: ClipboardList, anim: "tab-icon-bounce" },
-    { id: "financeiro", label: "Financeiro", icon: DollarSign, anim: "tab-icon-spin" },
-    { id: "caixa", label: "Caixa", icon: Wallet, anim: "tab-icon-spin" },
-    { id: "pagamentos", label: "Pagamentos", icon: CreditCard, anim: "tab-icon-swipe" },
-    { id: "despesas", label: "Despesas", icon: Receipt, anim: "tab-icon-shake" },
-    { id: "clientes", label: "Clientes", icon: Users, anim: "tab-icon-wave" },
-    { id: "produtos", label: "Produtos", icon: ShoppingBag, anim: "tab-icon-bob" },
-    { id: "gateway", label: "Gateway", icon: Wallet, anim: "tab-icon-spin" },
-    { id: "horarios", label: "Horários", icon: Clock, anim: "tab-icon-tick" },
-    { id: "servicos", label: "Serviços", icon: Settings, anim: "tab-icon-cog" },
+  const tabs: { id: Tab; label: string; icon: typeof BarChart3; anim: string; color: string }[] = [
+    { id: "dashboard", label: "Início", icon: BarChart3, anim: "tab-icon-dashboard", color: "#22d3ee" },
+    { id: "agendamentos", label: "Agenda", icon: Calendar, anim: "tab-icon-calendar", color: "#f59e0b" },
+    { id: "pedidos", label: "Pedidos", icon: ClipboardList, anim: "tab-icon-bounce", color: "#facc15" },
+    { id: "financeiro", label: "Financeiro", icon: DollarSign, anim: "tab-icon-spin", color: "#10b981" },
+    { id: "caixa", label: "Caixa", icon: Wallet, anim: "tab-icon-spin", color: "#14b8a6" },
+    { id: "pagamentos", label: "Pagamentos", icon: CreditCard, anim: "tab-icon-swipe", color: "#3b82f6" },
+    { id: "despesas", label: "Despesas", icon: Receipt, anim: "tab-icon-shake", color: "#ef4444" },
+    { id: "clientes", label: "Clientes", icon: Users, anim: "tab-icon-wave", color: "#a855f7" },
+    { id: "produtos", label: "Produtos", icon: ShoppingBag, anim: "tab-icon-bob", color: "#fb923c" },
+    { id: "gateway", label: "Gateway", icon: Wallet, anim: "tab-icon-spin", color: "#84cc16" },
+    { id: "horarios", label: "Horários", icon: Clock, anim: "tab-icon-tick", color: "#60a5fa" },
+    { id: "servicos", label: "Serviços", icon: Settings, anim: "tab-icon-cog", color: "#eab308" },
   ];
 
   const total = agendamentos.length;
