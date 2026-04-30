@@ -51,8 +51,12 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
   // Inline edit
   const [editingNome, setEditingNome] = useState(false);
   const [editingNasc, setEditingNasc] = useState(false);
+  const [editingWpp, setEditingWpp] = useState(false);
   const [nomeDraft, setNomeDraft] = useState("");
   const [nascDraft, setNascDraft] = useState("");
+  const [wppDraft, setWppDraft] = useState("");
+  const [wppError, setWppError] = useState<string | null>(null);
+  const [savingWpp, setSavingWpp] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Avaliações
