@@ -1,8 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 
-const WEBHOOK_URL = "https://graffiti-plunging-ravine.ngrok-free.dev/webhook/notificacao";
-const WEBHOOK_TOKEN = "dyoli123";
-
 export type LembreteTipo =
   | "confirmacao"
   | "lembrete"
@@ -81,11 +78,10 @@ const fallbackMessages: Record<LembreteTipo, string> = {
 
 const sendWebhook = async (numero: string, mensagem: string) => {
   try {
-    await fetch(WEBHOOK_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ numero, mensagem, token: WEBHOOK_TOKEN }),
+    const { error } = await supabase.functions.invoke("send-whatsapp-notification", {
+      body: { numero, mensagem },
     });
+    if (error) throw error;
   } catch (error) {
     console.log("Erro ao enviar webhook", error);
   }
