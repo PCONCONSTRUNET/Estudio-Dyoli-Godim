@@ -1,5 +1,49 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { corsHeaders, checkBotAuth, jsonResponse } from "../_shared/bot-auth.ts";
+import {
+  checkBotAuth,
+  corsHeaders,
+  jsonResponse,
+} from "../_shared/bot-auth.ts";
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function normalizeDate(input?: string): string | null {
+  if (!input) return null;
+  const value = input.trim().toLowerCase();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+
+  const today = new Date();
+  if (["hoje", "hj"].includes(value)) {
+    return `${today.getFullYear()}-${
+      String(today.getMonth() + 1).padStart(2, "0")
+    }-${String(today.getDate()).padStart(2, "0")}`;
+  }
+  if (["amanha", "amanhã"].includes(value)) {
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    return `${tomorrow.getFullYear()}-${
+      String(tomorrow.getMonth() + 1).padStart(2, "0")
+    }-${String(tomorrow.getDate()).padStart(2, "0")}`;
+  }
+
+  const ddmm = value.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2}|\d{4}))?$/);
+  if (!ddmm) return null;
+  const day = Number(ddmm[1]);
+  const month = Number(ddmm[2]);
+  let year = ddmm[3] ? Number(ddmm[3]) : today.getFullYear();
+  if (year < 100) year += 2000;
+  const candidate = new Date(year, month - 1, day);
+  if (
+    !ddmm[3] &&
+    candidate < new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  ) {
+    year += 1;
+  }
+  return `${year}-${String(month).padStart(2, "0")}-${
+    String(day).padStart(2, "0")
+  }`;
+}
 
 // Returns available 30-min slots for a given service & date
 Deno.serve(async (req) => {
@@ -12,38 +56,68 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { servico_id, data } = body as { servico_id?: string; data?: string };
+    const servico_id = body.servico_id ?? body.service_id ?? body.servicoId ??
+      body.serviceId;
+    const servico_nome = body.servico_nome ?? body.service_name ??
+      body.servico ?? body.service;
+    const data = normalizeDate(body.data ?? body.date);
 
-    if (!servico_id || !data) {
+    if ((!servico_id && !servico_nome) || !data) {
       return jsonResponse(
-        { success: false, error: "servico_id and data (YYYY-MM-DD) are required" },
-        400
-      );
-    }
-
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) {
-      return jsonResponse(
-        { success: false, error: "data must be in YYYY-MM-DD format" },
-        400
+        {
+          success: false,
+          error: "servico_id/servico_nome and data are required",
+        },
+        400,
       );
     }
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Load service
-    const { data: servico, error: servicoErr } = await supabase
-      .from("servicos")
-      .select("id, nome, duracao_minutos, preco")
-      .eq("id", servico_id)
-      .eq("ativo", true)
-      .maybeSingle();
+    // Load service. Accept UUID, exact name, or menu index (1, 2, 3...) from bot-servicos.
+    let servico: {
+      id: string;
+      nome: string;
+      duracao_minutos: number | null;
+      preco: number | null;
+    } | null = null;
+    let servicoErr = null;
+
+    if (servico_id && UUID_RE.test(String(servico_id))) {
+      const result = await supabase
+        .from("servicos")
+        .select("id, nome, duracao_minutos, preco")
+        .eq("id", servico_id)
+        .eq("ativo", true)
+        .maybeSingle();
+      servico = result.data;
+      servicoErr = result.error;
+    } else {
+      const { data: servicos, error } = await supabase
+        .from("servicos")
+        .select("id, nome, duracao_minutos, preco")
+        .eq("ativo", true)
+        .order("ordem", { ascending: true });
+
+      servicoErr = error;
+      const rawService = String(servico_nome ?? servico_id ?? "").trim();
+      const menuIndex = /^\d+$/.test(rawService) ? Number(rawService) - 1 : -1;
+      servico = menuIndex >= 0
+        ? (servicos?.[menuIndex] ?? null)
+        : (servicos?.find((item) =>
+          item.nome.toLowerCase() === rawService.toLowerCase()
+        ) ?? null);
+    }
 
     if (servicoErr) throw servicoErr;
     if (!servico) {
-      return jsonResponse({ success: false, error: "Serviço não encontrado" }, 404);
+      return jsonResponse(
+        { success: false, error: "Serviço não encontrado" },
+        404,
+      );
     }
 
     // Day of week (0=Sunday, 6=Saturday) — interpret in local time
@@ -79,6 +153,27 @@ Deno.serve(async (req) => {
     if (bloqErr) throw bloqErr;
     const bloqueadosSet = new Set((bloqueados ?? []).map((b) => b.horario));
 
+    const { data: agendamentos, error: agErr } = await supabase
+      .from("agendamentos")
+      .select("horario, duracao_minutos")
+      .eq("data_agendamento", data)
+      .in("status", ["pendente", "confirmado", "concluido"]);
+
+    if (agErr) throw agErr;
+    (agendamentos ?? []).forEach((ag) => {
+      const duracaoAgendamento = ag.duracao_minutos || 60;
+      const [ah, am] = ag.horario.split(":").map(Number);
+      const startT = ah * 60 + am;
+      for (let t = 0; t < duracaoAgendamento; t += 30) {
+        const checkT = startT + t;
+        const ch = Math.floor(checkT / 60);
+        const cm = checkT % 60;
+        bloqueadosSet.add(
+          `${String(ch).padStart(2, "0")}:${String(cm).padStart(2, "0")}`,
+        );
+      }
+    });
+
     // Generate 30-min slots between hora_inicio and hora_fim
     const [hIni, mIni] = horario.hora_inicio.split(":").map(Number);
     const [hFim, mFim] = horario.hora_fim.split(":").map(Number);
@@ -91,7 +186,9 @@ Deno.serve(async (req) => {
     for (let t = startMin; t + duracao <= endMin; t += 30) {
       const h = Math.floor(t / 60);
       const m = t % 60;
-      allSlots.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+      allSlots.push(
+        `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`,
+      );
     }
 
     // Filter: a slot is available only if all `slotsNeeded` consecutive 30-min blocks are free
@@ -102,7 +199,9 @@ Deno.serve(async (req) => {
         const checkT = startT + i * 30;
         const ch = Math.floor(checkT / 60);
         const cm = checkT % 60;
-        const checkSlot = `${String(ch).padStart(2, "0")}:${String(cm).padStart(2, "0")}`;
+        const checkSlot = `${String(ch).padStart(2, "0")}:${
+          String(cm).padStart(2, "0")
+        }`;
         if (bloqueadosSet.has(checkSlot)) return false;
       }
       return true;
@@ -110,7 +209,9 @@ Deno.serve(async (req) => {
 
     // Filter past slots if requested date is today
     const today = new Date();
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const todayStr = `${today.getFullYear()}-${
+      String(today.getMonth() + 1).padStart(2, "0")
+    }-${String(today.getDate()).padStart(2, "0")}`;
     let finalSlots = disponiveis;
     if (data === todayStr) {
       const nowMin = today.getHours() * 60 + today.getMinutes();
@@ -125,12 +226,17 @@ Deno.serve(async (req) => {
       servico,
       data,
       horarios_disponiveis: finalSlots,
+      horarios: finalSlots,
+      available_times: finalSlots,
     });
   } catch (err) {
     console.error("bot-horarios-disponiveis error:", err);
     return jsonResponse(
-      { success: false, error: err instanceof Error ? err.message : "Unknown error" },
-      500
+      {
+        success: false,
+        error: err instanceof Error ? err.message : "Unknown error",
+      },
+      500,
     );
   }
 });
