@@ -86,22 +86,25 @@ Deno.serve(async (req) => {
     const horasAntes = cfg.horas_antes ?? 24;
     const template = (cfg.mensagem && cfg.mensagem.trim()) || fallbackTemplate;
 
-    // 2) Calcula janela alvo: agora + horasAntes ± 15 minutos
-    const target = new Date(nowBrasilia().getTime() + horasAntes * 60 * 60 * 1000);
-    const windowStart = new Date(target.getTime() - 15 * 60 * 1000);
-    const windowEnd = new Date(target.getTime() + 15 * 60 * 1000);
+    // 2) Janela: do "agora" até "agora + horasAntes".
+    // Qualquer agendamento confirmado nessa janela é elegível para lembrete.
+    // Isso cobre dois casos:
+    //   a) agendamento marcado pra daqui a 24h → entra na janela quando faltarem ≤24h
+    //   b) agendamento criado em cima da hora (ex: pra daqui a 2h) → entra na próxima
+    //      execução do cron (≤10 min depois) e o lembrete dispara quase imediatamente.
+    const agora = nowBrasilia();
+    const limite = new Date(agora.getTime() + horasAntes * 60 * 60 * 1000);
 
-    // Pesquisa em duas datas possíveis (caso a janela cruze meia-noite)
     const datesToCheck = new Set<string>([
-      windowStart.toISOString().split("T")[0],
-      windowEnd.toISOString().split("T")[0],
+      agora.toISOString().split("T")[0],
+      limite.toISOString().split("T")[0],
     ]);
 
     const inWindow = (data: string, horario: string) => {
       const [y, mo, d] = data.split("-").map(Number);
       const [h, mi] = horario.split(":").map(Number);
       const dt = new Date(Date.UTC(y, mo - 1, d, h, mi));
-      return dt >= windowStart && dt <= windowEnd;
+      return dt >= agora && dt <= limite;
     };
 
     // 3) Busca agendamentos elegíveis (somente origem='app')
