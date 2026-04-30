@@ -96,8 +96,9 @@ Deno.serve(async (req) => {
 
       const cfgMap = new Map((configs || []).map((c: any) => [c.tipo, c]));
 
-      // Fire webhooks for each completed appointment
+      // Fire webhooks for each completed appointment (somente origem='app')
       for (const a of toComplete) {
+        if (a.origem !== "app") continue;
         const { data: prof } = await supabase
           .from("profiles")
           .select("nome, whatsapp")
