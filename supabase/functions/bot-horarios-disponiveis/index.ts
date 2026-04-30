@@ -77,18 +77,38 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Load service
-    let servicoQuery = supabase
-      .from("servicos")
-      .select("id, nome, duracao_minutos, preco")
-      .eq("ativo", true);
+    // Load service. Accept UUID, exact name, or menu index (1, 2, 3...) from bot-servicos.
+    let servico: {
+      id: string;
+      nome: string;
+      duracao_minutos: number | null;
+      preco: number | null;
+    } | null = null;
+    let servicoErr = null;
 
-    servicoQuery = servico_id && UUID_RE.test(String(servico_id))
-      ? servicoQuery.eq("id", servico_id)
-      : servicoQuery.ilike("nome", servico_nome ?? String(servico_id));
+    if (servico_id && UUID_RE.test(String(servico_id))) {
+      const result = await supabase
+        .from("servicos")
+        .select("id, nome, duracao_minutos, preco")
+        .eq("id", servico_id)
+        .eq("ativo", true)
+        .maybeSingle();
+      servico = result.data;
+      servicoErr = result.error;
+    } else {
+      const { data: servicos, error } = await supabase
+        .from("servicos")
+        .select("id, nome, duracao_minutos, preco")
+        .eq("ativo", true)
+        .order("ordem", { ascending: true });
 
-    const { data: servico, error: servicoErr } = await servicoQuery
-      .maybeSingle();
+      servicoErr = error;
+      const rawService = String(servico_nome ?? servico_id ?? "").trim();
+      const menuIndex = /^\d+$/.test(rawService) ? Number(rawService) - 1 : -1;
+      servico = menuIndex >= 0
+        ? (servicos?.[menuIndex] ?? null)
+        : (servicos?.find((item) => item.nome.toLowerCase() === rawService.toLowerCase()) ?? null);
+    }
 
     if (servicoErr) throw servicoErr;
     if (!servico) {
