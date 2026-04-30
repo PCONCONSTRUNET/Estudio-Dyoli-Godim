@@ -533,7 +533,7 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                       </div>
                       <div className="flex justify-end">
                         <button onClick={() => deleteAgendamento(a.id)}
-                          className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-primary-foreground/20 transition-all hover:bg-rose/10 hover:text-rose">
+                          className="flex items-center gap-1 rounded-lg border border-rose/40 bg-rose/10 px-2.5 py-1.5 font-body text-[10px] font-semibold text-rose transition-all hover:bg-rose/20 hover:text-rose hover:border-rose/60">
                           <Trash2 className="h-3.5 w-3.5" /> Excluir
                         </button>
                       </div>
