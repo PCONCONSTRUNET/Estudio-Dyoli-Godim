@@ -32,6 +32,7 @@ interface BotStatusResponse {
 const AdminBotWpp = () => {
   const [status, setStatus] = useState<BotStatus>("WAITING");
   const [qr, setQr] = useState<string | null>(null);
+  const [qrSrc, setQrSrc] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [manualRefreshing, setManualRefreshing] = useState(false);
