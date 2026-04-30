@@ -4,7 +4,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const WEBHOOK_URL = "https://graffiti-plunging-ravine.ngrok-free.dev/webhook/notificacao";
+const WEBHOOK_URL = "http://178.105.54.230:3001/webhook/notificacao";
 const WEBHOOK_TOKEN = "dyoli123";
 
 const json = (data: unknown, status = 200) =>
