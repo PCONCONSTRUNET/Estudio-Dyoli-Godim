@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RefreshCw, Smartphone, Wifi, WifiOff, Loader2, CheckCircle2, KeyRound, QrCode, ArrowLeft } from "lucide-react";
+import { RefreshCw, Smartphone, Wifi, WifiOff, Loader2, CheckCircle2, KeyRound, QrCode, ArrowLeft, LogOut } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
 
@@ -11,6 +12,7 @@ import logo from "@/assets/logo.png";
 const BOT_BASE_URL = "http://178.105.54.230:3001";
 const BOT_STATUS_URL = `${BOT_BASE_URL}/api/status`;
 const BOT_PAIRING_URL = `${BOT_BASE_URL}/api/pairing-code`;
+const BOT_LOGOUT_URL = `${BOT_BASE_URL}/api/logout`;
 const POLL_INTERVAL_MS = 3000;
 
 // Headers padrão para chamadas ao backend do robô.
@@ -36,6 +38,7 @@ const AdminBotWpp = () => {
   const [pairingCode, setPairingCode] = useState<string | null>(null);
   const [pairingLoading, setPairingLoading] = useState(false);
   const [pairingError, setPairingError] = useState<string | null>(null);
+  const [logoutLoading, setLogoutLoading] = useState(false);
   const intervalRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -115,6 +118,38 @@ const AdminBotWpp = () => {
     setPairingError(null);
     if (mode === "qr") {
       setPairingCode(null);
+    }
+  };
+
+  const handleLogout = async () => {
+    const ok = window.confirm(
+      "Tem certeza que deseja desconectar o assistente do WhatsApp? Será necessário escanear o QR Code novamente."
+    );
+    if (!ok) return;
+    setLogoutLoading(true);
+    try {
+      const res = await fetch(BOT_LOGOUT_URL, {
+        method: "POST",
+        cache: "no-store",
+        headers: BOT_HEADERS,
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      toast({
+        title: "Assistente desconectado",
+        description: "A sessão do WhatsApp foi encerrada com sucesso.",
+      });
+      setStatus("WAITING");
+      setQr(null);
+      setPairingCode(null);
+      await fetchStatus();
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao desconectar",
+        description: "Não foi possível encerrar a sessão. Verifique a VPS e tente novamente.",
+      });
+    } finally {
+      setLogoutLoading(false);
     }
   };
 
@@ -203,6 +238,20 @@ const AdminBotWpp = () => {
             <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground/70">
               Monitorando conexão • Última verificação: {lastUpdate.toLocaleTimeString("pt-BR")}
             </p>
+            <Button
+              onClick={handleLogout}
+              disabled={logoutLoading}
+              variant="destructive"
+              size="lg"
+              className="mt-4 rounded-full shadow-md"
+            >
+              {logoutLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <LogOut className="h-4 w-4" />
+              )}
+              Desconectar WhatsApp
+            </Button>
           </div>
         ) : (
           /* Status badge tematizado */
