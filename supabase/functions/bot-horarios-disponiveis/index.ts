@@ -1,6 +1,36 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders, checkBotAuth, jsonResponse } from "../_shared/bot-auth.ts";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function normalizeDate(input?: string): string | null {
+  if (!input) return null;
+  const value = input.trim().toLowerCase();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+
+  const today = new Date();
+  if (["hoje", "hj"].includes(value)) {
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  }
+  if (["amanha", "amanhã"].includes(value)) {
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    return `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
+  }
+
+  const ddmm = value.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2}|\d{4}))?$/);
+  if (!ddmm) return null;
+  const day = Number(ddmm[1]);
+  const month = Number(ddmm[2]);
+  let year = ddmm[3] ? Number(ddmm[3]) : today.getFullYear();
+  if (year < 100) year += 2000;
+  const candidate = new Date(year, month - 1, day);
+  if (!ddmm[3] && candidate < new Date(today.getFullYear(), today.getMonth(), today.getDate())) {
+    year += 1;
+  }
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
 // Returns available 30-min slots for a given service & date
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -12,18 +42,13 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { servico_id, data } = body as { servico_id?: string; data?: string };
+    const servico_id = body.servico_id ?? body.service_id ?? body.servicoId ?? body.serviceId;
+    const servico_nome = body.servico_nome ?? body.service_name ?? body.servico ?? body.service;
+    const data = normalizeDate(body.data ?? body.date);
 
-    if (!servico_id || !data) {
+    if ((!servico_id && !servico_nome) || !data) {
       return jsonResponse(
-        { success: false, error: "servico_id and data (YYYY-MM-DD) are required" },
-        400
-      );
-    }
-
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) {
-      return jsonResponse(
-        { success: false, error: "data must be in YYYY-MM-DD format" },
+        { success: false, error: "servico_id/servico_nome and data are required" },
         400
       );
     }
@@ -34,12 +59,16 @@ Deno.serve(async (req) => {
     );
 
     // Load service
-    const { data: servico, error: servicoErr } = await supabase
+    let servicoQuery = supabase
       .from("servicos")
       .select("id, nome, duracao_minutos, preco")
-      .eq("id", servico_id)
-      .eq("ativo", true)
-      .maybeSingle();
+      .eq("ativo", true);
+
+    servicoQuery = servico_id && UUID_RE.test(String(servico_id))
+      ? servicoQuery.eq("id", servico_id)
+      : servicoQuery.ilike("nome", servico_nome ?? String(servico_id));
+
+    const { data: servico, error: servicoErr } = await servicoQuery.maybeSingle();
 
     if (servicoErr) throw servicoErr;
     if (!servico) {
