@@ -8,8 +8,9 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
 
-// 🔌 Endpoints do backend (VPS fixa)
-const BOT_BASE_URL = "http://178.105.54.230:3001";
+// 🔌 Endpoints do backend (VPS fixa) — chamados via Edge Function proxy
+// para evitar erro de Mixed Content (site HTTPS -> VPS HTTP).
+const BOT_BASE_URL = "https://vlepenxinekoljxecomr.supabase.co/functions/v1/bot-wpp-proxy";
 const BOT_STATUS_URL = `${BOT_BASE_URL}/api/status`;
 const BOT_PAIRING_URL = `${BOT_BASE_URL}/api/pairing-code`;
 const BOT_LOGOUT_URL = `${BOT_BASE_URL}/api/logout`;
