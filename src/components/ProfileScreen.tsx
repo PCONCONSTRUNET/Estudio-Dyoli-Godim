@@ -135,6 +135,45 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
     setSaving(false);
   };
 
+  const saveWhatsapp = async () => {
+    const digits = wppDraft.replace(/\D/g, "");
+    if (digits.length < 10 || digits.length > 13) {
+      setWppError("Número inválido. Inclua DDD + número.");
+      return;
+    }
+    setWppError(null);
+    setSavingWpp(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("update-cliente-whatsapp", {
+        body: { whatsapp: digits },
+      });
+      if (error) {
+        // Tenta extrair mensagem amigável do contexto da edge function
+        let msg = "Não foi possível atualizar o WhatsApp.";
+        try {
+          const ctx: any = (error as any).context;
+          if (ctx?.json) msg = ctx.json.error || msg;
+          else if (ctx instanceof Response) {
+            const j = await ctx.json().catch(() => null);
+            if (j?.error) msg = j.error;
+          }
+        } catch {}
+        setWppError(msg);
+        return;
+      }
+      if (data?.error) {
+        setWppError(data.error);
+        return;
+      }
+      setProfile(prev => prev ? { ...prev, whatsapp: digits } : prev);
+      setEditingWpp(false);
+    } catch (e: any) {
+      setWppError(e?.message || "Erro ao atualizar WhatsApp.");
+    } finally {
+      setSavingWpp(false);
+    }
+  };
+
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr + "T12:00:00");
     return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
