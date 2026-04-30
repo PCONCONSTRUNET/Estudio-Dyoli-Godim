@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
 
     const { data: agendamentos, error } = await supabase
       .from("agendamentos")
-      .select("id, data_agendamento, horario, duracao_minutos, servico, cliente_nome, user_id")
+      .select("id, data_agendamento, horario, duracao_minutos, servico, cliente_nome, user_id, origem")
       .eq("status", "confirmado")
       .lte("data_agendamento", todayStr);
 
