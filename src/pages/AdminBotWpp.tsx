@@ -156,8 +156,7 @@ const AdminBotWpp = () => {
     }
   };
 
-  const qrSrc =
-    qr && (qr.startsWith("data:image") ? qr : `data:image/png;base64,${qr}`);
+  // qrSrc é gerado em um useEffect a partir da string crua do backend.
 
   const statusConfig: Record<
     BotStatus,
