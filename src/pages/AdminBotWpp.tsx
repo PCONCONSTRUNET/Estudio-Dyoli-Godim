@@ -13,8 +13,8 @@ const BOT_STATUS_URL = `${BOT_BASE_URL}/api/status`;
 const BOT_PAIRING_URL = `${BOT_BASE_URL}/api/pairing-code`;
 const POLL_INTERVAL_MS = 3000;
 
-// Mantido por compatibilidade com chamadas existentes; sem efeito no host atual.
-const NGROK_HEADERS = {} as const;
+// Headers padrão para chamadas ao backend do robô.
+const BOT_HEADERS = {} as const;
 
 type ConnectMode = "qr" | "code";
 
@@ -46,7 +46,7 @@ const AdminBotWpp = () => {
     try {
       const res = await fetch(BOT_STATUS_URL, {
         cache: "no-store",
-        headers: NGROK_HEADERS,
+        headers: BOT_HEADERS,
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: BotStatusResponse = await res.json();
@@ -56,7 +56,7 @@ const AdminBotWpp = () => {
       setLastUpdate(new Date());
     } catch (err) {
       setErrorMsg(
-        "Não foi possível conectar ao servidor do robô. Verifique se o túnel Ngrok está ativo."
+        "Não foi possível conectar ao servidor do robô. Verifique se a VPS está online."
       );
     }
   };
@@ -92,7 +92,7 @@ const AdminBotWpp = () => {
         method: "POST",
         cache: "no-store",
         headers: {
-          ...NGROK_HEADERS,
+          ...BOT_HEADERS,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ phone: digits }),
