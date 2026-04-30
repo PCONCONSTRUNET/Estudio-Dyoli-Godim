@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
 
     const { data: agendamentos, error } = await supabase
       .from("agendamentos")
-      .select("id, data_agendamento, horario, duracao_minutos, servico, cliente_nome, user_id")
+      .select("id, data_agendamento, horario, duracao_minutos, servico, cliente_nome, user_id, origem")
       .eq("status", "confirmado")
       .lte("data_agendamento", todayStr);
 
@@ -96,8 +96,9 @@ Deno.serve(async (req) => {
 
       const cfgMap = new Map((configs || []).map((c: any) => [c.tipo, c]));
 
-      // Fire webhooks for each completed appointment
+      // Fire webhooks for each completed appointment (somente origem='app')
       for (const a of toComplete) {
+        if (a.origem !== "app") continue;
         const { data: prof } = await supabase
           .from("profiles")
           .select("nome, whatsapp")
