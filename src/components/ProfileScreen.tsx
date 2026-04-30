@@ -51,8 +51,12 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
   // Inline edit
   const [editingNome, setEditingNome] = useState(false);
   const [editingNasc, setEditingNasc] = useState(false);
+  const [editingWpp, setEditingWpp] = useState(false);
   const [nomeDraft, setNomeDraft] = useState("");
   const [nascDraft, setNascDraft] = useState("");
+  const [wppDraft, setWppDraft] = useState("");
+  const [wppError, setWppError] = useState<string | null>(null);
+  const [savingWpp, setSavingWpp] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Avaliações
@@ -129,6 +133,45 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
     const { error } = await supabase.from("profiles").update(patch).eq("id", user.id);
     if (!error) setProfile(prev => prev ? { ...prev, ...patch } : prev);
     setSaving(false);
+  };
+
+  const saveWhatsapp = async () => {
+    const digits = wppDraft.replace(/\D/g, "");
+    if (digits.length < 10 || digits.length > 13) {
+      setWppError("Número inválido. Inclua DDD + número.");
+      return;
+    }
+    setWppError(null);
+    setSavingWpp(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("update-cliente-whatsapp", {
+        body: { whatsapp: digits },
+      });
+      if (error) {
+        // Tenta extrair mensagem amigável do contexto da edge function
+        let msg = "Não foi possível atualizar o WhatsApp.";
+        try {
+          const ctx: any = (error as any).context;
+          if (ctx?.json) msg = ctx.json.error || msg;
+          else if (ctx instanceof Response) {
+            const j = await ctx.json().catch(() => null);
+            if (j?.error) msg = j.error;
+          }
+        } catch {}
+        setWppError(msg);
+        return;
+      }
+      if (data?.error) {
+        setWppError(data.error);
+        return;
+      }
+      setProfile(prev => prev ? { ...prev, whatsapp: digits } : prev);
+      setEditingWpp(false);
+    } catch (e: any) {
+      setWppError(e?.message || "Erro ao atualizar WhatsApp.");
+    } finally {
+      setSavingWpp(false);
+    }
   };
 
   const formatDate = (dateStr: string) => {
@@ -393,13 +436,66 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
                 )}
               </div>
 
-              {/* WhatsApp (read only) */}
+              {/* WhatsApp (também é o login) */}
               <div className="space-y-1.5">
-                <label className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest font-medium">WhatsApp</label>
-                <div className="px-4 py-3 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[15px]">
-                  {loading ? "Carregando..." : formatWhatsapp(profile?.whatsapp || "") || "—"}
+                <div className="flex items-center justify-between">
+                  <label className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest font-medium">
+                    WhatsApp <span className="text-primary-foreground/25 normal-case tracking-normal">(seu login)</span>
+                  </label>
+                  {!editingWpp && !loading && (
+                    <button
+                      onClick={() => {
+                        setWppDraft(profile?.whatsapp || "");
+                        setWppError(null);
+                        setEditingWpp(true);
+                      }}
+                      className="ios-press text-primary-foreground/40 hover:text-gold transition-colors"
+                    >
+                      <Pencil className="w-3 h-3" />
+                    </button>
+                  )}
                 </div>
+                {editingWpp ? (
+                  <div className="space-y-1.5">
+                    <div className="flex gap-2">
+                      <input
+                        autoFocus
+                        type="tel"
+                        inputMode="numeric"
+                        placeholder="(11) 99999-9999"
+                        value={wppDraft}
+                        onChange={(e) => { setWppDraft(e.target.value); setWppError(null); }}
+                        className="flex-1 px-4 py-3 rounded-xl bg-primary-foreground/[0.05] border border-gold/30 text-primary-foreground font-body text-[15px] outline-none focus:border-gold/60"
+                      />
+                      <button
+                        disabled={savingWpp || !wppDraft.trim()}
+                        onClick={saveWhatsapp}
+                        className="ios-press px-3 rounded-xl bg-gold/15 border border-gold/25 text-gold disabled:opacity-40"
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                      <button
+                        disabled={savingWpp}
+                        onClick={() => { setEditingWpp(false); setWppError(null); }}
+                        className="ios-press px-3 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.08] text-primary-foreground/60 disabled:opacity-40"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    {wppError && (
+                      <p className="font-body text-[11px] text-rose px-1">{wppError}</p>
+                    )}
+                    <p className="font-body text-[10px] text-primary-foreground/35 px-1">
+                      Sua senha continua a mesma. Use o novo número no próximo login.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="px-4 py-3 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[15px]">
+                    {loading ? "Carregando..." : formatWhatsapp(profile?.whatsapp || "") || "—"}
+                  </div>
+                )}
               </div>
+
 
               {/* Aniversário */}
               <div className="space-y-1.5">
