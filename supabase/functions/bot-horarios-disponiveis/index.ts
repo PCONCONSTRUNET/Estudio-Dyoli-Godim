@@ -108,6 +108,25 @@ Deno.serve(async (req) => {
     if (bloqErr) throw bloqErr;
     const bloqueadosSet = new Set((bloqueados ?? []).map((b) => b.horario));
 
+    const { data: agendamentos, error: agErr } = await supabase
+      .from("agendamentos")
+      .select("horario, duracao_minutos")
+      .eq("data_agendamento", data)
+      .in("status", ["pendente", "confirmado", "concluido"]);
+
+    if (agErr) throw agErr;
+    (agendamentos ?? []).forEach((ag) => {
+      const duracaoAgendamento = ag.duracao_minutos || 60;
+      const [ah, am] = ag.horario.split(":").map(Number);
+      const startT = ah * 60 + am;
+      for (let t = 0; t < duracaoAgendamento; t += 30) {
+        const checkT = startT + t;
+        const ch = Math.floor(checkT / 60);
+        const cm = checkT % 60;
+        bloqueadosSet.add(`${String(ch).padStart(2, "0")}:${String(cm).padStart(2, "0")}`);
+      }
+    });
+
     // Generate 30-min slots between hora_inicio and hora_fim
     const [hIni, mIni] = horario.hora_inicio.split(":").map(Number);
     const [hFim, mFim] = horario.hora_fim.split(":").map(Number);
@@ -154,6 +173,8 @@ Deno.serve(async (req) => {
       servico,
       data,
       horarios_disponiveis: finalSlots,
+      horarios: finalSlots,
+      available_times: finalSlots,
     });
   } catch (err) {
     console.error("bot-horarios-disponiveis error:", err);
