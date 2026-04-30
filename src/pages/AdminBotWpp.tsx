@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import QRCode from "qrcode";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,7 @@ interface BotStatusResponse {
 const AdminBotWpp = () => {
   const [status, setStatus] = useState<BotStatus>("WAITING");
   const [qr, setQr] = useState<string | null>(null);
+  const [qrSrc, setQrSrc] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [manualRefreshing, setManualRefreshing] = useState(false);
@@ -72,6 +74,36 @@ const AdminBotWpp = () => {
       if (intervalRef.current) window.clearInterval(intervalRef.current);
     };
   }, []);
+
+  // Converte a string crua do QR (vinda do Baileys) em data URL renderizável.
+  useEffect(() => {
+    let cancelled = false;
+    if (!qr) {
+      setQrSrc(null);
+      return;
+    }
+    if (qr.startsWith("data:image")) {
+      setQrSrc(qr);
+      return;
+    }
+    // Se for base64 puro de imagem (longo e sem vírgulas típicas do payload Baileys)
+    const looksLikeBase64Image = /^[A-Za-z0-9+/=]+$/.test(qr) && qr.length > 200;
+    if (looksLikeBase64Image) {
+      setQrSrc(`data:image/png;base64,${qr}`);
+      return;
+    }
+    // Caso padrão: string crua do WhatsApp -> gerar QR Code localmente.
+    QRCode.toDataURL(qr, { width: 320, margin: 1 })
+      .then((url) => {
+        if (!cancelled) setQrSrc(url);
+      })
+      .catch(() => {
+        if (!cancelled) setQrSrc(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [qr]);
 
   // Polling continua ativo mesmo quando conectado, para detectar desconexão em tempo real
   const handleManualRefresh = async () => {
@@ -154,8 +186,7 @@ const AdminBotWpp = () => {
     }
   };
 
-  const qrSrc =
-    qr && (qr.startsWith("data:image") ? qr : `data:image/png;base64,${qr}`);
+  // qrSrc é gerado em um useEffect a partir da string crua do backend.
 
   const statusConfig: Record<
     BotStatus,
