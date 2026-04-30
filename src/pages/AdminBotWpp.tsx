@@ -38,6 +38,7 @@ const AdminBotWpp = () => {
   const [pairingCode, setPairingCode] = useState<string | null>(null);
   const [pairingLoading, setPairingLoading] = useState(false);
   const [pairingError, setPairingError] = useState<string | null>(null);
+  const [logoutLoading, setLogoutLoading] = useState(false);
   const intervalRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -117,6 +118,38 @@ const AdminBotWpp = () => {
     setPairingError(null);
     if (mode === "qr") {
       setPairingCode(null);
+    }
+  };
+
+  const handleLogout = async () => {
+    const ok = window.confirm(
+      "Tem certeza que deseja desconectar o assistente do WhatsApp? Será necessário escanear o QR Code novamente."
+    );
+    if (!ok) return;
+    setLogoutLoading(true);
+    try {
+      const res = await fetch(BOT_LOGOUT_URL, {
+        method: "POST",
+        cache: "no-store",
+        headers: BOT_HEADERS,
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      toast({
+        title: "Assistente desconectado",
+        description: "A sessão do WhatsApp foi encerrada com sucesso.",
+      });
+      setStatus("WAITING");
+      setQr(null);
+      setPairingCode(null);
+      await fetchStatus();
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao desconectar",
+        description: "Não foi possível encerrar a sessão. Verifique a VPS e tente novamente.",
+      });
+    } finally {
+      setLogoutLoading(false);
     }
   };
 
