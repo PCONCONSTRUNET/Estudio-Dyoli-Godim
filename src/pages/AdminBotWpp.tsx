@@ -7,13 +7,14 @@ import { RefreshCw, Smartphone, Wifi, WifiOff, Loader2, CheckCircle2, KeyRound, 
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
 
-// 🔌 Endpoints do backend (provisório via Ngrok até subir na VPS definitiva)
-const BOT_BASE_URL = "https://graffiti-plunging-ravine.ngrok-free.dev";
+// 🔌 Endpoints do backend (VPS fixa)
+const BOT_BASE_URL = "http://178.105.54.230:3001";
 const BOT_STATUS_URL = `${BOT_BASE_URL}/api/status`;
 const BOT_PAIRING_URL = `${BOT_BASE_URL}/api/pairing-code`;
 const POLL_INTERVAL_MS = 3000;
 
-const NGROK_HEADERS = { "ngrok-skip-browser-warning": "true" } as const;
+// Mantido por compatibilidade com chamadas existentes; sem efeito no host atual.
+const NGROK_HEADERS = {} as const;
 
 type ConnectMode = "qr" | "code";
 
