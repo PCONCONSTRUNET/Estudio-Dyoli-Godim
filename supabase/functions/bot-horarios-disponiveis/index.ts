@@ -1,7 +1,12 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { corsHeaders, checkBotAuth, jsonResponse } from "../_shared/bot-auth.ts";
+import {
+  checkBotAuth,
+  corsHeaders,
+  jsonResponse,
+} from "../_shared/bot-auth.ts";
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function normalizeDate(input?: string): string | null {
   if (!input) return null;
@@ -10,12 +15,16 @@ function normalizeDate(input?: string): string | null {
 
   const today = new Date();
   if (["hoje", "hj"].includes(value)) {
-    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    return `${today.getFullYear()}-${
+      String(today.getMonth() + 1).padStart(2, "0")
+    }-${String(today.getDate()).padStart(2, "0")}`;
   }
   if (["amanha", "amanhã"].includes(value)) {
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
-    return `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
+    return `${tomorrow.getFullYear()}-${
+      String(tomorrow.getMonth() + 1).padStart(2, "0")
+    }-${String(tomorrow.getDate()).padStart(2, "0")}`;
   }
 
   const ddmm = value.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2}|\d{4}))?$/);
@@ -25,10 +34,15 @@ function normalizeDate(input?: string): string | null {
   let year = ddmm[3] ? Number(ddmm[3]) : today.getFullYear();
   if (year < 100) year += 2000;
   const candidate = new Date(year, month - 1, day);
-  if (!ddmm[3] && candidate < new Date(today.getFullYear(), today.getMonth(), today.getDate())) {
+  if (
+    !ddmm[3] &&
+    candidate < new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  ) {
     year += 1;
   }
-  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  return `${year}-${String(month).padStart(2, "0")}-${
+    String(day).padStart(2, "0")
+  }`;
 }
 
 // Returns available 30-min slots for a given service & date
@@ -42,20 +56,25 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    const servico_id = body.servico_id ?? body.service_id ?? body.servicoId ?? body.serviceId;
-    const servico_nome = body.servico_nome ?? body.service_name ?? body.servico ?? body.service;
+    const servico_id = body.servico_id ?? body.service_id ?? body.servicoId ??
+      body.serviceId;
+    const servico_nome = body.servico_nome ?? body.service_name ??
+      body.servico ?? body.service;
     const data = normalizeDate(body.data ?? body.date);
 
     if ((!servico_id && !servico_nome) || !data) {
       return jsonResponse(
-        { success: false, error: "servico_id/servico_nome and data are required" },
-        400
+        {
+          success: false,
+          error: "servico_id/servico_nome and data are required",
+        },
+        400,
       );
     }
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
     // Load service
@@ -68,11 +87,15 @@ Deno.serve(async (req) => {
       ? servicoQuery.eq("id", servico_id)
       : servicoQuery.ilike("nome", servico_nome ?? String(servico_id));
 
-    const { data: servico, error: servicoErr } = await servicoQuery.maybeSingle();
+    const { data: servico, error: servicoErr } = await servicoQuery
+      .maybeSingle();
 
     if (servicoErr) throw servicoErr;
     if (!servico) {
-      return jsonResponse({ success: false, error: "Serviço não encontrado" }, 404);
+      return jsonResponse(
+        { success: false, error: "Serviço não encontrado" },
+        404,
+      );
     }
 
     // Day of week (0=Sunday, 6=Saturday) — interpret in local time
@@ -123,7 +146,9 @@ Deno.serve(async (req) => {
         const checkT = startT + t;
         const ch = Math.floor(checkT / 60);
         const cm = checkT % 60;
-        bloqueadosSet.add(`${String(ch).padStart(2, "0")}:${String(cm).padStart(2, "0")}`);
+        bloqueadosSet.add(
+          `${String(ch).padStart(2, "0")}:${String(cm).padStart(2, "0")}`,
+        );
       }
     });
 
@@ -139,7 +164,9 @@ Deno.serve(async (req) => {
     for (let t = startMin; t + duracao <= endMin; t += 30) {
       const h = Math.floor(t / 60);
       const m = t % 60;
-      allSlots.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+      allSlots.push(
+        `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`,
+      );
     }
 
     // Filter: a slot is available only if all `slotsNeeded` consecutive 30-min blocks are free
@@ -150,7 +177,9 @@ Deno.serve(async (req) => {
         const checkT = startT + i * 30;
         const ch = Math.floor(checkT / 60);
         const cm = checkT % 60;
-        const checkSlot = `${String(ch).padStart(2, "0")}:${String(cm).padStart(2, "0")}`;
+        const checkSlot = `${String(ch).padStart(2, "0")}:${
+          String(cm).padStart(2, "0")
+        }`;
         if (bloqueadosSet.has(checkSlot)) return false;
       }
       return true;
@@ -158,7 +187,9 @@ Deno.serve(async (req) => {
 
     // Filter past slots if requested date is today
     const today = new Date();
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const todayStr = `${today.getFullYear()}-${
+      String(today.getMonth() + 1).padStart(2, "0")
+    }-${String(today.getDate()).padStart(2, "0")}`;
     let finalSlots = disponiveis;
     if (data === todayStr) {
       const nowMin = today.getHours() * 60 + today.getMinutes();
@@ -179,8 +210,11 @@ Deno.serve(async (req) => {
   } catch (err) {
     console.error("bot-horarios-disponiveis error:", err);
     return jsonResponse(
-      { success: false, error: err instanceof Error ? err.message : "Unknown error" },
-      500
+      {
+        success: false,
+        error: err instanceof Error ? err.message : "Unknown error",
+      },
+      500,
     );
   }
 });
