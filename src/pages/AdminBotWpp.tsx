@@ -75,6 +75,36 @@ const AdminBotWpp = () => {
     };
   }, []);
 
+  // Converte a string crua do QR (vinda do Baileys) em data URL renderizável.
+  useEffect(() => {
+    let cancelled = false;
+    if (!qr) {
+      setQrSrc(null);
+      return;
+    }
+    if (qr.startsWith("data:image")) {
+      setQrSrc(qr);
+      return;
+    }
+    // Se for base64 puro de imagem (longo e sem vírgulas típicas do payload Baileys)
+    const looksLikeBase64Image = /^[A-Za-z0-9+/=]+$/.test(qr) && qr.length > 200;
+    if (looksLikeBase64Image) {
+      setQrSrc(`data:image/png;base64,${qr}`);
+      return;
+    }
+    // Caso padrão: string crua do WhatsApp -> gerar QR Code localmente.
+    QRCode.toDataURL(qr, { width: 320, margin: 1 })
+      .then((url) => {
+        if (!cancelled) setQrSrc(url);
+      })
+      .catch(() => {
+        if (!cancelled) setQrSrc(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [qr]);
+
   // Polling continua ativo mesmo quando conectado, para detectar desconexão em tempo real
   const handleManualRefresh = async () => {
     setManualRefreshing(true);
