@@ -238,6 +238,20 @@ const AdminBotWpp = () => {
             <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground/70">
               Monitorando conexão • Última verificação: {lastUpdate.toLocaleTimeString("pt-BR")}
             </p>
+            <Button
+              onClick={handleLogout}
+              disabled={logoutLoading}
+              variant="destructive"
+              size="lg"
+              className="mt-4 rounded-full shadow-md"
+            >
+              {logoutLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <LogOut className="h-4 w-4" />
+              )}
+              Desconectar WhatsApp
+            </Button>
           </div>
         ) : (
           /* Status badge tematizado */
