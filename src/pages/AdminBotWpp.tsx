@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RefreshCw, Smartphone, Wifi, WifiOff, Loader2, CheckCircle2, KeyRound, QrCode, ArrowLeft } from "lucide-react";
+import { RefreshCw, Smartphone, Wifi, WifiOff, Loader2, CheckCircle2, KeyRound, QrCode, ArrowLeft, LogOut } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.png";
 
@@ -11,6 +12,7 @@ import logo from "@/assets/logo.png";
 const BOT_BASE_URL = "http://178.105.54.230:3001";
 const BOT_STATUS_URL = `${BOT_BASE_URL}/api/status`;
 const BOT_PAIRING_URL = `${BOT_BASE_URL}/api/pairing-code`;
+const BOT_LOGOUT_URL = `${BOT_BASE_URL}/api/logout`;
 const POLL_INTERVAL_MS = 3000;
 
 // Headers padrão para chamadas ao backend do robô.
