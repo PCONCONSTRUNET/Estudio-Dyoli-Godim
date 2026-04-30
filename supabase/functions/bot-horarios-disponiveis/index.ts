@@ -107,7 +107,9 @@ Deno.serve(async (req) => {
       const menuIndex = /^\d+$/.test(rawService) ? Number(rawService) - 1 : -1;
       servico = menuIndex >= 0
         ? (servicos?.[menuIndex] ?? null)
-        : (servicos?.find((item) => item.nome.toLowerCase() === rawService.toLowerCase()) ?? null);
+        : (servicos?.find((item) =>
+          item.nome.toLowerCase() === rawService.toLowerCase()
+        ) ?? null);
     }
 
     if (servicoErr) throw servicoErr;
