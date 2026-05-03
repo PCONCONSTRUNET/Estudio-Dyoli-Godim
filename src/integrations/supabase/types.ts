@@ -24,6 +24,7 @@ export type Database = {
           forma_pagamento: string | null
           horario: string
           id: string
+          observacao: string
           origem: string
           servico: string
           status: string
@@ -42,6 +43,7 @@ export type Database = {
           forma_pagamento?: string | null
           horario: string
           id?: string
+          observacao?: string
           origem?: string
           servico: string
           status?: string
@@ -60,6 +62,7 @@ export type Database = {
           forma_pagamento?: string | null
           horario?: string
           id?: string
+          observacao?: string
           origem?: string
           servico?: string
           status?: string
