@@ -27,6 +27,7 @@ import CaixaTab from "@/components/CaixaTab";
 import DespesasTab from "@/components/DespesasTab";
 import PedidosTab from "@/components/PedidosTab";
 import GatewayTab from "@/components/GatewayTab";
+import AdminBotWpp from "@/pages/AdminBotWpp";
 import ProdutosTab from "@/components/ProdutosTab";
 import PagamentosTab from "@/components/PagamentosTab";
 import AdminDashboard from "@/components/AdminDashboard";
@@ -44,7 +45,7 @@ interface Agendamento {
 interface Profile { id: string; nome: string; whatsapp: string; created_at: string; }
 interface LembreteConfig { id: string; tipo: string; ativo: boolean; mensagem: string; horas_antes: number; }
 
-type Tab = "dashboard" | "agendamentos" | "pedidos" | "clientes" | "horarios" | "servicos" | "financeiro" | "caixa" | "pagamentos" | "produtos" | "despesas" | "gateway";
+type Tab = "dashboard" | "agendamentos" | "pedidos" | "clientes" | "horarios" | "servicos" | "financeiro" | "caixa" | "pagamentos" | "produtos" | "despesas" | "gateway" | "chatbot";
 
 const ADMIN_PASSWORD = "dyoliadmin";
 
@@ -467,6 +468,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     { id: "clientes", label: "Clientes", icon: Users, anim: "tab-icon-wave", color: "#a855f7" },
     { id: "produtos", label: "Produtos", icon: ShoppingBag, anim: "tab-icon-bob", color: "#fb923c" },
     { id: "gateway", label: "Gateway", icon: Wallet, anim: "tab-icon-spin", color: "#84cc16" },
+    { id: "chatbot", label: "Chatbot", icon: MessageSquare, anim: "tab-icon-bounce", color: "#25d366" },
     { id: "horarios", label: "Horários", icon: Clock, anim: "tab-icon-tick", color: "#60a5fa" },
     { id: "servicos", label: "Serviços", icon: Settings, anim: "tab-icon-cog", color: "#eab308" },
   ];
@@ -1715,6 +1717,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
           {tab === "despesas" && <DespesasTab />}
           {tab === "produtos" && <ProdutosTab />}
           {tab === "gateway" && <GatewayTab />}
+          {tab === "chatbot" && <AdminBotWpp />}
           {tab === "horarios" && <HorariosTab />}
           {tab === "servicos" && <ServicosTab />}
         </div>
