@@ -86,7 +86,7 @@ const Agendamento = () => {
   const loadServicos = useCallback(async (showLoader = true) => {
     if (showLoader) setLoadingServicos(true);
     const { data } = await supabase
-      .from("servicos")
+      .from("servicos_app")
       .select("id, nome, preco, duracao_minutos, categoria")
       .eq("ativo", true)
       .order("ordem", { ascending: true });
@@ -109,10 +109,10 @@ const Agendamento = () => {
     };
 
     const channel = supabase
-      .channel("servicos-realtime-cliente")
+      .channel("servicos_app-realtime-cliente")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "servicos" },
+        { event: "*", schema: "public", table: "servicos_app" },
         () => scheduleReload()
       )
       .subscribe();
