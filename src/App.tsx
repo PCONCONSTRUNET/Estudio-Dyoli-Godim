@@ -8,7 +8,7 @@ import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Agendar from "./pages/Agendar";
-
+import Agendamento from "./pages/Agendamento";
 import Servicos from "./pages/Servicos";
 import Produtos from "./pages/Produtos";
 import Confirmar from "./pages/Confirmar";
