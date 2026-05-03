@@ -425,6 +425,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       forma_pagamento: forma,
       status: "confirmado",
       duracao_minutos: serviceDuration,
+      observacao: observacao.trim(),
     }).select("id").single();
 
     if (agError || !agData) {
