@@ -1131,7 +1131,15 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                           : "Não pago";
 
                         return (
-                        <article key={a.id} className="group/card relative overflow-hidden rounded-2xl border border-primary-foreground/10 bg-gradient-to-br from-primary-foreground/[0.07] to-primary-foreground/[0.03] p-4 pl-5 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.4)] transition-all hover:border-gold/25 hover:shadow-[0_8px_28px_-10px_hsl(var(--gold)/0.2)]">
+                        <article
+                          key={a.id}
+                          onClick={(e) => {
+                            const target = e.target as HTMLElement;
+                            if (target.closest("button, input, a, select, textarea")) return;
+                            setDetalheAgendamento(a);
+                          }}
+                          className="group/card relative cursor-pointer overflow-hidden rounded-2xl border border-primary-foreground/10 bg-gradient-to-br from-primary-foreground/[0.07] to-primary-foreground/[0.03] p-4 pl-5 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.4)] transition-all hover:border-gold/25 hover:shadow-[0_8px_28px_-10px_hsl(var(--gold)/0.2)] active:scale-[0.99]"
+                        >
                           {/* Status bar lateral */}
                           <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${barColor}`} aria-label={barLabel} title={`Pagamento: ${barLabel}`} />
                           <div className="flex items-start justify-between gap-3">
