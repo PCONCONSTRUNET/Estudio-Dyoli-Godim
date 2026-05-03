@@ -45,7 +45,7 @@ interface Agendamento {
 interface Profile { id: string; nome: string; whatsapp: string; created_at: string; }
 interface LembreteConfig { id: string; tipo: string; ativo: boolean; mensagem: string; horas_antes: number; }
 
-type Tab = "dashboard" | "agendamentos" | "pedidos" | "clientes" | "horarios" | "servicos" | "financeiro" | "caixa" | "pagamentos" | "produtos" | "despesas" | "gateway" | "chatbot";
+type Tab = "dashboard" | "agendamentos" | "pedidos" | "clientes" | "horarios" | "servicos" | "servicos_app" | "financeiro" | "caixa" | "pagamentos" | "produtos" | "despesas" | "gateway" | "chatbot";
 
 const ADMIN_PASSWORD = "dyoliadmin";
 
@@ -470,7 +470,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     { id: "gateway", label: "Gateway", icon: Wallet, anim: "tab-icon-spin", color: "#84cc16" },
     { id: "chatbot", label: "Chatbot", icon: WhatsAppIcon, anim: "tab-icon-bounce", color: "#25d366" },
     { id: "horarios", label: "Horários", icon: Clock, anim: "tab-icon-tick", color: "#60a5fa" },
-    { id: "servicos", label: "Serviços", icon: Settings, anim: "tab-icon-cog", color: "#eab308" },
+    { id: "servicos", label: "Serviços (WhatsApp)", icon: Settings, anim: "tab-icon-cog", color: "#25d366" },
+    { id: "servicos_app", label: "Serviços (App)", icon: Sparkles, anim: "tab-icon-cog", color: "#eab308" },
   ];
 
   const total = agendamentos.length;
@@ -1719,7 +1720,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
           {tab === "gateway" && <GatewayTab />}
           {tab === "chatbot" && <AdminBotWpp embedded />}
           {tab === "horarios" && <HorariosTab />}
-          {tab === "servicos" && <ServicosTab />}
+          {tab === "servicos" && <ServicosTab tableName="servicos" storageKey="admin_custom_categorias_servicos" scopeLabel="Catálogo WhatsApp" scopeHint="Estes serviços são enviados pelo chatbot do WhatsApp" />}
+          {tab === "servicos_app" && <ServicosTab tableName="servicos_app" storageKey="admin_custom_categorias_servicos_app" scopeLabel="Catálogo App" scopeHint="Estes serviços aparecem somente no aplicativo dos clientes" />}
         </div>
       </div>
 
@@ -1941,9 +1943,22 @@ const HorariosTab = () => {
 };
 
 // ─── Serviços Tab ───
-const CATEGORIAS_STORAGE_KEY = "admin_custom_categorias_servicos";
+type ServicosTableName = "servicos" | "servicos_app";
 
-const ServicosTab = () => {
+interface ServicosTabProps {
+  tableName?: ServicosTableName;
+  storageKey?: string;
+  scopeLabel?: string;
+  scopeHint?: string;
+}
+
+const ServicosTab = ({
+  tableName = "servicos",
+  storageKey = "admin_custom_categorias_servicos",
+  scopeLabel = "Catálogo",
+  scopeHint = "Organize seu portfólio e veja sincronizar no agendamento dos clientes",
+}: ServicosTabProps = {}) => {
+  const CATEGORIAS_STORAGE_KEY = storageKey;
   const [services, setServices] = useState<{ id: string; name: string; price: number; category: string; active: boolean; duration: number }[]>([]);
   const [extraCategorias, setExtraCategorias] = useState<string[]>(() => {
     try {
@@ -1976,10 +1991,10 @@ const ServicosTab = () => {
   };
 
   const reloadServicos = useCallback(async () => {
-    const { data } = await supabase.from("servicos").select("*").order("ordem");
-    if (data) setServices(data.map(s => ({ id: s.id, name: s.nome, price: Number(s.preco), category: s.categoria, active: s.ativo, duration: s.duracao_minutos || 60 })));
+    const { data } = await supabase.from(tableName).select("*").order("ordem");
+    if (data) setServices(data.map((s: any) => ({ id: s.id, name: s.nome, price: Number(s.preco), category: s.categoria, active: s.ativo, duration: s.duracao_minutos || 60 })));
     setLoading(false);
-  }, []);
+  }, [tableName]);
 
   useEffect(() => {
     reloadServicos();
@@ -1989,10 +2004,10 @@ const ServicosTab = () => {
   const reloadDebounceRef = useRef<number | null>(null);
   useEffect(() => {
     const channel = supabase
-      .channel("servicos-realtime-admin")
+      .channel(`${tableName}-realtime-admin`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "servicos" },
+        { event: "*", schema: "public", table: tableName },
         () => {
           if (reloadDebounceRef.current) window.clearTimeout(reloadDebounceRef.current);
           reloadDebounceRef.current = window.setTimeout(() => reloadServicos(), 250);
@@ -2003,7 +2018,7 @@ const ServicosTab = () => {
       if (reloadDebounceRef.current) window.clearTimeout(reloadDebounceRef.current);
       supabase.removeChannel(channel);
     };
-  }, [reloadServicos]);
+  }, [reloadServicos, tableName]);
 
   // Lista única de categorias (combina as usadas pelos serviços + extras criadas vazias)
   const categorias = useMemo(() => {
@@ -2040,7 +2055,7 @@ const ServicosTab = () => {
     const ids = services.filter(s => s.category === cat && s.active).map(s => s.id);
     if (ids.length === 0) return;
     const { error } = await supabase
-      .from("servicos")
+      .from(tableName)
       .update({ ativo: false, updated_at: new Date().toISOString() })
       .in("id", ids);
     if (error) { toast.error("Erro ao desativar: " + error.message); return; }
@@ -2052,7 +2067,7 @@ const ServicosTab = () => {
     const ids = services.filter(s => s.category === cat && !s.active).map(s => s.id);
     if (ids.length === 0) return;
     const { error } = await supabase
-      .from("servicos")
+      .from(tableName)
       .update({ ativo: true, updated_at: new Date().toISOString() })
       .in("id", ids);
     if (error) { toast.error("Erro ao reativar: " + error.message); return; }
@@ -2088,7 +2103,7 @@ const ServicosTab = () => {
     // Atualiza serviços que usavam a categoria antiga
     const idsAfetados = services.filter(s => s.category === antigo).map(s => s.id);
     if (idsAfetados.length > 0) {
-      const { error } = await supabase.from("servicos").update({ categoria: novo, updated_at: new Date().toISOString() }).in("id", idsAfetados);
+      const { error } = await supabase.from(tableName).update({ categoria: novo, updated_at: new Date().toISOString() }).in("id", idsAfetados);
       if (error) { toast.error("Erro ao renomear: " + error.message); return; }
       setServices(prev => prev.map(s => s.category === antigo ? { ...s, category: novo } : s));
     }
@@ -2109,14 +2124,14 @@ const ServicosTab = () => {
   };
   const saveEdit = async (id: string) => {
     const finalCategoria = editCategory.trim() || "Outros";
-    await supabase.from("servicos").update({ nome: editName, preco: Number(editPrice), duracao_minutos: Number(editDuration), categoria: finalCategoria, updated_at: new Date().toISOString() }).eq("id", id);
+    await supabase.from(tableName).update({ nome: editName, preco: Number(editPrice), duracao_minutos: Number(editDuration), categoria: finalCategoria, updated_at: new Date().toISOString() }).eq("id", id);
     setServices(prev => prev.map(s => s.id === id ? { ...s, name: editName, price: Number(editPrice), duration: Number(editDuration), category: finalCategoria } : s));
     setEditing(null);
   };
   const addService = async () => {
     if (!newName || !newPrice) { toast.error("Preencha nome e preço"); return; }
     const finalCategoria = (newCategory || "").trim() || "Outros";
-    const { data, error } = await supabase.from("servicos").insert({ nome: newName, preco: Number(newPrice), categoria: finalCategoria, ativo: true, ordem: services.length + 1, duracao_minutos: Number(newDuration) || 60 }).select().single();
+    const { data, error } = await supabase.from(tableName).insert({ nome: newName, preco: Number(newPrice), categoria: finalCategoria, ativo: true, ordem: services.length + 1, duracao_minutos: Number(newDuration) || 60 }).select().single();
     if (error) { toast.error("Erro: " + error.message); return; }
     if (data) {
       setServices(prev => [...prev, { id: data.id, name: data.nome, price: Number(data.preco), category: data.categoria, active: data.ativo, duration: data.duracao_minutos || 60 }]);
@@ -2131,11 +2146,11 @@ const ServicosTab = () => {
   const toggleActive = async (id: string) => {
     const s = services.find(s => s.id === id);
     if (!s) return;
-    await supabase.from("servicos").update({ ativo: !s.active, updated_at: new Date().toISOString() }).eq("id", id);
+    await supabase.from(tableName).update({ ativo: !s.active, updated_at: new Date().toISOString() }).eq("id", id);
     setServices(prev => prev.map(s => s.id === id ? { ...s, active: !s.active } : s));
   };
   const removeService = async (id: string) => {
-    await supabase.from("servicos").delete().eq("id", id);
+    await supabase.from(tableName).delete().eq("id", id);
     setServices(prev => prev.filter(s => s.id !== id));
   };
 
@@ -2248,10 +2263,10 @@ const ServicosTab = () => {
               <div className="w-8 h-8 rounded-xl bg-gold/15 flex items-center justify-center">
                 <Sparkles className="w-4 h-4 text-gold" />
               </div>
-              <span className="font-body text-[10px] tracking-[0.18em] uppercase text-gold/80">Catálogo</span>
+              <span className="font-body text-[10px] tracking-[0.18em] uppercase text-gold/80">{scopeLabel}</span>
             </div>
             <h1 className="font-heading text-2xl font-semibold text-primary-foreground leading-tight">Serviços & Categorias</h1>
-            <p className="font-body text-[12px] text-primary-foreground/40 mt-1">Organize seu portfólio e veja sincronizar no agendamento dos clientes</p>
+            <p className="font-body text-[12px] text-primary-foreground/40 mt-1">{scopeHint}</p>
           </div>
         </div>
 

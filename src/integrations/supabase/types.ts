@@ -401,6 +401,45 @@ export type Database = {
           categoria: string
           created_at: string
           duracao_minutos: number
+          exclusivo_app: boolean
+          id: string
+          nome: string
+          ordem: number
+          preco: number
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          categoria?: string
+          created_at?: string
+          duracao_minutos?: number
+          exclusivo_app?: boolean
+          id?: string
+          nome: string
+          ordem?: number
+          preco: number
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string
+          created_at?: string
+          duracao_minutos?: number
+          exclusivo_app?: boolean
+          id?: string
+          nome?: string
+          ordem?: number
+          preco?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      servicos_app: {
+        Row: {
+          ativo: boolean
+          categoria: string
+          created_at: string
+          duracao_minutos: number
           id: string
           nome: string
           ordem: number

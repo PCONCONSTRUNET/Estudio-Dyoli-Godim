@@ -112,7 +112,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       }
     });
     // Load service duration
-    supabase.from("servicos").select("duracao_minutos, nome, preco").eq("nome", service).maybeSingle().then(({ data }) => {
+    supabase.from("servicos_app").select("duracao_minutos, nome, preco").eq("nome", service).maybeSingle().then(({ data }) => {
       if (data?.duracao_minutos) setServiceDuration(data.duracao_minutos);
       if (data?.preco) setServicePrice(data.preco);
     });
