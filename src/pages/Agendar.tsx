@@ -7,8 +7,9 @@ const Agendar = () => {
   const navigate = useNavigate();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  const handleSelectService = (serviceId: string) => {
-    navigate(`/servicos?filtro=${serviceId}`);
+  const handleSelectService = (serviceName: string) => {
+    const params = new URLSearchParams({ servico: serviceName });
+    navigate(`/confirmar?${params.toString()}`);
   };
 
   return (
