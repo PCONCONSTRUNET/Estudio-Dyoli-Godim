@@ -29,7 +29,7 @@ interface BotStatusResponse {
   qr?: string;
 }
 
-const AdminBotWpp = () => {
+const AdminBotWpp = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const [status, setStatus] = useState<BotStatus>("WAITING");
   const [qr, setQr] = useState<string | null>(null);
   const [qrSrc, setQrSrc] = useState<string | null>(null);
@@ -223,30 +223,42 @@ const AdminBotWpp = () => {
   const isConnected = status === "CONNECTED";
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-nude via-background to-nude py-10 px-4">
-      <div className="mx-auto w-full max-w-2xl">
-        {/* Header com logo da Dyoli */}
-        <div className="mb-8 flex flex-col items-center text-center">
-          <div className="mb-4 flex items-center gap-3">
-            <div className="h-14 w-14 overflow-hidden rounded-full border-2 border-gold/40 bg-charcoal shadow-lg">
-              <img
-                src={logo}
-                alt="Estúdio Dyoli Godim"
-                className="h-full w-full object-cover"
-              />
+    <div className={embedded
+      ? "w-full"
+      : "min-h-screen bg-gradient-to-b from-nude via-background to-nude py-10 px-4"
+    }>
+      <div className={embedded ? "w-full" : "mx-auto w-full max-w-2xl"}>
+        {/* Header — só na página standalone */}
+        {!embedded && (
+          <div className="mb-8 flex flex-col items-center text-center">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="h-14 w-14 overflow-hidden rounded-full border-2 border-gold/40 bg-charcoal shadow-lg">
+                <img src={logo} alt="Estúdio Dyoli Godim" className="h-full w-full object-cover" />
+              </div>
             </div>
+            <p className="font-body text-[11px] uppercase tracking-[0.25em] text-gold">
+              Estúdio Dyoli Godim
+            </p>
+            <h1 className="mt-2 font-heading text-3xl md:text-4xl font-semibold text-foreground">
+              Configuração do Assistente Virtual
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Painel privado de conexão do Assistente Virtual de WhatsApp
+            </p>
+            <div className="mt-3 h-px w-24 bg-gradient-to-r from-transparent via-gold to-transparent" />
           </div>
-          <p className="font-body text-[11px] uppercase tracking-[0.25em] text-gold">
-            Estúdio Dyoli Godim
-          </p>
-          <h1 className="mt-2 font-heading text-3xl md:text-4xl font-semibold text-foreground">
-            Configuração do Assistente Virtual
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Painel privado de conexão do Assistente Virtual de WhatsApp
-          </p>
-          <div className="mt-3 h-px w-24 bg-gradient-to-r from-transparent via-gold to-transparent" />
-        </div>
+        )}
+
+        {embedded && (
+          <div className="mb-4">
+            <h2 className="font-heading text-xl font-semibold text-primary-foreground">
+              Assistente Virtual WhatsApp
+            </h2>
+            <p className="font-body text-[12px] text-primary-foreground/40 mt-0.5">
+              Conecte o robô de agendamento ao seu WhatsApp
+            </p>
+          </div>
+        )}
 
         {/* Estado: Assistente Online */}
         {isConnected ? (
@@ -523,9 +535,11 @@ const AdminBotWpp = () => {
           </Card>
         )}
 
-        <p className="mt-8 text-center text-[11px] uppercase tracking-[0.2em] text-muted-foreground/60">
-          Estúdio Dyoli Godim • Página privada
-        </p>
+        {!embedded && (
+          <p className="mt-8 text-center text-[11px] uppercase tracking-[0.2em] text-muted-foreground/60">
+            Estúdio Dyoli Godim • Página privada
+          </p>
+        )}
       </div>
     </div>
   );
