@@ -41,6 +41,7 @@ interface Agendamento {
   created_at: string; user_id: string; duracao_minutos: number; forma_pagamento: string | null;
   cliente_nome: string | null;
   origem?: string | null;
+  observacao?: string | null;
 }
 interface Profile { id: string; nome: string; whatsapp: string; created_at: string; }
 interface LembreteConfig { id: string; tipo: string; ativo: boolean; mensagem: string; horas_antes: number; }
