@@ -1720,7 +1720,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
           {tab === "gateway" && <GatewayTab />}
           {tab === "chatbot" && <AdminBotWpp embedded />}
           {tab === "horarios" && <HorariosTab />}
-          {tab === "servicos" && <ServicosTab />}
+          {tab === "servicos" && <ServicosTab tableName="servicos" storageKey="admin_custom_categorias_servicos" scopeLabel="Catálogo WhatsApp" scopeHint="Estes serviços são enviados pelo chatbot do WhatsApp" />}
+          {tab === "servicos_app" && <ServicosTab tableName="servicos_app" storageKey="admin_custom_categorias_servicos_app" scopeLabel="Catálogo App" scopeHint="Estes serviços aparecem somente no aplicativo dos clientes" />}
         </div>
       </div>
 
