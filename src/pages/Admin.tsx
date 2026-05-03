@@ -365,6 +365,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
   // Manual registration state
   const [showManualRegister, setShowManualRegister] = useState(false);
+  const [detalheAgendamento, setDetalheAgendamento] = useState<Agendamento | null>(null);
   const [manualServicos, setManualServicos] = useState<{ id: string; nome: string; preco: number; duracao_minutos: number; categoria: string }[]>([]);
   const [manualServico, setManualServico] = useState("");
   const [manualCliente, setManualCliente] = useState("");
