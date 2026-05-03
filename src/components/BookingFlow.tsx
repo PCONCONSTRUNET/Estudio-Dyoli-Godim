@@ -575,6 +575,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
 
         {/* Escolha do pagamento */}
         <div className="w-full max-w-sm mt-6 lg:mx-auto">
+          <p className="font-body text-[11px] text-muted-foreground uppercase tracking-widest font-medium mb-2.5 text-left">
             Como deseja pagar? <span className="text-rose normal-case tracking-normal text-[11px] font-normal">(toque para escolher)</span>
           </p>
           <div className="space-y-2.5">
