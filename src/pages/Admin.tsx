@@ -365,6 +365,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
   // Manual registration state
   const [showManualRegister, setShowManualRegister] = useState(false);
+  const [detalheAgendamento, setDetalheAgendamento] = useState<Agendamento | null>(null);
   const [manualServicos, setManualServicos] = useState<{ id: string; nome: string; preco: number; duracao_minutos: number; categoria: string }[]>([]);
   const [manualServico, setManualServico] = useState("");
   const [manualCliente, setManualCliente] = useState("");
@@ -1130,7 +1131,15 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                           : "Não pago";
 
                         return (
-                        <article key={a.id} className="group/card relative overflow-hidden rounded-2xl border border-primary-foreground/10 bg-gradient-to-br from-primary-foreground/[0.07] to-primary-foreground/[0.03] p-4 pl-5 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.4)] transition-all hover:border-gold/25 hover:shadow-[0_8px_28px_-10px_hsl(var(--gold)/0.2)]">
+                        <article
+                          key={a.id}
+                          onClick={(e) => {
+                            const target = e.target as HTMLElement;
+                            if (target.closest("button, input, a, select, textarea")) return;
+                            setDetalheAgendamento(a);
+                          }}
+                          className="group/card relative cursor-pointer overflow-hidden rounded-2xl border border-primary-foreground/10 bg-gradient-to-br from-primary-foreground/[0.07] to-primary-foreground/[0.03] p-4 pl-5 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.4)] transition-all hover:border-gold/25 hover:shadow-[0_8px_28px_-10px_hsl(var(--gold)/0.2)] active:scale-[0.99]"
+                        >
                           {/* Status bar lateral */}
                           <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${barColor}`} aria-label={barLabel} title={`Pagamento: ${barLabel}`} />
                           <div className="flex items-start justify-between gap-3">
@@ -1263,6 +1272,130 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                   )}
                 </div>
               </section>
+
+              {/* Modal de detalhes do agendamento */}
+              <Dialog open={!!detalheAgendamento} onOpenChange={(o) => !o && setDetalheAgendamento(null)}>
+                <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overflow-x-hidden rounded-2xl border border-gold/20 bg-charcoal p-4 sm:p-5">
+                  <DialogHeader>
+                    <DialogTitle className="font-heading text-[17px] font-semibold text-primary-foreground">
+                      Detalhes do agendamento
+                    </DialogTitle>
+                  </DialogHeader>
+                  {detalheAgendamento && (() => {
+                    const a = detalheAgendamento;
+                    const cliente = clientes.find((c) => c.id === a.user_id);
+                    const valorPago = Number(a.valor_pago || 0);
+                    const valorTotal = Number(a.valor);
+                    const restante = Math.max(0, valorTotal - valorPago);
+                    return (
+                      <div className="space-y-3">
+                        {/* Cliente */}
+                        <div className="rounded-2xl border border-gold/20 bg-gold/5 p-3">
+                          <p className="font-body text-[10px] uppercase tracking-wider text-gold/70 mb-1">Cliente</p>
+                          <p className="font-heading text-[16px] font-semibold text-primary-foreground">{getClientName(a.user_id, a.cliente_nome)}</p>
+                          {cliente?.whatsapp && (
+                            <a
+                              href={`https://wa.me/55${cliente.whatsapp.replace(/\D/g, "")}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="mt-1 inline-flex items-center gap-1.5 font-body text-[12px] text-green-400 hover:text-green-300"
+                            >
+                              <WhatsAppIcon className="h-3.5 w-3.5" />
+                              {formatWhatsapp(cliente.whatsapp)}
+                            </a>
+                          )}
+                        </div>
+
+                        {/* Serviço + data/hora */}
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="col-span-2 rounded-xl border border-primary-foreground/10 bg-primary-foreground/[0.04] p-3">
+                            <p className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/40 mb-1">Serviço</p>
+                            <p className="font-body text-[14px] font-medium text-primary-foreground">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""}</p>
+                            <p className="font-body text-[11px] text-primary-foreground/50 mt-0.5">Duração: {a.duracao_minutos || 60} min{(a as any).foi_estendido ? " (estendido)" : ""}</p>
+                          </div>
+                          <div className="rounded-xl border border-primary-foreground/10 bg-primary-foreground/[0.04] p-3">
+                            <p className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/40 mb-1">Data</p>
+                            <p className="font-body text-[13px] font-medium text-primary-foreground">{formatDate(a.data_agendamento)}</p>
+                          </div>
+                          <div className="rounded-xl border border-primary-foreground/10 bg-primary-foreground/[0.04] p-3">
+                            <p className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/40 mb-1">Horário</p>
+                            <p className="font-body text-[13px] font-medium text-primary-foreground">{a.horario}</p>
+                          </div>
+                        </div>
+
+                        {/* Observações */}
+                        {a.observacao && (
+                          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
+                            <p className="font-body text-[10px] uppercase tracking-wider text-amber-400/80 mb-1">📝 Observações do cliente</p>
+                            <p className="font-body text-[13px] text-amber-100/95 leading-relaxed whitespace-pre-wrap break-words">{a.observacao}</p>
+                          </div>
+                        )}
+
+                        {/* Pagamento */}
+                        <div className="rounded-xl border border-gold/15 bg-gradient-to-br from-gold/[0.08] to-gold/[0.02] p-3 space-y-1.5">
+                          <p className="font-body text-[10px] uppercase tracking-wider text-gold/70">Pagamento</p>
+                          <div className="flex items-center justify-between">
+                            <p className="font-body text-[12px] text-primary-foreground/60">Valor total</p>
+                            <p className="font-heading text-[15px] font-semibold text-gold">R$ {valorTotal.toFixed(2).replace(".", ",")}</p>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <p className="font-body text-[12px] text-primary-foreground/60">Já recebido</p>
+                            <p className="font-body text-[13px] font-medium text-green-400">R$ {valorPago.toFixed(2).replace(".", ",")}</p>
+                          </div>
+                          {restante > 0 && (
+                            <div className="flex items-center justify-between border-t border-gold/10 pt-1.5">
+                              <p className="font-body text-[12px] text-primary-foreground/60">Falta</p>
+                              <p className="font-body text-[13px] font-medium text-red-400">R$ {restante.toFixed(2).replace(".", ",")}</p>
+                            </div>
+                          )}
+                          <div className="flex items-center justify-between border-t border-gold/10 pt-1.5">
+                            <p className="font-body text-[12px] text-primary-foreground/60">Forma</p>
+                            <p className="font-body text-[12px] font-medium text-primary-foreground capitalize">{a.forma_pagamento || "—"}</p>
+                          </div>
+                        </div>
+
+                        {/* Status + origem */}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {statusBadge(a.status)}
+                          {pagamentoBadge(a)}
+                          {a.origem === "whatsapp_bot" && (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-green-500/30 bg-green-500/10 px-2 py-0.5 font-body text-[10px] font-semibold uppercase tracking-wide text-green-400">
+                              <WhatsAppIcon className="h-3 w-3" /> WhatsApp
+                            </span>
+                          )}
+                          {a.origem === "admin_manual" && (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-gold/30 bg-gold/10 px-2 py-0.5 font-body text-[10px] font-semibold uppercase tracking-wide text-gold">Presencial</span>
+                          )}
+                          {a.origem === "app" && (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-blue-400/30 bg-blue-400/10 px-2 py-0.5 font-body text-[10px] font-semibold uppercase tracking-wide text-blue-400">App</span>
+                          )}
+                        </div>
+
+                        {/* Metadados */}
+                        <div className="rounded-xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.02] p-3 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <p className="font-body text-[11px] text-primary-foreground/40">Criado em</p>
+                            <p className="font-body text-[11px] text-primary-foreground/70">{new Date(a.created_at).toLocaleString("pt-BR")}</p>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <p className="font-body text-[11px] text-primary-foreground/40">ID</p>
+                            <p className="font-body text-[10px] text-primary-foreground/40 font-mono">{a.id.slice(0, 8)}</p>
+                          </div>
+                        </div>
+
+                        {cliente && (
+                          <button
+                            onClick={() => { setDetalheAgendamento(null); setTab("clientes"); setSelectedClient(cliente.id); }}
+                            className="w-full flex items-center justify-center gap-2 rounded-xl border border-gold/30 bg-gold/10 px-4 py-2.5 font-body text-[12px] font-medium text-gold hover:bg-gold/20 transition-all"
+                          >
+                            <Users className="h-3.5 w-3.5" /> Ver perfil completo do cliente
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </DialogContent>
+              </Dialog>
 
               {/* Manual Registration Dialog */}
               <Dialog open={showManualRegister} onOpenChange={setShowManualRegister}>
