@@ -2002,10 +2002,10 @@ const ServicosTab = ({
   const reloadDebounceRef = useRef<number | null>(null);
   useEffect(() => {
     const channel = supabase
-      .channel("servicos-realtime-admin")
+      .channel(`${tableName}-realtime-admin`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "servicos" },
+        { event: "*", schema: "public", table: tableName },
         () => {
           if (reloadDebounceRef.current) window.clearTimeout(reloadDebounceRef.current);
           reloadDebounceRef.current = window.setTimeout(() => reloadServicos(), 250);
@@ -2016,7 +2016,7 @@ const ServicosTab = ({
       if (reloadDebounceRef.current) window.clearTimeout(reloadDebounceRef.current);
       supabase.removeChannel(channel);
     };
-  }, [reloadServicos]);
+  }, [reloadServicos, tableName]);
 
   // Lista única de categorias (combina as usadas pelos serviços + extras criadas vazias)
   const categorias = useMemo(() => {
