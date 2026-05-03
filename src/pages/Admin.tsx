@@ -2053,7 +2053,7 @@ const ServicosTab = ({
     const ids = services.filter(s => s.category === cat && s.active).map(s => s.id);
     if (ids.length === 0) return;
     const { error } = await supabase
-      .from("servicos")
+      .from(tableName)
       .update({ ativo: false, updated_at: new Date().toISOString() })
       .in("id", ids);
     if (error) { toast.error("Erro ao desativar: " + error.message); return; }
@@ -2065,7 +2065,7 @@ const ServicosTab = ({
     const ids = services.filter(s => s.category === cat && !s.active).map(s => s.id);
     if (ids.length === 0) return;
     const { error } = await supabase
-      .from("servicos")
+      .from(tableName)
       .update({ ativo: true, updated_at: new Date().toISOString() })
       .in("id", ids);
     if (error) { toast.error("Erro ao reativar: " + error.message); return; }
@@ -2101,7 +2101,7 @@ const ServicosTab = ({
     // Atualiza serviços que usavam a categoria antiga
     const idsAfetados = services.filter(s => s.category === antigo).map(s => s.id);
     if (idsAfetados.length > 0) {
-      const { error } = await supabase.from("servicos").update({ categoria: novo, updated_at: new Date().toISOString() }).in("id", idsAfetados);
+      const { error } = await supabase.from(tableName).update({ categoria: novo, updated_at: new Date().toISOString() }).in("id", idsAfetados);
       if (error) { toast.error("Erro ao renomear: " + error.message); return; }
       setServices(prev => prev.map(s => s.category === antigo ? { ...s, category: novo } : s));
     }
@@ -2122,14 +2122,14 @@ const ServicosTab = ({
   };
   const saveEdit = async (id: string) => {
     const finalCategoria = editCategory.trim() || "Outros";
-    await supabase.from("servicos").update({ nome: editName, preco: Number(editPrice), duracao_minutos: Number(editDuration), categoria: finalCategoria, updated_at: new Date().toISOString() }).eq("id", id);
+    await supabase.from(tableName).update({ nome: editName, preco: Number(editPrice), duracao_minutos: Number(editDuration), categoria: finalCategoria, updated_at: new Date().toISOString() }).eq("id", id);
     setServices(prev => prev.map(s => s.id === id ? { ...s, name: editName, price: Number(editPrice), duration: Number(editDuration), category: finalCategoria } : s));
     setEditing(null);
   };
   const addService = async () => {
     if (!newName || !newPrice) { toast.error("Preencha nome e preço"); return; }
     const finalCategoria = (newCategory || "").trim() || "Outros";
-    const { data, error } = await supabase.from("servicos").insert({ nome: newName, preco: Number(newPrice), categoria: finalCategoria, ativo: true, ordem: services.length + 1, duracao_minutos: Number(newDuration) || 60 }).select().single();
+    const { data, error } = await supabase.from(tableName).insert({ nome: newName, preco: Number(newPrice), categoria: finalCategoria, ativo: true, ordem: services.length + 1, duracao_minutos: Number(newDuration) || 60 }).select().single();
     if (error) { toast.error("Erro: " + error.message); return; }
     if (data) {
       setServices(prev => [...prev, { id: data.id, name: data.nome, price: Number(data.preco), category: data.categoria, active: data.ativo, duration: data.duracao_minutos || 60 }]);
@@ -2144,11 +2144,11 @@ const ServicosTab = ({
   const toggleActive = async (id: string) => {
     const s = services.find(s => s.id === id);
     if (!s) return;
-    await supabase.from("servicos").update({ ativo: !s.active, updated_at: new Date().toISOString() }).eq("id", id);
+    await supabase.from(tableName).update({ ativo: !s.active, updated_at: new Date().toISOString() }).eq("id", id);
     setServices(prev => prev.map(s => s.id === id ? { ...s, active: !s.active } : s));
   };
   const removeService = async (id: string) => {
-    await supabase.from("servicos").delete().eq("id", id);
+    await supabase.from(tableName).delete().eq("id", id);
     setServices(prev => prev.filter(s => s.id !== id));
   };
 
