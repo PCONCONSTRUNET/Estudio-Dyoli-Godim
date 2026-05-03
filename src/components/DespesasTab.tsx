@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Save, X, Trash2, Check, AlertTriangle, Clock, Bell, ChevronRight, Eye } from "lucide-react";
+import { Plus, Save, X, Trash2, Check, AlertTriangle, Clock, Bell, ChevronRight, Eye, Receipt, TrendingDown, TrendingUp, Sparkles, CalendarDays, Wallet } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -231,6 +231,14 @@ const DespesasTab = () => {
     setObservacao("");
   };
 
+  const totalAtrasado = useMemo(
+    () => despesas.filter((d) => !d.pago && d.data_vencimento < today).reduce((s, d) => s + Number(d.valor), 0),
+    [despesas, today]
+  );
+  const countAtrasadas = despesas.filter((d) => !d.pago && d.data_vencimento < today).length;
+  const countPendentes = despesas.filter((d) => !d.pago).length;
+  const countPagas = despesas.filter((d) => d.pago).length;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -240,157 +248,206 @@ const DespesasTab = () => {
   }
 
   return (
-    <div className="space-y-4 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <h2 className="font-heading text-lg font-semibold text-primary-foreground lg:hidden">Despesas</h2>
-        <div className="flex items-center gap-2">
-          {/* Notification Bell */}
-          <Sheet>
-            <SheetTrigger asChild>
-              <button className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] transition-all hover:bg-primary-foreground/[0.1]">
-                <Bell className={`h-4 w-4 ${activeNotifications.length > 0 ? "text-yellow-400" : "text-primary-foreground/30"}`} />
-                {activeNotifications.length > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white animate-pulse">
-                    {activeNotifications.length}
-                  </span>
-                )}
-              </button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[340px] sm:w-[400px] bg-charcoal border-primary-foreground/[0.06] p-0">
-              <SheetHeader className="px-5 pt-5 pb-4 border-b border-primary-foreground/[0.06]">
-                <SheetTitle className="font-heading text-[16px] font-semibold text-primary-foreground flex items-center gap-2">
-                  <Bell className="w-4 h-4 text-gold" />
-                  Notificações
-                  {activeNotifications.length > 0 && (
-                    <span className="ml-auto px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 text-[10px] font-body font-medium border border-red-500/20">
-                      {activeNotifications.length}
-                    </span>
-                  )}
-                </SheetTitle>
-              </SheetHeader>
+    <div className="space-y-5 animate-fade-in">
+      {/* ── Editorial Hero ── */}
+      <div className="relative overflow-hidden rounded-3xl border border-rose/20 bg-gradient-to-br from-rose/[0.08] via-gold/[0.04] to-transparent p-5">
+        <div className="pointer-events-none absolute -top-24 -right-20 w-64 h-64 rounded-full bg-rose/15 blur-3xl animate-[hero-glow_6s_ease-in-out_infinite]" />
+        <div className="pointer-events-none absolute -bottom-24 -left-16 w-56 h-56 rounded-full bg-gold/10 blur-3xl animate-[hero-glow-alt_7s_ease-in-out_infinite]" />
 
-              {activeNotifications.length > 0 && (
-                <div className="px-4 pt-3 flex justify-end">
-                  <button
-                    onClick={clearAllNotifications}
-                    className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 font-body text-[10px] font-medium text-primary-foreground/30 transition-all hover:bg-primary-foreground/[0.06] hover:text-primary-foreground/50"
-                  >
-                    <X className="h-3 w-3" /> Limpar tudo
-                  </button>
-                </div>
-              )}
-
-              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 max-h-[calc(100vh-160px)]">
-                {activeNotifications.length === 0 ? (
-                  <div className="py-16 text-center">
-                    <Check className="h-8 w-8 text-green-400/40 mx-auto mb-3" />
-                    <p className="font-body text-[13px] text-primary-foreground/30">Tudo em dia! 🎉</p>
-                    <p className="font-body text-[11px] text-primary-foreground/20 mt-1">Nenhuma notificação pendente</p>
-                  </div>
-                ) : (
-                  activeNotifications.map((n) => {
-                    const notifConfig = {
-                      atrasado: {
-                        bg: "bg-red-500/10 border-red-500/25",
-                        icon: AlertTriangle,
-                        iconColor: "text-red-400",
-                        title: `Atrasado há ${n.dias} dia${n.dias > 1 ? "s" : ""}`,
-                        titleColor: "text-red-400",
-                      },
-                      hoje: {
-                        bg: "bg-yellow-500/10 border-yellow-500/25",
-                        icon: Clock,
-                        iconColor: "text-yellow-400",
-                        title: "Vence hoje!",
-                        titleColor: "text-yellow-400",
-                      },
-                      proximo: {
-                        bg: "bg-blue-500/10 border-blue-500/25",
-                        icon: Clock,
-                        iconColor: "text-blue-400",
-                        title: `Vence em ${n.dias} dia${n.dias > 1 ? "s" : ""}`,
-                        titleColor: "text-blue-400",
-                      },
-                    };
-                    const cfg = notifConfig[n.tipo];
-                    const Icon = cfg.icon;
-
-                    return (
-                      <div key={n.despesa.id} className={`rounded-xl border p-3 transition-all ${cfg.bg}`}>
-                        <div className="flex items-start gap-2.5">
-                          <div className={`mt-0.5 shrink-0 ${cfg.iconColor}`}>
-                            <Icon className="h-4 w-4" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className={`font-body text-[11px] font-semibold ${cfg.titleColor}`}>{cfg.title}</p>
-                            <p className="font-body text-[13px] font-medium text-primary-foreground truncate mt-0.5">
-                              {n.despesa.descricao}
-                            </p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="font-heading text-[13px] font-bold text-primary-foreground">
-                                {formatCurrency(Number(n.despesa.valor))}
-                              </span>
-                              <span className="font-body text-[10px] text-primary-foreground/30">
-                                {n.despesa.categoria}
-                              </span>
-                            </div>
-                            <p className="font-body text-[10px] text-primary-foreground/25 mt-1">
-                              Vencimento: {formatDate(n.despesa.data_vencimento)}
-                            </p>
-                            <div className="flex items-center gap-1.5 mt-2">
-                              <button
-                                onClick={() => dismissNotification(n.despesa.id)}
-                                className="flex items-center gap-1 rounded-lg px-2 py-1 bg-primary-foreground/[0.06] text-primary-foreground/40 text-[10px] font-body font-medium border border-primary-foreground/[0.08] hover:bg-primary-foreground/[0.1] hover:text-primary-foreground/60 transition-all"
-                              >
-                                <Eye className="h-3 w-3" /> Lida
-                              </button>
-                              <button
-                                onClick={() => deleteDespesa(n.despesa.id)}
-                                className="flex items-center gap-1 rounded-lg px-2 py-1 bg-rose/10 text-rose/60 text-[10px] font-body font-medium border border-rose/20 hover:bg-rose/20 hover:text-rose transition-all"
-                              >
-                                <Trash2 className="h-3 w-3" /> Excluir
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
+        <div className="relative">
+          <div className="flex items-start justify-between gap-3 mb-5">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose/10 border border-rose/20 mb-2">
+                <Sparkles className="w-2.5 h-2.5 text-rose animate-pulse" />
+                <span className="font-body text-[9px] text-rose/80 uppercase tracking-[0.2em] font-medium">
+                  Controle financeiro
+                </span>
               </div>
-            </SheetContent>
-          </Sheet>
+              <h2 className="font-heading text-xl font-semibold text-primary-foreground tracking-tight flex items-center gap-2">
+                <Receipt className="w-5 h-5 text-rose" />
+                Despesas
+              </h2>
+              <p className="font-body text-[12px] text-primary-foreground/45 mt-0.5">
+                {countPendentes > 0
+                  ? `${countPendentes} pendente${countPendentes > 1 ? "s" : ""} • ${countPagas} paga${countPagas !== 1 ? "s" : ""}`
+                  : "Tudo em dia ✨"}
+              </p>
+            </div>
 
-          <button
-            onClick={() => setShowForm(true)}
-            className="flex items-center gap-1.5 rounded-xl bg-gold/10 px-3 py-2 font-body text-[12px] font-medium text-gold transition-all hover:bg-gold/20"
-          >
-            <Plus className="h-3.5 w-3.5" /> Adicionar
-          </button>
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Notification Bell */}
+              <Sheet>
+                <SheetTrigger asChild>
+                  <button className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.08] transition-all hover:bg-primary-foreground/[0.1] hover:border-primary-foreground/[0.15]">
+                    <Bell className={`h-4 w-4 ${activeNotifications.length > 0 ? "text-yellow-400 animate-[wiggle_2s_ease-in-out_infinite]" : "text-primary-foreground/40"}`} />
+                    {activeNotifications.length > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white animate-pulse shadow-[0_0_8px_hsl(0_70%_55%/0.6)]">
+                        {activeNotifications.length}
+                      </span>
+                    )}
+                  </button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[340px] sm:w-[400px] bg-charcoal border-primary-foreground/[0.06] p-0">
+                  <SheetHeader className="px-5 pt-5 pb-4 border-b border-primary-foreground/[0.06]">
+                    <SheetTitle className="font-heading text-[16px] font-semibold text-primary-foreground flex items-center gap-2">
+                      <Bell className="w-4 h-4 text-gold" />
+                      Notificações
+                      {activeNotifications.length > 0 && (
+                        <span className="ml-auto px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 text-[10px] font-body font-medium border border-red-500/20">
+                          {activeNotifications.length}
+                        </span>
+                      )}
+                    </SheetTitle>
+                  </SheetHeader>
+
+                  {activeNotifications.length > 0 && (
+                    <div className="px-4 pt-3 flex justify-end">
+                      <button
+                        onClick={clearAllNotifications}
+                        className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 font-body text-[10px] font-medium text-primary-foreground/30 transition-all hover:bg-primary-foreground/[0.06] hover:text-primary-foreground/50"
+                      >
+                        <X className="h-3 w-3" /> Limpar tudo
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 max-h-[calc(100vh-160px)]">
+                    {activeNotifications.length === 0 ? (
+                      <div className="py-16 text-center">
+                        <Check className="h-8 w-8 text-green-400/40 mx-auto mb-3" />
+                        <p className="font-body text-[13px] text-primary-foreground/30">Tudo em dia! 🎉</p>
+                        <p className="font-body text-[11px] text-primary-foreground/20 mt-1">Nenhuma notificação pendente</p>
+                      </div>
+                    ) : (
+                      activeNotifications.map((n) => {
+                        const notifConfig = {
+                          atrasado: {
+                            bg: "bg-red-500/10 border-red-500/25",
+                            icon: AlertTriangle,
+                            iconColor: "text-red-400",
+                            title: `Atrasado há ${n.dias} dia${n.dias > 1 ? "s" : ""}`,
+                            titleColor: "text-red-400",
+                          },
+                          hoje: {
+                            bg: "bg-yellow-500/10 border-yellow-500/25",
+                            icon: Clock,
+                            iconColor: "text-yellow-400",
+                            title: "Vence hoje!",
+                            titleColor: "text-yellow-400",
+                          },
+                          proximo: {
+                            bg: "bg-blue-500/10 border-blue-500/25",
+                            icon: Clock,
+                            iconColor: "text-blue-400",
+                            title: `Vence em ${n.dias} dia${n.dias > 1 ? "s" : ""}`,
+                            titleColor: "text-blue-400",
+                          },
+                        };
+                        const cfg = notifConfig[n.tipo];
+                        const Icon = cfg.icon;
+
+                        return (
+                          <div key={n.despesa.id} className={`rounded-xl border p-3 transition-all ${cfg.bg}`}>
+                            <div className="flex items-start gap-2.5">
+                              <div className={`mt-0.5 shrink-0 ${cfg.iconColor}`}>
+                                <Icon className="h-4 w-4" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className={`font-body text-[11px] font-semibold ${cfg.titleColor}`}>{cfg.title}</p>
+                                <p className="font-body text-[13px] font-medium text-primary-foreground truncate mt-0.5">
+                                  {n.despesa.descricao}
+                                </p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className="font-heading text-[13px] font-bold text-primary-foreground">
+                                    {formatCurrency(Number(n.despesa.valor))}
+                                  </span>
+                                  <span className="font-body text-[10px] text-primary-foreground/30">
+                                    {n.despesa.categoria}
+                                  </span>
+                                </div>
+                                <p className="font-body text-[10px] text-primary-foreground/25 mt-1">
+                                  Vencimento: {formatDate(n.despesa.data_vencimento)}
+                                </p>
+                                <div className="flex items-center gap-1.5 mt-2">
+                                  <button
+                                    onClick={() => dismissNotification(n.despesa.id)}
+                                    className="flex items-center gap-1 rounded-lg px-2 py-1 bg-primary-foreground/[0.06] text-primary-foreground/40 text-[10px] font-body font-medium border border-primary-foreground/[0.08] hover:bg-primary-foreground/[0.1] hover:text-primary-foreground/60 transition-all"
+                                  >
+                                    <Eye className="h-3 w-3" /> Lida
+                                  </button>
+                                  <button
+                                    onClick={() => deleteDespesa(n.despesa.id)}
+                                    className="flex items-center gap-1 rounded-lg px-2 py-1 bg-rose/10 text-rose/60 text-[10px] font-body font-medium border border-rose/20 hover:bg-rose/20 hover:text-rose transition-all"
+                                  >
+                                    <Trash2 className="h-3 w-3" /> Excluir
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </SheetContent>
+              </Sheet>
+
+              <button
+                onClick={() => setShowForm(true)}
+                className="ios-press flex items-center gap-1.5 rounded-2xl bg-gradient-to-br from-gold to-gold/80 px-4 h-10 font-body text-[12px] font-semibold text-charcoal shadow-[0_8px_24px_-6px_hsl(40_60%_55%/0.45)] transition-all hover:shadow-[0_12px_28px_-6px_hsl(40_60%_55%/0.6)] hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <Plus className="h-4 w-4" /> Nova
+              </button>
+            </div>
+          </div>
+
+          {/* Stats grid */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="group relative p-3 rounded-2xl bg-red-500/[0.06] border border-red-500/[0.15] hover:border-red-500/25 transition-all overflow-hidden">
+              <div className="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-red-500/10 blur-xl group-hover:bg-red-500/20 transition-all" />
+              <TrendingDown className="relative w-3.5 h-3.5 text-red-400/80 mb-1.5 group-hover:scale-110 transition-transform" />
+              <p className="relative font-heading text-base font-bold text-red-400 tabular-nums leading-none truncate">
+                {formatCurrency(totalAtrasado)}
+              </p>
+              <p className="relative font-body text-[9px] text-primary-foreground/40 uppercase tracking-wider mt-1">
+                {countAtrasadas} atrasada{countAtrasadas !== 1 ? "s" : ""}
+              </p>
+            </div>
+            <div className="group relative p-3 rounded-2xl bg-orange-500/[0.05] border border-orange-500/[0.12] hover:border-orange-500/25 transition-all overflow-hidden">
+              <div className="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-orange-500/10 blur-xl group-hover:bg-orange-500/20 transition-all" />
+              <Wallet className="relative w-3.5 h-3.5 text-orange-400/80 mb-1.5 group-hover:scale-110 transition-transform" />
+              <p className="relative font-heading text-base font-bold text-orange-400 tabular-nums leading-none truncate">
+                {formatCurrency(totalPendente)}
+              </p>
+              <p className="relative font-body text-[9px] text-primary-foreground/40 uppercase tracking-wider mt-1">
+                Pendente
+              </p>
+            </div>
+            <div className="group relative p-3 rounded-2xl bg-green-500/[0.05] border border-green-500/[0.12] hover:border-green-500/25 transition-all overflow-hidden">
+              <div className="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-green-500/10 blur-xl group-hover:bg-green-500/20 transition-all" />
+              <TrendingUp className="relative w-3.5 h-3.5 text-green-400/80 mb-1.5 group-hover:scale-110 transition-transform" />
+              <p className="relative font-heading text-base font-bold text-green-400 tabular-nums leading-none truncate">
+                {formatCurrency(totalPago)}
+              </p>
+              <p className="relative font-body text-[9px] text-primary-foreground/40 uppercase tracking-wider mt-1">
+                Pago
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Alert banner */}
       {activeNotifications.filter(n => n.tipo === "atrasado" || n.tipo === "hoje").length > 0 && (
-        <div className="flex items-center gap-2 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-3 py-2.5">
-          <AlertTriangle className="h-4 w-4 text-yellow-400 shrink-0" />
+        <div className="flex items-center gap-2.5 rounded-2xl border border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 via-orange-500/5 to-transparent px-4 py-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-yellow-500/15 shrink-0">
+            <AlertTriangle className="h-4 w-4 text-yellow-400" />
+          </div>
           <p className="font-body text-[12px] text-yellow-300 flex-1">
-            Você tem <strong>{activeNotifications.filter(n => n.tipo === "atrasado" || n.tipo === "hoje").length}</strong> despesa(s) que precisa(m) de atenção!
+            Você tem <strong className="text-yellow-200">{activeNotifications.filter(n => n.tipo === "atrasado" || n.tipo === "hoje").length}</strong> despesa(s) que precisa(m) de atenção
           </p>
         </div>
       )}
-
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 gap-2">
-        <div className="rounded-xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-3">
-          <p className="font-body text-[10px] text-primary-foreground/40 uppercase tracking-wider">Pendente</p>
-          <p className="font-heading text-lg font-bold text-red-400 mt-0.5">{formatCurrency(totalPendente)}</p>
-        </div>
-        <div className="rounded-xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-3">
-          <p className="font-body text-[10px] text-primary-foreground/40 uppercase tracking-wider">Pago</p>
-          <p className="font-heading text-lg font-bold text-green-400 mt-0.5">{formatCurrency(totalPago)}</p>
-        </div>
-      </div>
 
       {/* Filters */}
       <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
