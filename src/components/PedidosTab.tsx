@@ -20,6 +20,7 @@ interface Agendamento {
   cliente_nome: string | null;
   origem?: string | null;
   forma_pagamento?: string | null;
+  observacao?: string | null;
 }
 
 interface Props {
@@ -502,6 +503,12 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                           {paymentBadge(a)}
                         </div>
                       </div>
+                      {a.observacao && (
+                        <div className="col-span-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-2">
+                          <p className="font-body text-[10px] text-amber-400/70 uppercase tracking-wider mb-0.5">Observações do cliente</p>
+                          <p className="font-body text-[12px] text-amber-200/95 leading-snug whitespace-pre-wrap break-words">📝 {a.observacao}</p>
+                        </div>
+                      )}
                     </div>
                     <div className="border-t border-primary-foreground/[0.06] pt-3 space-y-2">
                       <p className="font-body text-[10px] text-primary-foreground/30 uppercase tracking-wider">Alterar status</p>

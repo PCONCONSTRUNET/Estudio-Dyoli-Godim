@@ -24,6 +24,7 @@ export type Database = {
           forma_pagamento: string | null
           horario: string
           id: string
+          observacao: string
           origem: string
           servico: string
           status: string
@@ -42,6 +43,7 @@ export type Database = {
           forma_pagamento?: string | null
           horario: string
           id?: string
+          observacao?: string
           origem?: string
           servico: string
           status?: string
@@ -60,6 +62,7 @@ export type Database = {
           forma_pagamento?: string | null
           horario?: string
           id?: string
+          observacao?: string
           origem?: string
           servico?: string
           status?: string
@@ -96,6 +99,75 @@ export type Database = {
           created_at?: string
           id?: string
           nota?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      cliente_anotacoes: {
+        Row: {
+          agendamento_id: string | null
+          created_at: string
+          descricao: string
+          fotos: string[]
+          id: string
+          produtos_usados: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agendamento_id?: string | null
+          created_at?: string
+          descricao?: string
+          fotos?: string[]
+          id?: string
+          produtos_usados?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agendamento_id?: string | null
+          created_at?: string
+          descricao?: string
+          fotos?: string[]
+          id?: string
+          produtos_usados?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      cliente_fichas: {
+        Row: {
+          alergias: string
+          contraindicacoes: string
+          created_at: string
+          id: string
+          observacoes_gerais: string
+          produtos_favoritos: string
+          tipo_pele: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alergias?: string
+          contraindicacoes?: string
+          created_at?: string
+          id?: string
+          observacoes_gerais?: string
+          produtos_favoritos?: string
+          tipo_pele?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alergias?: string
+          contraindicacoes?: string
+          created_at?: string
+          id?: string
+          observacoes_gerais?: string
+          produtos_favoritos?: string
+          tipo_pele?: string
           updated_at?: string
           user_id?: string
         }

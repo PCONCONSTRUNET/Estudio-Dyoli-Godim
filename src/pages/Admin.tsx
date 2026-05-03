@@ -41,6 +41,7 @@ interface Agendamento {
   created_at: string; user_id: string; duracao_minutos: number; forma_pagamento: string | null;
   cliente_nome: string | null;
   origem?: string | null;
+  observacao?: string | null;
 }
 interface Profile { id: string; nome: string; whatsapp: string; created_at: string; }
 interface LembreteConfig { id: string; tipo: string; ativo: boolean; mensagem: string; horas_antes: number; }
@@ -1164,6 +1165,11 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                   </div>
                                 )}
                                 <p className="mt-0.5 truncate font-body text-[12px] text-primary-foreground/65">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""} · {a.duracao_minutos || 60}min</p>
+                                {a.observacao && (
+                                  <div className="mt-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 py-1.5">
+                                    <p className="font-body text-[11px] text-amber-300/90 leading-snug">📝 {a.observacao}</p>
+                                  </div>
+                                )}
                                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
                                   {statusBadge(a.status)}
                                   {pagamentoBadge(a)}
