@@ -556,9 +556,25 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
           </div>
         </div>
 
+        {/* Observações do cliente */}
+        <div className="w-full max-w-sm mt-6 lg:mx-auto">
+          <label className="font-body text-[11px] text-muted-foreground uppercase tracking-widest font-medium mb-2.5 block text-left">
+            Observações <span className="normal-case tracking-normal text-[11px] text-muted-foreground/60">(opcional)</span>
+          </label>
+          <textarea
+            value={observacao}
+            onChange={(e) => setObservacao(e.target.value.slice(0, 500))}
+            placeholder="Ex: alergia a algum produto, gestante, sensibilidade na pele, preferências..."
+            rows={3}
+            className="w-full p-3 rounded-2xl border-2 border-border/60 bg-card text-foreground font-body text-[13px] placeholder:text-muted-foreground/50 focus:outline-none focus:border-gold/60 resize-none"
+          />
+          {observacao.length > 0 && (
+            <p className="font-body text-[10px] text-muted-foreground/60 mt-1 text-right">{observacao.length}/500</p>
+          )}
+        </div>
+
         {/* Escolha do pagamento */}
         <div className="w-full max-w-sm mt-6 lg:mx-auto">
-          <p className="font-body text-[11px] text-muted-foreground uppercase tracking-widest font-medium mb-2.5 text-left">
             Como deseja pagar? <span className="text-rose normal-case tracking-normal text-[11px] font-normal">(toque para escolher)</span>
           </p>
           <div className="space-y-2.5">
