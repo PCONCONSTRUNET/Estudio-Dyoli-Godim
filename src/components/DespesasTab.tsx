@@ -239,6 +239,14 @@ const DespesasTab = () => {
   const countPendentes = despesas.filter((d) => !d.pago).length;
   const countPagas = despesas.filter((d) => d.pago).length;
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-gold border-t-transparent" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5 animate-fade-in">
       {/* ── Editorial Hero ── */}
