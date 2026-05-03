@@ -2261,10 +2261,10 @@ const ServicosTab = ({
               <div className="w-8 h-8 rounded-xl bg-gold/15 flex items-center justify-center">
                 <Sparkles className="w-4 h-4 text-gold" />
               </div>
-              <span className="font-body text-[10px] tracking-[0.18em] uppercase text-gold/80">Catálogo</span>
+              <span className="font-body text-[10px] tracking-[0.18em] uppercase text-gold/80">{scopeLabel}</span>
             </div>
             <h1 className="font-heading text-2xl font-semibold text-primary-foreground leading-tight">Serviços & Categorias</h1>
-            <p className="font-body text-[12px] text-primary-foreground/40 mt-1">Organize seu portfólio e veja sincronizar no agendamento dos clientes</p>
+            <p className="font-body text-[12px] text-primary-foreground/40 mt-1">{scopeHint}</p>
           </div>
         </div>
 
