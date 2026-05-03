@@ -1311,7 +1311,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                           <div className="col-span-2 rounded-xl border border-primary-foreground/10 bg-primary-foreground/[0.04] p-3">
                             <p className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/40 mb-1">Serviço</p>
                             <p className="font-body text-[14px] font-medium text-primary-foreground">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""}</p>
-                            <p className="font-body text-[11px] text-primary-foreground/50 mt-0.5">Duração: {a.duracao_minutos || 60} min{a.foi_estendido ? " (estendido)" : ""}</p>
+                            <p className="font-body text-[11px] text-primary-foreground/50 mt-0.5">Duração: {a.duracao_minutos || 60} min{(a as any).foi_estendido ? " (estendido)" : ""}</p>
                           </div>
                           <div className="rounded-xl border border-primary-foreground/10 bg-primary-foreground/[0.04] p-3">
                             <p className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/40 mb-1">Data</p>
