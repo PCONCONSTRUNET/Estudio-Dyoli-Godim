@@ -470,7 +470,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     { id: "gateway", label: "Gateway", icon: Wallet, anim: "tab-icon-spin", color: "#84cc16" },
     { id: "chatbot", label: "Chatbot", icon: WhatsAppIcon, anim: "tab-icon-bounce", color: "#25d366" },
     { id: "horarios", label: "Horários", icon: Clock, anim: "tab-icon-tick", color: "#60a5fa" },
-    { id: "servicos", label: "Serviços", icon: Settings, anim: "tab-icon-cog", color: "#eab308" },
+    { id: "servicos", label: "Serviços (WhatsApp)", icon: Settings, anim: "tab-icon-cog", color: "#25d366" },
+    { id: "servicos_app", label: "Serviços (App)", icon: Sparkles, anim: "tab-icon-cog", color: "#eab308" },
   ];
 
   const total = agendamentos.length;
