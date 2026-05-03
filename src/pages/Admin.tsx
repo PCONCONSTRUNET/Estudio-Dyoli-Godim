@@ -1941,9 +1941,22 @@ const HorariosTab = () => {
 };
 
 // ─── Serviços Tab ───
-const CATEGORIAS_STORAGE_KEY = "admin_custom_categorias_servicos";
+type ServicosTableName = "servicos" | "servicos_app";
 
-const ServicosTab = () => {
+interface ServicosTabProps {
+  tableName?: ServicosTableName;
+  storageKey?: string;
+  scopeLabel?: string;
+  scopeHint?: string;
+}
+
+const ServicosTab = ({
+  tableName = "servicos",
+  storageKey = "admin_custom_categorias_servicos",
+  scopeLabel = "Catálogo",
+  scopeHint = "Organize seu portfólio e veja sincronizar no agendamento dos clientes",
+}: ServicosTabProps = {}) => {
+  const CATEGORIAS_STORAGE_KEY = storageKey;
   const [services, setServices] = useState<{ id: string; name: string; price: number; category: string; active: boolean; duration: number }[]>([]);
   const [extraCategorias, setExtraCategorias] = useState<string[]>(() => {
     try {
