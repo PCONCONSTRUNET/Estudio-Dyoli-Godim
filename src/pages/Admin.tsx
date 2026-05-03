@@ -1989,10 +1989,10 @@ const ServicosTab = ({
   };
 
   const reloadServicos = useCallback(async () => {
-    const { data } = await supabase.from("servicos").select("*").order("ordem");
-    if (data) setServices(data.map(s => ({ id: s.id, name: s.nome, price: Number(s.preco), category: s.categoria, active: s.ativo, duration: s.duracao_minutos || 60 })));
+    const { data } = await supabase.from(tableName).select("*").order("ordem");
+    if (data) setServices(data.map((s: any) => ({ id: s.id, name: s.nome, price: Number(s.preco), category: s.categoria, active: s.ativo, duration: s.duracao_minutos || 60 })));
     setLoading(false);
-  }, []);
+  }, [tableName]);
 
   useEffect(() => {
     reloadServicos();
