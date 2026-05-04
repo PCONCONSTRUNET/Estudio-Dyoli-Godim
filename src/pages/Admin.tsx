@@ -2098,7 +2098,7 @@ const ServicosTab = ({
   scopeHint = "Organize seu portfólio e veja sincronizar no agendamento dos clientes",
 }: ServicosTabProps = {}) => {
   const CATEGORIAS_STORAGE_KEY = storageKey;
-  const [services, setServices] = useState<{ id: string; name: string; price: number; category: string; active: boolean; duration: number }[]>([]);
+  const [services, setServices] = useState<{ id: string; name: string; price: number; category: string; active: boolean; duration: number; descricao: string }[]>([]);
   const [extraCategorias, setExtraCategorias] = useState<string[]>(() => {
     try {
       const raw = localStorage.getItem(CATEGORIAS_STORAGE_KEY);
@@ -2111,11 +2111,13 @@ const ServicosTab = ({
   const [editPrice, setEditPrice] = useState("");
   const [editDuration, setEditDuration] = useState("");
   const [editCategory, setEditCategory] = useState("");
+  const [editDescricao, setEditDescricao] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState("");
   const [newPrice, setNewPrice] = useState("");
   const [newCategory, setNewCategory] = useState("");
   const [newDuration, setNewDuration] = useState("60");
+  const [newDescricao, setNewDescricao] = useState("");
 
   // Categorias state
   const [showNewCatInput, setShowNewCatInput] = useState(false);
