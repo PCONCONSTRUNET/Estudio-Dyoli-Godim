@@ -161,8 +161,38 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
                 </p>
               </div>
 
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/60 pointer-events-none" />
+                <input
+                  type="text"
+                  inputMode="search"
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  placeholder="Buscar serviço pelo nome..."
+                  className="w-full h-12 pl-11 pr-10 rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm font-body text-[14px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-gold/50 focus:ring-2 focus:ring-gold/20 transition-all"
+                />
+                {busca && (
+                  <button
+                    type="button"
+                    onClick={() => setBusca("")}
+                    className="ios-press absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                    aria-label="Limpar busca"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
               <div className="space-y-3 pt-1">
-                {servicosDaCategoria.map((s) => (
+                {servicosDaCategoria.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-border/60 p-10 text-center">
+                    <Search className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
+                    <p className="font-body text-[14px] text-muted-foreground">
+                      Nenhum serviço encontrado{busca ? ` para "${busca}"` : ""}.
+                    </p>
+                  </div>
+                ) : (
+                  servicosDaCategoria.map((s) => (
                   <button
                     key={s.id}
                     onClick={() => onSelectService(s.nome)}
@@ -184,7 +214,8 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
                     </div>
                     <ChevronRight className="w-5 h-5 text-muted-foreground/40 group-hover:text-gold group-hover:translate-x-1 transition-all duration-300 flex-shrink-0" />
                   </button>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           )}
