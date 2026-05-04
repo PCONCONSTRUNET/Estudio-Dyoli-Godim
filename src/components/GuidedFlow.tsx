@@ -161,27 +161,31 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
                 </p>
               </div>
 
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/60 pointer-events-none" />
-                <input
-                  type="text"
-                  inputMode="search"
-                  value={busca}
-                  onChange={(e) => setBusca(e.target.value)}
-                  placeholder="Buscar serviço pelo nome..."
-                  className="w-full h-12 pl-11 pr-10 rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm font-body text-[14px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-gold/50 focus:ring-2 focus:ring-gold/20 transition-all"
-                />
-                {busca && (
-                  <button
-                    type="button"
-                    onClick={() => setBusca("")}
-                    className="ios-press absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-                    aria-label="Limpar busca"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
+              <div className="relative group">
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-gold/20 via-rose/10 to-gold/20 blur-md opacity-70 group-focus-within:opacity-100 transition-opacity pointer-events-none" />
+                <div className="relative">
+                  <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gold pointer-events-none" strokeWidth={2.5} />
+                  <input
+                    type="text"
+                    inputMode="search"
+                    value={busca}
+                    onChange={(e) => setBusca(e.target.value)}
+                    placeholder="Buscar serviço pelo nome..."
+                    className="w-full h-14 pl-12 pr-11 rounded-2xl border-2 border-gold/50 bg-card font-body text-[15px] font-medium text-foreground placeholder:text-muted-foreground/70 shadow-[0_4px_20px_-6px_hsl(var(--gold)/0.35)] focus:outline-none focus:border-gold focus:ring-4 focus:ring-gold/25 focus:shadow-[0_6px_28px_-6px_hsl(var(--gold)/0.5)] transition-all"
+                  />
+                  {busca && (
+                    <button
+                      type="button"
+                      onClick={() => setBusca("")}
+                      className="ios-press absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      aria-label="Limpar busca"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </div>
+
 
               <div className="space-y-3 pt-1">
                 {servicosDaCategoria.length === 0 ? (
