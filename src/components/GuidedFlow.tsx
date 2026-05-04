@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ChevronRight, User, Loader2, Folder, Sparkles } from "lucide-react";
+import { ArrowLeft, ChevronRight, User, Loader2, Folder, Sparkles, Search, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface GuidedFlowProps {
@@ -20,6 +20,7 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [loading, setLoading] = useState(true);
   const [categoriaSelecionada, setCategoriaSelecionada] = useState<string | null>(null);
+  const [busca, setBusca] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -59,13 +60,13 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
     return Array.from(map.entries()).map(([nome, count]) => ({ nome, count }));
   }, [servicos]);
 
-  const servicosDaCategoria = useMemo(
-    () =>
-      categoriaSelecionada
-        ? servicos.filter((s) => (s.categoria || "Outros") === categoriaSelecionada)
-        : [],
-    [servicos, categoriaSelecionada]
-  );
+  const servicosDaCategoria = useMemo(() => {
+    if (!categoriaSelecionada) return [];
+    const lista = servicos.filter((s) => (s.categoria || "Outros") === categoriaSelecionada);
+    const termo = busca.trim().toLowerCase();
+    if (!termo) return lista;
+    return lista.filter((s) => s.nome.toLowerCase().includes(termo));
+  }, [servicos, categoriaSelecionada, busca]);
 
   const OptionCard = ({
     title,
@@ -104,7 +105,7 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
 
       <div className="w-full max-w-md lg:max-w-xl">
         <button
-          onClick={categoriaSelecionada ? () => setCategoriaSelecionada(null) : onBack}
+          onClick={categoriaSelecionada ? () => { setCategoriaSelecionada(null); setBusca(""); } : onBack}
           className="ios-press flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -160,8 +161,38 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
                 </p>
               </div>
 
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/60 pointer-events-none" />
+                <input
+                  type="text"
+                  inputMode="search"
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  placeholder="Buscar serviço pelo nome..."
+                  className="w-full h-12 pl-11 pr-10 rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm font-body text-[14px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-gold/50 focus:ring-2 focus:ring-gold/20 transition-all"
+                />
+                {busca && (
+                  <button
+                    type="button"
+                    onClick={() => setBusca("")}
+                    className="ios-press absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                    aria-label="Limpar busca"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
               <div className="space-y-3 pt-1">
-                {servicosDaCategoria.map((s) => (
+                {servicosDaCategoria.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-border/60 p-10 text-center">
+                    <Search className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
+                    <p className="font-body text-[14px] text-muted-foreground">
+                      Nenhum serviço encontrado{busca ? ` para "${busca}"` : ""}.
+                    </p>
+                  </div>
+                ) : (
+                  servicosDaCategoria.map((s) => (
                   <button
                     key={s.id}
                     onClick={() => onSelectService(s.nome)}
@@ -183,7 +214,8 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
                     </div>
                     <ChevronRight className="w-5 h-5 text-muted-foreground/40 group-hover:text-gold group-hover:translate-x-1 transition-all duration-300 flex-shrink-0" />
                   </button>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           )}
