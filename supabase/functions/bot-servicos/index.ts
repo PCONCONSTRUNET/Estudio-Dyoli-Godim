@@ -17,15 +17,37 @@ Deno.serve(async (req) => {
 
     const { data, error } = await supabase
       .from("servicos")
-      .select("id, nome, categoria, preco, duracao_minutos, descricao")
+      .select("id, nome, categoria, preco, duracao_minutos, descricao, ordem")
       .eq("ativo", true)
       .order("ordem", { ascending: true });
 
     if (error) throw error;
 
+    // Carrega ordem das categorias definida no admin
+    const { data: ordemData } = await supabase
+      .from("categorias_ordem")
+      .select("nome, ordem")
+      .eq("scope", "servicos")
+      .order("ordem");
+
+    const ordemMap = new Map<string, number>();
+    (ordemData ?? []).forEach((r: any) => ordemMap.set(r.nome, r.ordem));
+
+    const servicos = (data ?? []).slice().sort((a: any, b: any) => {
+      const oa = ordemMap.has(a.categoria) ? ordemMap.get(a.categoria)! : Number.MAX_SAFE_INTEGER;
+      const ob = ordemMap.has(b.categoria) ? ordemMap.get(b.categoria)! : Number.MAX_SAFE_INTEGER;
+      if (oa !== ob) return oa - ob;
+      // Categorias sem ordem definida: alfabético
+      if (oa === Number.MAX_SAFE_INTEGER && ob === Number.MAX_SAFE_INTEGER) {
+        const c = String(a.categoria || "").localeCompare(String(b.categoria || ""), "pt-BR");
+        if (c !== 0) return c;
+      }
+      return (a.ordem ?? 0) - (b.ordem ?? 0);
+    }).map(({ ordem: _o, ...rest }: any) => rest);
+
     return jsonResponse({
       success: true,
-      servicos: data ?? [],
+      servicos,
     });
   } catch (err) {
     console.error("bot-servicos error:", err);
