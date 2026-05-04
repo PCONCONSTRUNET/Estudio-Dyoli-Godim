@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ChevronRight, User, Loader2, Folder, Sparkles } from "lucide-react";
+import { ArrowLeft, ChevronRight, User, Loader2, Folder, Sparkles, Search, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface GuidedFlowProps {
@@ -20,6 +20,7 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
   const [servicos, setServicos] = useState<Servico[]>([]);
   const [loading, setLoading] = useState(true);
   const [categoriaSelecionada, setCategoriaSelecionada] = useState<string | null>(null);
+  const [busca, setBusca] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -59,13 +60,13 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
     return Array.from(map.entries()).map(([nome, count]) => ({ nome, count }));
   }, [servicos]);
 
-  const servicosDaCategoria = useMemo(
-    () =>
-      categoriaSelecionada
-        ? servicos.filter((s) => (s.categoria || "Outros") === categoriaSelecionada)
-        : [],
-    [servicos, categoriaSelecionada]
-  );
+  const servicosDaCategoria = useMemo(() => {
+    if (!categoriaSelecionada) return [];
+    const lista = servicos.filter((s) => (s.categoria || "Outros") === categoriaSelecionada);
+    const termo = busca.trim().toLowerCase();
+    if (!termo) return lista;
+    return lista.filter((s) => s.nome.toLowerCase().includes(termo));
+  }, [servicos, categoriaSelecionada, busca]);
 
   const OptionCard = ({
     title,
@@ -104,7 +105,7 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
 
       <div className="w-full max-w-md lg:max-w-xl">
         <button
-          onClick={categoriaSelecionada ? () => setCategoriaSelecionada(null) : onBack}
+          onClick={categoriaSelecionada ? () => { setCategoriaSelecionada(null); setBusca(""); } : onBack}
           className="ios-press flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
