@@ -2289,6 +2289,11 @@ const ServicosTab = ({
     if (extraCategorias.includes(antigo)) {
       persistExtras(extraCategorias.map(c => c === antigo ? novo : c));
     }
+    // Atualiza ordem persistida
+    if (ordemCategorias.includes(antigo)) {
+      const nova = ordemCategorias.map(c => c === antigo ? novo : c);
+      await salvarOrdemCategorias(nova);
+    }
     setRenomeandoCat(null);
     toast.success("Categoria renomeada");
   };
