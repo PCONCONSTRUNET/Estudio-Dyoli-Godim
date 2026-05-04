@@ -2804,6 +2804,18 @@ const ServicosTab = ({
                       <p className="mt-2 font-body text-[12px] text-primary-foreground/55 leading-relaxed whitespace-pre-line line-clamp-3">{s.descricao}</p>
                     )}
                     <div className="flex items-center justify-end gap-1 mt-3 pt-3 border-t border-primary-foreground/[0.05]">
+                      <button
+                        onClick={() => moverServico(s.id, -1)}
+                        disabled={isFirstInCat}
+                        className="p-2 rounded-lg hover:bg-gold/10 text-primary-foreground/40 hover:text-gold transition-all active:scale-95 disabled:opacity-20 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                        title="Mover para cima na categoria (afeta app e WhatsApp)"
+                      ><ChevronUp className="w-3.5 h-3.5" /></button>
+                      <button
+                        onClick={() => moverServico(s.id, 1)}
+                        disabled={isLastInCat}
+                        className="p-2 rounded-lg hover:bg-gold/10 text-primary-foreground/40 hover:text-gold transition-all active:scale-95 disabled:opacity-20 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                        title="Mover para baixo na categoria"
+                      ><ChevronDown className="w-3.5 h-3.5" /></button>
                       <button onClick={() => toggleActive(s.id)} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-body text-[11px] font-medium transition-all active:scale-95 ${s.active ? "bg-gold/10 text-gold hover:bg-gold/15" : "bg-primary-foreground/[0.05] text-primary-foreground/40 hover:bg-primary-foreground/[0.08]"}`}>
                         <div className={`w-7 h-4 rounded-full relative transition-all ${s.active ? "bg-gold/50" : "bg-primary-foreground/20"}`}>
                           <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-all duration-200 ${s.active ? "left-3.5" : "left-0.5"}`} />
