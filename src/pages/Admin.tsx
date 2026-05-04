@@ -2124,12 +2124,45 @@ const ServicosTab = ({
   const [novaCategoria, setNovaCategoria] = useState("");
   const [renomeandoCat, setRenomeandoCat] = useState<string | null>(null);
   const [renomeCatValor, setRenomeCatValor] = useState("");
+  const [ordemCategorias, setOrdemCategorias] = useState<string[]>([]);
 
   // Persistência das categorias "vazias" (ainda sem serviços)
   const persistExtras = (lista: string[]) => {
     setExtraCategorias(lista);
     try { localStorage.setItem(CATEGORIAS_STORAGE_KEY, JSON.stringify(lista)); } catch { /* ignore */ }
   };
+
+  // Carrega ordem das categorias do banco
+  const reloadOrdemCategorias = useCallback(async () => {
+    const { data } = await supabase
+      .from("categorias_ordem")
+      .select("nome, ordem")
+      .eq("scope", tableName)
+      .order("ordem");
+    if (data) setOrdemCategorias(data.map((r: any) => r.nome));
+  }, [tableName]);
+
+  useEffect(() => { reloadOrdemCategorias(); }, [reloadOrdemCategorias]);
+
+  // Persiste nova ordem (substitui todas as linhas do scope)
+  const salvarOrdemCategorias = async (nova: string[]) => {
+    setOrdemCategorias(nova);
+    await supabase.from("categorias_ordem").delete().eq("scope", tableName);
+    if (nova.length > 0) {
+      const rows = nova.map((nome, idx) => ({ scope: tableName, nome, ordem: idx }));
+      await supabase.from("categorias_ordem").insert(rows);
+    }
+  };
+
+  const moverCategoria = (cat: string, dir: -1 | 1) => {
+    const lista = [...categorias];
+    const i = lista.indexOf(cat);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= lista.length) return;
+    [lista[i], lista[j]] = [lista[j], lista[i]];
+    salvarOrdemCategorias(lista);
+  };
+
 
   const reloadServicos = useCallback(async () => {
     const { data } = await supabase.from(tableName).select("*").order("ordem");
