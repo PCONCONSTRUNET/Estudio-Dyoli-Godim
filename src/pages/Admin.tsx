@@ -2566,6 +2566,18 @@ const ServicosTab = ({
                         {count > 0 ? `${ativos}/${count}` : "0"}
                       </span>
                       <div className="flex items-center gap-0.5 ml-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => moverCategoria(cat, -1)}
+                          disabled={idx === 0}
+                          className="p-1 rounded-md hover:bg-gold/15 text-primary-foreground/50 hover:text-gold transition-colors disabled:opacity-20 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                          title="Mover para cima (afeta a ordem no WhatsApp e no app)"
+                        ><ChevronUp className="w-3 h-3" /></button>
+                        <button
+                          onClick={() => moverCategoria(cat, 1)}
+                          disabled={idx === categorias.length - 1}
+                          className="p-1 rounded-md hover:bg-gold/15 text-primary-foreground/50 hover:text-gold transition-colors disabled:opacity-20 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                          title="Mover para baixo"
+                        ><ChevronDown className="w-3 h-3" /></button>
                         {count > 0 && (
                           ativa ? (
                             <button
