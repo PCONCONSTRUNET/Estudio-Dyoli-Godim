@@ -2338,6 +2338,46 @@ const ServicosTab = ({
     setServices(prev => prev.filter(s => s.id !== id));
   };
 
+  // Move um serviço para cima/baixo dentro da MESMA categoria.
+  // Troca o valor de `ordem` com o vizinho — reflete no app e no WhatsApp.
+  const moverServico = async (id: string, dir: -1 | 1) => {
+    const atual = services.find(s => s.id === id);
+    if (!atual) return;
+    // Lista da mesma categoria, ordenada como no banco (por `ordem`, depois nome para estabilidade)
+    const mesmaCat = services
+      .filter(s => (s.category || "Outros") === (atual.category || "Outros"))
+      .slice()
+      .sort((a, b) => {
+        const oa = (services.indexOf(a));
+        const ob = (services.indexOf(b));
+        return oa - ob;
+      });
+    const i = mesmaCat.findIndex(s => s.id === id);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= mesmaCat.length) return;
+    const a = mesmaCat[i];
+    const b = mesmaCat[j];
+
+    // Busca os valores reais de ordem do banco
+    const { data: rows } = await supabase
+      .from(tableName)
+      .select("id, ordem")
+      .in("id", [a.id, b.id]);
+    if (!rows || rows.length < 2) return;
+    const ordemA = rows.find((r: any) => r.id === a.id)?.ordem ?? 0;
+    const ordemB = rows.find((r: any) => r.id === b.id)?.ordem ?? 0;
+    // Se forem iguais, força um delta para manter a inversão estável
+    const novoA = ordemA === ordemB ? ordemB + (dir === -1 ? -1 : 1) : ordemB;
+    const novoB = ordemA === ordemB ? ordemA : ordemA;
+
+    await Promise.all([
+      supabase.from(tableName).update({ ordem: novoA, updated_at: new Date().toISOString() }).eq("id", a.id),
+      supabase.from(tableName).update({ ordem: novoB, updated_at: new Date().toISOString() }).eq("id", b.id),
+    ]);
+    await reloadServicos();
+  };
+
+
   // Filtro / busca (hooks devem ficar antes de qualquer early return)
   const [filtroCat, setFiltroCat] = useState<string>("todas");
   const [busca, setBusca] = useState("");
