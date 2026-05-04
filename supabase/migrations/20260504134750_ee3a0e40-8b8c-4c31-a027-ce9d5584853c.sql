@@ -1,0 +1,1 @@
+CREATE POLICY "Gestão de serviços (anon admin)" ON public.servicos FOR ALL TO anon USING (true) WITH CHECK (true);
