@@ -2525,7 +2525,7 @@ const ServicosTab = ({
           </div>
         ) : (
           <div className="flex flex-wrap gap-2">
-            {categorias.map(cat => {
+            {categorias.map((cat, idx) => {
               const count = contarServicos(cat);
               const ativos = contarAtivos(cat);
               const ativa = categoriaAtiva(cat);
