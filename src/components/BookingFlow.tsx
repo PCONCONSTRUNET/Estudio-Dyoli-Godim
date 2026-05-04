@@ -532,6 +532,11 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
               <p className="font-body text-[14px] font-medium text-foreground mt-0.5">
                 {service}{variation ? ` — ${variation}` : ""}
               </p>
+              {serviceDescricao && (
+                <p className="font-body text-[12px] text-muted-foreground mt-1.5 leading-relaxed whitespace-pre-line">
+                  {serviceDescricao}
+                </p>
+              )}
             </div>
             <div className="flex gap-8">
               <div>
