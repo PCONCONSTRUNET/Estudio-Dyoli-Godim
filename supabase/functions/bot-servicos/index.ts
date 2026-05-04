@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
 
     const { data, error } = await supabase
       .from("servicos")
-      .select("id, nome, categoria, preco, duracao_minutos")
+      .select("id, nome, categoria, preco, duracao_minutos, descricao")
       .eq("ativo", true)
       .order("ordem", { ascending: true });
 
