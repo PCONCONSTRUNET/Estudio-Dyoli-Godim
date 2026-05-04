@@ -2262,27 +2262,28 @@ const ServicosTab = ({
     setEditPrice(s.price.toString());
     setEditDuration(s.duration.toString());
     setEditCategory(s.category || "");
+    setEditDescricao(s.descricao || "");
   };
   const saveEdit = async (id: string) => {
     const finalCategoria = editCategory.trim() || "Outros";
-    await supabase.from(tableName).update({ nome: editName, preco: Number(editPrice), duracao_minutos: Number(editDuration), categoria: finalCategoria, updated_at: new Date().toISOString() }).eq("id", id);
-    setServices(prev => prev.map(s => s.id === id ? { ...s, name: editName, price: Number(editPrice), duration: Number(editDuration), category: finalCategoria } : s));
+    await supabase.from(tableName).update({ nome: editName, preco: Number(editPrice), duracao_minutos: Number(editDuration), categoria: finalCategoria, descricao: editDescricao, updated_at: new Date().toISOString() }).eq("id", id);
+    setServices(prev => prev.map(s => s.id === id ? { ...s, name: editName, price: Number(editPrice), duration: Number(editDuration), category: finalCategoria, descricao: editDescricao } : s));
     setEditing(null);
   };
   const addService = async () => {
     if (!newName || !newPrice) { toast.error("Preencha nome e preço"); return; }
     const finalCategoria = (newCategory || "").trim() || "Outros";
-    const { data, error } = await supabase.from(tableName).insert({ nome: newName, preco: Number(newPrice), categoria: finalCategoria, ativo: true, ordem: services.length + 1, duracao_minutos: Number(newDuration) || 60 }).select().single();
+    const { data, error } = await supabase.from(tableName).insert({ nome: newName, preco: Number(newPrice), categoria: finalCategoria, ativo: true, ordem: services.length + 1, duracao_minutos: Number(newDuration) || 60, descricao: newDescricao }).select().single();
     if (error) { toast.error("Erro: " + error.message); return; }
     if (data) {
-      setServices(prev => [...prev, { id: data.id, name: data.nome, price: Number(data.preco), category: data.categoria, active: data.ativo, duration: data.duracao_minutos || 60 }]);
+      setServices(prev => [...prev, { id: data.id, name: data.nome, price: Number(data.preco), category: data.categoria, active: data.ativo, duration: data.duracao_minutos || 60, descricao: (data as any).descricao || "" }]);
       // Se a categoria estava na lista de "extras", remove (agora ela tem serviço)
       if (extraCategorias.includes(finalCategoria)) {
         persistExtras(extraCategorias.filter(c => c !== finalCategoria));
       }
       toast.success("Serviço criado");
     }
-    setNewName(""); setNewPrice(""); setNewCategory(""); setNewDuration("60"); setShowAdd(false);
+    setNewName(""); setNewPrice(""); setNewCategory(""); setNewDuration("60"); setNewDescricao(""); setShowAdd(false);
   };
   const toggleActive = async (id: string) => {
     const s = services.find(s => s.id === id);
