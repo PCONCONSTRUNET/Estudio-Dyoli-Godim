@@ -7,7 +7,7 @@ import {
   BarChart3, Calendar, Users, Clock, Settings, LogOut, Search,
   X, Edit2, Trash2, Plus, Save, CheckCircle, Bell, MessageSquare,
   UserX, DollarSign, CreditCard, ShoppingBag, Download, ChevronLeft, ChevronRight, Receipt, ClipboardList, Wallet, Timer, PlusCircle, Menu,
-  Sparkles, Folder, Filter, TrendingUp, Power, Eye, EyeOff
+  Sparkles, Folder, Filter, TrendingUp, Power, Eye, EyeOff, ChevronUp, ChevronDown
 } from "lucide-react";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription
