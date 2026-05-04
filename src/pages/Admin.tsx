@@ -2624,6 +2624,10 @@ const ServicosTab = ({
                 <input value={newDuration} onChange={e => setNewDuration(e.target.value)} placeholder="60" type="number" className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
               </div>
             </div>
+            <div>
+              <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Descrição (opcional) — aparece para a cliente no app e WhatsApp</label>
+              <textarea value={newDescricao} onChange={e => setNewDescricao(e.target.value)} placeholder="Ex: Na Micropigmentação Shadow são usados pigmentos específicos para criar um efeito suave e esfumado..." rows={4} className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20 resize-none" />
+            </div>
             <div className="grid grid-cols-2 gap-2 min-w-0 pt-1">
               <button onClick={addService} className="w-full min-w-0 py-2.5 rounded-xl bg-gradient-to-br from-gold/20 to-gold/10 text-gold font-body text-[12px] font-medium hover:from-gold/25 hover:to-gold/15 active:scale-95 transition-all">Salvar serviço</button>
               <button onClick={() => setShowAdd(false)} className="w-full min-w-0 py-2.5 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/40 font-body text-[12px] hover:text-primary-foreground/60 transition-all">Cancelar</button>
