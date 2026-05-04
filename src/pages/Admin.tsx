@@ -2195,12 +2195,16 @@ const ServicosTab = ({
   }, [reloadServicos, tableName]);
 
   // Lista única de categorias (combina as usadas pelos serviços + extras criadas vazias)
+  // Ordenadas conforme `ordemCategorias` (do banco); novas categorias vão pro fim em ordem alfabética.
   const categorias = useMemo(() => {
     const set = new Set<string>();
     services.forEach(s => { if (s.category) set.add(s.category); });
     extraCategorias.forEach(c => set.add(c));
-    return Array.from(set).sort((a, b) => a.localeCompare(b, "pt-BR"));
-  }, [services, extraCategorias]);
+    const todas = Array.from(set);
+    const ordenadas = ordemCategorias.filter(c => set.has(c));
+    const restantes = todas.filter(c => !ordenadas.includes(c)).sort((a, b) => a.localeCompare(b, "pt-BR"));
+    return [...ordenadas, ...restantes];
+  }, [services, extraCategorias, ordemCategorias]);
 
   const contarServicos = (cat: string) => services.filter(s => s.category === cat).length;
   const contarAtivos = (cat: string) => services.filter(s => s.category === cat && s.active).length;
