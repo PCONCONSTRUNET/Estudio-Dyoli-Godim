@@ -104,6 +104,33 @@ export type Database = {
         }
         Relationships: []
       }
+      categorias_ordem: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          ordem: number
+          scope: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          ordem?: number
+          scope: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          ordem?: number
+          scope?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cliente_anotacoes: {
         Row: {
           agendamento_id: string | null

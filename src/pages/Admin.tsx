@@ -7,7 +7,7 @@ import {
   BarChart3, Calendar, Users, Clock, Settings, LogOut, Search,
   X, Edit2, Trash2, Plus, Save, CheckCircle, Bell, MessageSquare,
   UserX, DollarSign, CreditCard, ShoppingBag, Download, ChevronLeft, ChevronRight, Receipt, ClipboardList, Wallet, Timer, PlusCircle, Menu,
-  Sparkles, Folder, Filter, TrendingUp, Power, Eye, EyeOff
+  Sparkles, Folder, Filter, TrendingUp, Power, Eye, EyeOff, ChevronUp, ChevronDown
 } from "lucide-react";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription
@@ -2124,12 +2124,45 @@ const ServicosTab = ({
   const [novaCategoria, setNovaCategoria] = useState("");
   const [renomeandoCat, setRenomeandoCat] = useState<string | null>(null);
   const [renomeCatValor, setRenomeCatValor] = useState("");
+  const [ordemCategorias, setOrdemCategorias] = useState<string[]>([]);
 
   // Persistência das categorias "vazias" (ainda sem serviços)
   const persistExtras = (lista: string[]) => {
     setExtraCategorias(lista);
     try { localStorage.setItem(CATEGORIAS_STORAGE_KEY, JSON.stringify(lista)); } catch { /* ignore */ }
   };
+
+  // Carrega ordem das categorias do banco
+  const reloadOrdemCategorias = useCallback(async () => {
+    const { data } = await supabase
+      .from("categorias_ordem")
+      .select("nome, ordem")
+      .eq("scope", tableName)
+      .order("ordem");
+    if (data) setOrdemCategorias(data.map((r: any) => r.nome));
+  }, [tableName]);
+
+  useEffect(() => { reloadOrdemCategorias(); }, [reloadOrdemCategorias]);
+
+  // Persiste nova ordem (substitui todas as linhas do scope)
+  const salvarOrdemCategorias = async (nova: string[]) => {
+    setOrdemCategorias(nova);
+    await supabase.from("categorias_ordem").delete().eq("scope", tableName);
+    if (nova.length > 0) {
+      const rows = nova.map((nome, idx) => ({ scope: tableName, nome, ordem: idx }));
+      await supabase.from("categorias_ordem").insert(rows);
+    }
+  };
+
+  const moverCategoria = (cat: string, dir: -1 | 1) => {
+    const lista = [...categorias];
+    const i = lista.indexOf(cat);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= lista.length) return;
+    [lista[i], lista[j]] = [lista[j], lista[i]];
+    salvarOrdemCategorias(lista);
+  };
+
 
   const reloadServicos = useCallback(async () => {
     const { data } = await supabase.from(tableName).select("*").order("ordem");
@@ -2162,12 +2195,16 @@ const ServicosTab = ({
   }, [reloadServicos, tableName]);
 
   // Lista única de categorias (combina as usadas pelos serviços + extras criadas vazias)
+  // Ordenadas conforme `ordemCategorias` (do banco); novas categorias vão pro fim em ordem alfabética.
   const categorias = useMemo(() => {
     const set = new Set<string>();
     services.forEach(s => { if (s.category) set.add(s.category); });
     extraCategorias.forEach(c => set.add(c));
-    return Array.from(set).sort((a, b) => a.localeCompare(b, "pt-BR"));
-  }, [services, extraCategorias]);
+    const todas = Array.from(set);
+    const ordenadas = ordemCategorias.filter(c => set.has(c));
+    const restantes = todas.filter(c => !ordenadas.includes(c)).sort((a, b) => a.localeCompare(b, "pt-BR"));
+    return [...ordenadas, ...restantes];
+  }, [services, extraCategorias, ordemCategorias]);
 
   const contarServicos = (cat: string) => services.filter(s => s.category === cat).length;
   const contarAtivos = (cat: string) => services.filter(s => s.category === cat && s.active).length;
@@ -2251,6 +2288,11 @@ const ServicosTab = ({
     // Atualiza extras (se aplicável)
     if (extraCategorias.includes(antigo)) {
       persistExtras(extraCategorias.map(c => c === antigo ? novo : c));
+    }
+    // Atualiza ordem persistida
+    if (ordemCategorias.includes(antigo)) {
+      const nova = ordemCategorias.map(c => c === antigo ? novo : c);
+      await salvarOrdemCategorias(nova);
     }
     setRenomeandoCat(null);
     toast.success("Categoria renomeada");
@@ -2483,7 +2525,7 @@ const ServicosTab = ({
           </div>
         ) : (
           <div className="flex flex-wrap gap-2">
-            {categorias.map(cat => {
+            {categorias.map((cat, idx) => {
               const count = contarServicos(cat);
               const ativos = contarAtivos(cat);
               const ativa = categoriaAtiva(cat);
@@ -2524,6 +2566,18 @@ const ServicosTab = ({
                         {count > 0 ? `${ativos}/${count}` : "0"}
                       </span>
                       <div className="flex items-center gap-0.5 ml-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => moverCategoria(cat, -1)}
+                          disabled={idx === 0}
+                          className="p-1 rounded-md hover:bg-gold/15 text-primary-foreground/50 hover:text-gold transition-colors disabled:opacity-20 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                          title="Mover para cima (afeta a ordem no WhatsApp e no app)"
+                        ><ChevronUp className="w-3 h-3" /></button>
+                        <button
+                          onClick={() => moverCategoria(cat, 1)}
+                          disabled={idx === categorias.length - 1}
+                          className="p-1 rounded-md hover:bg-gold/15 text-primary-foreground/50 hover:text-gold transition-colors disabled:opacity-20 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                          title="Mover para baixo"
+                        ><ChevronDown className="w-3 h-3" /></button>
                         {count > 0 && (
                           ativa ? (
                             <button
