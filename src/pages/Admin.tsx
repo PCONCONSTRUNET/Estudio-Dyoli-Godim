@@ -2098,7 +2098,7 @@ const ServicosTab = ({
   scopeHint = "Organize seu portfólio e veja sincronizar no agendamento dos clientes",
 }: ServicosTabProps = {}) => {
   const CATEGORIAS_STORAGE_KEY = storageKey;
-  const [services, setServices] = useState<{ id: string; name: string; price: number; category: string; active: boolean; duration: number }[]>([]);
+  const [services, setServices] = useState<{ id: string; name: string; price: number; category: string; active: boolean; duration: number; descricao: string }[]>([]);
   const [extraCategorias, setExtraCategorias] = useState<string[]>(() => {
     try {
       const raw = localStorage.getItem(CATEGORIAS_STORAGE_KEY);
@@ -2111,11 +2111,13 @@ const ServicosTab = ({
   const [editPrice, setEditPrice] = useState("");
   const [editDuration, setEditDuration] = useState("");
   const [editCategory, setEditCategory] = useState("");
+  const [editDescricao, setEditDescricao] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState("");
   const [newPrice, setNewPrice] = useState("");
   const [newCategory, setNewCategory] = useState("");
   const [newDuration, setNewDuration] = useState("60");
+  const [newDescricao, setNewDescricao] = useState("");
 
   // Categorias state
   const [showNewCatInput, setShowNewCatInput] = useState(false);
@@ -2131,7 +2133,7 @@ const ServicosTab = ({
 
   const reloadServicos = useCallback(async () => {
     const { data } = await supabase.from(tableName).select("*").order("ordem");
-    if (data) setServices(data.map((s: any) => ({ id: s.id, name: s.nome, price: Number(s.preco), category: s.categoria, active: s.ativo, duration: s.duracao_minutos || 60 })));
+    if (data) setServices(data.map((s: any) => ({ id: s.id, name: s.nome, price: Number(s.preco), category: s.categoria, active: s.ativo, duration: s.duracao_minutos || 60, descricao: s.descricao || "" })));
     setLoading(false);
   }, [tableName]);
 
@@ -2260,27 +2262,28 @@ const ServicosTab = ({
     setEditPrice(s.price.toString());
     setEditDuration(s.duration.toString());
     setEditCategory(s.category || "");
+    setEditDescricao(s.descricao || "");
   };
   const saveEdit = async (id: string) => {
     const finalCategoria = editCategory.trim() || "Outros";
-    await supabase.from(tableName).update({ nome: editName, preco: Number(editPrice), duracao_minutos: Number(editDuration), categoria: finalCategoria, updated_at: new Date().toISOString() }).eq("id", id);
-    setServices(prev => prev.map(s => s.id === id ? { ...s, name: editName, price: Number(editPrice), duration: Number(editDuration), category: finalCategoria } : s));
+    await supabase.from(tableName).update({ nome: editName, preco: Number(editPrice), duracao_minutos: Number(editDuration), categoria: finalCategoria, descricao: editDescricao, updated_at: new Date().toISOString() }).eq("id", id);
+    setServices(prev => prev.map(s => s.id === id ? { ...s, name: editName, price: Number(editPrice), duration: Number(editDuration), category: finalCategoria, descricao: editDescricao } : s));
     setEditing(null);
   };
   const addService = async () => {
     if (!newName || !newPrice) { toast.error("Preencha nome e preço"); return; }
     const finalCategoria = (newCategory || "").trim() || "Outros";
-    const { data, error } = await supabase.from(tableName).insert({ nome: newName, preco: Number(newPrice), categoria: finalCategoria, ativo: true, ordem: services.length + 1, duracao_minutos: Number(newDuration) || 60 }).select().single();
+    const { data, error } = await supabase.from(tableName).insert({ nome: newName, preco: Number(newPrice), categoria: finalCategoria, ativo: true, ordem: services.length + 1, duracao_minutos: Number(newDuration) || 60, descricao: newDescricao }).select().single();
     if (error) { toast.error("Erro: " + error.message); return; }
     if (data) {
-      setServices(prev => [...prev, { id: data.id, name: data.nome, price: Number(data.preco), category: data.categoria, active: data.ativo, duration: data.duracao_minutos || 60 }]);
+      setServices(prev => [...prev, { id: data.id, name: data.nome, price: Number(data.preco), category: data.categoria, active: data.ativo, duration: data.duracao_minutos || 60, descricao: (data as any).descricao || "" }]);
       // Se a categoria estava na lista de "extras", remove (agora ela tem serviço)
       if (extraCategorias.includes(finalCategoria)) {
         persistExtras(extraCategorias.filter(c => c !== finalCategoria));
       }
       toast.success("Serviço criado");
     }
-    setNewName(""); setNewPrice(""); setNewCategory(""); setNewDuration("60"); setShowAdd(false);
+    setNewName(""); setNewPrice(""); setNewCategory(""); setNewDuration("60"); setNewDescricao(""); setShowAdd(false);
   };
   const toggleActive = async (id: string) => {
     const s = services.find(s => s.id === id);
@@ -2621,6 +2624,10 @@ const ServicosTab = ({
                 <input value={newDuration} onChange={e => setNewDuration(e.target.value)} placeholder="60" type="number" className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20" />
               </div>
             </div>
+            <div>
+              <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Descrição (opcional) — aparece para a cliente no app e WhatsApp</label>
+              <textarea value={newDescricao} onChange={e => setNewDescricao(e.target.value)} placeholder="Ex: Na Micropigmentação Shadow são usados pigmentos específicos para criar um efeito suave e esfumado..." rows={4} className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20 resize-none" />
+            </div>
             <div className="grid grid-cols-2 gap-2 min-w-0 pt-1">
               <button onClick={addService} className="w-full min-w-0 py-2.5 rounded-xl bg-gradient-to-br from-gold/20 to-gold/10 text-gold font-body text-[12px] font-medium hover:from-gold/25 hover:to-gold/15 active:scale-95 transition-all">Salvar serviço</button>
               <button onClick={() => setShowAdd(false)} className="w-full min-w-0 py-2.5 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/40 font-body text-[12px] hover:text-primary-foreground/60 transition-all">Cancelar</button>
@@ -2658,6 +2665,7 @@ const ServicosTab = ({
                       <input value={editPrice} onChange={e => setEditPrice(e.target.value)} type="number" placeholder="Preço" className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
                       <input value={editDuration} onChange={e => setEditDuration(e.target.value)} type="number" placeholder="Min" className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20" />
                     </div>
+                    <textarea value={editDescricao} onChange={e => setEditDescricao(e.target.value)} placeholder="Descrição (opcional) — aparece no app e WhatsApp" rows={3} className="w-full min-w-0 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20 resize-none" />
                     <div className="grid grid-cols-[1fr_auto] gap-2">
                       <button onClick={() => saveEdit(s.id)} className="min-w-0 px-3 py-2 rounded-xl bg-gradient-to-br from-gold/20 to-gold/10 text-gold hover:from-gold/25 hover:to-gold/15 active:scale-95 transition-all font-body text-[12px]"><Save className="w-4 h-4 inline mr-1" />Salvar</button>
                       <button onClick={() => setEditing(null)} className="px-3 py-2 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/30 hover:text-primary-foreground/50 transition-all"><X className="w-4 h-4" /></button>
@@ -2684,6 +2692,9 @@ const ServicosTab = ({
                         <p className="font-body text-[9px] text-primary-foreground/30 mt-1 uppercase tracking-wider">{s.active ? "Ativo" : "Inativo"}</p>
                       </div>
                     </div>
+                    {s.descricao && (
+                      <p className="mt-2 font-body text-[12px] text-primary-foreground/55 leading-relaxed whitespace-pre-line line-clamp-3">{s.descricao}</p>
+                    )}
                     <div className="flex items-center justify-end gap-1 mt-3 pt-3 border-t border-primary-foreground/[0.05]">
                       <button onClick={() => toggleActive(s.id)} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-body text-[11px] font-medium transition-all active:scale-95 ${s.active ? "bg-gold/10 text-gold hover:bg-gold/15" : "bg-primary-foreground/[0.05] text-primary-foreground/40 hover:bg-primary-foreground/[0.08]"}`}>
                         <div className={`w-7 h-4 rounded-full relative transition-all ${s.active ? "bg-gold/50" : "bg-primary-foreground/20"}`}>

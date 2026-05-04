@@ -1,0 +1,2 @@
+ALTER TABLE public.servicos ADD COLUMN IF NOT EXISTS descricao TEXT NOT NULL DEFAULT '';
+ALTER TABLE public.servicos_app ADD COLUMN IF NOT EXISTS descricao TEXT NOT NULL DEFAULT '';

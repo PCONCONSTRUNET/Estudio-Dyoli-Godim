@@ -472,6 +472,7 @@ export type Database = {
           ativo: boolean
           categoria: string
           created_at: string
+          descricao: string
           duracao_minutos: number
           exclusivo_app: boolean
           id: string
@@ -484,6 +485,7 @@ export type Database = {
           ativo?: boolean
           categoria?: string
           created_at?: string
+          descricao?: string
           duracao_minutos?: number
           exclusivo_app?: boolean
           id?: string
@@ -496,6 +498,7 @@ export type Database = {
           ativo?: boolean
           categoria?: string
           created_at?: string
+          descricao?: string
           duracao_minutos?: number
           exclusivo_app?: boolean
           id?: string
@@ -511,6 +514,7 @@ export type Database = {
           ativo: boolean
           categoria: string
           created_at: string
+          descricao: string
           duracao_minutos: number
           id: string
           nome: string
@@ -522,6 +526,7 @@ export type Database = {
           ativo?: boolean
           categoria?: string
           created_at?: string
+          descricao?: string
           duracao_minutos?: number
           id?: string
           nome: string
@@ -533,6 +538,7 @@ export type Database = {
           ativo?: boolean
           categoria?: string
           created_at?: string
+          descricao?: string
           duracao_minutos?: number
           id?: string
           nome?: string
