@@ -2338,17 +2338,67 @@ const ServicosTab = ({
     setServices(prev => prev.filter(s => s.id !== id));
   };
 
+  // Move um serviço para cima/baixo dentro da MESMA categoria.
+  // Troca o valor de `ordem` com o vizinho — reflete no app e no WhatsApp.
+  const moverServico = async (id: string, dir: -1 | 1) => {
+    const atual = services.find(s => s.id === id);
+    if (!atual) return;
+    // Lista da mesma categoria, ordenada como no banco (por `ordem`, depois nome para estabilidade)
+    const mesmaCat = services
+      .filter(s => (s.category || "Outros") === (atual.category || "Outros"))
+      .slice()
+      .sort((a, b) => {
+        const oa = (services.indexOf(a));
+        const ob = (services.indexOf(b));
+        return oa - ob;
+      });
+    const i = mesmaCat.findIndex(s => s.id === id);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= mesmaCat.length) return;
+    const a = mesmaCat[i];
+    const b = mesmaCat[j];
+
+    // Busca os valores reais de ordem do banco
+    const { data: rows } = await supabase
+      .from(tableName)
+      .select("id, ordem")
+      .in("id", [a.id, b.id]);
+    if (!rows || rows.length < 2) return;
+    const ordemA = rows.find((r: any) => r.id === a.id)?.ordem ?? 0;
+    const ordemB = rows.find((r: any) => r.id === b.id)?.ordem ?? 0;
+    // Se forem iguais, força um delta para manter a inversão estável
+    const novoA = ordemA === ordemB ? ordemB + (dir === -1 ? -1 : 1) : ordemB;
+    const novoB = ordemA === ordemB ? ordemA : ordemA;
+
+    await Promise.all([
+      supabase.from(tableName).update({ ordem: novoA, updated_at: new Date().toISOString() }).eq("id", a.id),
+      supabase.from(tableName).update({ ordem: novoB, updated_at: new Date().toISOString() }).eq("id", b.id),
+    ]);
+    await reloadServicos();
+  };
+
+
   // Filtro / busca (hooks devem ficar antes de qualquer early return)
   const [filtroCat, setFiltroCat] = useState<string>("todas");
   const [busca, setBusca] = useState("");
 
   const servicosFiltrados = useMemo(() => {
-    return services.filter(s => {
-      if (filtroCat !== "todas" && s.category !== filtroCat) return false;
-      if (busca && !s.name.toLowerCase().includes(busca.toLowerCase())) return false;
-      return true;
-    });
-  }, [services, filtroCat, busca]);
+    const catIndex = new Map<string, number>();
+    categorias.forEach((c, i) => catIndex.set(c, i));
+    return services
+      .filter(s => {
+        if (filtroCat !== "todas" && s.category !== filtroCat) return false;
+        if (busca && !s.name.toLowerCase().includes(busca.toLowerCase())) return false;
+        return true;
+      })
+      .slice()
+      .sort((a, b) => {
+        const ca = catIndex.get(a.category) ?? 999;
+        const cb = catIndex.get(b.category) ?? 999;
+        if (ca !== cb) return ca - cb;
+        return services.indexOf(a) - services.indexOf(b);
+      });
+  }, [services, filtroCat, busca, categorias]);
 
   // Stats agregadas
   const stats = useMemo(() => {
@@ -2705,6 +2755,10 @@ const ServicosTab = ({
         <div className="space-y-2">
           {servicosFiltrados.map(s => {
             const cor = corCategoria(s.category || "Outros");
+            const mesmaCat = services.filter(x => (x.category || "Outros") === (s.category || "Outros"));
+            const idxCat = mesmaCat.findIndex(x => x.id === s.id);
+            const isFirstInCat = idxCat === 0;
+            const isLastInCat = idxCat === mesmaCat.length - 1;
             return (
               <div key={s.id} className={`group relative p-4 rounded-2xl border transition-all overflow-x-hidden ${s.active ? "bg-gradient-to-br from-primary-foreground/[0.04] to-primary-foreground/[0.02] border-primary-foreground/[0.08] hover:border-gold/20 hover:shadow-lg hover:shadow-gold/5" : "bg-primary-foreground/[0.01] border-primary-foreground/[0.03] opacity-50"}`}>
                 {/* Faixa lateral colorida pela categoria */}
@@ -2750,6 +2804,18 @@ const ServicosTab = ({
                       <p className="mt-2 font-body text-[12px] text-primary-foreground/55 leading-relaxed whitespace-pre-line line-clamp-3">{s.descricao}</p>
                     )}
                     <div className="flex items-center justify-end gap-1 mt-3 pt-3 border-t border-primary-foreground/[0.05]">
+                      <button
+                        onClick={() => moverServico(s.id, -1)}
+                        disabled={isFirstInCat}
+                        className="p-2 rounded-lg hover:bg-gold/10 text-primary-foreground/40 hover:text-gold transition-all active:scale-95 disabled:opacity-20 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                        title="Mover para cima na categoria (afeta app e WhatsApp)"
+                      ><ChevronUp className="w-3.5 h-3.5" /></button>
+                      <button
+                        onClick={() => moverServico(s.id, 1)}
+                        disabled={isLastInCat}
+                        className="p-2 rounded-lg hover:bg-gold/10 text-primary-foreground/40 hover:text-gold transition-all active:scale-95 disabled:opacity-20 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                        title="Mover para baixo na categoria"
+                      ><ChevronDown className="w-3.5 h-3.5" /></button>
                       <button onClick={() => toggleActive(s.id)} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-body text-[11px] font-medium transition-all active:scale-95 ${s.active ? "bg-gold/10 text-gold hover:bg-gold/15" : "bg-primary-foreground/[0.05] text-primary-foreground/40 hover:bg-primary-foreground/[0.08]"}`}>
                         <div className={`w-7 h-4 rounded-full relative transition-all ${s.active ? "bg-gold/50" : "bg-primary-foreground/20"}`}>
                           <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-all duration-200 ${s.active ? "left-3.5" : "left-0.5"}`} />
