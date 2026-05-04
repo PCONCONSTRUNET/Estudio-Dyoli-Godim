@@ -2755,6 +2755,10 @@ const ServicosTab = ({
         <div className="space-y-2">
           {servicosFiltrados.map(s => {
             const cor = corCategoria(s.category || "Outros");
+            const mesmaCat = services.filter(x => (x.category || "Outros") === (s.category || "Outros"));
+            const idxCat = mesmaCat.findIndex(x => x.id === s.id);
+            const isFirstInCat = idxCat === 0;
+            const isLastInCat = idxCat === mesmaCat.length - 1;
             return (
               <div key={s.id} className={`group relative p-4 rounded-2xl border transition-all overflow-x-hidden ${s.active ? "bg-gradient-to-br from-primary-foreground/[0.04] to-primary-foreground/[0.02] border-primary-foreground/[0.08] hover:border-gold/20 hover:shadow-lg hover:shadow-gold/5" : "bg-primary-foreground/[0.01] border-primary-foreground/[0.03] opacity-50"}`}>
                 {/* Faixa lateral colorida pela categoria */}
