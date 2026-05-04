@@ -2383,12 +2383,22 @@ const ServicosTab = ({
   const [busca, setBusca] = useState("");
 
   const servicosFiltrados = useMemo(() => {
-    return services.filter(s => {
-      if (filtroCat !== "todas" && s.category !== filtroCat) return false;
-      if (busca && !s.name.toLowerCase().includes(busca.toLowerCase())) return false;
-      return true;
-    });
-  }, [services, filtroCat, busca]);
+    const catIndex = new Map<string, number>();
+    categorias.forEach((c, i) => catIndex.set(c, i));
+    return services
+      .filter(s => {
+        if (filtroCat !== "todas" && s.category !== filtroCat) return false;
+        if (busca && !s.name.toLowerCase().includes(busca.toLowerCase())) return false;
+        return true;
+      })
+      .slice()
+      .sort((a, b) => {
+        const ca = catIndex.get(a.category) ?? 999;
+        const cb = catIndex.get(b.category) ?? 999;
+        if (ca !== cb) return ca - cb;
+        return services.indexOf(a) - services.indexOf(b);
+      });
+  }, [services, filtroCat, busca, categorias]);
 
   // Stats agregadas
   const stats = useMemo(() => {
