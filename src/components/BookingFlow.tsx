@@ -27,6 +27,7 @@ interface PaymentResponse {
   barcode?: string;
   boleto_url?: string;
   ticket_url?: string;
+  expiration?: string;
   status?: string;
   message?: string;
   error?: string;
@@ -56,7 +57,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   const [timeLeft, setTimeLeft] = useState<number>(300); // 5 min in seconds
   const [observacao, setObservacao] = useState<string>("");
 
-  const PIX_KEY = "48999779829";
+  const PIX_KEY = "+5548999779829";
   const PIX_NAME = "DYOLI GODIM";
   const PIX_CITY = "BRASIL";
 
@@ -311,7 +312,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
         return;
       }
 
-      // 1. Create agendamento as "confirmado" (já bloqueia horário)
+      // 1. Create agendamento as pending while the Mercado Pago Pix is unpaid.
       const { data: agData, error: agError } = await supabase.from("agendamentos").insert({
         user_id: user.id,
         servico: service,
@@ -321,7 +322,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
         valor: numericPrice,
         valor_pago: 0,
         forma_pagamento: selectedPaymentMethod,
-        status: "confirmado",
+        status: "pendente",
         duracao_minutos: serviceDuration,
         observacao: observacao.trim(),
       }).select("id").single();
@@ -389,8 +390,12 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       }
 
       setPaymentData(result);
-      setPaymentExpiry(Date.now() + 5 * 60 * 1000); // 5 minutes
-      setTimeLeft(300);
+      const gatewayExpiration = result?.expiration ? new Date(result.expiration).getTime() : 0;
+      const expiresAt = Number.isFinite(gatewayExpiration) && gatewayExpiration > Date.now()
+        ? gatewayExpiration
+        : Date.now() + 30 * 60 * 1000;
+      setPaymentExpiry(expiresAt);
+      setTimeLeft(Math.max(0, Math.floor((expiresAt - Date.now()) / 1000)));
       setStep("payment");
     } catch (err) {
       console.error("Payment error:", err);
@@ -400,12 +405,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   };
 
   const handleGoToPayment = () => {
-    if (gatewayInfo) {
-      handleCreatePayment();
-    } else {
-      // No external gateway — fallback to local PIX flow
-      handleConfirmPixAgora();
-    }
+    handleCreatePayment();
   };
 
   // Cria agendamento e dispara notificações; status sempre "confirmado".
@@ -629,7 +629,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
         </div>
 
         <div className="pt-6 pb-4">
-          <button onClick={paymentChoice === "pix" ? handleConfirmPixAgora : handleConfirmRecepcao} disabled={paymentLoading}
+          <button onClick={paymentChoice === "pix" ? handleGoToPayment : handleConfirmRecepcao} disabled={paymentLoading}
             className="ios-press w-full py-4 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all flex items-center justify-center gap-2.5 disabled:opacity-50">
             {paymentLoading ? (
               <><Loader2 className="w-5 h-5 animate-spin" /> Confirmando...</>
