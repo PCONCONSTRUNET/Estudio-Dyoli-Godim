@@ -123,6 +123,7 @@ async function handleMercadoPago(
           first_name: customer_name || "Cliente",
         },
         external_reference: `WEB_${agendamento_id}`,
+        ...(config.webhook_url ? { notification_url: config.webhook_url } : {}),
       };
 
       const res = await fetch("https://api.mercadopago.com/v1/payments", {
