@@ -405,12 +405,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   };
 
   const handleGoToPayment = () => {
-    if (gatewayInfo && availableMethods.pix) {
-      handleCreatePayment();
-    } else {
-      // No external gateway — fallback to local PIX flow
-      handleConfirmPixAgora();
-    }
+    handleCreatePayment();
   };
 
   // Cria agendamento e dispara notificações; status sempre "confirmado".
