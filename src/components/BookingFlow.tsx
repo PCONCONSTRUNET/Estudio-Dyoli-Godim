@@ -27,6 +27,7 @@ interface PaymentResponse {
   barcode?: string;
   boleto_url?: string;
   ticket_url?: string;
+  expiration?: string;
   status?: string;
   message?: string;
   error?: string;
@@ -389,8 +390,12 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       }
 
       setPaymentData(result);
-      setPaymentExpiry(Date.now() + 5 * 60 * 1000); // 5 minutes
-      setTimeLeft(300);
+      const gatewayExpiration = result?.expiration ? new Date(result.expiration).getTime() : 0;
+      const expiresAt = Number.isFinite(gatewayExpiration) && gatewayExpiration > Date.now()
+        ? gatewayExpiration
+        : Date.now() + 30 * 60 * 1000;
+      setPaymentExpiry(expiresAt);
+      setTimeLeft(Math.max(0, Math.floor((expiresAt - Date.now()) / 1000)));
       setStep("payment");
     } catch (err) {
       console.error("Payment error:", err);
