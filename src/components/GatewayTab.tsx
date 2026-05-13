@@ -98,8 +98,8 @@ const GatewayTab = () => {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://vlepenxinekoljxecomr.supabase.co";
       
       for (const d of data as GatewayConfig[]) {
-        // Auto-generate webhook URL if empty
-        if (!d.webhook_url) {
+        // Auto-generate webhook URL if empty or not public HTTPS
+        if (!d.webhook_url || !d.webhook_url.startsWith("https://")) {
           const webhookFn = d.gateway === "mercadopago" ? "mercadopago-webhook" : "woovi-webhook";
           const generatedUrl = `${supabaseUrl}/functions/v1/${webhookFn}`;
           await (supabase.from as any)("gateway_configs")
