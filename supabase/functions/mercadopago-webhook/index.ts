@@ -41,6 +41,9 @@ Deno.serve(async (req) => {
 
         // If payment is approved, update the agendamento
         if (payment.status === "approved" && payment.external_reference) {
+          // Aceita "WEB_<uuid>" (vindo do app/site) ou UUID puro (legado)
+          const agendamentoId = String(payment.external_reference).replace(/^WEB_/, "");
+
           const { error } = await supabase
             .from("agendamentos")
             .update({
@@ -48,17 +51,17 @@ Deno.serve(async (req) => {
               valor_pago: payment.transaction_amount,
               forma_pagamento: payment.payment_type_id || "mercadopago",
             })
-            .eq("id", payment.external_reference);
+            .eq("id", agendamentoId);
 
           if (error) {
             console.error("Error updating agendamento:", error);
           } else {
-            console.log(`Agendamento ${payment.external_reference} updated with payment`);
+            console.log(`Agendamento ${agendamentoId} updated with payment`);
             // Buscar dados do agendamento pra montar a notificação
             const { data: ag } = await supabase
               .from("agendamentos")
               .select("servico, valor_pago, cliente_nome, user_id")
-              .eq("id", payment.external_reference)
+              .eq("id", agendamentoId)
               .single();
             if (ag) {
               // Push pra admin

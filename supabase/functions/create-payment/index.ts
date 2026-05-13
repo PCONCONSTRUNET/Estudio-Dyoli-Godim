@@ -122,7 +122,7 @@ async function handleMercadoPago(
           email: customer_email || "cliente@email.com",
           first_name: customer_name || "Cliente",
         },
-        external_reference: agendamento_id,
+        external_reference: `WEB_${agendamento_id}`,
       };
 
       const res = await fetch("https://api.mercadopago.com/v1/payments", {
@@ -173,7 +173,7 @@ async function handleMercadoPago(
           email: customer_email || "cliente@email.com",
           name: customer_name || "Cliente",
         },
-        external_reference: agendamento_id,
+        external_reference: `WEB_${agendamento_id}`,
         payment_methods: {
           excluded_payment_types: [{ id: "ticket" }], // exclude boleto
           installments: 6,
@@ -232,7 +232,7 @@ async function handleMercadoPago(
             number: customer_cpf || "00000000000",
           },
         },
-        external_reference: agendamento_id,
+        external_reference: `WEB_${agendamento_id}`,
       };
 
       const res = await fetch("https://api.mercadopago.com/v1/payments", {
