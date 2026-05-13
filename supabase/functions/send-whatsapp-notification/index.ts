@@ -30,23 +30,31 @@ Deno.serve(async (req) => {
       return json({ error: "Mensagem obrigatória" }, 400);
     }
 
-    const resp = await fetch(WEBHOOK_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ numero, mensagem, token: WEBHOOK_TOKEN }),
-    });
+    try {
+      const resp = await fetch(WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ numero, mensagem, token: WEBHOOK_TOKEN }),
+      });
 
-    const responseText = await resp.text().catch(() => "");
+      const responseText = await resp.text().catch(() => "");
 
-    if (!resp.ok) {
-      console.error("whatsapp webhook failed", resp.status, responseText);
-      return json({ ok: false, error: `Webhook respondeu HTTP ${resp.status}`, detail: responseText }, 502);
+      if (!resp.ok) {
+        console.error("whatsapp webhook failed", resp.status, responseText);
+        // Não falha a request principal — retorna 200 com fallback para o frontend não quebrar
+        return json({ ok: false, fallback: true, error: `Webhook respondeu HTTP ${resp.status}`, detail: responseText });
+      }
+
+      console.log("whatsapp notification sent", { numero, status: resp.status });
+      return json({ ok: true, status: resp.status, detail: responseText });
+    } catch (fetchErr) {
+      // VPS offline / connection refused — não derruba o fluxo do usuário
+      const message = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
+      console.warn("whatsapp webhook unreachable:", message);
+      return json({ ok: false, fallback: true, error: "WEBHOOK_UNREACHABLE", detail: message });
     }
-
-    console.log("whatsapp notification sent", { numero, status: resp.status });
-    return json({ ok: true, status: resp.status, detail: responseText });
   } catch (error) {
     console.error("send-whatsapp-notification error", error);
-    return json({ error: error instanceof Error ? error.message : "Erro interno" }, 500);
+    return json({ ok: false, fallback: true, error: error instanceof Error ? error.message : "Erro interno" });
   }
 });
