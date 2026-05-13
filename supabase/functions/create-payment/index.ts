@@ -92,6 +92,12 @@ Deno.serve(async (req) => {
   }
 });
 
+function getWebhookUrl(configuredUrl: string | null | undefined, functionName: string) {
+  if (configuredUrl?.startsWith("https://")) return configuredUrl;
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  return supabaseUrl ? `${supabaseUrl}/functions/v1/${functionName}` : undefined;
+}
+
 // ─── Mercado Pago ────────────────────────────────────────────────────────────
 
 async function handleMercadoPago(
