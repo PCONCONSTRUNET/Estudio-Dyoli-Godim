@@ -111,8 +111,8 @@ async function handleMercadoPago(
   try {
     // PIX payment
     if (payment_method === "pix") {
-      // 5 min expiration
-      const expDate = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+      // 30 min expiration (MP recomenda pelo menos 30 min para o cliente abrir o app do banco)
+      const expDate = new Date(Date.now() + 30 * 60 * 1000).toISOString();
       const body: any = {
         transaction_amount: amount,
         description: description || "Agendamento",
