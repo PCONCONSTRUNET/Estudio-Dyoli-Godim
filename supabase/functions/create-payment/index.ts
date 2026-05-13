@@ -100,6 +100,7 @@ async function handleMercadoPago(
 ) {
   const { amount, description, agendamento_id, payment_method, customer_email, customer_name, customer_cpf } = params;
   const token = config.access_token;
+  const notificationUrl = getWebhookUrl(config.webhook_url, "mercadopago-webhook");
 
   if (!token) {
     return new Response(JSON.stringify({ error: "Access token do Mercado Pago não configurado" }), {
@@ -123,7 +124,7 @@ async function handleMercadoPago(
           first_name: customer_name || "Cliente",
         },
         external_reference: `WEB_${agendamento_id}`,
-        ...(config.webhook_url ? { notification_url: config.webhook_url } : {}),
+        ...(notificationUrl ? { notification_url: notificationUrl } : {}),
       };
 
       const res = await fetch("https://api.mercadopago.com/v1/payments", {
@@ -185,7 +186,7 @@ async function handleMercadoPago(
           pending: `${Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '.lovable.app')}`,
         },
         auto_return: "approved",
-        notification_url: config.webhook_url,
+        notification_url: notificationUrl,
       };
 
       const res = await fetch("https://api.mercadopago.com/checkout/preferences", {
@@ -234,6 +235,7 @@ async function handleMercadoPago(
           },
         },
         external_reference: `WEB_${agendamento_id}`,
+        ...(notificationUrl ? { notification_url: notificationUrl } : {}),
       };
 
       const res = await fetch("https://api.mercadopago.com/v1/payments", {
