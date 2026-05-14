@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ClipboardList, Search, FileText, CheckCircle2, XCircle, Clock, Download, ExternalLink, User, Calendar, RotateCcw } from "lucide-react";
+import { ClipboardList, Search, FileText, CheckCircle2, XCircle, Clock, Download, ExternalLink, User, Calendar, RotateCcw, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 
@@ -159,6 +159,22 @@ const AnamneseTab = () => {
       return;
     }
     toast.error("Esta ficha não possui PDF anexado");
+  };
+
+  const removerFicha = async (a: Anamnese) => {
+    const ok = window.confirm(`Excluir a ficha de ${a.cliente_nome || "este cliente"}? Esta ação não pode ser desfeita.`);
+    if (!ok) return;
+    // remove o PDF do storage (se existir) — não bloqueia se falhar
+    if (a.pdf_path) {
+      try {
+        await supabase.storage.from("anamneses").remove([a.pdf_path]);
+      } catch {}
+    }
+    const { error } = await supabase.from("anamneses").delete().eq("id", a.id);
+    if (error) return toast.error("Erro ao excluir ficha");
+    setItems((prev) => prev.filter((p) => p.id !== a.id));
+    if (selected?.id === a.id) setSelected(null);
+    toast.success("Ficha excluída");
   };
 
   const totalPendentes = items.filter((i) => (i.status || (i.revisada ? "aprovada" : "pendente")) === "pendente").length;
@@ -340,6 +356,13 @@ const AnamneseTab = () => {
                       <CheckCircle2 className="w-3.5 h-3.5" /> Aprovar
                     </button>
                   )}
+                  <button
+                    onClick={() => removerFicha(a)}
+                    className="h-9 px-3 rounded-lg bg-red-500/[0.06] hover:bg-red-500/15 border border-red-500/15 text-red-400/80 hover:text-red-400 text-[12px] font-body font-medium flex items-center gap-1.5 active:scale-95 transition-all ml-auto"
+                    title="Excluir ficha"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Excluir
+                  </button>
                 </div>
 
                 {st === "negada" && (
