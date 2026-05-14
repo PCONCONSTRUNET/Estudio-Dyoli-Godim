@@ -404,7 +404,23 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     setPaymentLoading(false);
   };
 
-  const handleGoToPayment = () => {
+  const handleGoToPayment = async () => {
+    // Serviço gratuito (R$ 0): não passa pelo gateway de pagamento.
+    // Cria o agendamento já confirmado, igual ao fluxo de recepção.
+    if (numericPrice === 0 || paymentAmount === 0) {
+      setPaymentLoading(true);
+      const id = await createAgendamento("pix");
+      setPaymentLoading(false);
+      if (!id) return;
+      onConfirm({
+        date: selectedDate,
+        time: selectedTime,
+        price: numericPrice,
+        paidAmount: 0,
+        durationMinutes: serviceDuration,
+      });
+      return;
+    }
     handleCreatePayment();
   };
 
