@@ -74,6 +74,54 @@ export type Database = {
         }
         Relationships: []
       }
+      anamneses: {
+        Row: {
+          cliente_nome: string
+          created_at: string
+          dados: Json
+          id: string
+          observacao: string
+          origem: string
+          pdf_path: string | null
+          pdf_url: string | null
+          revisada: boolean
+          revisada_at: string | null
+          updated_at: string
+          user_id: string | null
+          whatsapp: string
+        }
+        Insert: {
+          cliente_nome?: string
+          created_at?: string
+          dados?: Json
+          id?: string
+          observacao?: string
+          origem?: string
+          pdf_path?: string | null
+          pdf_url?: string | null
+          revisada?: boolean
+          revisada_at?: string | null
+          updated_at?: string
+          user_id?: string | null
+          whatsapp?: string
+        }
+        Update: {
+          cliente_nome?: string
+          created_at?: string
+          dados?: Json
+          id?: string
+          observacao?: string
+          origem?: string
+          pdf_path?: string | null
+          pdf_url?: string | null
+          revisada?: boolean
+          revisada_at?: string | null
+          updated_at?: string
+          user_id?: string | null
+          whatsapp?: string
+        }
+        Relationships: []
+      }
       avaliacoes: {
         Row: {
           agendamento_id: string
