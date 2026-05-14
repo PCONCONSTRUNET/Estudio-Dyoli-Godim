@@ -86,6 +86,7 @@ export type Database = {
           pdf_url: string | null
           revisada: boolean
           revisada_at: string | null
+          status: string
           updated_at: string
           user_id: string | null
           whatsapp: string
@@ -101,6 +102,7 @@ export type Database = {
           pdf_url?: string | null
           revisada?: boolean
           revisada_at?: string | null
+          status?: string
           updated_at?: string
           user_id?: string | null
           whatsapp?: string
@@ -116,6 +118,7 @@ export type Database = {
           pdf_url?: string | null
           revisada?: boolean
           revisada_at?: string | null
+          status?: string
           updated_at?: string
           user_id?: string | null
           whatsapp?: string
