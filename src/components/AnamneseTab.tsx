@@ -58,7 +58,7 @@ const AnamneseTab = () => {
   useEffect(() => {
     load();
     const ch = supabase
-      .channel("anamneses-realtime-v2")
+      .channel("anamneses-realtime-v3")
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "anamneses" },
@@ -67,6 +67,12 @@ const AnamneseTab = () => {
             const novo = payload.new as Anamnese;
             if (prev.find((p) => p.id === novo.id)) return prev;
             toast.success(`Nova ficha: ${novo.cliente_nome || "Cliente"}`);
+            try {
+              if (typeof window !== "undefined" && "Audio" in window) {
+                // beep curto opcional, ignora se bloqueado
+                new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=").play().catch(()=>{});
+              }
+            } catch {}
             return [novo, ...prev];
           });
         }
@@ -88,14 +94,26 @@ const AnamneseTab = () => {
           setItems((prev) => prev.filter((p) => p.id !== old.id));
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        setLive(status === "SUBSCRIBED");
+      });
 
-    // fallback polling discreto a cada 30s caso websocket caia
-    const poll = setInterval(load, 30000);
+    // Resync ao voltar foco/online (websocket pode dormir em mobile)
+    const resync = () => load();
+    const onVisibility = () => { if (document.visibilityState === "visible") load(); };
+    window.addEventListener("focus", resync);
+    window.addEventListener("online", resync);
+    document.addEventListener("visibilitychange", onVisibility);
+
+    // safety net leve a cada 10s caso o websocket caia
+    const poll = setInterval(load, 10000);
 
     return () => {
       supabase.removeChannel(ch);
       clearInterval(poll);
+      window.removeEventListener("focus", resync);
+      window.removeEventListener("online", resync);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);
 
