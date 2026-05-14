@@ -161,6 +161,22 @@ const AnamneseTab = () => {
     toast.error("Esta ficha não possui PDF anexado");
   };
 
+  const removerFicha = async (a: Anamnese) => {
+    const ok = window.confirm(`Excluir a ficha de ${a.cliente_nome || "este cliente"}? Esta ação não pode ser desfeita.`);
+    if (!ok) return;
+    // remove o PDF do storage (se existir) — não bloqueia se falhar
+    if (a.pdf_path) {
+      try {
+        await supabase.storage.from("anamneses").remove([a.pdf_path]);
+      } catch {}
+    }
+    const { error } = await supabase.from("anamneses").delete().eq("id", a.id);
+    if (error) return toast.error("Erro ao excluir ficha");
+    setItems((prev) => prev.filter((p) => p.id !== a.id));
+    if (selected?.id === a.id) setSelected(null);
+    toast.success("Ficha excluída");
+  };
+
   const totalPendentes = items.filter((i) => (i.status || (i.revisada ? "aprovada" : "pendente")) === "pendente").length;
 
   const getStatus = (a: Anamnese): Status => a.status || (a.revisada ? "aprovada" : "pendente");
