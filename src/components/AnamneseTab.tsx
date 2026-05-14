@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ClipboardList, Search, FileText, CheckCircle2, Circle, Download, ExternalLink, User, Phone, Calendar } from "lucide-react";
+import { ClipboardList, Search, FileText, CheckCircle2, XCircle, Clock, Download, ExternalLink, User, Calendar, RotateCcw } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
+
+type Status = "pendente" | "aprovada" | "negada";
 
 interface Anamnese {
   id: string;
@@ -14,6 +17,7 @@ interface Anamnese {
   pdf_path: string | null;
   revisada: boolean;
   revisada_at: string | null;
+  status: Status;
   observacao: string;
   origem: string;
   created_at: string;
@@ -37,11 +41,10 @@ const AnamneseTab = () => {
   const [items, setItems] = useState<Anamnese[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"todas" | "pendentes" | "revisadas">("todas");
+  const [filter, setFilter] = useState<"todas" | "pendentes" | "aprovadas" | "negadas">("todas");
   const [selected, setSelected] = useState<Anamnese | null>(null);
 
   const load = async () => {
-    setLoading(true);
     const { data, error } = await supabase
       .from("anamneses")
       .select("*")
@@ -54,31 +57,73 @@ const AnamneseTab = () => {
   useEffect(() => {
     load();
     const ch = supabase
-      .channel("anamneses-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "anamneses" }, () => load())
+      .channel("anamneses-realtime-v2")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "anamneses" },
+        (payload) => {
+          setItems((prev) => {
+            const novo = payload.new as Anamnese;
+            if (prev.find((p) => p.id === novo.id)) return prev;
+            toast.success(`Nova ficha: ${novo.cliente_nome || "Cliente"}`);
+            return [novo, ...prev];
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "anamneses" },
+        (payload) => {
+          const novo = payload.new as Anamnese;
+          setItems((prev) => prev.map((p) => (p.id === novo.id ? novo : p)));
+          setSelected((cur) => (cur && cur.id === novo.id ? novo : cur));
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "anamneses" },
+        (payload) => {
+          const old = payload.old as Anamnese;
+          setItems((prev) => prev.filter((p) => p.id !== old.id));
+        }
+      )
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+
+    // fallback polling discreto a cada 30s caso websocket caia
+    const poll = setInterval(load, 30000);
+
+    return () => {
+      supabase.removeChannel(ch);
+      clearInterval(poll);
+    };
   }, []);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     return items.filter((a) => {
-      if (filter === "pendentes" && a.revisada) return false;
-      if (filter === "revisadas" && !a.revisada) return false;
+      const st = a.status || (a.revisada ? "aprovada" : "pendente");
+      if (filter === "pendentes" && st !== "pendente") return false;
+      if (filter === "aprovadas" && st !== "aprovada") return false;
+      if (filter === "negadas" && st !== "negada") return false;
       if (!term) return true;
       const hay = `${a.cliente_nome} ${a.whatsapp}`.toLowerCase();
       return hay.includes(term);
     });
   }, [items, search, filter]);
 
-  const toggleRevisada = async (a: Anamnese) => {
-    const novo = !a.revisada;
+  const setStatus = async (a: Anamnese, status: Status) => {
     const { error } = await supabase
       .from("anamneses")
-      .update({ revisada: novo, revisada_at: novo ? new Date().toISOString() : null })
+      .update({
+        status,
+        revisada: status !== "pendente",
+        revisada_at: status !== "pendente" ? new Date().toISOString() : null,
+      })
       .eq("id", a.id);
     if (error) return toast.error("Erro ao atualizar");
-    toast.success(novo ? "Marcada como revisada" : "Marcada como pendente");
+    if (status === "aprovada") toast.success("Ficha aprovada");
+    if (status === "negada") toast.success("Ficha negada — atendimento bloqueado");
+    if (status === "pendente") toast.success("Voltou para pendente");
   };
 
   const openPdf = async (a: Anamnese) => {
@@ -97,7 +142,15 @@ const AnamneseTab = () => {
     toast.error("Esta ficha não possui PDF anexado");
   };
 
-  const totalPendentes = items.filter(i => !i.revisada).length;
+  const totalPendentes = items.filter((i) => (i.status || (i.revisada ? "aprovada" : "pendente")) === "pendente").length;
+
+  const getStatus = (a: Anamnese): Status => a.status || (a.revisada ? "aprovada" : "pendente");
+
+  const statusBadge = (st: Status) => {
+    if (st === "aprovada") return { label: "Aprovada", cls: "bg-green-500/10 text-green-400 border-green-500/20" };
+    if (st === "negada") return { label: "Negada", cls: "bg-red-500/10 text-red-400 border-red-500/20" };
+    return { label: "Nova", cls: "bg-gold/15 text-gold border-gold/20" };
+  };
 
   return (
     <div className="space-y-4 animate-fade-in pb-24 lg:pb-4">
@@ -129,16 +182,17 @@ const AnamneseTab = () => {
             className="w-full h-11 pl-10 pr-3 rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] text-primary-foreground text-[13px] font-body placeholder:text-primary-foreground/30 focus:border-gold/40 focus:outline-none"
           />
         </div>
-        <div className="flex gap-1 rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] p-1">
+        <div className="flex gap-1 rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] p-1 overflow-x-auto">
           {([
             ["todas", "Todas"],
             ["pendentes", "Pendentes"],
-            ["revisadas", "Revisadas"],
+            ["aprovadas", "Aprovadas"],
+            ["negadas", "Negadas"],
           ] as const).map(([k, label]) => (
             <button
               key={k}
               onClick={() => setFilter(k)}
-              className={`flex-1 sm:flex-initial px-3 h-9 rounded-lg font-body text-[12px] font-medium transition-all ${
+              className={`flex-1 sm:flex-initial px-3 h-9 rounded-lg font-body text-[12px] font-medium transition-all whitespace-nowrap ${
                 filter === k ? "bg-gold/15 text-gold" : "text-primary-foreground/55 hover:text-primary-foreground/80"
               }`}
             >
@@ -159,82 +213,119 @@ const AnamneseTab = () => {
           <p className="font-body text-[13px] text-primary-foreground/40">
             {items.length === 0 ? "Nenhuma ficha recebida ainda" : "Nenhuma ficha encontrada"}
           </p>
-          {items.length === 0 && (
-            <p className="font-body text-[11px] text-primary-foreground/30 mt-2">
-              Configure o chatbot para enviar as fichas para esta aba.
-            </p>
-          )}
         </div>
       ) : (
         <div className="space-y-2">
-          {filtered.map((a) => (
-            <div
-              key={a.id}
-              className={`rounded-2xl border p-4 transition-all ${
-                a.revisada
-                  ? "border-primary-foreground/[0.06] bg-primary-foreground/[0.02]"
-                  : "border-gold/15 bg-gold/[0.04]"
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <button
-                  onClick={() => toggleRevisada(a)}
-                  className={`mt-0.5 w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all active:scale-95 ${
-                    a.revisada
-                      ? "bg-green-500/10 text-green-400 hover:bg-green-500/15"
-                      : "bg-gold/15 text-gold hover:bg-gold/20"
-                  }`}
-                  aria-label={a.revisada ? "Marcar como pendente" : "Marcar como revisada"}
-                >
-                  {a.revisada ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
-                </button>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
+          {filtered.map((a) => {
+            const st = getStatus(a);
+            const badge = statusBadge(st);
+            return (
+              <div
+                key={a.id}
+                className={`rounded-2xl border p-4 transition-all ${
+                  st === "pendente"
+                    ? "border-gold/15 bg-gold/[0.04]"
+                    : st === "negada"
+                    ? "border-red-500/15 bg-red-500/[0.04]"
+                    : "border-primary-foreground/[0.06] bg-primary-foreground/[0.02]"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-body text-[14px] font-medium text-primary-foreground truncate flex items-center gap-1.5">
                         <User className="w-3.5 h-3.5 text-primary-foreground/40 shrink-0" />
                         {a.cliente_nome || "Sem nome"}
                       </p>
-                      <p className="font-body text-[12px] text-primary-foreground/50 truncate mt-0.5 flex items-center gap-1.5">
-                        <Phone className="w-3 h-3 shrink-0" />
-                        {formatWhatsapp(a.whatsapp) || "—"}
-                      </p>
-                    </div>
-                    {!a.revisada && (
-                      <span className="shrink-0 px-2 py-0.5 rounded-full text-[9px] font-body font-bold bg-gold/15 text-gold border border-gold/20 uppercase tracking-wider">
-                        Nova
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#25D366]/10 border border-[#25D366]/20 text-[#25D366] text-[10px] font-body font-medium">
+                        <WhatsAppIcon className="w-3 h-3" />
+                        WhatsApp
                       </span>
-                    )}
+                    </div>
+                    <p className="font-body text-[12px] text-primary-foreground/50 truncate mt-1 flex items-center gap-1.5">
+                      <WhatsAppIcon className="w-3 h-3 text-[#25D366] shrink-0" />
+                      {formatWhatsapp(a.whatsapp) || "—"}
+                    </p>
+                    <div className="flex items-center gap-3 mt-1.5 text-[11px] text-primary-foreground/45">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {formatDate(a.created_at)}
+                      </span>
+                    </div>
                   </div>
-
-                  <div className="flex items-center gap-3 mt-2 text-[11px] text-primary-foreground/45">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {formatDate(a.created_at)}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    <button
-                      onClick={() => setSelected(a)}
-                      className="h-9 px-3 rounded-lg bg-primary-foreground/[0.06] hover:bg-primary-foreground/[0.10] border border-primary-foreground/[0.08] text-primary-foreground/80 text-[12px] font-body font-medium flex items-center gap-1.5 active:scale-95 transition-all"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" /> Ver dados
-                    </button>
-                    {(a.pdf_url || a.pdf_path) && (
-                      <button
-                        onClick={() => openPdf(a)}
-                        className="h-9 px-3 rounded-lg bg-gold/10 hover:bg-gold/15 border border-gold/20 text-gold text-[12px] font-body font-medium flex items-center gap-1.5 active:scale-95 transition-all"
-                      >
-                        <Download className="w-3.5 h-3.5" /> PDF
-                      </button>
-                    )}
-                  </div>
+                  <span className={`shrink-0 px-2 py-0.5 rounded-full text-[9px] font-body font-bold border uppercase tracking-wider ${badge.cls}`}>
+                    {badge.label}
+                  </span>
                 </div>
+
+                {/* Ações */}
+                <div className="flex flex-wrap gap-2 mt-3">
+                  <button
+                    onClick={() => setSelected(a)}
+                    className="h-9 px-3 rounded-lg bg-primary-foreground/[0.06] hover:bg-primary-foreground/[0.10] border border-primary-foreground/[0.08] text-primary-foreground/80 text-[12px] font-body font-medium flex items-center gap-1.5 active:scale-95 transition-all"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" /> Ver dados
+                  </button>
+                  {(a.pdf_url || a.pdf_path) && (
+                    <button
+                      onClick={() => openPdf(a)}
+                      className="h-9 px-3 rounded-lg bg-gold/10 hover:bg-gold/15 border border-gold/20 text-gold text-[12px] font-body font-medium flex items-center gap-1.5 active:scale-95 transition-all"
+                    >
+                      <Download className="w-3.5 h-3.5" /> PDF
+                    </button>
+                  )}
+
+                  {st === "pendente" && (
+                    <>
+                      <button
+                        onClick={() => setStatus(a, "aprovada")}
+                        className="h-9 px-3 rounded-lg bg-green-500/10 hover:bg-green-500/15 border border-green-500/25 text-green-400 text-[12px] font-body font-medium flex items-center gap-1.5 active:scale-95 transition-all"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Aprovar
+                      </button>
+                      <button
+                        onClick={() => setStatus(a, "negada")}
+                        className="h-9 px-3 rounded-lg bg-red-500/10 hover:bg-red-500/15 border border-red-500/25 text-red-400 text-[12px] font-body font-medium flex items-center gap-1.5 active:scale-95 transition-all"
+                      >
+                        <XCircle className="w-3.5 h-3.5" /> Negar
+                      </button>
+                    </>
+                  )}
+                  {st !== "pendente" && (
+                    <button
+                      onClick={() => setStatus(a, "pendente")}
+                      className="h-9 px-3 rounded-lg bg-primary-foreground/[0.04] hover:bg-primary-foreground/[0.08] border border-primary-foreground/[0.08] text-primary-foreground/70 text-[12px] font-body font-medium flex items-center gap-1.5 active:scale-95 transition-all"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" /> Reabrir
+                    </button>
+                  )}
+                  {st === "aprovada" && (
+                    <button
+                      onClick={() => setStatus(a, "negada")}
+                      className="h-9 px-3 rounded-lg bg-red-500/10 hover:bg-red-500/15 border border-red-500/25 text-red-400 text-[12px] font-body font-medium flex items-center gap-1.5 active:scale-95 transition-all"
+                    >
+                      <XCircle className="w-3.5 h-3.5" /> Negar
+                    </button>
+                  )}
+                  {st === "negada" && (
+                    <button
+                      onClick={() => setStatus(a, "aprovada")}
+                      className="h-9 px-3 rounded-lg bg-green-500/10 hover:bg-green-500/15 border border-green-500/25 text-green-400 text-[12px] font-body font-medium flex items-center gap-1.5 active:scale-95 transition-all"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Aprovar
+                    </button>
+                  )}
+                </div>
+
+                {st === "negada" && (
+                  <div className="mt-2 flex items-center gap-1.5 text-[11px] text-red-400/80">
+                    <XCircle className="w-3 h-3" />
+                    Atendimento bloqueado por anamnese negada
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -251,8 +342,21 @@ const AnamneseTab = () => {
             <div className="space-y-4 mt-2">
               <div className="rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] p-3 space-y-1">
                 <p className="font-body text-[13px] text-primary-foreground"><span className="text-primary-foreground/50">Cliente:</span> {selected.cliente_nome || "—"}</p>
-                <p className="font-body text-[13px] text-primary-foreground"><span className="text-primary-foreground/50">WhatsApp:</span> {formatWhatsapp(selected.whatsapp)}</p>
+                <p className="font-body text-[13px] text-primary-foreground flex items-center gap-1.5">
+                  <span className="text-primary-foreground/50">WhatsApp:</span>
+                  <WhatsAppIcon className="w-3.5 h-3.5 text-[#25D366]" />
+                  {formatWhatsapp(selected.whatsapp)}
+                </p>
                 <p className="font-body text-[12px] text-primary-foreground/60"><span className="text-primary-foreground/40">Recebida em:</span> {formatDate(selected.created_at)}</p>
+                <p className="font-body text-[12px] mt-1">
+                  <span className="text-primary-foreground/40">Status: </span>
+                  <span className={
+                    getStatus(selected) === "aprovada" ? "text-green-400" :
+                    getStatus(selected) === "negada" ? "text-red-400" : "text-gold"
+                  }>
+                    {statusBadge(getStatus(selected)).label}
+                  </span>
+                </p>
               </div>
 
               <div>
@@ -290,12 +394,25 @@ const AnamneseTab = () => {
                   </button>
                 )}
                 <button
-                  onClick={() => { toggleRevisada(selected); setSelected({ ...selected, revisada: !selected.revisada }); }}
-                  className="h-10 px-4 rounded-xl bg-primary-foreground/[0.06] hover:bg-primary-foreground/[0.10] border border-primary-foreground/[0.08] text-primary-foreground text-[13px] font-body font-medium flex items-center gap-2 active:scale-95 transition-all"
+                  onClick={() => setStatus(selected, "aprovada")}
+                  className="h-10 px-4 rounded-xl bg-green-500/15 hover:bg-green-500/20 border border-green-500/30 text-green-400 text-[13px] font-body font-medium flex items-center gap-2 active:scale-95 transition-all"
                 >
-                  {selected.revisada ? <Circle className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
-                  {selected.revisada ? "Marcar como pendente" : "Marcar como revisada"}
+                  <CheckCircle2 className="w-4 h-4" /> Aprovar
                 </button>
+                <button
+                  onClick={() => setStatus(selected, "negada")}
+                  className="h-10 px-4 rounded-xl bg-red-500/15 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-[13px] font-body font-medium flex items-center gap-2 active:scale-95 transition-all"
+                >
+                  <XCircle className="w-4 h-4" /> Negar
+                </button>
+                {getStatus(selected) !== "pendente" && (
+                  <button
+                    onClick={() => setStatus(selected, "pendente")}
+                    className="h-10 px-4 rounded-xl bg-primary-foreground/[0.06] hover:bg-primary-foreground/[0.10] border border-primary-foreground/[0.08] text-primary-foreground text-[13px] font-body font-medium flex items-center gap-2 active:scale-95 transition-all"
+                  >
+                    <Clock className="w-4 h-4" /> Reabrir
+                  </button>
+                )}
               </div>
             </div>
           )}
