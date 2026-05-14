@@ -45,6 +45,8 @@ const AnamneseTab = () => {
   const [filter, setFilter] = useState<"todas" | "pendentes" | "aprovadas" | "negadas">("todas");
   const [selected, setSelected] = useState<Anamnese | null>(null);
   const [live, setLive] = useState(false);
+  const [toDelete, setToDelete] = useState<Anamnese | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = async () => {
     const { data, error } = await supabase
