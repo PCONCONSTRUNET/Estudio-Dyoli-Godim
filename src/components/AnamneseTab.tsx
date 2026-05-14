@@ -470,6 +470,69 @@ const AnamneseTab = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Modal de confirmação de exclusão */}
+      <Dialog open={!!toDelete} onOpenChange={(open) => !open && !deleting && setToDelete(null)}>
+        <DialogContent className="max-w-sm bg-charcoal border-red-500/20">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-lg text-primary-foreground flex items-center gap-2">
+              <span className="w-9 h-9 rounded-full bg-red-500/15 border border-red-500/25 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-4.5 h-4.5 text-red-400" />
+              </span>
+              Excluir ficha?
+            </DialogTitle>
+          </DialogHeader>
+
+          {toDelete && (
+            <div className="space-y-4">
+              <p className="font-body text-[13px] text-primary-foreground/70 leading-relaxed">
+                Você está prestes a excluir permanentemente a ficha de anamnese de{" "}
+                <span className="text-primary-foreground font-medium">{toDelete.cliente_nome || "este cliente"}</span>.
+                Esta ação não pode ser desfeita.
+              </p>
+
+              <div className="rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] p-3 space-y-1.5">
+                <div className="flex items-center gap-2 text-[12px] text-primary-foreground/70">
+                  <User className="w-3.5 h-3.5 text-primary-foreground/40" />
+                  {toDelete.cliente_nome || "Sem nome"}
+                </div>
+                <div className="flex items-center gap-2 text-[12px] text-primary-foreground/70">
+                  <WhatsAppIcon className="w-3.5 h-3.5 text-[#25D366]" />
+                  {formatWhatsapp(toDelete.whatsapp) || "—"}
+                </div>
+                <div className="flex items-center gap-2 text-[12px] text-primary-foreground/70">
+                  <Calendar className="w-3.5 h-3.5 text-primary-foreground/40" />
+                  {formatDate(toDelete.created_at)}
+                </div>
+                {(toDelete.pdf_url || toDelete.pdf_path) && (
+                  <div className="flex items-center gap-2 text-[11px] text-red-400/80 pt-1">
+                    <FileText className="w-3.5 h-3.5" />
+                    O PDF anexado também será removido
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={() => setToDelete(null)}
+                  disabled={deleting}
+                  className="flex-1 h-11 rounded-xl bg-primary-foreground/[0.06] hover:bg-primary-foreground/[0.10] border border-primary-foreground/[0.10] text-primary-foreground/80 text-[13px] font-body font-medium active:scale-95 transition-all disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  disabled={deleting}
+                  className="flex-1 h-11 rounded-xl bg-red-500/15 hover:bg-red-500/25 border border-red-500/35 text-red-400 text-[13px] font-body font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-all disabled:opacity-50"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {deleting ? "Excluindo..." : "Excluir ficha"}
+                </button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
