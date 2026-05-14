@@ -164,19 +164,20 @@ const AnamneseTab = () => {
     toast.error("Esta ficha não possui PDF anexado");
   };
 
-  const removerFicha = async (a: Anamnese) => {
-    const ok = window.confirm(`Excluir a ficha de ${a.cliente_nome || "este cliente"}? Esta ação não pode ser desfeita.`);
-    if (!ok) return;
-    // remove o PDF do storage (se existir) — não bloqueia se falhar
-    if (a.pdf_path) {
-      try {
-        await supabase.storage.from("anamneses").remove([a.pdf_path]);
-      } catch {}
+  const removerFicha = (a: Anamnese) => setToDelete(a);
+
+  const confirmDelete = async () => {
+    if (!toDelete) return;
+    setDeleting(true);
+    if (toDelete.pdf_path) {
+      try { await supabase.storage.from("anamneses").remove([toDelete.pdf_path]); } catch {}
     }
-    const { error } = await supabase.from("anamneses").delete().eq("id", a.id);
+    const { error } = await supabase.from("anamneses").delete().eq("id", toDelete.id);
+    setDeleting(false);
     if (error) return toast.error("Erro ao excluir ficha");
-    setItems((prev) => prev.filter((p) => p.id !== a.id));
-    if (selected?.id === a.id) setSelected(null);
+    setItems((prev) => prev.filter((p) => p.id !== toDelete.id));
+    if (selected?.id === toDelete.id) setSelected(null);
+    setToDelete(null);
     toast.success("Ficha excluída");
   };
 
