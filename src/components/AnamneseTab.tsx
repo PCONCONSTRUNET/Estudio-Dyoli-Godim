@@ -187,6 +187,12 @@ const AnamneseTab = () => {
         <div className="text-right shrink-0">
           <p className="font-heading text-2xl font-bold text-gold tabular-nums leading-none">{totalPendentes}</p>
           <p className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-wider mt-1">Pendentes</p>
+          <div className="mt-1.5 inline-flex items-center gap-1">
+            <span className={`w-1.5 h-1.5 rounded-full ${live ? "bg-green-400 animate-pulse" : "bg-primary-foreground/30"}`} />
+            <span className={`text-[9px] font-body uppercase tracking-wider ${live ? "text-green-400/80" : "text-primary-foreground/40"}`}>
+              {live ? "Ao vivo" : "Conectando"}
+            </span>
+          </div>
         </div>
       </div>
 
