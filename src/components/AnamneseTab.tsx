@@ -43,6 +43,7 @@ const AnamneseTab = () => {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"todas" | "pendentes" | "aprovadas" | "negadas">("todas");
   const [selected, setSelected] = useState<Anamnese | null>(null);
+  const [live, setLive] = useState(false);
 
   const load = async () => {
     const { data, error } = await supabase
@@ -57,7 +58,7 @@ const AnamneseTab = () => {
   useEffect(() => {
     load();
     const ch = supabase
-      .channel("anamneses-realtime-v2")
+      .channel("anamneses-realtime-v3")
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "anamneses" },
@@ -66,6 +67,12 @@ const AnamneseTab = () => {
             const novo = payload.new as Anamnese;
             if (prev.find((p) => p.id === novo.id)) return prev;
             toast.success(`Nova ficha: ${novo.cliente_nome || "Cliente"}`);
+            try {
+              if (typeof window !== "undefined" && "Audio" in window) {
+                // beep curto opcional, ignora se bloqueado
+                new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=").play().catch(()=>{});
+              }
+            } catch {}
             return [novo, ...prev];
           });
         }
@@ -87,14 +94,26 @@ const AnamneseTab = () => {
           setItems((prev) => prev.filter((p) => p.id !== old.id));
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        setLive(status === "SUBSCRIBED");
+      });
 
-    // fallback polling discreto a cada 30s caso websocket caia
-    const poll = setInterval(load, 30000);
+    // Resync ao voltar foco/online (websocket pode dormir em mobile)
+    const resync = () => load();
+    const onVisibility = () => { if (document.visibilityState === "visible") load(); };
+    window.addEventListener("focus", resync);
+    window.addEventListener("online", resync);
+    document.addEventListener("visibilitychange", onVisibility);
+
+    // safety net leve a cada 10s caso o websocket caia
+    const poll = setInterval(load, 10000);
 
     return () => {
       supabase.removeChannel(ch);
       clearInterval(poll);
+      window.removeEventListener("focus", resync);
+      window.removeEventListener("online", resync);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);
 
@@ -168,6 +187,12 @@ const AnamneseTab = () => {
         <div className="text-right shrink-0">
           <p className="font-heading text-2xl font-bold text-gold tabular-nums leading-none">{totalPendentes}</p>
           <p className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-wider mt-1">Pendentes</p>
+          <div className="mt-1.5 inline-flex items-center gap-1">
+            <span className={`w-1.5 h-1.5 rounded-full ${live ? "bg-green-400 animate-pulse" : "bg-primary-foreground/30"}`} />
+            <span className={`text-[9px] font-body uppercase tracking-wider ${live ? "text-green-400/80" : "text-primary-foreground/40"}`}>
+              {live ? "Ao vivo" : "Conectando"}
+            </span>
+          </div>
         </div>
       </div>
 
