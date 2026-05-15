@@ -148,20 +148,12 @@ const AnamneseTab = () => {
     if (status === "pendente") toast.success("Voltou para pendente");
   };
 
-  const openPdf = async (a: Anamnese) => {
-    if (a.pdf_url) {
-      window.open(a.pdf_url, "_blank");
+  const openPdf = (a: Anamnese) => {
+    if (!a.pdf_url && !a.pdf_path) {
+      toast.error("Esta ficha não possui PDF anexado");
       return;
     }
-    if (a.pdf_path) {
-      const { data, error } = await supabase.storage
-        .from("anamneses")
-        .createSignedUrl(a.pdf_path, 60 * 10);
-      if (error || !data) return toast.error("Erro ao gerar link do PDF");
-      window.open(data.signedUrl, "_blank");
-      return;
-    }
-    toast.error("Esta ficha não possui PDF anexado");
+    window.open(`/anamnese/${a.id}/pdf`, "_blank");
   };
 
   const removerFicha = (a: Anamnese) => setToDelete(a);
