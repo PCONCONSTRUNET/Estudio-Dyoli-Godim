@@ -148,12 +148,23 @@ const AnamneseTab = () => {
     if (status === "pendente") toast.success("Voltou para pendente");
   };
 
+  const slugify = (s: string) =>
+    (s || "ficha")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 60) || "ficha";
+
   const openPdf = (a: Anamnese) => {
     if (!a.pdf_url && !a.pdf_path) {
       toast.error("Esta ficha não possui PDF anexado");
       return;
     }
-    window.open(`/anamnese/${a.id}/pdf`, "_blank");
+    const slug = slugify(a.cliente_nome);
+    const shortId = a.id.slice(0, 8);
+    window.open(`/anamnese/${slug}-${shortId}/pdf`, "_blank");
   };
 
   const removerFicha = (a: Anamnese) => setToDelete(a);
