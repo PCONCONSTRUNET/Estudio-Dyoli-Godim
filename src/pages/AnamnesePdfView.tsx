@@ -11,20 +11,42 @@ export default function AnamnesePdfView() {
     document.title = "Ficha de Anamnese — Dyoli";
     (async () => {
       if (!id) return;
-      const { data, error } = await supabase
-        .from("anamneses")
-        .select("pdf_path, pdf_url, cliente_nome")
-        .eq("id", id)
-        .maybeSingle();
-      if (error || !data) {
+
+      // id pode ser:
+      // - UUID completo (formato antigo)
+      // - "<slug>-<8charsId>" (novo formato amigável, ex: julia-pereira-826431bb)
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+      let row: { pdf_path: string | null; pdf_url: string | null; cliente_nome: string | null } | null = null;
+
+      if (isUuid) {
+        const { data } = await supabase
+          .from("anamneses")
+          .select("pdf_path, pdf_url, cliente_nome")
+          .eq("id", id)
+          .maybeSingle();
+        row = (data as any) || null;
+      } else {
+        // pega últimos 8 chars como prefixo do uuid
+        const shortId = id.slice(-8).toLowerCase();
+        const { data } = await supabase
+          .from("anamneses")
+          .select("id, pdf_path, pdf_url, cliente_nome")
+          .order("created_at", { ascending: false })
+          .limit(500);
+        const match = (data || []).find((r: any) => String(r.id).toLowerCase().startsWith(shortId));
+        if (match) row = match as any;
+      }
+
+      if (!row) {
         setErro("Ficha não encontrada");
         return;
       }
-      if (data.cliente_nome) document.title = `Anamnese — ${data.cliente_nome}`;
-      if (data.pdf_path) {
+      if (row.cliente_nome) document.title = `Anamnese — ${row.cliente_nome}`;
+      if (row.pdf_path) {
         const { data: signed, error: signErr } = await supabase.storage
           .from("anamneses")
-          .createSignedUrl(data.pdf_path, 60 * 30);
+          .createSignedUrl(row.pdf_path, 60 * 30);
         if (signErr || !signed) {
           setErro("Não foi possível gerar o link do PDF");
           return;
@@ -32,8 +54,8 @@ export default function AnamnesePdfView() {
         setUrl(signed.signedUrl);
         return;
       }
-      if (data.pdf_url) {
-        setUrl(data.pdf_url);
+      if (row.pdf_url) {
+        setUrl(row.pdf_url);
         return;
       }
       setErro("Esta ficha não possui PDF anexado");
