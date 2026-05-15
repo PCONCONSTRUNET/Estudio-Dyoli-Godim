@@ -24,6 +24,9 @@ verify_jwt = false
 [functions.bot-agendar]
 verify_jwt = false
 
+[functions.bot-anamnese]
+verify_jwt = false
+
 [functions.bot-meus-agendamentos]
 verify_jwt = false
 
