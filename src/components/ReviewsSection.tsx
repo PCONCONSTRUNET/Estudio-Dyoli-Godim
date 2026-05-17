@@ -72,9 +72,9 @@ const ReviewsSection = () => {
     return () => { cancelled = true; };
   }, []);
 
-  // Avaliações reais primeiro, depois fixas (preenchimento)
-  const reviews = useMemo<Review[]>(() => [...realReviews, ...staticReviews], [realReviews]);
-  const totalCount = realReviews.length + staticReviews.length * 40;
+  // Apenas avaliações reais
+  const reviews = realReviews;
+  const totalCount = realReviews.length;
   const avgRating = useMemo(
     () => (reviews.reduce((s, r) => s + r.rating, 0) / Math.max(reviews.length, 1)).toFixed(1),
     [reviews]
