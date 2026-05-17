@@ -702,10 +702,15 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
         </div>
 
         <div className="pt-6 pb-4">
-          <button onClick={paymentChoice === "pix" ? handleGoToPayment : handleConfirmRecepcao} disabled={paymentLoading}
-            className="ios-press w-full py-4 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all flex items-center justify-center gap-2.5 disabled:opacity-50">
+          <button
+            onClick={paymentChoice === "pix" ? handleGoToPayment : handleConfirmRecepcao}
+            disabled={paymentLoading || (exigeAnamnese && !anamneseEnviada)}
+            className="ios-press w-full py-4 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all flex items-center justify-center gap-2.5 disabled:opacity-50"
+          >
             {paymentLoading ? (
               <><Loader2 className="w-5 h-5 animate-spin" /> Confirmando...</>
+            ) : exigeAnamnese && !anamneseEnviada ? (
+              <><ClipboardList className="w-5 h-5" /> Preencha a anamnese</>
             ) : paymentChoice === "pix" ? (
               <><img src={pixIcon} alt="PIX" className="w-5 h-5" /> Gerar PIX — R$ {paymentAmount}</>
             ) : (
@@ -714,9 +719,19 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
           </button>
         </div>
         </div>
+        {exigeAnamnese && anamneseTipo && (
+          <AnamneseFormModal
+            open={anamneseOpen}
+            onClose={() => setAnamneseOpen(false)}
+            onSubmitted={() => { setAnamneseEnviada(true); setAnamneseOpen(false); }}
+            tipo={anamneseTipo}
+            servico={service}
+          />
+        )}
       </section>
     );
   }
+
 
   // Payment screen
   if (step === "payment") {
