@@ -525,6 +525,16 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     setPaymentLoading(false);
   };
 
+
+  // Detecta se este serviço exige anamnese
+  const catLower = (serviceCategoria || "").toLowerCase();
+  const nomeLower = (service || "").toLowerCase();
+  let anamneseTipo: AnamneseTipo | null = null;
+  if (nomeLower.includes("labial")) anamneseTipo = "labial";
+  else if (catLower.includes("tatua")) anamneseTipo = "tatuagem";
+  else if (catLower.includes("perfura") || catLower.includes("piercing")) anamneseTipo = "piercing";
+  const exigeAnamnese = anamneseTipo !== null;
+
   if (step === "confirm") {
     return (
       <section className="min-h-screen bg-background px-6 py-8 flex flex-col lg:items-center lg:px-8">
