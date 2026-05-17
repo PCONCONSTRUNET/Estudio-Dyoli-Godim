@@ -11,44 +11,7 @@ interface Review {
   isReal?: boolean;
 }
 
-const staticReviews: Review[] = [
-  {
-    name: "Mariana S.",
-    city: "Goiânia",
-    rating: 5,
-    text: "Resultado impecável! Sobrancelhas naturais e perfeitas. Super profissional.",
-  },
-  {
-    name: "Camila R.",
-    city: "Aparecida",
-    rating: 5,
-    text: "Ambiente higienizado e atendimento maravilhoso. Cicatrização tranquila.",
-  },
-  {
-    name: "Juliana M.",
-    city: "Goiânia",
-    rating: 5,
-    text: "Apaixonada pelo resultado! Cor linda e técnica perfeita. Me senti segura.",
-  },
-  {
-    name: "Beatriz A.",
-    city: "Anápolis",
-    rating: 5,
-    text: "Estúdio aconchegante e resultado que superou minhas expectativas.",
-  },
-  {
-    name: "Larissa C.",
-    city: "Goiânia",
-    rating: 5,
-    text: "Atendimento humanizado, atenciosa e cuidadosa. Sem complicações.",
-  },
-  {
-    name: "Patrícia S.",
-    city: "Trindade",
-    rating: 4,
-    text: "Trabalho de altíssima qualidade. Naturalidade e durabilidade excelentes.",
-  },
-];
+// Sem mocks: apenas avaliações reais salvas em `avaliacoes`.
 
 const CARD_STEP = 238;
 
