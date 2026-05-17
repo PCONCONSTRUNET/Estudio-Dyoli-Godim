@@ -118,13 +118,16 @@ const ReviewsSection = () => {
     setCurrentX(next);
   };
 
+  // Não renderiza nada enquanto não houver nenhuma avaliação real
+  if (reviews.length === 0) return null;
+
   return (
     <section className="relative w-full">
       <div className="mb-3 flex items-end justify-between gap-3">
         <div>
           <p className="font-body text-[10px] text-gold/70 tracking-[0.25em] uppercase">Avaliações</p>
           <p className="font-heading text-lg font-semibold text-primary-foreground tracking-wide mt-0.5">
-            {avgRating} · {totalCount}+ clientes
+            {avgRating} · {totalCount} {totalCount === 1 ? "cliente" : "clientes"}
           </p>
         </div>
         <div className="flex items-center gap-1.5">
