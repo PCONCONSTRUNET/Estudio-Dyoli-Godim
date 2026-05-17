@@ -25,11 +25,29 @@ interface Agendamento {
   variacao: string | null;
   data_agendamento: string;
   horario: string;
+  duracao_minutos: number;
   valor: number;
   valor_pago: number;
   status: string;
   created_at: string;
 }
+
+// true se o horário final do agendamento já passou
+const jaTerminou = (a: { data_agendamento: string; horario: string; duracao_minutos: number }) => {
+  try {
+    const [h, m] = (a.horario || "00:00").split(":").map(Number);
+    const start = new Date(`${a.data_agendamento}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`);
+    const end = new Date(start.getTime() + (a.duracao_minutos || 60) * 60_000);
+    return end.getTime() <= Date.now();
+  } catch {
+    return false;
+  }
+};
+
+// pode avaliar = já terminou e não foi cancelado/falta
+const podeAvaliar = (a: Agendamento) =>
+  jaTerminou(a) && a.status !== "cancelado" && a.status !== "falta";
+
 
 interface Profile {
   nome: string;
