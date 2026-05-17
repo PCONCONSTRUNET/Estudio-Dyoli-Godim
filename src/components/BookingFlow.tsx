@@ -105,6 +105,9 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   const [serviceDuration, setServiceDuration] = useState(60);
   const [servicePrice, setServicePrice] = useState<number | null>(null);
   const [serviceDescricao, setServiceDescricao] = useState<string>("");
+  const [serviceCategoria, setServiceCategoria] = useState<string>("");
+  const [anamneseEnviada, setAnamneseEnviada] = useState(false);
+  const [anamneseOpen, setAnamneseOpen] = useState(false);
 
   useEffect(() => {
     supabase.from("horarios_funcionamento").select("*").then(({ data }) => {
