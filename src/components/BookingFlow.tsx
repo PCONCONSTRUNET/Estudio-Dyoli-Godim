@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { notifyAgendamentoConfirmado } from "@/lib/notify-webhook";
 import { sendPush, showLocalNotification } from "@/lib/push-notify";
+import AnamneseFormModal, { AnamneseTipo } from "@/components/AnamneseFormModal";
+import { ClipboardList, CheckCircle } from "lucide-react";
 
 interface BookingFlowProps {
   service: string;
