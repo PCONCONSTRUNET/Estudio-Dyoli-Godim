@@ -11,44 +11,7 @@ interface Review {
   isReal?: boolean;
 }
 
-const staticReviews: Review[] = [
-  {
-    name: "Mariana S.",
-    city: "Goiânia",
-    rating: 5,
-    text: "Resultado impecável! Sobrancelhas naturais e perfeitas. Super profissional.",
-  },
-  {
-    name: "Camila R.",
-    city: "Aparecida",
-    rating: 5,
-    text: "Ambiente higienizado e atendimento maravilhoso. Cicatrização tranquila.",
-  },
-  {
-    name: "Juliana M.",
-    city: "Goiânia",
-    rating: 5,
-    text: "Apaixonada pelo resultado! Cor linda e técnica perfeita. Me senti segura.",
-  },
-  {
-    name: "Beatriz A.",
-    city: "Anápolis",
-    rating: 5,
-    text: "Estúdio aconchegante e resultado que superou minhas expectativas.",
-  },
-  {
-    name: "Larissa C.",
-    city: "Goiânia",
-    rating: 5,
-    text: "Atendimento humanizado, atenciosa e cuidadosa. Sem complicações.",
-  },
-  {
-    name: "Patrícia S.",
-    city: "Trindade",
-    rating: 4,
-    text: "Trabalho de altíssima qualidade. Naturalidade e durabilidade excelentes.",
-  },
-];
+// Sem mocks: apenas avaliações reais salvas em `avaliacoes`.
 
 const CARD_STEP = 238;
 
@@ -109,9 +72,9 @@ const ReviewsSection = () => {
     return () => { cancelled = true; };
   }, []);
 
-  // Avaliações reais primeiro, depois fixas (preenchimento)
-  const reviews = useMemo<Review[]>(() => [...realReviews, ...staticReviews], [realReviews]);
-  const totalCount = realReviews.length + staticReviews.length * 40;
+  // Apenas avaliações reais
+  const reviews = realReviews;
+  const totalCount = realReviews.length;
   const avgRating = useMemo(
     () => (reviews.reduce((s, r) => s + r.rating, 0) / Math.max(reviews.length, 1)).toFixed(1),
     [reviews]
@@ -155,13 +118,16 @@ const ReviewsSection = () => {
     setCurrentX(next);
   };
 
+  // Não renderiza nada enquanto não houver nenhuma avaliação real
+  if (reviews.length === 0) return null;
+
   return (
     <section className="relative w-full">
       <div className="mb-3 flex items-end justify-between gap-3">
         <div>
           <p className="font-body text-[10px] text-gold/70 tracking-[0.25em] uppercase">Avaliações</p>
           <p className="font-heading text-lg font-semibold text-primary-foreground tracking-wide mt-0.5">
-            {avgRating} · {totalCount}+ clientes
+            {avgRating} · {totalCount} {totalCount === 1 ? "cliente" : "clientes"}
           </p>
         </div>
         <div className="flex items-center gap-1.5">
