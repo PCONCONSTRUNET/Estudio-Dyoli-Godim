@@ -612,7 +612,48 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
           )}
         </div>
 
-        {/* Escolha do pagamento */}
+        {/* Anamnese (obrigatória p/ labial, tatuagem, piercing) */}
+        {exigeAnamnese && (
+          <div className="w-full max-w-sm mt-6 lg:mx-auto">
+            <p className="font-body text-[11px] text-muted-foreground uppercase tracking-widest font-medium mb-2.5 text-left">
+              Ficha de anamnese <span className="text-rose normal-case tracking-normal text-[11px] font-normal">(obrigatória)</span>
+            </p>
+            {anamneseEnviada ? (
+              <div className="flex items-center gap-2 p-3.5 rounded-2xl border-2 border-gold/40 bg-gold/10">
+                <CheckCircle className="w-5 h-5 text-gold shrink-0" />
+                <div className="flex-1">
+                  <p className="font-body text-[13px] font-semibold text-foreground">Ficha enviada</p>
+                  <p className="font-body text-[11px] text-muted-foreground">Será analisada pela profissional</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAnamneseOpen(true)}
+                  className="text-[11px] font-body text-gold hover:underline"
+                >
+                  Editar
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setAnamneseOpen(true)}
+                className="ios-press w-full flex items-center gap-3 p-3.5 rounded-2xl border-2 border-rose/40 bg-rose/5 hover:bg-rose/10 transition-all text-left"
+              >
+                <ClipboardList className="w-5 h-5 text-rose shrink-0" />
+                <div className="flex-1">
+                  <p className="font-body text-[13px] font-semibold text-foreground">Preencher ficha de anamnese</p>
+                  <p className="font-body text-[11px] text-muted-foreground">
+                    {anamneseTipo === "labial" && "Inclui orientação de uso de Aciclovir"}
+                    {anamneseTipo === "tatuagem" && "Avaliação prévia obrigatória"}
+                    {anamneseTipo === "piercing" && "Avaliação prévia obrigatória"}
+                  </p>
+                </div>
+                <span className="text-rose text-[18px] font-semibold">›</span>
+              </button>
+            )}
+          </div>
+        )}
+
         <div className="w-full max-w-sm mt-6 lg:mx-auto">
           <p className="font-body text-[11px] text-muted-foreground uppercase tracking-widest font-medium mb-2.5 text-left">
             Como deseja pagar? <span className="text-rose normal-case tracking-normal text-[11px] font-normal">(toque para escolher)</span>
