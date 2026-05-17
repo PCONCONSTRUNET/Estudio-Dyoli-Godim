@@ -120,10 +120,11 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       }
     });
     // Load service duration
-    supabase.from("servicos_app").select("duracao_minutos, nome, preco, descricao").eq("nome", service).maybeSingle().then(({ data }) => {
+    supabase.from("servicos_app").select("duracao_minutos, nome, preco, descricao, categoria").eq("nome", service).maybeSingle().then(({ data }) => {
       if (data?.duracao_minutos) setServiceDuration(data.duracao_minutos);
       if (data?.preco) setServicePrice(data.preco);
       if ((data as any)?.descricao) setServiceDescricao((data as any).descricao);
+      if ((data as any)?.categoria) setServiceCategoria((data as any).categoria);
     });
     // Load active gateway payment methods
     (supabase.from as any)("gateway_configs").select("gateway, pix_enabled, cartao_enabled, boleto_enabled").eq("ativo", true).then(({ data }: any) => {
