@@ -682,7 +682,7 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
                             {cancelling === a.id ? "Cancelando..." : "Cancelar"}
                           </button>
                         )}
-                        {a.status === "concluido" && (
+                        {podeAvaliar(a) && (
                           avaliacoes[a.id] ? (
                             <button
                               onClick={() => setRatingTarget(a)}
