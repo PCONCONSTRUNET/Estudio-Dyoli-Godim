@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { notifyAgendamentoConfirmado } from "@/lib/notify-webhook";
 import { sendPush, showLocalNotification } from "@/lib/push-notify";
+import AnamneseFormModal, { AnamneseTipo } from "@/components/AnamneseFormModal";
+import { ClipboardList, CheckCircle } from "lucide-react";
 
 interface BookingFlowProps {
   service: string;
@@ -103,6 +105,9 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   const [serviceDuration, setServiceDuration] = useState(60);
   const [servicePrice, setServicePrice] = useState<number | null>(null);
   const [serviceDescricao, setServiceDescricao] = useState<string>("");
+  const [serviceCategoria, setServiceCategoria] = useState<string>("");
+  const [anamneseEnviada, setAnamneseEnviada] = useState(false);
+  const [anamneseOpen, setAnamneseOpen] = useState(false);
 
   useEffect(() => {
     supabase.from("horarios_funcionamento").select("*").then(({ data }) => {
@@ -115,10 +120,11 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       }
     });
     // Load service duration
-    supabase.from("servicos_app").select("duracao_minutos, nome, preco, descricao").eq("nome", service).maybeSingle().then(({ data }) => {
+    supabase.from("servicos_app").select("duracao_minutos, nome, preco, descricao, categoria").eq("nome", service).maybeSingle().then(({ data }) => {
       if (data?.duracao_minutos) setServiceDuration(data.duracao_minutos);
       if (data?.preco) setServicePrice(data.preco);
       if ((data as any)?.descricao) setServiceDescricao((data as any).descricao);
+      if ((data as any)?.categoria) setServiceCategoria((data as any).categoria);
     });
     // Load active gateway payment methods
     (supabase.from as any)("gateway_configs").select("gateway, pix_enabled, cartao_enabled, boleto_enabled").eq("ativo", true).then(({ data }: any) => {
@@ -519,6 +525,16 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     setPaymentLoading(false);
   };
 
+
+  // Detecta se este serviço exige anamnese
+  const catLower = (serviceCategoria || "").toLowerCase();
+  const nomeLower = (service || "").toLowerCase();
+  let anamneseTipo: AnamneseTipo | null = null;
+  if (nomeLower.includes("labial")) anamneseTipo = "labial";
+  else if (catLower.includes("tatua")) anamneseTipo = "tatuagem";
+  else if (catLower.includes("perfura") || catLower.includes("piercing")) anamneseTipo = "piercing";
+  const exigeAnamnese = anamneseTipo !== null;
+
   if (step === "confirm") {
     return (
       <section className="min-h-screen bg-background px-6 py-8 flex flex-col lg:items-center lg:px-8">
@@ -596,7 +612,48 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
           )}
         </div>
 
-        {/* Escolha do pagamento */}
+        {/* Anamnese (obrigatória p/ labial, tatuagem, piercing) */}
+        {exigeAnamnese && (
+          <div className="w-full max-w-sm mt-6 lg:mx-auto">
+            <p className="font-body text-[11px] text-muted-foreground uppercase tracking-widest font-medium mb-2.5 text-left">
+              Ficha de anamnese <span className="text-rose normal-case tracking-normal text-[11px] font-normal">(obrigatória)</span>
+            </p>
+            {anamneseEnviada ? (
+              <div className="flex items-center gap-2 p-3.5 rounded-2xl border-2 border-gold/40 bg-gold/10">
+                <CheckCircle className="w-5 h-5 text-gold shrink-0" />
+                <div className="flex-1">
+                  <p className="font-body text-[13px] font-semibold text-foreground">Ficha enviada</p>
+                  <p className="font-body text-[11px] text-muted-foreground">Será analisada pela profissional</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAnamneseOpen(true)}
+                  className="text-[11px] font-body text-gold hover:underline"
+                >
+                  Editar
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setAnamneseOpen(true)}
+                className="ios-press w-full flex items-center gap-3 p-3.5 rounded-2xl border-2 border-rose/40 bg-rose/5 hover:bg-rose/10 transition-all text-left"
+              >
+                <ClipboardList className="w-5 h-5 text-rose shrink-0" />
+                <div className="flex-1">
+                  <p className="font-body text-[13px] font-semibold text-foreground">Preencher ficha de anamnese</p>
+                  <p className="font-body text-[11px] text-muted-foreground">
+                    {anamneseTipo === "labial" && "Inclui orientação de uso de Aciclovir"}
+                    {anamneseTipo === "tatuagem" && "Avaliação prévia obrigatória"}
+                    {anamneseTipo === "piercing" && "Avaliação prévia obrigatória"}
+                  </p>
+                </div>
+                <span className="text-rose text-[18px] font-semibold">›</span>
+              </button>
+            )}
+          </div>
+        )}
+
         <div className="w-full max-w-sm mt-6 lg:mx-auto">
           <p className="font-body text-[11px] text-muted-foreground uppercase tracking-widest font-medium mb-2.5 text-left">
             Como deseja pagar? <span className="text-rose normal-case tracking-normal text-[11px] font-normal">(toque para escolher)</span>
@@ -645,10 +702,15 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
         </div>
 
         <div className="pt-6 pb-4">
-          <button onClick={paymentChoice === "pix" ? handleGoToPayment : handleConfirmRecepcao} disabled={paymentLoading}
-            className="ios-press w-full py-4 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all flex items-center justify-center gap-2.5 disabled:opacity-50">
+          <button
+            onClick={paymentChoice === "pix" ? handleGoToPayment : handleConfirmRecepcao}
+            disabled={paymentLoading || (exigeAnamnese && !anamneseEnviada)}
+            className="ios-press w-full py-4 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[15px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] transition-all flex items-center justify-center gap-2.5 disabled:opacity-50"
+          >
             {paymentLoading ? (
               <><Loader2 className="w-5 h-5 animate-spin" /> Confirmando...</>
+            ) : exigeAnamnese && !anamneseEnviada ? (
+              <><ClipboardList className="w-5 h-5" /> Preencha a anamnese</>
             ) : paymentChoice === "pix" ? (
               <><img src={pixIcon} alt="PIX" className="w-5 h-5" /> Gerar PIX — R$ {paymentAmount}</>
             ) : (
@@ -657,9 +719,19 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
           </button>
         </div>
         </div>
+        {exigeAnamnese && anamneseTipo && (
+          <AnamneseFormModal
+            open={anamneseOpen}
+            onClose={() => setAnamneseOpen(false)}
+            onSubmitted={() => { setAnamneseEnviada(true); setAnamneseOpen(false); }}
+            tipo={anamneseTipo}
+            servico={service}
+          />
+        )}
       </section>
     );
   }
+
 
   // Payment screen
   if (step === "payment") {
