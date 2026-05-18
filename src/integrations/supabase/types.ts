@@ -553,6 +553,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          cpf: string | null
           created_at: string
           data_nascimento: string | null
           id: string
@@ -561,6 +562,7 @@ export type Database = {
           whatsapp: string
         }
         Insert: {
+          cpf?: string | null
           created_at?: string
           data_nascimento?: string | null
           id: string
@@ -569,6 +571,7 @@ export type Database = {
           whatsapp: string
         }
         Update: {
+          cpf?: string | null
           created_at?: string
           data_nascimento?: string | null
           id?: string
