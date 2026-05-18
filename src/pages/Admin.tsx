@@ -1932,6 +1932,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
           {tab === "pedidos" && <PedidosTab agendamentos={agendamentos} getClientName={getClientName} clientes={clientes} onUpdate={loadData} />}
           {tab === "despesas" && <DespesasTab />}
           {tab === "anamnese" && <AnamneseTab />}
+          {tab === "avaliacoes" && <AvaliacoesTab />}
           {tab === "produtos" && <ProdutosTab />}
           {tab === "gateway" && <GatewayTab />}
           {tab === "chatbot" && <AdminBotWpp embedded />}
