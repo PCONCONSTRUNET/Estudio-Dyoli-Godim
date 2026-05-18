@@ -7,10 +7,11 @@ const corsHeaders = {
 
 const WEBHOOK_URL = "http://178.105.54.230:3001/webhook/notificacao";
 const WEBHOOK_TOKEN = "dyoli123";
+const SITE_URL = Deno.env.get("PUBLIC_SITE_URL") || "https://estudiodyoli.lovable.app";
 
 const fallbackMessages: Record<string, string> = {
   comparecimento: "💖 Obrigada por comparecer, {nome}! Esperamos te ver novamente em breve.",
-  pos_atendimento: "⭐ Olá {nome}, como foi seu atendimento? Sua opinião é muito importante!",
+  pos_atendimento: "⭐ Olá {nome}, como foi seu atendimento? Avalie em: {link_avaliacao}",
 };
 
 const formatDate = (iso: string) => {
