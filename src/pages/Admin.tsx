@@ -275,13 +275,7 @@ const Admin = () => {
             {/* Logo + identidade */}
             <div className="text-center space-y-4">
               <div className="relative mx-auto h-20 w-20">
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-gold/30 to-rose/20 blur-md" />
-                <div className="relative h-20 w-20 overflow-hidden rounded-full border border-gold/30 bg-charcoal shadow-[0_8px_24px_-8px_hsl(var(--gold)/0.4)]">
-                  <img src={logo} alt="Estúdio Dyoli Godim" className="h-full w-full object-cover" />
-                </div>
-                <div className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border border-gold/40 bg-charcoal shadow-md">
-                  <Settings className="h-3.5 w-3.5 text-gold" />
-                </div>
+                <img src={logo} alt="Estúdio Dyoli Godim" className="h-full w-full object-contain" />
               </div>
 
               <div className="space-y-1">
