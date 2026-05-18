@@ -23,7 +23,7 @@ const formatDate = (iso: string) => {
   }
 };
 
-const interpolate = (template: string, p: { nome: string; data: string; horario: string; servico?: string }) => {
+const interpolate = (template: string, p: { nome: string; data: string; horario: string; servico?: string; link_avaliacao?: string }) => {
   const map: Record<string, string> = {
     nome: p.nome || "cliente",
     cliente: p.nome || "cliente",
@@ -34,6 +34,8 @@ const interpolate = (template: string, p: { nome: string; data: string; horario:
     hora: p.horario,
     tempo: p.horario,
     servico: p.servico || "",
+    link_avaliacao: p.link_avaliacao || "",
+    link: p.link_avaliacao || "",
   };
   let out = template.replace(/\{([a-zA-Z_]+)\}/g, (_, k) => map[k.toLowerCase()] ?? `{${k}}`);
   out = out.replace(/\[([a-zA-Z_]+)\]/g, (_, k) => map[k.toLowerCase()] ?? `[${k}]`);
