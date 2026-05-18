@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.bot-ia-fallback]
 verify_jwt = false
+
+[functions.submit-avaliacao]
+verify_jwt = false
