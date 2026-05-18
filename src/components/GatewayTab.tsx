@@ -2,6 +2,11 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Save, Eye, EyeOff, Copy, Check, CreditCard, QrCode, FileText, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
+import pixIconImg from "@/assets/pix-icon.png";
+
+const PixIcon = ({ className }: { className?: string }) => (
+  <img src={pixIconImg} alt="PIX" className={className} />
+);
 
 interface GatewayConfig {
   id: string;
