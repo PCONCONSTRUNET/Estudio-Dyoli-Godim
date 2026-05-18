@@ -428,6 +428,54 @@ export type Database = {
         }
         Relationships: []
       }
+      pagamento_historico: {
+        Row: {
+          acao: string
+          agendamento_id: string
+          autor_id: string | null
+          autor_nome: string
+          created_at: string
+          id: string
+          observacao: string
+          status_anterior: string
+          status_novo: string
+          total: number
+          valor_anterior: number
+          valor_delta: number
+          valor_novo: number
+        }
+        Insert: {
+          acao?: string
+          agendamento_id: string
+          autor_id?: string | null
+          autor_nome?: string
+          created_at?: string
+          id?: string
+          observacao?: string
+          status_anterior: string
+          status_novo: string
+          total?: number
+          valor_anterior?: number
+          valor_delta?: number
+          valor_novo?: number
+        }
+        Update: {
+          acao?: string
+          agendamento_id?: string
+          autor_id?: string | null
+          autor_nome?: string
+          created_at?: string
+          id?: string
+          observacao?: string
+          status_anterior?: string
+          status_novo?: string
+          total?: number
+          valor_anterior?: number
+          valor_delta?: number
+          valor_novo?: number
+        }
+        Relationships: []
+      }
       password_reset_tokens: {
         Row: {
           created_at: string
