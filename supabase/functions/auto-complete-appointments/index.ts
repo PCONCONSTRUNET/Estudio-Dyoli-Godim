@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
         if (!numero) continue;
 
         const nome = a.cliente_nome || prof?.nome || "";
-        const link_avaliacao = `${SITE_URL}/avaliar/${a.id}`;
+        const link_avaliacao = `${SITE_URL}/avaliar`;
 
         for (const tipo of ["comparecimento", "pos_atendimento"] as const) {
           const cfg: any = cfgMap.get(tipo);
