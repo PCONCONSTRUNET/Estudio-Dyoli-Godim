@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Star, Trash2, RefreshCw } from "lucide-react";
+import { Star, Trash2, RefreshCw, X, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Avaliacao {
@@ -17,6 +17,7 @@ const AvaliacoesTab = () => {
   const [list, setList] = useState<Avaliacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [toDelete, setToDelete] = useState<Avaliacao | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -38,16 +39,17 @@ const AvaliacoesTab = () => {
 
   useEffect(() => { load(); }, []);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Excluir esta avaliação? Ela sairá da Home.")) return;
-    setDeleting(id);
-    const { error } = await supabase.from("avaliacoes").delete().eq("id", id);
+  const confirmDelete = async () => {
+    if (!toDelete) return;
+    setDeleting(toDelete.id);
+    const { error } = await supabase.from("avaliacoes").delete().eq("id", toDelete.id);
     setDeleting(null);
     if (error) {
       alert("Não foi possível excluir: " + error.message);
       return;
     }
-    setList((prev) => prev.filter((r) => r.id !== id));
+    setList((prev) => prev.filter((r) => r.id !== toDelete.id));
+    setToDelete(null);
   };
 
   const formatDate = (iso: string) => {
@@ -57,6 +59,8 @@ const AvaliacoesTab = () => {
         " · " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
     } catch { return iso; }
   };
+
+  const nomeOf = (r: Avaliacao) => r._profile_nome || r.cliente_nome || "Cliente";
 
   return (
     <div className="space-y-4">
@@ -83,51 +87,112 @@ const AvaliacoesTab = () => {
         </div>
       ) : (
         <div className="grid gap-3">
-          {list.map((r) => {
-            const nome = r._profile_nome || r.cliente_nome || "Cliente";
-            return (
-              <div
-                key={r.id}
-                className="rounded-2xl border border-primary-foreground/[0.08] bg-primary-foreground/[0.04] p-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-body text-[13px] font-semibold text-primary-foreground">{nome}</span>
-                      <span className="flex items-center gap-0.5">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-3 h-3 ${i < r.nota ? "fill-gold text-gold" : "text-primary-foreground/20"}`}
-                            strokeWidth={1.5}
-                          />
-                        ))}
+          {list.map((r) => (
+            <div
+              key={r.id}
+              className="rounded-2xl border border-primary-foreground/[0.08] bg-primary-foreground/[0.04] p-4"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-body text-[13px] font-semibold text-primary-foreground">{nomeOf(r)}</span>
+                    <span className="flex items-center gap-0.5">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-3 h-3 ${i < r.nota ? "fill-gold text-gold" : "text-primary-foreground/20"}`}
+                          strokeWidth={1.5}
+                        />
+                      ))}
+                    </span>
+                    {!r.agendamento_id && (
+                      <span className="px-1.5 py-0.5 rounded-full bg-primary-foreground/[0.08] font-body text-[9px] uppercase tracking-wider text-primary-foreground/50">
+                        Avulsa
                       </span>
-                      {!r.agendamento_id && (
-                        <span className="px-1.5 py-0.5 rounded-full bg-primary-foreground/[0.08] font-body text-[9px] uppercase tracking-wider text-primary-foreground/50">
-                          Avulsa
-                        </span>
-                      )}
-                    </div>
-                    <p className="font-body text-[11px] text-primary-foreground/40 mt-0.5">{formatDate(r.created_at)}</p>
-                    {r.comentario && (
-                      <p className="font-body text-[13px] text-primary-foreground/80 mt-2 leading-relaxed whitespace-pre-wrap">
-                        {r.comentario}
-                      </p>
                     )}
                   </div>
-                  <button
-                    onClick={() => handleDelete(r.id)}
-                    disabled={deleting === r.id}
-                    className="ios-press shrink-0 w-9 h-9 rounded-full bg-rose/10 border border-rose/20 text-rose flex items-center justify-center disabled:opacity-40"
-                    aria-label="Excluir avaliação"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <p className="font-body text-[11px] text-primary-foreground/40 mt-0.5">{formatDate(r.created_at)}</p>
+                  {r.comentario && (
+                    <p className="font-body text-[13px] text-primary-foreground/80 mt-2 leading-relaxed whitespace-pre-wrap">
+                      {r.comentario}
+                    </p>
+                  )}
                 </div>
+                <button
+                  onClick={() => setToDelete(r)}
+                  className="ios-press shrink-0 w-9 h-9 rounded-full bg-rose/10 border border-rose/20 text-rose flex items-center justify-center"
+                  aria-label="Excluir avaliação"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
-            );
-          })}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {toDelete && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center px-4 animate-fade-in">
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => deleting ? null : setToDelete(null)}
+          />
+          <div className="relative w-full max-w-sm rounded-3xl border border-primary-foreground/[0.08] bg-charcoal/95 backdrop-blur-2xl shadow-[0_25px_60px_-12px_rgba(0,0,0,0.7)] animate-scale-in p-6">
+            <button
+              onClick={() => setToDelete(null)}
+              disabled={!!deleting}
+              className="ios-press absolute top-4 right-4 w-8 h-8 rounded-full bg-primary-foreground/[0.08] flex items-center justify-center text-primary-foreground/40 hover:text-primary-foreground/70"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="w-12 h-12 rounded-full bg-rose/15 border border-rose/25 flex items-center justify-center mb-3">
+              <AlertTriangle className="w-5 h-5 text-rose" />
+            </div>
+            <h3 className="font-heading text-lg font-semibold text-primary-foreground leading-tight">
+              Excluir avaliação?
+            </h3>
+            <p className="font-body text-[13px] text-primary-foreground/60 mt-1">
+              Esta avaliação de <span className="text-primary-foreground/90 font-medium">{nomeOf(toDelete)}</span> sairá da Home e não poderá ser recuperada.
+            </p>
+
+            <div className="mt-4 rounded-2xl border border-primary-foreground/[0.08] bg-primary-foreground/[0.04] p-3">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="flex items-center gap-0.5">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`w-3 h-3 ${i < toDelete.nota ? "fill-gold text-gold" : "text-primary-foreground/20"}`}
+                      strokeWidth={1.5}
+                    />
+                  ))}
+                </span>
+                <span className="font-body text-[11px] text-primary-foreground/50">{formatDate(toDelete.created_at)}</span>
+              </div>
+              {toDelete.comentario && (
+                <p className="font-body text-[12px] text-primary-foreground/75 line-clamp-3">
+                  “{toDelete.comentario}”
+                </p>
+              )}
+            </div>
+
+            <div className="flex gap-2 mt-5">
+              <button
+                onClick={() => setToDelete(null)}
+                disabled={!!deleting}
+                className="ios-press flex-1 py-3 rounded-full bg-primary-foreground/[0.06] border border-primary-foreground/[0.08] text-primary-foreground/80 font-body text-[14px] font-medium hover:bg-primary-foreground/[0.1] disabled:opacity-40"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={!!deleting}
+                className="ios-press flex-1 py-3 rounded-full bg-rose text-white font-body text-[14px] font-semibold hover:opacity-90 disabled:opacity-40"
+              >
+                {deleting ? "Excluindo..." : "Excluir"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
