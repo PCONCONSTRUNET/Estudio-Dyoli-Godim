@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Save, X, Trash2, Check, AlertTriangle, Clock, Bell, ChevronRight, Eye, Receipt, TrendingDown, TrendingUp, Sparkles, CalendarDays, Wallet } from "lucide-react";
+import { Plus, Save, X, Check, AlertTriangle, Clock, Bell, ChevronRight, Eye, Receipt, TrendingDown, TrendingUp, Sparkles, CalendarDays, Wallet } from "lucide-react";
+import BinButton from "@/components/ui/bin-button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
