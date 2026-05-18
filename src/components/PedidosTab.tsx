@@ -666,12 +666,20 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                           <p className="font-body text-[11px] text-primary-foreground/70">
                             A receber: <span className="font-bold text-red-300">{formatCurrency(Number(a.valor))}</span>
                           </p>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); registrarPagamentoIntegral(a); }}
-                            className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-green-500/40 bg-green-500/15 px-3 py-2 font-body text-[12px] font-semibold text-green-300 hover:bg-green-500/25 hover:text-green-200 transition-all"
-                          >
-                            <CheckCircle className="h-4 w-4" /> Recebi o valor — marcar como pago
-                          </button>
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); abrirRegistroPagamento(a, "sinal"); }}
+                              className="flex items-center justify-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/15 px-2 py-2 font-body text-[12px] font-semibold text-amber-200 hover:bg-amber-500/25 transition-all"
+                            >
+                              <Wallet className="h-4 w-4" /> Registrar sinal
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); registrarPagamentoIntegral(a); }}
+                              className="flex items-center justify-center gap-1.5 rounded-lg border border-green-500/40 bg-green-500/15 px-2 py-2 font-body text-[12px] font-semibold text-green-300 hover:bg-green-500/25 hover:text-green-200 transition-all"
+                            >
+                              <CheckCircle className="h-4 w-4" /> Quitar tudo
+                            </button>
+                          </div>
                         </div>
                       )}
                       {a.observacao && (
