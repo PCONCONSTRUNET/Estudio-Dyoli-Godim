@@ -96,7 +96,7 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
 
   // Notifications: today's appointments, pending payments, no-shows
   const notifications = useMemo(() => {
-    const notifs: { tipo: "hoje" | "pendente" | "falta" | "proximo"; agendamento: Agendamento; label: string }[] = [];
+    const notifs: { tipo: "hoje" | "pendente" | "sinal" | "falta" | "proximo"; agendamento: Agendamento; label: string }[] = [];
     const todayDate = new Date(today + "T12:00:00");
 
     agendamentos.forEach((a) => {
@@ -121,13 +121,18 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
         notifs.push({ tipo: "proximo", agendamento: a, label: "Amanhã" });
       }
 
-      // Pending payment (pago < valor)
-      if (a.status !== "falta" && Number(a.valor_pago || 0) < Number(a.valor) && diffDays <= 0) {
-        notifs.push({ tipo: "pendente", agendamento: a, label: `Falta ${formatCurrency(Number(a.valor) - Number(a.valor_pago || 0))}` });
+      // Pagamento parcial (sinal) ou não pago — apenas para atendimentos passados/hoje
+      if (a.status !== "falta" && !isPago(a) && diffDays <= 0) {
+        const restante = Number(a.valor) - Number(a.valor_pago || 0);
+        if (isSinalPago(a)) {
+          notifs.push({ tipo: "sinal", agendamento: a, label: `Sinal pago · a receber ${formatCurrency(restante)}` });
+        } else {
+          notifs.push({ tipo: "pendente", agendamento: a, label: `Não pago · ${formatCurrency(restante)}` });
+        }
       }
     });
 
-    const order = { falta: 0, hoje: 1, pendente: 2, proximo: 3 };
+    const order = { falta: 0, hoje: 1, pendente: 2, sinal: 3, proximo: 4 };
     notifs.sort((a, b) => order[a.tipo] - order[b.tipo]);
     return notifs;
   }, [agendamentos, today]);
