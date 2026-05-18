@@ -21,6 +21,11 @@ interface Agendamento {
   origem?: string | null;
   forma_pagamento?: string | null;
   observacao?: string | null;
+  payment_id?: string | null;
+  paid_at?: string | null;
+  payer_name?: string | null;
+  receipt_url?: string | null;
+
 }
 
 interface Props {
