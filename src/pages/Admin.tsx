@@ -1784,6 +1784,36 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                               <p className="font-body text-[10px] text-primary-foreground/30">Valor total</p>
                             </div>
                           </div>
+
+                          {saldoDevedor > 0 && (
+                            <div className="rounded-2xl border border-amber-500/40 bg-gradient-to-br from-amber-500/15 via-amber-500/[0.06] to-transparent p-3.5 shadow-[0_0_0_1px_rgba(245,158,11,0.08),0_8px_24px_-8px_rgba(245,158,11,0.35)]">
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="font-body text-[10px] uppercase tracking-wider text-amber-400/80 font-semibold">Saldo devedor</p>
+                                  <p className="font-heading text-[22px] font-bold text-amber-300 leading-tight mt-0.5">
+                                    R$ {saldoDevedor.toFixed(2).replace(".", ",")}
+                                  </p>
+                                  <p className="font-body text-[11px] text-amber-200/70 mt-0.5">
+                                    {pedidosDevendo} {pedidosDevendo === 1 ? "pedido em aberto" : "pedidos em aberto"}
+                                  </p>
+                                </div>
+                                <div className="shrink-0 h-11 w-11 rounded-full bg-amber-500/15 border border-amber-500/40 flex items-center justify-center">
+                                  <span className="font-heading text-[18px] text-amber-300">⌛</span>
+                                </div>
+                              </div>
+                              <p className="font-body text-[11px] text-amber-200/70 mt-2 leading-snug">
+                                💡 Conforme os pagamentos forem registrados na aba <span className="font-semibold text-amber-200">Pedidos</span>, este saldo é descontado automaticamente.
+                              </p>
+                            </div>
+                          )}
+
+                          {saldoDevedor <= 0 && totalValor > 0 && (
+                            <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.06] p-2.5 flex items-center gap-2">
+                              <span className="text-emerald-400 text-[14px]">✓</span>
+                              <p className="font-body text-[11px] text-emerald-300/90">Cliente sem pendências financeiras.</p>
+                            </div>
+                          )}
+
                           <div className="grid grid-cols-3 gap-2">
                             <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-2 text-center">
                               <p className="font-body text-[16px] font-bold text-emerald-400">{confirmedCount}</p>
