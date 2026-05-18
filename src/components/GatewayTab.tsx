@@ -24,7 +24,7 @@ interface GatewayMeta {
   key: string;
   label: string;
   color: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   tokenPlaceholder: string;
   publicKeyPlaceholder: string;
   publicKeyLabel: string;
