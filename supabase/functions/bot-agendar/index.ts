@@ -195,7 +195,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create the appointment
+    // PIX online → reserva o slot como "aguardando_pagamento" (oculto do admin/histórico).
+    // Só vira "confirmado" quando o webhook do Mercado Pago confirmar o pagamento.
+    // Outras formas (pagar na recepção) entram já como "confirmado".
+    const forma = forma_pagamento ?? "pix";
+    const isPixOnline = forma === "pix";
+    const statusInicial = isPixOnline ? "aguardando_pagamento" : "confirmado";
+
     const { data: agendamento, error: agendarErr } = await admin
       .from("agendamentos")
       .insert({
@@ -207,8 +213,8 @@ Deno.serve(async (req) => {
         horario,
         valor: servico.preco,
         duracao_minutos: duracao,
-        forma_pagamento: forma_pagamento ?? "pix",
-        status: "confirmado",
+        forma_pagamento: forma,
+        status: statusInicial,
         origem: "whatsapp_bot",
       })
       .select()
@@ -216,40 +222,44 @@ Deno.serve(async (req) => {
 
     if (agendarErr) throw agendarErr;
 
-    // Webhook de confirmação + push pro admin (background, não bloqueia resposta)
-    try {
-      const [y, mo, d] = data.split("-");
-      const dataFmt = `${d}/${mo}/${y}`;
-      const mensagem = `✅ *Agendamento Confirmado no Estudio Dyoli Godim!* 🌸\n\nOlá ${nome}, recebemos a confirmação do seu agendamento para o dia ${dataFmt} às ${horario}. Te esperamos!`;
-      fetch("http://localhost:3000/webhook/notificacao", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ numero: wa, mensagem, token: "dyoli123" }),
-      }).catch((e) => console.log("Erro ao enviar webhook de confirmação", e));
-    } catch (e) {
-      console.log("notify webhook skipped", e);
-    }
+    // ⚠️ Para PIX online NÃO disparamos notificações aqui — agendamento está PENDENTE.
+    // O webhook do Mercado Pago (mercadopago-webhook) é quem confirma e notifica.
+    if (!isPixOnline) {
+      // Webhook de confirmação WhatsApp pro cliente (somente pagamento na recepção)
+      try {
+        const [y, mo, d] = data.split("-");
+        const dataFmt = `${d}/${mo}/${y}`;
+        const mensagem = `✅ *Agendamento Confirmado no Estudio Dyoli Godim!* 🌸\n\nOlá ${nome}, recebemos a confirmação do seu agendamento para o dia ${dataFmt} às ${horario}. Te esperamos!`;
+        fetch("http://localhost:3000/webhook/notificacao", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ numero: wa, mensagem, token: "dyoli123" }),
+        }).catch((e) => console.log("Erro ao enviar webhook de confirmação", e));
+      } catch (e) {
+        console.log("notify webhook skipped", e);
+      }
 
-    // Push nativo pro admin (via WhatsApp bot)
-    try {
-      const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-      const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-      fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${SERVICE_KEY}`,
-          apikey: SERVICE_KEY,
-        },
-        body: JSON.stringify({
-          role: "admin",
-          title: "🔔 Novo Agendamento (WhatsApp)",
-          message: `${nome} — ${servico.nome} em ${data} às ${horario}`,
-          url: "/admin",
-        }),
-      }).catch((e) => console.log("send-push failed", e));
-    } catch (e) {
-      console.log("push skipped", e);
+      // Push nativo pro admin (via WhatsApp bot)
+      try {
+        const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+        const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        fetch(`${SUPABASE_URL}/functions/v1/send-push`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SERVICE_KEY}`,
+            apikey: SERVICE_KEY,
+          },
+          body: JSON.stringify({
+            role: "admin",
+            title: "🔔 Novo Agendamento (WhatsApp)",
+            message: `${nome} — ${servico.nome} em ${data} às ${horario}`,
+            url: "/admin",
+          }),
+        }).catch((e) => console.log("send-push failed", e));
+      } catch (e) {
+        console.log("push skipped", e);
+      }
     }
 
     return jsonResponse({
