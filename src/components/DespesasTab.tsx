@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Save, X, Check, AlertTriangle, Clock, Bell, ChevronRight, Eye, Receipt, TrendingDown, TrendingUp, Sparkles, CalendarDays, Wallet, Repeat } from "lucide-react";
+import { Plus, Save, X, Check, AlertTriangle, Clock, Bell, ChevronRight, ChevronDown, Eye, Receipt, TrendingDown, TrendingUp, Sparkles, CalendarDays, Wallet, Repeat } from "lucide-react";
 import BinButton from "@/components/ui/bin-button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -47,6 +47,14 @@ const DespesasTab = () => {
   const [fixa, setFixa] = useState(false);
   const [meses, setMeses] = useState("12");
   const [saving, setSaving] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  const toggleGroup = (id: string) =>
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
 
   useEffect(() => {
     loadDespesas();
@@ -497,67 +505,143 @@ const DespesasTab = () => {
         </div>
       ) : (
         <div className="space-y-2">
-          {filtered.map((d) => {
-            const status = getStatus(d);
-            const cfg = statusConfig[status];
-            const Icon = cfg.icon;
-            return (
-              <div
-                key={d.id}
-                className={`rounded-xl border p-3 transition-all ${cfg.bg}`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-body font-medium border flex items-center gap-1 ${cfg.badge}`}>
-                        <Icon className="h-2.5 w-2.5" />
-                        {cfg.label}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-medium border bg-primary-foreground/[0.05] text-primary-foreground/40 border-primary-foreground/[0.06]">
-                        {d.categoria}
-                      </span>
-                      {d.fixa && (
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-semibold border bg-gold/10 text-gold border-gold/30 flex items-center gap-1">
-                          <Repeat className="h-2.5 w-2.5" /> Fixa
+          {(() => {
+            // Agrupa despesas fixas por recorrencia_id, mantém ordem da lista filtrada
+            const seen = new Set<string>();
+            const items: Array<
+              | { type: "single"; despesa: Despesa }
+              | { type: "group"; recorrenciaId: string; despesas: Despesa[] }
+            > = [];
+
+            filtered.forEach((d) => {
+              if (d.fixa && d.recorrencia_id) {
+                if (seen.has(d.recorrencia_id)) return;
+                seen.add(d.recorrencia_id);
+                // Pega TODAS as parcelas (não só filtradas) para o resumo
+                const todas = despesas
+                  .filter((x) => x.recorrencia_id === d.recorrencia_id)
+                  .sort((a, b) => a.data_vencimento.localeCompare(b.data_vencimento));
+                items.push({ type: "group", recorrenciaId: d.recorrencia_id, despesas: todas });
+              } else {
+                items.push({ type: "single", despesa: d });
+              }
+            });
+
+            const renderRow = (d: Despesa, inGroup = false) => {
+              const status = getStatus(d);
+              const cfg = statusConfig[status];
+              const Icon = cfg.icon;
+              return (
+                <div key={d.id} className={`rounded-xl border p-3 transition-all ${cfg.bg} ${inGroup ? "ml-2" : ""}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-body font-medium border flex items-center gap-1 ${cfg.badge}`}>
+                          <Icon className="h-2.5 w-2.5" />
+                          {cfg.label}
                         </span>
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-medium border bg-primary-foreground/[0.05] text-primary-foreground/40 border-primary-foreground/[0.06]">
+                          {d.categoria}
+                        </span>
+                        {d.fixa && !inGroup && (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-semibold border bg-gold/10 text-gold border-gold/30 flex items-center gap-1">
+                            <Repeat className="h-2.5 w-2.5" /> Fixa
+                          </span>
+                        )}
+                      </div>
+                      <p className="font-body text-[13px] font-medium text-primary-foreground truncate">
+                        {d.descricao}
+                      </p>
+                      <div className="flex items-center gap-3 mt-1">
+                        <p className={`font-heading text-[15px] font-bold ${cfg.text}`}>
+                          {formatCurrency(Number(d.valor))}
+                        </p>
+                        <p className="font-body text-[11px] text-primary-foreground/30">
+                          Vence {formatDate(d.data_vencimento)}
+                        </p>
+                      </div>
+                      {d.observacao && (
+                        <p className="font-body text-[11px] text-primary-foreground/25 mt-1 truncate">
+                          {d.observacao}
+                        </p>
                       )}
                     </div>
-                    <p className="font-body text-[13px] font-medium text-primary-foreground truncate">
-                      {d.descricao}
-                    </p>
-                    <div className="flex items-center gap-3 mt-1">
-                      <p className={`font-heading text-[15px] font-bold ${cfg.text}`}>
-                        {formatCurrency(Number(d.valor))}
-                      </p>
-                      <p className="font-body text-[11px] text-primary-foreground/30">
-                        Vence {formatDate(d.data_vencimento)}
-                      </p>
+                    <div className="flex flex-col gap-2 shrink-0">
+                      <button
+                        onClick={() => togglePago(d)}
+                        className={`flex h-11 w-11 items-center justify-center rounded-2xl border-2 transition-all shadow-sm ${
+                          d.pago
+                            ? "bg-green-500/25 text-green-400 border-green-500/40 shadow-green-500/10"
+                            : "bg-primary-foreground/[0.06] text-primary-foreground/40 border-primary-foreground/[0.1] hover:bg-gold/15 hover:text-gold hover:border-gold/30 hover:shadow-gold/10"
+                        }`}
+                        title={d.pago ? "Desmarcar" : "Marcar como pago"}
+                      >
+                        <Check className="h-5 w-5" />
+                      </button>
+                      <BinButton size="md" onClick={() => deleteDespesa(d.id)} />
                     </div>
-                    {d.observacao && (
-                      <p className="font-body text-[11px] text-primary-foreground/25 mt-1 truncate">
-                        {d.observacao}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-2 shrink-0">
-                    <button
-                      onClick={() => togglePago(d)}
-                      className={`flex h-11 w-11 items-center justify-center rounded-2xl border-2 transition-all shadow-sm ${
-                        d.pago
-                          ? "bg-green-500/25 text-green-400 border-green-500/40 shadow-green-500/10"
-                          : "bg-primary-foreground/[0.06] text-primary-foreground/40 border-primary-foreground/[0.1] hover:bg-gold/15 hover:text-gold hover:border-gold/30 hover:shadow-gold/10"
-                      }`}
-                      title={d.pago ? "Desmarcar" : "Marcar como pago"}
-                    >
-                      <Check className="h-5 w-5" />
-                    </button>
-                    <BinButton size="md" onClick={() => deleteDespesa(d.id)} />
-
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            };
+
+            return items.map((item) => {
+              if (item.type === "single") return renderRow(item.despesa);
+
+              const grupo = item.despesas;
+              const open = expandedGroups.has(item.recorrenciaId);
+              const inicio = grupo[0]?.data_vencimento;
+              const fim = grupo[grupo.length - 1]?.data_vencimento;
+              const total = grupo.reduce((s, x) => s + Number(x.valor), 0);
+              const pagas = grupo.filter((x) => x.pago).length;
+              const baseNome = (grupo[0]?.descricao || "").replace(/\s*\(\d+\/\d+\)\s*$/, "");
+              const proxima = grupo.find((x) => !x.pago);
+
+              return (
+                <div key={item.recorrenciaId} className="rounded-2xl border border-gold/25 bg-gradient-to-br from-gold/[0.06] via-gold/[0.02] to-transparent overflow-hidden">
+                  <button
+                    onClick={() => toggleGroup(item.recorrenciaId)}
+                    className="w-full p-3 flex items-center gap-3 text-left hover:bg-gold/[0.04] transition-all"
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold/15 border border-gold/30 shrink-0">
+                      <Repeat className="h-4 w-4 text-gold" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-semibold border bg-gold/10 text-gold border-gold/30 flex items-center gap-1">
+                          <Repeat className="h-2.5 w-2.5" /> Fixa · {grupo.length}x
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-medium border bg-primary-foreground/[0.05] text-primary-foreground/40 border-primary-foreground/[0.06]">
+                          {grupo[0]?.categoria}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-medium border bg-green-500/10 text-green-400 border-green-500/20">
+                          {pagas}/{grupo.length} pagas
+                        </span>
+                      </div>
+                      <p className="font-body text-[13px] font-semibold text-primary-foreground truncate">{baseNome}</p>
+                      <div className="flex items-center gap-3 mt-1 flex-wrap">
+                        <p className="font-heading text-[15px] font-bold text-gold">{formatCurrency(total)}</p>
+                        <p className="font-body text-[11px] text-primary-foreground/40">
+                          {inicio && formatDate(inicio)} → {fim && formatDate(fim)}
+                        </p>
+                      </div>
+                      {proxima && (
+                        <p className="font-body text-[10px] text-primary-foreground/30 mt-0.5">
+                          Próxima: {formatDate(proxima.data_vencimento)} · {formatCurrency(Number(proxima.valor))}
+                        </p>
+                      )}
+                    </div>
+                    <ChevronDown className={`h-5 w-5 text-primary-foreground/40 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+                  </button>
+                  {open && (
+                    <div className="border-t border-gold/15 p-2 space-y-2 bg-charcoal/30">
+                      {grupo.map((p) => renderRow(p, true))}
+                    </div>
+                  )}
+                </div>
+              );
+            });
+          })()}
         </div>
       )}
 
