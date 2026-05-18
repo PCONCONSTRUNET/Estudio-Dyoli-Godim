@@ -1347,14 +1347,15 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                           </div>
                           {restante > 0 && (
                             <div className="flex items-center justify-between border-t border-gold/10 pt-1.5">
-                              <p className="font-body text-[12px] text-primary-foreground/60">Falta</p>
+                              <p className="font-body text-[12px] text-primary-foreground/60">A receber</p>
                               <p className="font-body text-[13px] font-medium text-red-400">R$ {restante.toFixed(2).replace(".", ",")}</p>
                             </div>
                           )}
                           <div className="flex items-center justify-between border-t border-gold/10 pt-1.5">
                             <p className="font-body text-[12px] text-primary-foreground/60">Forma</p>
-                            <p className="font-body text-[12px] font-medium text-primary-foreground capitalize">{a.forma_pagamento || "—"}</p>
+                            <p className="font-body text-[12px] font-medium text-primary-foreground">{formatFormaPagamento(a.forma_pagamento)}</p>
                           </div>
+
                         </div>
 
                         {/* Status + origem */}
