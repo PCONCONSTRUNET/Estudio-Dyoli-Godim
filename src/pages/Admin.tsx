@@ -36,6 +36,7 @@ import AvaliacoesTab from "@/components/AvaliacoesTab";
 import { Star } from "lucide-react";
 import AdminDashboard from "@/components/AdminDashboard";
 import { useAdminNotifications } from "@/hooks/use-admin-notifications";
+import { unlockNotificationAudio } from "@/lib/notification-sound";
 import { Switch } from "@/components/ui/switch";
 
 // ─── Types ───
@@ -417,6 +418,21 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
   useEffect(() => {
     loadData();
+  }, []);
+
+  // Desbloqueia o áudio de notificação no primeiro toque/clique (iOS/Safari)
+  useEffect(() => {
+    const unlock = () => {
+      unlockNotificationAudio();
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+    window.addEventListener("pointerdown", unlock, { once: true });
+    window.addEventListener("keydown", unlock, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
   }, []);
 
   const loadData = async () => {
