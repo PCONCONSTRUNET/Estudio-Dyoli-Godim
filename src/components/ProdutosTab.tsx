@@ -157,13 +157,7 @@ const ProdutosTab = () => {
     <div className="space-y-4 animate-fade-in overflow-x-hidden">
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-heading text-lg font-semibold text-primary-foreground">Produtos</h2>
-        <button
-          onClick={() => setShowAdd(!showAdd)}
-          className="flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-xl bg-gold/10 text-gold font-body text-[12px] font-medium hover:bg-gold/20 transition-all"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Adicionar
-        </button>
+        <PlusButton size={28} title="Adicionar produto" onClick={() => setShowAdd(!showAdd)} />
       </div>
 
       {/* Add product dialog */}
