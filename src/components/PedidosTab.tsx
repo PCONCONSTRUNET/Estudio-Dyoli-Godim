@@ -988,6 +988,36 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                           <CheckCircle className="h-4 w-4" /> Quitar tudo
                         </button>
                       </div>
+
+                      {/* Histórico de pagamentos */}
+                      <div className="pt-2 border-t border-primary-foreground/[0.06]">
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <History className="h-3.5 w-3.5 text-primary-foreground/50" />
+                          <p className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/50 font-semibold">Histórico de pagamentos</p>
+                        </div>
+                        {!historicoMap[a.id] ? (
+                          <p className="font-body text-[11px] text-primary-foreground/30">Carregando…</p>
+                        ) : historicoMap[a.id].length === 0 ? (
+                          <p className="font-body text-[11px] text-primary-foreground/30 italic">Nenhuma alteração registrada ainda.</p>
+                        ) : (
+                          <ul className="space-y-1.5">
+                            {historicoMap[a.id].map((h) => (
+                              <li key={h.id} className="rounded-lg border border-primary-foreground/[0.06] bg-primary-foreground/[0.02] px-2.5 py-2">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase ${statusColor(h.status_anterior)}`}>{statusLabel(h.status_anterior)}</span>
+                                  <span className="text-primary-foreground/30 text-[10px]">→</span>
+                                  <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase ${statusColor(h.status_novo)}`}>{statusLabel(h.status_novo)}</span>
+                                  <span className="ml-auto font-body text-[11px] font-semibold text-green-400">+{formatCurrency(h.valor_delta)}</span>
+                                </div>
+                                <div className="flex items-center justify-between gap-2 mt-1 font-body text-[10px] text-primary-foreground/50">
+                                  <span>por <span className="text-primary-foreground/80">{h.autor_nome}</span></span>
+                                  <span>{new Date(h.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}</span>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
