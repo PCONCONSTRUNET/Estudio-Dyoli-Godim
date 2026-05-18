@@ -7,12 +7,11 @@ const Avaliar = () => {
   const { id: agendamentoId } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(true);
-  const [agendamento, setAgendamento] = useState<{
-    servico: string;
-    cliente_nome: string | null;
-    user_id: string;
-  } | null>(null);
+  const isAvulsa = !agendamentoId;
+
+  const [loading, setLoading] = useState(!isAvulsa);
+  const [servico, setServico] = useState<string>("");
+  const [agendamentoExiste, setAgendamentoExiste] = useState<boolean>(isAvulsa);
 
   const [nome, setNome] = useState("");
   const [nota, setNota] = useState(0);
@@ -24,7 +23,7 @@ const Avaliar = () => {
   const [alreadyRated, setAlreadyRated] = useState(false);
 
   useEffect(() => {
-    if (!agendamentoId) return;
+    if (isAvulsa) return;
     (async () => {
       const { data: ag } = await supabase
         .from("agendamentos")
@@ -33,7 +32,8 @@ const Avaliar = () => {
         .maybeSingle();
 
       if (ag) {
-        setAgendamento(ag as any);
+        setAgendamentoExiste(true);
+        setServico(ag.servico || "");
         let nomeInicial = ag.cliente_nome || "";
         if (!nomeInicial && ag.user_id) {
           const { data: prof } = await supabase
@@ -54,7 +54,7 @@ const Avaliar = () => {
       }
       setLoading(false);
     })();
-  }, [agendamentoId]);
+  }, [agendamentoId, isAvulsa]);
 
   const handleSubmit = async () => {
     if (nota < 1) { setError("Selecione pelo menos 1 estrela"); return; }
@@ -65,7 +65,7 @@ const Avaliar = () => {
     try {
       const { data, error: fnErr } = await supabase.functions.invoke("submit-avaliacao", {
         body: {
-          agendamento_id: agendamentoId,
+          agendamento_id: agendamentoId || null,
           nota,
           comentario: comentario.trim(),
           nome: nome.trim(),
@@ -95,7 +95,7 @@ const Avaliar = () => {
     );
   }
 
-  if (!agendamento) {
+  if (!agendamentoExiste) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-charcoal px-6 text-center">
         <p className="font-heading text-xl text-primary-foreground mb-2">Link inválido</p>
@@ -134,11 +134,11 @@ const Avaliar = () => {
         <div className="flex items-center gap-2 mb-1">
           <Sparkles className="w-4 h-4 text-gold" />
           <span className="font-body text-[10px] uppercase tracking-widest text-gold/80 font-medium">
-            Como foi seu atendimento?
+            {isAvulsa ? "Avalie seu atendimento" : "Como foi seu atendimento?"}
           </span>
         </div>
         <h1 className="font-heading text-xl font-semibold text-primary-foreground leading-tight">
-          {agendamento.servico}
+          {isAvulsa ? "Conte como foi sua experiência" : servico}
         </h1>
         <p className="font-body text-[12px] text-primary-foreground/45 mt-1">
           Sua avaliação aparece na home do app ✨

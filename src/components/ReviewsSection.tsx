@@ -37,7 +37,7 @@ const ReviewsSection = () => {
     (async () => {
       const { data, error } = await supabase
         .from("avaliacoes")
-        .select("nota, comentario, user_id, created_at")
+        .select("nota, comentario, user_id, cliente_nome, created_at")
         .gte("nota", 4)
         .not("comentario", "is", null)
         .neq("comentario", "")
@@ -46,21 +46,23 @@ const ReviewsSection = () => {
 
       if (error || !data || cancelled) return;
 
-      const userIds = Array.from(new Set(data.map((r) => r.user_id)));
-      const { data: profs } = await supabase
-        .from("profiles")
-        .select("id, nome")
-        .in("id", userIds);
-
-      if (cancelled) return;
-
-      const nameMap = new Map<string, string>();
-      (profs || []).forEach((p) => nameMap.set(p.id, p.nome));
+      const userIds = Array.from(new Set(data.map((r) => r.user_id).filter(Boolean) as string[]));
+      let nameMap = new Map<string, string>();
+      if (userIds.length > 0) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("id, nome")
+          .in("id", userIds);
+        if (cancelled) return;
+        (profs || []).forEach((p) => nameMap.set(p.id, p.nome));
+      }
 
       const mapped: Review[] = data
         .filter((r) => (r.comentario || "").trim().length > 0)
         .map((r) => ({
-          name: formatClientName(nameMap.get(r.user_id) || "Cliente"),
+          name: formatClientName(
+            (r.user_id && nameMap.get(r.user_id)) || r.cliente_nome || "Cliente"
+          ),
           city: "",
           rating: r.nota,
           text: r.comentario || "",

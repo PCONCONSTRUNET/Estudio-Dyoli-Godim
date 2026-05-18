@@ -139,31 +139,34 @@ export type Database = {
       }
       avaliacoes: {
         Row: {
-          agendamento_id: string
+          agendamento_id: string | null
+          cliente_nome: string | null
           comentario: string | null
           created_at: string
           id: string
           nota: number
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
-          agendamento_id: string
+          agendamento_id?: string | null
+          cliente_nome?: string | null
           comentario?: string | null
           created_at?: string
           id?: string
           nota: number
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
-          agendamento_id?: string
+          agendamento_id?: string | null
+          cliente_nome?: string | null
           comentario?: string | null
           created_at?: string
           id?: string
           nota?: number
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
