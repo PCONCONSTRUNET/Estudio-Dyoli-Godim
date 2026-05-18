@@ -37,6 +37,7 @@ export function useAdminNotifications(
       const { data } = await supabase
         .from("agendamentos")
         .select("id")
+        .neq("status", "aguardando_pagamento")
         .order("created_at", { ascending: false });
       if (data) {
         data.forEach((a) => knownIdsRef.current.add(a.id));
@@ -59,6 +60,8 @@ export function useAdminNotifications(
         (payload) => {
           if (!initialLoadDone.current) return;
           const newRecord = payload.new as Agendamento;
+          // Ignorar agendamentos aguardando pagamento — só notificar quando confirmar
+          if ((newRecord as any).status === "aguardando_pagamento") return;
           if (knownIdsRef.current.has(newRecord.id)) return;
           knownIdsRef.current.add(newRecord.id);
 
