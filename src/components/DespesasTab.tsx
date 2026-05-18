@@ -185,18 +185,36 @@ const DespesasTab = () => {
       return;
     }
     setSaving(true);
-    const { error } = await (supabase.from as any)("despesas").insert([{
-      descricao,
-      valor: parseFloat(valor),
-      data_vencimento: dataVencimento,
-      categoria,
-      observacao: observacao || null,
-    }]);
+
+    // Monta lista de parcelas: 1 se não é fixa, N meses se é fixa
+    const totalParcelas = fixa ? Math.max(1, Math.min(60, parseInt(meses) || 1)) : 1;
+    const recorrenciaId = fixa ? (crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`) : null;
+    const [yy, mm, dd] = dataVencimento.split("-").map(Number);
+    const rows = Array.from({ length: totalParcelas }, (_, i) => {
+      // Avança i meses preservando o dia (clampa pro último dia do mês quando necessário)
+      const base = new Date(yy, mm - 1 + i, 1);
+      const ultimoDiaMes = new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate();
+      const dia = Math.min(dd, ultimoDiaMes);
+      const venc = new Date(base.getFullYear(), base.getMonth(), dia);
+      const vencStr = `${venc.getFullYear()}-${String(venc.getMonth() + 1).padStart(2, "0")}-${String(venc.getDate()).padStart(2, "0")}`;
+      const descricaoFinal = fixa && totalParcelas > 1 ? `${descricao} (${i + 1}/${totalParcelas})` : descricao;
+      return {
+        descricao: descricaoFinal,
+        valor: parseFloat(valor),
+        data_vencimento: vencStr,
+        categoria,
+        observacao: observacao || null,
+        fixa,
+        recorrencia_id: recorrenciaId,
+      };
+    });
+
+    const { error } = await (supabase.from as any)("despesas").insert(rows);
     if (error) {
       console.error("Erro despesas insert:", error);
       toast.error("Erro ao salvar despesa");
     } else {
-      toast.success("Despesa adicionada!");
+      toast.success(fixa ? `${totalParcelas} despesas mensais criadas ✅` : "Despesa adicionada!");
       setShowForm(false);
       resetForm();
       loadDespesas();
