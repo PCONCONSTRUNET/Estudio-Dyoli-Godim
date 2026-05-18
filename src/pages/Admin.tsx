@@ -532,7 +532,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
       concluido: "bg-green-500/10 text-green-500 border-green-500/20",
       falta: "bg-orange-500/10 text-orange-500 border-orange-500/20",
     };
-    const labels: Record<string, string> = { confirmado: "Confirmado", cancelado: "Cancelado", concluido: "Concluído", falta: "Falta" };
+    const labels: Record<string, string> = { confirmado: "Confirmado", cancelado: "Cancelado", concluido: "Concluído", falta: "Não veio" };
     return <span className={`px-2 py-0.5 rounded-full text-[10px] font-body font-medium border ${map[s] || "bg-secondary text-muted-foreground border-border"}`}>{labels[s] || s}</span>;
   };
 
@@ -540,9 +540,10 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     const pago = Number(a.valor_pago || 0);
     const totalValor = Number(a.valor);
     if (pago >= totalValor) return <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-medium border bg-green-500/10 text-green-500 border-green-500/20">Pago</span>;
-    if (pago > 0) return <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-medium border bg-gold/10 text-gold border-gold/20">Sinal</span>;
-    return <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-medium border bg-primary-foreground/5 text-primary-foreground/30 border-primary-foreground/[0.06]">Pendente</span>;
+    if (pago > 0) return <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-medium border bg-gold/10 text-gold border-gold/20">Sinal pago</span>;
+    return <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-medium border bg-amber-500/10 text-amber-400 border-amber-500/30">Não pago</span>;
   };
+
 
   const updatePayment = async (id: string, type: "sinal" | "completo") => {
     const a = agendamentos.find((item) => item.id === id);
