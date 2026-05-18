@@ -1880,7 +1880,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
           {tab === "financeiro" && <FinanceiroTab agendamentos={agendamentos} getClientName={getClientName} />}
           {tab === "caixa" && <CaixaTab agendamentos={agendamentos} getClientName={getClientName} />}
           {tab === "pagamentos" && <PagamentosTab agendamentos={agendamentos} getClientName={getClientName} />}
-          {tab === "pedidos" && <PedidosTab agendamentos={agendamentos} getClientName={getClientName} onUpdate={loadData} />}
+          {tab === "pedidos" && <PedidosTab agendamentos={agendamentos} getClientName={getClientName} clientes={clientes} onUpdate={loadData} />}
           {tab === "despesas" && <DespesasTab />}
           {tab === "anamnese" && <AnamneseTab />}
           {tab === "produtos" && <ProdutosTab />}
