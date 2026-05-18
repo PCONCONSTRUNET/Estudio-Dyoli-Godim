@@ -11,7 +11,6 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const agendamento_id = body?.agendamento_id ? String(body.agendamento_id).trim() : null;
     const nota = Number(body?.nota);
     const comentario = String(body?.comentario || "").trim().slice(0, 500);
     const nome = String(body?.nome || "").trim().slice(0, 100);
@@ -34,51 +33,15 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    let user_id: string | null = null;
+    const { error: insErr } = await supabase
+      .from("avaliacoes")
+      .insert({ nota, comentario, cliente_nome: nome });
 
-    // Se veio agendamento_id, valida e busca user_id
-    if (agendamento_id) {
-      const { data: ag } = await supabase
-        .from("agendamentos")
-        .select("id, user_id")
-        .eq("id", agendamento_id)
-        .maybeSingle();
-
-      if (!ag) {
-        return new Response(JSON.stringify({ error: "Agendamento não encontrado" }), {
-          status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      user_id = ag.user_id;
-
-      if (nome && user_id) {
-        await supabase.from("profiles").update({ nome }).eq("id", user_id);
-      }
-
-      const { error: upErr } = await supabase
-        .from("avaliacoes")
-        .upsert(
-          { agendamento_id, user_id, nota, comentario, cliente_nome: nome },
-          { onConflict: "agendamento_id" },
-        );
-      if (upErr) {
-        return new Response(JSON.stringify({ error: upErr.message }), {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    } else {
-      // Avaliação avulsa (sem agendamento)
-      const { error: insErr } = await supabase
-        .from("avaliacoes")
-        .insert({ nota, comentario, cliente_nome: nome });
-      if (insErr) {
-        return new Response(JSON.stringify({ error: insErr.message }), {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+    if (insErr) {
+      return new Response(JSON.stringify({ error: insErr.message }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     return new Response(JSON.stringify({ ok: true }), {
