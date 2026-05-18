@@ -874,7 +874,11 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                 <div key={a.id} className="rounded-xl border border-primary-foreground/[0.08] bg-primary-foreground/[0.03] overflow-hidden">
                   <button
                     type="button"
-                    onClick={() => setExpandedDevedorId(isExpanded ? null : a.id)}
+                    onClick={() => {
+                      const next = isExpanded ? null : a.id;
+                      setExpandedDevedorId(next);
+                      if (next && !historicoMap[a.id]) loadHistorico(a.id);
+                    }}
                     className="w-full text-left p-3 space-y-2 hover:bg-primary-foreground/[0.04] transition-colors"
                   >
                     <div className="flex items-start justify-between gap-2">
