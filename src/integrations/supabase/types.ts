@@ -300,9 +300,11 @@ export type Database = {
           data_pagamento: string | null
           data_vencimento: string
           descricao: string
+          fixa: boolean
           id: string
           observacao: string | null
           pago: boolean
+          recorrencia_id: string | null
           updated_at: string
           valor: number
         }
@@ -312,9 +314,11 @@ export type Database = {
           data_pagamento?: string | null
           data_vencimento: string
           descricao: string
+          fixa?: boolean
           id?: string
           observacao?: string | null
           pago?: boolean
+          recorrencia_id?: string | null
           updated_at?: string
           valor: number
         }
@@ -324,9 +328,11 @@ export type Database = {
           data_pagamento?: string | null
           data_vencimento?: string
           descricao?: string
+          fixa?: boolean
           id?: string
           observacao?: string | null
           pago?: boolean
+          recorrencia_id?: string | null
           updated_at?: string
           valor?: number
         }

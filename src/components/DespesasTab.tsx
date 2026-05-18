@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Save, X, Check, AlertTriangle, Clock, Bell, ChevronRight, Eye, Receipt, TrendingDown, TrendingUp, Sparkles, CalendarDays, Wallet } from "lucide-react";
+import { Plus, Save, X, Check, AlertTriangle, Clock, Bell, ChevronRight, Eye, Receipt, TrendingDown, TrendingUp, Sparkles, CalendarDays, Wallet, Repeat } from "lucide-react";
 import BinButton from "@/components/ui/bin-button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -16,6 +16,8 @@ interface Despesa {
   categoria: string;
   observacao: string | null;
   created_at: string;
+  fixa?: boolean;
+  recorrencia_id?: string | null;
 }
 
 const CATEGORIAS = ["Aluguel", "Fornecedor", "Material", "Conta de Luz", "Conta de Água", "Internet", "Outros"];
@@ -42,6 +44,8 @@ const DespesasTab = () => {
   const [dataVencimento, setDataVencimento] = useState("");
   const [categoria, setCategoria] = useState("Outros");
   const [observacao, setObservacao] = useState("");
+  const [fixa, setFixa] = useState(false);
+  const [meses, setMeses] = useState("12");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -181,18 +185,36 @@ const DespesasTab = () => {
       return;
     }
     setSaving(true);
-    const { error } = await (supabase.from as any)("despesas").insert([{
-      descricao,
-      valor: parseFloat(valor),
-      data_vencimento: dataVencimento,
-      categoria,
-      observacao: observacao || null,
-    }]);
+
+    // Monta lista de parcelas: 1 se não é fixa, N meses se é fixa
+    const totalParcelas = fixa ? Math.max(1, Math.min(60, parseInt(meses) || 1)) : 1;
+    const recorrenciaId = fixa ? (crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`) : null;
+    const [yy, mm, dd] = dataVencimento.split("-").map(Number);
+    const rows = Array.from({ length: totalParcelas }, (_, i) => {
+      // Avança i meses preservando o dia (clampa pro último dia do mês quando necessário)
+      const base = new Date(yy, mm - 1 + i, 1);
+      const ultimoDiaMes = new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate();
+      const dia = Math.min(dd, ultimoDiaMes);
+      const venc = new Date(base.getFullYear(), base.getMonth(), dia);
+      const vencStr = `${venc.getFullYear()}-${String(venc.getMonth() + 1).padStart(2, "0")}-${String(venc.getDate()).padStart(2, "0")}`;
+      const descricaoFinal = fixa && totalParcelas > 1 ? `${descricao} (${i + 1}/${totalParcelas})` : descricao;
+      return {
+        descricao: descricaoFinal,
+        valor: parseFloat(valor),
+        data_vencimento: vencStr,
+        categoria,
+        observacao: observacao || null,
+        fixa,
+        recorrencia_id: recorrenciaId,
+      };
+    });
+
+    const { error } = await (supabase.from as any)("despesas").insert(rows);
     if (error) {
       console.error("Erro despesas insert:", error);
       toast.error("Erro ao salvar despesa");
     } else {
-      toast.success("Despesa adicionada!");
+      toast.success(fixa ? `${totalParcelas} despesas mensais criadas ✅` : "Despesa adicionada!");
       setShowForm(false);
       resetForm();
       loadDespesas();
@@ -230,6 +252,8 @@ const DespesasTab = () => {
     setDataVencimento("");
     setCategoria("Outros");
     setObservacao("");
+    setFixa(false);
+    setMeses("12");
   };
 
   const totalAtrasado = useMemo(
@@ -492,6 +516,11 @@ const DespesasTab = () => {
                       <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-medium border bg-primary-foreground/[0.05] text-primary-foreground/40 border-primary-foreground/[0.06]">
                         {d.categoria}
                       </span>
+                      {d.fixa && (
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-semibold border bg-gold/10 text-gold border-gold/30 flex items-center gap-1">
+                          <Repeat className="h-2.5 w-2.5" /> Fixa
+                        </span>
+                      )}
                     </div>
                     <p className="font-body text-[13px] font-medium text-primary-foreground truncate">
                       {d.descricao}
@@ -580,6 +609,40 @@ const DespesasTab = () => {
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
+            </div>
+
+            {/* Despesa fixa (mensal recorrente) */}
+            <div className={`rounded-xl border p-3 transition-all ${fixa ? "border-gold/40 bg-gold/[0.06]" : "border-primary-foreground/[0.06] bg-primary-foreground/[0.03]"}`}>
+              <button
+                type="button"
+                onClick={() => setFixa((v) => !v)}
+                className="flex w-full items-center justify-between gap-3"
+              >
+                <div className="flex items-center gap-2 text-left">
+                  <Repeat className={`h-4 w-4 ${fixa ? "text-gold" : "text-primary-foreground/40"}`} />
+                  <div>
+                    <p className={`font-body text-[12px] font-semibold ${fixa ? "text-primary-foreground" : "text-primary-foreground/70"}`}>Despesa fixa (mensal)</p>
+                    <p className="font-body text-[10px] text-primary-foreground/40">Cria automaticamente uma cópia por mês</p>
+                  </div>
+                </div>
+                <span className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${fixa ? "bg-gold" : "bg-primary-foreground/15"}`}>
+                  <span className={`inline-block h-4 w-4 rounded-full bg-charcoal shadow transition-transform ${fixa ? "translate-x-4" : "translate-x-0.5"}`} />
+                </span>
+              </button>
+              {fixa && (
+                <div className="mt-3 flex items-center gap-2">
+                  <label className="font-body text-[11px] text-primary-foreground/60 shrink-0">Repetir por</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={60}
+                    value={meses}
+                    onChange={(e) => setMeses(e.target.value)}
+                    className="w-20 rounded-lg bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] py-1.5 px-2 text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  />
+                  <span className="font-body text-[11px] text-primary-foreground/60">meses</span>
+                </div>
+              )}
             </div>
             <div>
               <label className="font-body text-[11px] text-primary-foreground/40 mb-1 block">Observação</label>
