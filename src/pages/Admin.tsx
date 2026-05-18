@@ -50,7 +50,7 @@ interface Agendamento {
 interface Profile { id: string; nome: string; whatsapp: string; cpf?: string | null; created_at: string; }
 interface LembreteConfig { id: string; tipo: string; ativo: boolean; mensagem: string; horas_antes: number; }
 
-type Tab = "dashboard" | "agendamentos" | "pedidos" | "clientes" | "horarios" | "servicos" | "servicos_app" | "financeiro" | "caixa" | "pagamentos" | "produtos" | "despesas" | "gateway" | "chatbot" | "anamnese";
+type Tab = "dashboard" | "agendamentos" | "pedidos" | "clientes" | "horarios" | "servicos" | "servicos_app" | "financeiro" | "caixa" | "pagamentos" | "produtos" | "despesas" | "gateway" | "chatbot" | "anamnese" | "avaliacoes";
 
 const ADMIN_PASSWORD = "dyoliadmin";
 
