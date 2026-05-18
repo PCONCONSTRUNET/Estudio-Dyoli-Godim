@@ -4,8 +4,8 @@ import { toast } from "sonner";
 import { Save, Eye, EyeOff, Copy, Check, CreditCard, QrCode, FileText, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
 import pixIconImg from "@/assets/pix-icon.png";
 
-const PixIcon = ({ className }: { className?: string }) => (
-  <img src={pixIconImg} alt="PIX" className={className} />
+const PixIcon = ({ className, style }: { className?: string; style?: React.CSSProperties }) => (
+  <img src={pixIconImg} alt="PIX" className={className} style={style} />
 );
 
 interface GatewayConfig {
