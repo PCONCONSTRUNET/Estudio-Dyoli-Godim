@@ -60,7 +60,7 @@ const GATEWAYS: GatewayMeta[] = [
     key: "woovi",
     label: "Woovi (OpenPix)",
     color: "#03d69d",
-    icon: QrCode,
+    icon: PixIcon,
     tokenPlaceholder: "Q2xpZW50X0lk...",
     publicKeyPlaceholder: "(opcional)",
     publicKeyLabel: "App ID",
