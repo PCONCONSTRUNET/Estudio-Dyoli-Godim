@@ -522,13 +522,8 @@ const DespesasTab = () => {
                     >
                       <Check className="h-5 w-5" />
                     </button>
-                    <button
-                      onClick={() => deleteDespesa(d.id)}
-                      className="flex h-11 w-11 items-center justify-center rounded-2xl border-2 bg-primary-foreground/[0.06] text-primary-foreground/30 border-primary-foreground/[0.1] transition-all shadow-sm hover:bg-rose/15 hover:text-rose hover:border-rose/30 hover:shadow-rose/10"
-                      title="Excluir"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <BinButton size="md" onClick={() => deleteDespesa(d.id)} />
+
                   </div>
                 </div>
               </div>
