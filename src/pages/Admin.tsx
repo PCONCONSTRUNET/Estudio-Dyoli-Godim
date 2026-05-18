@@ -2669,7 +2669,7 @@ const ServicosTab = ({
                         )}
                         <button onClick={() => iniciarRenomearCat(cat)} className="p-1 rounded-md hover:bg-primary-foreground/[0.08] text-primary-foreground/50 hover:text-primary-foreground transition-colors" title="Renomear"><Edit2 className="w-3 h-3" /></button>
                         {podeExcluir && (
-                          <button onClick={() => removerCategoria(cat)} className="p-1 rounded-md hover:bg-rose/10 text-primary-foreground/30 hover:text-rose transition-colors" title="Excluir categoria vazia"><Trash2 className="w-3 h-3" /></button>
+                          <BinButton size="sm" onClick={() => removerCategoria(cat)} label="Excluir categoria vazia" />
                         )}
                       </div>
                     </>
