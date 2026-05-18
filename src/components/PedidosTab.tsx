@@ -778,7 +778,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                       <p className="font-heading text-[15px] font-bold text-amber-300 leading-tight">{formatCurrency(restante)}</p>
                       {sinal ? (
                         <span className="inline-flex items-center gap-0.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-amber-400 mt-0.5">
-                          Sinal pago
+                          Quitado parcial
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-0.5 rounded-full border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-red-400 mt-0.5">
