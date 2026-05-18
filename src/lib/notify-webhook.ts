@@ -78,7 +78,7 @@ const fallbackMessages: Record<LembreteTipo, string> = {
   comparecimento:
     "💖 Obrigada por comparecer, {nome}! Esperamos te ver novamente em breve.",
   pos_atendimento:
-    "⭐ Olá {nome}, como foi seu atendimento? Sua opinião é muito importante!",
+    "⭐ Olá {nome}, esperamos que tenha amado seu atendimento no Estúdio Dyoli Godim! Conte pra gente como foi: {link_avaliacao} 💛",
 };
 
 const sendWebhook = async (numero: string, mensagem: string) => {
