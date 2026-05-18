@@ -1141,12 +1141,13 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                           : "bg-gradient-to-b from-red-400 to-red-600 shadow-[0_0_12px_-2px_rgba(239,68,68,0.5)]";
 
                         const barLabel = isCancelado
-                          ? a.status === "falta" ? "Falta" : "Cancelado"
+                          ? a.status === "falta" ? "Não veio" : "Cancelado"
                           : isPagoIntegral
                           ? "Pago"
                           : isPagoParcial
-                          ? "Sinal"
+                          ? "Sinal pago"
                           : "Não pago";
+
 
                         return (
                         <article
