@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Search, CreditCard, QrCode, Barcode, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, Filter, AlertCircle } from "lucide-react";
+import pixIcon from "@/assets/pix-icon.png";
 
 interface Agendamento {
   id: string;
