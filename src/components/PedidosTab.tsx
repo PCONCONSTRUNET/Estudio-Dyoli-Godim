@@ -40,7 +40,7 @@ const formatDate = (d: string) =>
 const formatCurrency = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-type PagamentoFilter = "todos" | "pago" | "recepcao" | "pendente";
+type PagamentoFilter = "todos" | "pago" | "sinal" | "recepcao" | "pendente";
 
 const isFormaRecepcao = (forma_pagamento?: string | null): boolean => {
   const forma = (forma_pagamento || "").toLowerCase();
@@ -60,13 +60,24 @@ const isPago = (a: { valor: number; valor_pago: number | null }): boolean => {
   return pago >= valor && valor > 0;
 };
 
+const isSinalPago = (a: { valor: number; valor_pago: number | null }): boolean => {
+  const valor = Number(a.valor || 0);
+  const pago = Number(a.valor_pago || 0);
+  return pago > 0 && pago < valor;
+};
+
+const isNaoPago = (a: { valor: number; valor_pago: number | null }): boolean => {
+  return Number(a.valor_pago || 0) <= 0;
+};
+
 const matchesPagamentoFilter = (
   a: { valor: number; valor_pago: number | null; forma_pagamento?: string | null },
   filter: PagamentoFilter
 ): boolean => {
   if (filter === "todos") return true;
   if (filter === "pago") return isPago(a);
-  if (filter === "pendente") return !isPago(a);
+  if (filter === "sinal") return isSinalPago(a);
+  if (filter === "pendente") return isNaoPago(a);
   if (filter === "recepcao") return isFormaRecepcao(a.forma_pagamento);
   return true;
 };
