@@ -1283,9 +1283,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                   </button>
                                 </>
                               )}
-                              <button onClick={() => deleteAgendamento(a.id)} className="rounded-lg p-1.5 text-primary-foreground/40 transition-all hover:bg-rose/15 hover:text-rose" title="Excluir">
-                                <Trash2 className="h-4 w-4" />
-                              </button>
+                              <BinButton size="sm" onClick={() => deleteAgendamento(a.id)} />
+
                             </div>
                           </div>
                         </article>
