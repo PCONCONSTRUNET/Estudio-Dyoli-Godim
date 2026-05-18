@@ -276,15 +276,23 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     return {
       todos: agendamentos.length,
       pago: agendamentos.filter((a) => isPago(a)).length,
+      sinal: agendamentos.filter((a) => isSinalPago(a)).length,
       recepcao: agendamentos.filter((a) => isFormaRecepcao(a.forma_pagamento)).length,
-      pendente: agendamentos.filter((a) => !isPago(a)).length,
+      pendente: agendamentos.filter((a) => isNaoPago(a)).length,
     };
+  }, [agendamentos]);
+
+  const totalAReceber = useMemo(() => {
+    return agendamentos
+      .filter((a) => a.status !== "cancelado" && a.status !== "falta" && !isPago(a))
+      .reduce((sum, a) => sum + (Number(a.valor) - Number(a.valor_pago || 0)), 0);
   }, [agendamentos]);
 
   const notifConfig = {
     hoje: { bg: "bg-gold/10 border-gold/25", icon: Clock, iconColor: "text-gold", titleColor: "text-gold" },
     proximo: { bg: "bg-blue-500/10 border-blue-500/25", icon: Clock, iconColor: "text-blue-400", titleColor: "text-blue-400" },
     pendente: { bg: "bg-red-500/10 border-red-500/25", icon: AlertTriangle, iconColor: "text-red-400", titleColor: "text-red-400" },
+    sinal: { bg: "bg-amber-500/10 border-amber-500/25", icon: Wallet, iconColor: "text-amber-400", titleColor: "text-amber-400" },
     falta: { bg: "bg-orange-500/10 border-orange-500/25", icon: UserX, iconColor: "text-orange-400", titleColor: "text-orange-400" },
   };
 
