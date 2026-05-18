@@ -292,11 +292,15 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     };
   }, [agendamentos]);
 
-  const totalAReceber = useMemo(() => {
+  const devedores = useMemo(() => {
     return agendamentos
       .filter((a) => a.status !== "cancelado" && a.status !== "falta" && !isPago(a))
-      .reduce((sum, a) => sum + (Number(a.valor) - Number(a.valor_pago || 0)), 0);
+      .sort((a, b) => b.data_agendamento.localeCompare(a.data_agendamento));
   }, [agendamentos]);
+
+  const totalAReceber = useMemo(() => {
+    return devedores.reduce((sum, a) => sum + (Number(a.valor) - Number(a.valor_pago || 0)), 0);
+  }, [devedores]);
 
   const notifConfig = {
     hoje: { bg: "bg-gold/10 border-gold/25", icon: Clock, iconColor: "text-gold", titleColor: "text-gold" },
