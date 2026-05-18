@@ -7,10 +7,11 @@ const corsHeaders = {
 
 const WEBHOOK_URL = "http://178.105.54.230:3001/webhook/notificacao";
 const WEBHOOK_TOKEN = "dyoli123";
+const SITE_URL = Deno.env.get("PUBLIC_SITE_URL") || "https://estudiodyoli.lovable.app";
 
 const fallbackMessages: Record<string, string> = {
   comparecimento: "💖 Obrigada por comparecer, {nome}! Esperamos te ver novamente em breve.",
-  pos_atendimento: "⭐ Olá {nome}, como foi seu atendimento? Sua opinião é muito importante!",
+  pos_atendimento: "⭐ Olá {nome}, como foi seu atendimento? Avalie em: {link_avaliacao}",
 };
 
 const formatDate = (iso: string) => {
@@ -22,7 +23,7 @@ const formatDate = (iso: string) => {
   }
 };
 
-const interpolate = (template: string, p: { nome: string; data: string; horario: string; servico?: string }) => {
+const interpolate = (template: string, p: { nome: string; data: string; horario: string; servico?: string; link_avaliacao?: string }) => {
   const map: Record<string, string> = {
     nome: p.nome || "cliente",
     cliente: p.nome || "cliente",
@@ -33,6 +34,8 @@ const interpolate = (template: string, p: { nome: string; data: string; horario:
     hora: p.horario,
     tempo: p.horario,
     servico: p.servico || "",
+    link_avaliacao: p.link_avaliacao || "",
+    link: p.link_avaliacao || "",
   };
   let out = template.replace(/\{([a-zA-Z_]+)\}/g, (_, k) => map[k.toLowerCase()] ?? `{${k}}`);
   out = out.replace(/\[([a-zA-Z_]+)\]/g, (_, k) => map[k.toLowerCase()] ?? `[${k}]`);
@@ -96,9 +99,9 @@ Deno.serve(async (req) => {
 
       const cfgMap = new Map((configs || []).map((c: any) => [c.tipo, c]));
 
-      // Fire webhooks for each completed appointment (somente origem='app')
+      // Fire webhooks for each completed appointment (app + assistente)
       for (const a of toComplete) {
-        if (a.origem !== "app") continue;
+        if (a.origem !== "app" && a.origem !== "whatsapp_bot") continue;
         const { data: prof } = await supabase
           .from("profiles")
           .select("nome, whatsapp")
@@ -109,16 +112,20 @@ Deno.serve(async (req) => {
         if (!numero) continue;
 
         const nome = a.cliente_nome || prof?.nome || "";
+        const link_avaliacao = `${SITE_URL}/avaliar/${a.id}`;
 
         for (const tipo of ["comparecimento", "pos_atendimento"] as const) {
           const cfg: any = cfgMap.get(tipo);
           if (cfg && cfg.ativo === false) continue;
+          // Para agendamentos via assistente, só envia o pós-atendimento (avaliação)
+          if (a.origem === "whatsapp_bot" && tipo !== "pos_atendimento") continue;
           const template = (cfg?.mensagem && cfg.mensagem.trim()) || fallbackMessages[tipo];
           const mensagem = interpolate(template, {
             nome,
             data: a.data_agendamento,
             horario: a.horario,
             servico: a.servico || undefined,
+            link_avaliacao,
           });
 
           fetch(WEBHOOK_URL, {

@@ -16,6 +16,7 @@ import Sucesso from "./pages/Sucesso";
 import Cuidados from "./pages/Cuidados";
 import Instalar from "./pages/Instalar";
 import AdminBotWpp from "./pages/AdminBotWpp";
+import Avaliar from "./pages/Avaliar";
 import AnamnesePdfView from "./pages/AnamnesePdfView";
 import NotFound from "./pages/NotFound";
 import PushPromptModal from "./components/PushPromptModal";
@@ -43,6 +44,7 @@ const App = () => (
           <Route path="/cuidados" element={<Cuidados />} />
           <Route path="/instalar" element={<Instalar />} />
           <Route path="/admin-bot-wpp" element={<AdminBotWpp />} />
+          <Route path="/avaliar/:id" element={<Avaliar />} />
           <Route path="/anamnese/:id/pdf" element={<AnamnesePdfView />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
