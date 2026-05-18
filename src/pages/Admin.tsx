@@ -2634,9 +2634,10 @@ const ServicosTab = ({
           </div>
           <button
             onClick={() => setShowNewCatInput(!showNewCatInput)}
-            className="flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/70 font-body text-[12px] font-medium hover:bg-primary-foreground/[0.08] transition-all active:scale-95"
+            className="shrink-0"
+            title="Nova categoria"
           >
-            <Plus className="w-3.5 h-3.5" />Nova
+            <PlusButton size={28} title="Nova categoria" onClick={() => setShowNewCatInput(!showNewCatInput)} />
           </button>
         </div>
 
