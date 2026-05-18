@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Edit2, Save, X, Upload, ShoppingBag, Image } from "lucide-react";
+import { Edit2, Save, X, Upload, ShoppingBag, Image } from "lucide-react";
 import BinButton from "@/components/ui/bin-button";
+import PlusButton from "@/components/ui/plus-button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Produto {
