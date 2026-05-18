@@ -35,7 +35,7 @@ const formatCurrency = (v?: number) => {
  * Supports: {nome} {cliente} {data} {horario} {hora} {servico} {valor}
  * (Aliases also supported with [BRACKETS], e.g. [Nome_do_cliente])
  */
-const SITE_URL = "https://estudiodyoli.lovable.app";
+const SITE_URL = "https://www.estudiodyoligodim.com.br";
 const LINK_AVALIACAO = `${SITE_URL}/avaliar`;
 
 const interpolate = (template: string, params: NotifyParams) => {
