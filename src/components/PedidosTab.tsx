@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, Trash2, CheckCircle, X, UserX, ChevronDown, Bell, Clock, AlertTriangle, Eye } from "lucide-react";
+import { Search, Trash2, CheckCircle, X, UserX, ChevronDown, Bell, Clock, AlertTriangle, Eye, Wallet } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -40,7 +40,7 @@ const formatDate = (d: string) =>
 const formatCurrency = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-type PagamentoFilter = "todos" | "pago" | "recepcao" | "pendente";
+type PagamentoFilter = "todos" | "pago" | "sinal" | "recepcao" | "pendente";
 
 const isFormaRecepcao = (forma_pagamento?: string | null): boolean => {
   const forma = (forma_pagamento || "").toLowerCase();
@@ -60,13 +60,24 @@ const isPago = (a: { valor: number; valor_pago: number | null }): boolean => {
   return pago >= valor && valor > 0;
 };
 
+const isSinalPago = (a: { valor: number; valor_pago: number | null }): boolean => {
+  const valor = Number(a.valor || 0);
+  const pago = Number(a.valor_pago || 0);
+  return pago > 0 && pago < valor;
+};
+
+const isNaoPago = (a: { valor: number; valor_pago: number | null }): boolean => {
+  return Number(a.valor_pago || 0) <= 0;
+};
+
 const matchesPagamentoFilter = (
   a: { valor: number; valor_pago: number | null; forma_pagamento?: string | null },
   filter: PagamentoFilter
 ): boolean => {
   if (filter === "todos") return true;
   if (filter === "pago") return isPago(a);
-  if (filter === "pendente") return !isPago(a);
+  if (filter === "sinal") return isSinalPago(a);
+  if (filter === "pendente") return isNaoPago(a);
   if (filter === "recepcao") return isFormaRecepcao(a.forma_pagamento);
   return true;
 };
@@ -85,7 +96,7 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
 
   // Notifications: today's appointments, pending payments, no-shows
   const notifications = useMemo(() => {
-    const notifs: { tipo: "hoje" | "pendente" | "falta" | "proximo"; agendamento: Agendamento; label: string }[] = [];
+    const notifs: { tipo: "hoje" | "pendente" | "sinal" | "falta" | "proximo"; agendamento: Agendamento; label: string }[] = [];
     const todayDate = new Date(today + "T12:00:00");
 
     agendamentos.forEach((a) => {
@@ -110,13 +121,18 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
         notifs.push({ tipo: "proximo", agendamento: a, label: "Amanhã" });
       }
 
-      // Pending payment (pago < valor)
-      if (a.status !== "falta" && Number(a.valor_pago || 0) < Number(a.valor) && diffDays <= 0) {
-        notifs.push({ tipo: "pendente", agendamento: a, label: `Falta ${formatCurrency(Number(a.valor) - Number(a.valor_pago || 0))}` });
+      // Pagamento parcial (sinal) ou não pago — apenas para atendimentos passados/hoje
+      if (a.status !== "falta" && !isPago(a) && diffDays <= 0) {
+        const restante = Number(a.valor) - Number(a.valor_pago || 0);
+        if (isSinalPago(a)) {
+          notifs.push({ tipo: "sinal", agendamento: a, label: `Sinal pago · a receber ${formatCurrency(restante)}` });
+        } else {
+          notifs.push({ tipo: "pendente", agendamento: a, label: `Não pago · ${formatCurrency(restante)}` });
+        }
       }
     });
 
-    const order = { falta: 0, hoje: 1, pendente: 2, proximo: 3 };
+    const order = { falta: 0, hoje: 1, pendente: 2, sinal: 3, proximo: 4 };
     notifs.sort((a, b) => order[a.tipo] - order[b.tipo]);
     return notifs;
   }, [agendamentos, today]);
@@ -205,20 +221,30 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     );
   };
 
-  const paidBadge = (pago: boolean) => pago ? (
-    <span title="Pago" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-green-500/30 bg-green-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-green-400">
-      <CheckCircle className="h-2.5 w-2.5" /> Pago
-    </span>
-  ) : (
-    <span title="Não pago" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-red-400">
-      <AlertTriangle className="h-2.5 w-2.5" /> Não pago
-    </span>
-  );
+  const paidBadge = (a: Agendamento) => {
+    if (isPago(a)) {
+      return (
+        <span title="Pago integralmente" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-green-500/30 bg-green-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-green-400">
+          <CheckCircle className="h-2.5 w-2.5" /> Pago
+        </span>
+      );
+    }
+    if (isSinalPago(a)) {
+      return (
+        <span title="Sinal pago, falta receber o restante" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-amber-400">
+          <Wallet className="h-2.5 w-2.5" /> Sinal pago
+        </span>
+      );
+    }
+    return (
+      <span title="Não pago" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-red-400">
+        <AlertTriangle className="h-2.5 w-2.5" /> Não pago
+      </span>
+    );
+  };
 
   const paymentBadge = (a: Agendamento) => {
-    const pago = isPago(a);
     const recepcao = isFormaRecepcao(a.forma_pagamento);
-
     return (
       <span className="inline-flex flex-wrap items-center gap-1">
         {recepcao && (
@@ -226,9 +252,15 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
             <Clock className="h-2.5 w-2.5" /> Recepção
           </span>
         )}
-        {paidBadge(pago)}
+        {paidBadge(a)}
       </span>
     );
+  };
+
+  const registrarPagamentoIntegral = async (a: Agendamento) => {
+    await supabase.from("agendamentos").update({ valor_pago: Number(a.valor) }).eq("id", a.id);
+    onUpdate();
+    toast.success("Pagamento registrado como quitado");
   };
 
 
@@ -244,15 +276,23 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     return {
       todos: agendamentos.length,
       pago: agendamentos.filter((a) => isPago(a)).length,
+      sinal: agendamentos.filter((a) => isSinalPago(a)).length,
       recepcao: agendamentos.filter((a) => isFormaRecepcao(a.forma_pagamento)).length,
-      pendente: agendamentos.filter((a) => !isPago(a)).length,
+      pendente: agendamentos.filter((a) => isNaoPago(a)).length,
     };
+  }, [agendamentos]);
+
+  const totalAReceber = useMemo(() => {
+    return agendamentos
+      .filter((a) => a.status !== "cancelado" && a.status !== "falta" && !isPago(a))
+      .reduce((sum, a) => sum + (Number(a.valor) - Number(a.valor_pago || 0)), 0);
   }, [agendamentos]);
 
   const notifConfig = {
     hoje: { bg: "bg-gold/10 border-gold/25", icon: Clock, iconColor: "text-gold", titleColor: "text-gold" },
     proximo: { bg: "bg-blue-500/10 border-blue-500/25", icon: Clock, iconColor: "text-blue-400", titleColor: "text-blue-400" },
     pendente: { bg: "bg-red-500/10 border-red-500/25", icon: AlertTriangle, iconColor: "text-red-400", titleColor: "text-red-400" },
+    sinal: { bg: "bg-amber-500/10 border-amber-500/25", icon: Wallet, iconColor: "text-amber-400", titleColor: "text-amber-400" },
     falta: { bg: "bg-orange-500/10 border-orange-500/25", icon: UserX, iconColor: "text-orange-400", titleColor: "text-orange-400" },
   };
 
@@ -414,6 +454,7 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
             { value: "todos" as PagamentoFilter, label: "Tudo", activeClass: "bg-gold/15 text-gold border-gold/40 shadow-[0_0_0_1px_hsl(var(--gold)/0.2)]", inactiveClass: "bg-gold/[0.04] text-gold/60 border-gold/20 hover:bg-gold/10 hover:text-gold/80", count: pagamentoCounts.todos },
             { value: "pago" as PagamentoFilter, label: "Pago", activeClass: "bg-green-500/15 text-green-400 border-green-500/40 shadow-[0_0_0_1px_rgb(34_197_94_/_0.2)]", inactiveClass: "bg-green-500/[0.05] text-green-400/70 border-green-500/20 hover:bg-green-500/10 hover:text-green-400", count: pagamentoCounts.pago },
             { value: "recepcao" as PagamentoFilter, label: "Recepção", activeClass: "bg-blue-500/15 text-blue-400 border-blue-500/40 shadow-[0_0_0_1px_rgb(59_130_246_/_0.2)]", inactiveClass: "bg-blue-500/[0.05] text-blue-400/70 border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400", count: pagamentoCounts.recepcao },
+            { value: "sinal" as PagamentoFilter, label: "Sinal", activeClass: "bg-amber-500/15 text-amber-400 border-amber-500/40 shadow-[0_0_0_1px_rgb(245_158_11_/_0.2)]", inactiveClass: "bg-amber-500/[0.05] text-amber-400/70 border-amber-500/20 hover:bg-amber-500/10 hover:text-amber-400", count: pagamentoCounts.sinal },
             { value: "pendente" as PagamentoFilter, label: "Não pago", activeClass: "bg-red-500/15 text-red-400 border-red-500/40 shadow-[0_0_0_1px_rgb(239_68_68_/_0.2)]", inactiveClass: "bg-red-500/[0.05] text-red-400/70 border-red-500/20 hover:bg-red-500/10 hover:text-red-400", count: pagamentoCounts.pendente },
           ]).map((f) => (
             <button key={f.value} onClick={() => setPagamentoFilter(f.value)}
@@ -433,9 +474,33 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
         </p>
       </div>
 
+      {totalAReceber > 0 && (
+        <button
+          onClick={() => setPagamentoFilter(pagamentoCounts.sinal > 0 ? "sinal" : "pendente")}
+          className="w-full flex items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-amber-500/[0.03] px-3 py-2.5 hover:border-amber-500/50 hover:bg-amber-500/15 transition-all text-left"
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <Wallet className="h-4 w-4 text-amber-400 shrink-0" />
+            <div className="min-w-0">
+              <p className="font-body text-[10px] text-amber-400/70 uppercase tracking-wider">Total a receber</p>
+              <p className="font-heading text-[15px] font-bold text-amber-300 leading-tight">{formatCurrency(totalAReceber)}</p>
+            </div>
+          </div>
+          <div className="flex flex-col items-end shrink-0">
+            {pagamentoCounts.sinal > 0 && (
+              <span className="font-body text-[10px] text-amber-300/80">{pagamentoCounts.sinal} c/ sinal</span>
+            )}
+            {pagamentoCounts.pendente > 0 && (
+              <span className="font-body text-[10px] text-red-300/80">{pagamentoCounts.pendente} sem pagar</span>
+            )}
+          </div>
+        </button>
+      )}
+
       <p className="font-body text-[11px] text-primary-foreground/30">
         {filtered.length} pedido{filtered.length !== 1 ? "s" : ""} encontrado{filtered.length !== 1 ? "s" : ""}
       </p>
+
 
       {/* List */}
       {filtered.length === 0 ? (
@@ -483,13 +548,8 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                         <p className="text-primary-foreground font-medium">{formatDate(a.data_agendamento)}</p>
                       </div>
                       <div>
-                        <p className="text-primary-foreground/30">Valor pago</p>
-                        <p className="text-primary-foreground font-medium">
-                          {formatCurrency(Number(a.valor_pago || 0))}
-                          {Number(a.valor_pago || 0) < Number(a.valor) && (
-                            <span className="text-red-400 ml-1">(falta {formatCurrency(Number(a.valor) - Number(a.valor_pago || 0))})</span>
-                          )}
-                        </p>
+                        <p className="text-primary-foreground/30">Valor total</p>
+                        <p className="text-primary-foreground font-medium">{formatCurrency(Number(a.valor))}</p>
                       </div>
                       <div>
                         <p className="text-primary-foreground/30">Criado em</p>
@@ -508,6 +568,56 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                           {paymentBadge(a)}
                         </div>
                       </div>
+
+                      {isSinalPago(a) && a.status !== "cancelado" && (
+                        <div className="col-span-2 rounded-xl border border-amber-500/40 bg-gradient-to-br from-amber-500/15 to-amber-500/[0.04] px-3 py-3 space-y-2">
+                          <div className="flex items-center gap-1.5">
+                            <Wallet className="h-4 w-4 text-amber-400" />
+                            <p className="font-body text-[11px] font-semibold uppercase tracking-wider text-amber-400">Pagamento parcial (sinal)</p>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 text-[11px]">
+                            <div>
+                              <p className="text-primary-foreground/45 text-[10px]">Total</p>
+                              <p className="text-primary-foreground/90 font-medium">{formatCurrency(Number(a.valor))}</p>
+                            </div>
+                            <div>
+                              <p className="text-primary-foreground/45 text-[10px]">Sinal pago</p>
+                              <p className="text-green-400 font-semibold">{formatCurrency(Number(a.valor_pago || 0))}</p>
+                            </div>
+                            <div>
+                              <p className="text-primary-foreground/45 text-[10px]">A receber</p>
+                              <p className="text-amber-300 font-bold">{formatCurrency(Number(a.valor) - Number(a.valor_pago || 0))}</p>
+                            </div>
+                          </div>
+                          <p className="font-body text-[11px] text-amber-200/80 leading-snug">
+                            💡 O cliente já pagou o sinal. Cobre o valor restante na recepção e marque como pago integralmente abaixo.
+                          </p>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); registrarPagamentoIntegral(a); }}
+                            className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-green-500/40 bg-green-500/15 px-3 py-2 font-body text-[12px] font-semibold text-green-300 hover:bg-green-500/25 hover:text-green-200 transition-all"
+                          >
+                            <CheckCircle className="h-4 w-4" /> Recebi o restante — marcar como pago
+                          </button>
+                        </div>
+                      )}
+
+                      {isNaoPago(a) && a.status !== "cancelado" && a.status !== "falta" && (
+                        <div className="col-span-2 rounded-xl border border-red-500/30 bg-gradient-to-br from-red-500/10 to-red-500/[0.03] px-3 py-3 space-y-2">
+                          <div className="flex items-center gap-1.5">
+                            <AlertTriangle className="h-4 w-4 text-red-400" />
+                            <p className="font-body text-[11px] font-semibold uppercase tracking-wider text-red-400">Nada pago ainda</p>
+                          </div>
+                          <p className="font-body text-[11px] text-primary-foreground/70">
+                            A receber: <span className="font-bold text-red-300">{formatCurrency(Number(a.valor))}</span>
+                          </p>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); registrarPagamentoIntegral(a); }}
+                            className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-green-500/40 bg-green-500/15 px-3 py-2 font-body text-[12px] font-semibold text-green-300 hover:bg-green-500/25 hover:text-green-200 transition-all"
+                          >
+                            <CheckCircle className="h-4 w-4" /> Recebi o valor — marcar como pago
+                          </button>
+                        </div>
+                      )}
                       {a.observacao && (
                         <div className="col-span-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-2">
                           <p className="font-body text-[10px] text-amber-400/70 uppercase tracking-wider mb-0.5">Observações do cliente</p>
