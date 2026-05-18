@@ -221,20 +221,30 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     );
   };
 
-  const paidBadge = (pago: boolean) => pago ? (
-    <span title="Pago" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-green-500/30 bg-green-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-green-400">
-      <CheckCircle className="h-2.5 w-2.5" /> Pago
-    </span>
-  ) : (
-    <span title="Não pago" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-red-400">
-      <AlertTriangle className="h-2.5 w-2.5" /> Não pago
-    </span>
-  );
+  const paidBadge = (a: Agendamento) => {
+    if (isPago(a)) {
+      return (
+        <span title="Pago integralmente" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-green-500/30 bg-green-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-green-400">
+          <CheckCircle className="h-2.5 w-2.5" /> Pago
+        </span>
+      );
+    }
+    if (isSinalPago(a)) {
+      return (
+        <span title="Sinal pago, falta receber o restante" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-amber-400">
+          <Wallet className="h-2.5 w-2.5" /> Sinal pago
+        </span>
+      );
+    }
+    return (
+      <span title="Não pago" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-red-400">
+        <AlertTriangle className="h-2.5 w-2.5" /> Não pago
+      </span>
+    );
+  };
 
   const paymentBadge = (a: Agendamento) => {
-    const pago = isPago(a);
     const recepcao = isFormaRecepcao(a.forma_pagamento);
-
     return (
       <span className="inline-flex flex-wrap items-center gap-1">
         {recepcao && (
@@ -242,9 +252,15 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
             <Clock className="h-2.5 w-2.5" /> Recepção
           </span>
         )}
-        {paidBadge(pago)}
+        {paidBadge(a)}
       </span>
     );
+  };
+
+  const registrarPagamentoIntegral = async (a: Agendamento) => {
+    await supabase.from("agendamentos").update({ valor_pago: Number(a.valor) }).eq("id", a.id);
+    onUpdate();
+    toast.success("Pagamento registrado como quitado");
   };
 
 
