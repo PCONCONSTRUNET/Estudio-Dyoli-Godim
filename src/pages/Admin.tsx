@@ -32,6 +32,8 @@ import AdminBotWpp from "@/pages/AdminBotWpp";
 import ProdutosTab from "@/components/ProdutosTab";
 import PagamentosTab from "@/components/PagamentosTab";
 import AnamneseTab from "@/components/AnamneseTab";
+import AvaliacoesTab from "@/components/AvaliacoesTab";
+import { Star } from "lucide-react";
 import AdminDashboard from "@/components/AdminDashboard";
 import { useAdminNotifications } from "@/hooks/use-admin-notifications";
 import { Switch } from "@/components/ui/switch";
@@ -48,7 +50,7 @@ interface Agendamento {
 interface Profile { id: string; nome: string; whatsapp: string; cpf?: string | null; created_at: string; }
 interface LembreteConfig { id: string; tipo: string; ativo: boolean; mensagem: string; horas_antes: number; }
 
-type Tab = "dashboard" | "agendamentos" | "pedidos" | "clientes" | "horarios" | "servicos" | "servicos_app" | "financeiro" | "caixa" | "pagamentos" | "produtos" | "despesas" | "gateway" | "chatbot" | "anamnese";
+type Tab = "dashboard" | "agendamentos" | "pedidos" | "clientes" | "horarios" | "servicos" | "servicos_app" | "financeiro" | "caixa" | "pagamentos" | "produtos" | "despesas" | "gateway" | "chatbot" | "anamnese" | "avaliacoes";
 
 const ADMIN_PASSWORD = "dyoliadmin";
 
@@ -471,6 +473,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     { id: "despesas", label: "Despesas", icon: Receipt, anim: "tab-icon-shake", color: "#ef4444" },
     { id: "clientes", label: "Clientes", icon: Users, anim: "tab-icon-wave", color: "#a855f7" },
     { id: "anamnese", label: "Anamnese", icon: FileText, anim: "tab-icon-bounce", color: "#ec4899" },
+    { id: "avaliacoes", label: "Avaliações", icon: Star, anim: "tab-icon-bounce", color: "#fbbf24" },
     { id: "produtos", label: "Produtos", icon: ShoppingBag, anim: "tab-icon-bob", color: "#fb923c" },
     { id: "gateway", label: "Gateway", icon: Wallet, anim: "tab-icon-spin", color: "#84cc16" },
     { id: "chatbot", label: "Chatbot", icon: WhatsAppIcon, anim: "tab-icon-bounce", color: "#25d366" },
@@ -1929,6 +1932,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
           {tab === "pedidos" && <PedidosTab agendamentos={agendamentos} getClientName={getClientName} clientes={clientes} onUpdate={loadData} />}
           {tab === "despesas" && <DespesasTab />}
           {tab === "anamnese" && <AnamneseTab />}
+          {tab === "avaliacoes" && <AvaliacoesTab />}
           {tab === "produtos" && <ProdutosTab />}
           {tab === "gateway" && <GatewayTab />}
           {tab === "chatbot" && <AdminBotWpp embedded />}
