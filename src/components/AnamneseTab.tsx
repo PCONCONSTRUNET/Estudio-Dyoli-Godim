@@ -364,13 +364,8 @@ const AnamneseTab = () => {
                       <CheckCircle2 className="w-3.5 h-3.5" /> Aprovar
                     </button>
                   )}
-                  <button
-                    onClick={() => removerFicha(a)}
-                    className="h-9 px-3 rounded-lg bg-red-500/[0.06] hover:bg-red-500/15 border border-red-500/15 text-red-400/80 hover:text-red-400 text-[12px] font-body font-medium flex items-center gap-1.5 active:scale-95 transition-all ml-auto"
-                    title="Excluir ficha"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" /> Excluir
-                  </button>
+                  <BinButton size="sm" className="ml-auto" onClick={() => removerFicha(a)} label="Excluir ficha" />
+
                 </div>
 
                 {st === "negada" && (
