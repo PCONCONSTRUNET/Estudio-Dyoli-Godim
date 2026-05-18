@@ -473,6 +473,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     { id: "despesas", label: "Despesas", icon: Receipt, anim: "tab-icon-shake", color: "#ef4444" },
     { id: "clientes", label: "Clientes", icon: Users, anim: "tab-icon-wave", color: "#a855f7" },
     { id: "anamnese", label: "Anamnese", icon: FileText, anim: "tab-icon-bounce", color: "#ec4899" },
+    { id: "avaliacoes", label: "Avaliações", icon: Star, anim: "tab-icon-bounce", color: "#fbbf24" },
     { id: "produtos", label: "Produtos", icon: ShoppingBag, anim: "tab-icon-bob", color: "#fb923c" },
     { id: "gateway", label: "Gateway", icon: Wallet, anim: "tab-icon-spin", color: "#84cc16" },
     { id: "chatbot", label: "Chatbot", icon: WhatsAppIcon, anim: "tab-icon-bounce", color: "#25d366" },
