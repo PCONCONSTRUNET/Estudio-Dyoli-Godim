@@ -28,14 +28,23 @@ Deno.serve(async (req) => {
       if (correlationID) {
         console.log(`Payment confirmed for correlationID: ${correlationID}, value: ${valuePaid}`);
 
+        const payerName = charge.customer?.name || charge.payer?.name || null;
+        const receiptUrl = charge.paymentLinkUrl || charge.transactionReceiptURL || null;
+        const paidAt = charge.paidAt || charge.paymentDate || new Date().toISOString();
+
         const { error } = await supabase
           .from("agendamentos")
           .update({
             status: "confirmado",
             valor_pago: valuePaid,
             forma_pagamento: "pix_woovi",
+            payment_id: charge.identifier || charge.transactionID || null,
+            paid_at: paidAt,
+            payer_name: payerName,
+            receipt_url: receiptUrl,
           })
           .eq("id", correlationID);
+
 
         if (error) {
           console.error("Error updating agendamento:", error);
