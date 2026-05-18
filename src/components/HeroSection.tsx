@@ -61,7 +61,7 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, onProdutos, isAuthenticat
               <>
                 <button
                   onClick={onSchedule}
-                  className="ios-press group flex items-center justify-center gap-2 w-full py-3 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[14px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] backdrop-blur-sm"
+                  className="btn-hero-shine ios-press group flex items-center justify-center gap-2 w-full py-3 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[14px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] backdrop-blur-sm"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width={17} viewBox="0 0 24 24" height={17} fill="none" strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="4" width="18" height="18" rx="2"/>
@@ -69,37 +69,45 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, onProdutos, isAuthenticat
                     <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
                   </svg>
                   <span>Agendar</span>
+                  <span className="btn-overlay" aria-hidden />
+                  <span className="btn-shine" aria-hidden />
                 </button>
                 <button
                   onClick={onProfile}
-                  className="ios-press group flex items-center justify-center gap-2 w-full py-3 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[14px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] backdrop-blur-sm"
+                  className="btn-hero-shine ios-press group flex items-center justify-center gap-2 w-full py-3 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[14px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] backdrop-blur-sm"
                 >
                   <User className="w-4 h-4" />
                   <span>Meu Perfil</span>
+                  <span className="btn-overlay" aria-hidden />
+                  <span className="btn-shine" aria-hidden />
                 </button>
                 <button
                   onClick={onProdutos}
-                  className="ios-press group flex items-center justify-center gap-2 w-full py-3 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[14px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] backdrop-blur-sm"
+                  className="btn-hero-shine ios-press group flex items-center justify-center gap-2 w-full py-3 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[14px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] backdrop-blur-sm"
                 >
                   <ShoppingBag className="w-4 h-4" />
                   <span>Produtos</span>
+                  <span className="btn-overlay" aria-hidden />
+                  <span className="btn-shine" aria-hidden />
                 </button>
               </>
             ) : (
               <>
                 <button
                   onClick={onLogin}
-                  className="ios-press group flex items-center justify-center gap-2 w-full py-3 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[14px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] backdrop-blur-sm"
+                  className="btn-hero-shine ios-press group flex items-center justify-center gap-2 w-full py-3 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[14px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] backdrop-blur-sm"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width={17} viewBox="0 0 24 24" height={17} fill="none" strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="8" r="4"/>
                     <path d="M5 20c0-3.3137 3.134-6 7-6s7 2.6863 7 6"/>
                   </svg>
                   <span>Entrar</span>
+                  <span className="btn-overlay" aria-hidden />
+                  <span className="btn-shine" aria-hidden />
                 </button>
                 <button
                   onClick={onSchedule}
-                  className="ios-press group flex items-center justify-center gap-2 w-full py-3 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[14px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] backdrop-blur-sm"
+                  className="btn-hero-shine ios-press group flex items-center justify-center gap-2 w-full py-3 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[14px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] backdrop-blur-sm"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width={17} viewBox="0 0 24 24" height={17} fill="none" strokeWidth="2.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="4" width="18" height="18" rx="2"/>
@@ -107,13 +115,17 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, onProdutos, isAuthenticat
                     <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
                   </svg>
                   <span>Cadastrar</span>
+                  <span className="btn-overlay" aria-hidden />
+                  <span className="btn-shine" aria-hidden />
                 </button>
                 <button
                   onClick={onProdutos}
-                  className="ios-press group flex items-center justify-center gap-2 w-full py-3 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[14px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] backdrop-blur-sm"
+                  className="btn-hero-shine ios-press group flex items-center justify-center gap-2 w-full py-3 rounded-full bg-rose text-primary-foreground font-body font-semibold text-[14px] tracking-wide shadow-[0_4px_20px_-4px_hsl(340_30%_50%/0.4)] backdrop-blur-sm"
                 >
                   <ShoppingBag className="w-4 h-4" />
                   <span>Produtos</span>
+                  <span className="btn-overlay" aria-hidden />
+                  <span className="btn-shine" aria-hidden />
                 </button>
               </>
             )}

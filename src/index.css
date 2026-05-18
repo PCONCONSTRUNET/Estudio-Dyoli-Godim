@@ -390,3 +390,42 @@ select option {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
   transform: translateY(2px);
 }
+
+/* Botão hero com overlay + shine */
+.btn-hero-shine {
+  position: relative;
+  overflow: hidden;
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+}
+.btn-hero-shine > .btn-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+.btn-hero-shine > .btn-shine {
+  position: absolute;
+  top: -80px;
+  left: -80px;
+  width: 160px;
+  height: 160px;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.8) 0%, transparent 80%);
+  transform: rotate(45deg);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+.btn-hero-shine > * { position: relative; z-index: 1; }
+.btn-hero-shine > .btn-overlay,
+.btn-hero-shine > .btn-shine { z-index: 0; }
+.btn-hero-shine:hover > .btn-overlay { opacity: 0.45; }
+.btn-hero-shine:hover > .btn-shine { opacity: 1; }
+.btn-hero-shine:active { transform: translateY(1px); }
