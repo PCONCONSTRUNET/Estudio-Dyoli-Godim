@@ -92,6 +92,7 @@ const matchesPagamentoFilter = (
 
 const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Props) => {
   const [devedoresOpen, setDevedoresOpen] = useState(false);
+  const [expandedDevedorId, setExpandedDevedorId] = useState<string | null>(null);
   const getClienteWhatsapp = (userId: string): string => clientes.find((c) => c.id === userId)?.whatsapp || "";
   const formatWhatsapp = (w: string) => (w ? `(${w.slice(0, 2)}) ${w.slice(2, 7)}-${w.slice(7)}` : "");
   const [searchTerm, setSearchTerm] = useState("");
