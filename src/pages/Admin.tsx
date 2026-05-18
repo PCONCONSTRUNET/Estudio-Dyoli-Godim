@@ -26,6 +26,7 @@ import FinanceiroTab from "@/components/FinanceiroTab";
 import CaixaTab from "@/components/CaixaTab";
 import DespesasTab from "@/components/DespesasTab";
 import PedidosTab from "@/components/PedidosTab";
+import BinButton from "@/components/ui/bin-button";
 import GatewayTab from "@/components/GatewayTab";
 import AdminBotWpp from "@/pages/AdminBotWpp";
 import ProdutosTab from "@/components/ProdutosTab";
