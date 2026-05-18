@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Edit2, Trash2, Save, X, Upload, ShoppingBag, Image } from "lucide-react";
+import { Plus, Edit2, Save, X, Upload, ShoppingBag, Image } from "lucide-react";
+import BinButton from "@/components/ui/bin-button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Produto {
@@ -333,12 +334,8 @@ const ProdutosTab = () => {
                       >
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
-                      <button
-                        onClick={() => removeProduto(p.id)}
-                        className="p-1.5 rounded-lg hover:bg-rose/10 text-primary-foreground/20 hover:text-rose transition-all"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <BinButton size="sm" onClick={() => removeProduto(p.id)} />
+
                     </div>
                   </div>
                 </div>

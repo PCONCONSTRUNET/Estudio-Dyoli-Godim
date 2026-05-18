@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ClipboardList, Search, FileText, CheckCircle2, XCircle, Clock, Download, ExternalLink, User, Calendar, RotateCcw, Trash2 } from "lucide-react";
+import BinButton from "@/components/ui/bin-button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertTriangle } from "lucide-react";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
@@ -363,13 +364,8 @@ const AnamneseTab = () => {
                       <CheckCircle2 className="w-3.5 h-3.5" /> Aprovar
                     </button>
                   )}
-                  <button
-                    onClick={() => removerFicha(a)}
-                    className="h-9 px-3 rounded-lg bg-red-500/[0.06] hover:bg-red-500/15 border border-red-500/15 text-red-400/80 hover:text-red-400 text-[12px] font-body font-medium flex items-center gap-1.5 active:scale-95 transition-all ml-auto"
-                    title="Excluir ficha"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" /> Excluir
-                  </button>
+                  <BinButton size="sm" className="ml-auto" onClick={() => removerFicha(a)} label="Excluir ficha" />
+
                 </div>
 
                 {st === "negada" && (

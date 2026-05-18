@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Save, X, Trash2, Check, AlertTriangle, Clock, Bell, ChevronRight, Eye, Receipt, TrendingDown, TrendingUp, Sparkles, CalendarDays, Wallet } from "lucide-react";
+import { Plus, Save, X, Check, AlertTriangle, Clock, Bell, ChevronRight, Eye, Receipt, TrendingDown, TrendingUp, Sparkles, CalendarDays, Wallet } from "lucide-react";
+import BinButton from "@/components/ui/bin-button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -375,12 +376,8 @@ const DespesasTab = () => {
                                   >
                                     <Eye className="h-3 w-3" /> Lida
                                   </button>
-                                  <button
-                                    onClick={() => deleteDespesa(n.despesa.id)}
-                                    className="flex items-center gap-1 rounded-lg px-2 py-1 bg-rose/10 text-rose/60 text-[10px] font-body font-medium border border-rose/20 hover:bg-rose/20 hover:text-rose transition-all"
-                                  >
-                                    <Trash2 className="h-3 w-3" /> Excluir
-                                  </button>
+                                  <BinButton size="sm" onClick={() => deleteDespesa(n.despesa.id)} />
+
                                 </div>
                               </div>
                             </div>
@@ -525,13 +522,8 @@ const DespesasTab = () => {
                     >
                       <Check className="h-5 w-5" />
                     </button>
-                    <button
-                      onClick={() => deleteDespesa(d.id)}
-                      className="flex h-11 w-11 items-center justify-center rounded-2xl border-2 bg-primary-foreground/[0.06] text-primary-foreground/30 border-primary-foreground/[0.1] transition-all shadow-sm hover:bg-rose/15 hover:text-rose hover:border-rose/30 hover:shadow-rose/10"
-                      title="Excluir"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <BinButton size="md" onClick={() => deleteDespesa(d.id)} />
+
                   </div>
                 </div>
               </div>

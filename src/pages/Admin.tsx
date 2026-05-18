@@ -26,6 +26,7 @@ import FinanceiroTab from "@/components/FinanceiroTab";
 import CaixaTab from "@/components/CaixaTab";
 import DespesasTab from "@/components/DespesasTab";
 import PedidosTab from "@/components/PedidosTab";
+import BinButton from "@/components/ui/bin-button";
 import GatewayTab from "@/components/GatewayTab";
 import AdminBotWpp from "@/pages/AdminBotWpp";
 import ProdutosTab from "@/components/ProdutosTab";
@@ -971,12 +972,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                     >
                                       <CheckCircle className="h-3 w-3" /> Lida
                                     </button>
-                                    <button
-                                      onClick={() => deleteAgendamento(n.ag.id)}
-                                      className="flex items-center gap-1 rounded-lg px-2 py-1 bg-rose/10 text-rose/60 text-[10px] font-body font-medium border border-rose/20 hover:bg-rose/20 hover:text-rose transition-all"
-                                    >
-                                      <Trash2 className="h-3 w-3" /> Excluir
-                                    </button>
+                                    <BinButton size="sm" onClick={() => deleteAgendamento(n.ag.id)} />
+
                                   </div>
                                 </div>
                               </div>
@@ -1286,9 +1283,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                   </button>
                                 </>
                               )}
-                              <button onClick={() => deleteAgendamento(a.id)} className="rounded-lg p-1.5 text-primary-foreground/40 transition-all hover:bg-rose/15 hover:text-rose" title="Excluir">
-                                <Trash2 className="h-4 w-4" />
-                              </button>
+                              <BinButton size="sm" onClick={() => deleteAgendamento(a.id)} />
+
                             </div>
                           </div>
                         </article>
@@ -2673,7 +2669,7 @@ const ServicosTab = ({
                         )}
                         <button onClick={() => iniciarRenomearCat(cat)} className="p-1 rounded-md hover:bg-primary-foreground/[0.08] text-primary-foreground/50 hover:text-primary-foreground transition-colors" title="Renomear"><Edit2 className="w-3 h-3" /></button>
                         {podeExcluir && (
-                          <button onClick={() => removerCategoria(cat)} className="p-1 rounded-md hover:bg-rose/10 text-primary-foreground/30 hover:text-rose transition-colors" title="Excluir categoria vazia"><Trash2 className="w-3 h-3" /></button>
+                          <BinButton size="sm" onClick={() => removerCategoria(cat)} label="Excluir categoria vazia" />
                         )}
                       </div>
                     </>
@@ -2851,7 +2847,7 @@ const ServicosTab = ({
                         {s.active ? "Ativo" : "Inativo"}
                       </button>
                       <button onClick={() => startEdit(s)} className="p-2 rounded-lg hover:bg-primary-foreground/[0.06] text-primary-foreground/40 hover:text-gold transition-all active:scale-95"><Edit2 className="w-3.5 h-3.5" /></button>
-                      <button onClick={() => removeService(s.id)} className="p-2 rounded-lg hover:bg-rose/10 text-primary-foreground/30 hover:text-rose transition-all active:scale-95"><Trash2 className="w-3.5 h-3.5" /></button>
+                      <BinButton size="sm" onClick={() => removeService(s.id)} />
                     </div>
                   </div>
                 )}

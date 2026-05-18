@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { Search, Trash2, CheckCircle, X, UserX, ChevronDown, Bell, Clock, AlertTriangle, Eye, Wallet } from "lucide-react";
+import { Search, CheckCircle, X, UserX, ChevronDown, Bell, Clock, AlertTriangle, Eye, Wallet } from "lucide-react";
+import BinButton from "@/components/ui/bin-button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -425,12 +426,11 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                             >
                               <Eye className="h-3 w-3" /> Lida
                             </button>
-                            <button
+                            <BinButton
+                              size="sm"
                               onClick={() => deleteAgendamento(n.agendamento.id)}
-                              className="flex items-center gap-1 rounded-lg px-2 py-1 bg-rose/10 text-rose/60 text-[10px] font-body font-medium border border-rose/20 hover:bg-rose/20 hover:text-rose transition-all"
-                            >
-                              <Trash2 className="h-3 w-3" /> Excluir
-                            </button>
+                            />
+
                           </div>
                         </div>
                       </div>
@@ -756,11 +756,9 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                         )}
                       </div>
                       <div className="flex justify-end">
-                        <button onClick={() => deleteAgendamento(a.id)}
-                          className="flex items-center gap-1 rounded-lg border border-rose/40 bg-rose/10 px-2.5 py-1.5 font-body text-[10px] font-semibold text-rose transition-all hover:bg-rose/20 hover:text-rose hover:border-rose/60">
-                          <Trash2 className="h-3.5 w-3.5" /> Excluir
-                        </button>
+                        <BinButton size="sm" onClick={() => deleteAgendamento(a.id)} />
                       </div>
+
                     </div>
                   </div>
                 )}
