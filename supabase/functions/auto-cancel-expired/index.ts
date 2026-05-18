@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
       console.log(`Cancelled ${total} expired agendamentos (pendente: ${expiredPend?.length || 0}, aguardando_pagamento: ${expiredAwait?.length || 0})`);
     }
 
-    return new Response(JSON.stringify({ cancelled: expired?.length || 0 }), {
+    return new Response(JSON.stringify({ cancelled: total }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
