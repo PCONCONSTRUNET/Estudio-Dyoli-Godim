@@ -32,6 +32,8 @@ import AdminBotWpp from "@/pages/AdminBotWpp";
 import ProdutosTab from "@/components/ProdutosTab";
 import PagamentosTab from "@/components/PagamentosTab";
 import AnamneseTab from "@/components/AnamneseTab";
+import AvaliacoesTab from "@/components/AvaliacoesTab";
+import { Star } from "lucide-react";
 import AdminDashboard from "@/components/AdminDashboard";
 import { useAdminNotifications } from "@/hooks/use-admin-notifications";
 import { Switch } from "@/components/ui/switch";
