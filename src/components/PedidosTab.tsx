@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, CheckCircle, X, UserX, ChevronDown, Bell, Clock, AlertTriangle, Eye, Wallet } from "lucide-react";
+import { Search, CheckCircle, X, UserX, ChevronDown, Bell, Clock, AlertTriangle, Eye, Wallet, History } from "lucide-react";
 import BinButton from "@/components/ui/bin-button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
@@ -269,8 +269,76 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     );
   };
 
+  // ===== Histórico/auditoria de pagamentos =====
+  interface HistoricoEntry {
+    id: string;
+    agendamento_id: string;
+    status_anterior: string;
+    status_novo: string;
+    valor_anterior: number;
+    valor_novo: number;
+    valor_delta: number;
+    total: number;
+    acao: string;
+    autor_nome: string;
+    created_at: string;
+  }
+  const [historicoMap, setHistoricoMap] = useState<Record<string, HistoricoEntry[]>>({});
+
+  const statusFromValor = (valor_pago: number, total: number): "nao_pago" | "quitado_parcial" | "quitado" => {
+    if (valor_pago <= 0) return "nao_pago";
+    if (valor_pago >= total) return "quitado";
+    return "quitado_parcial";
+  };
+  const statusLabel = (s: string) =>
+    s === "quitado" ? "Quitado" : s === "quitado_parcial" ? "Quitado parcial" : s === "nao_pago" ? "Não pago" : s;
+  const statusColor = (s: string) =>
+    s === "quitado" ? "text-green-400 border-green-500/30 bg-green-500/10"
+    : s === "quitado_parcial" ? "text-amber-400 border-amber-500/40 bg-amber-500/10"
+    : "text-red-400 border-red-500/30 bg-red-500/10";
+
+  const loadHistorico = async (agendamentoId: string) => {
+    const { data } = await supabase
+      .from("pagamento_historico")
+      .select("*")
+      .eq("agendamento_id", agendamentoId)
+      .order("created_at", { ascending: false });
+    setHistoricoMap((prev) => ({ ...prev, [agendamentoId]: (data || []) as HistoricoEntry[] }));
+  };
+
+  const logPagamento = async (a: Agendamento, valor_novo: number, acao: "registro" | "quitar" | "estorno") => {
+    const valor_anterior = Number(a.valor_pago || 0);
+    const total = Number(a.valor);
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      const autor_id = userRes?.user?.id || null;
+      const autor_nome =
+        (userRes?.user?.user_metadata as any)?.nome ||
+        userRes?.user?.email ||
+        "Admin";
+      await supabase.from("pagamento_historico").insert({
+        agendamento_id: a.id,
+        status_anterior: statusFromValor(valor_anterior, total),
+        status_novo: statusFromValor(valor_novo, total),
+        valor_anterior,
+        valor_novo,
+        valor_delta: valor_novo - valor_anterior,
+        total,
+        acao,
+        autor_id,
+        autor_nome,
+      });
+      // refresh if already loaded
+      if (historicoMap[a.id]) await loadHistorico(a.id);
+    } catch (err) {
+      console.error("Falha ao registrar histórico de pagamento", err);
+    }
+  };
+
   const registrarPagamentoIntegral = async (a: Agendamento) => {
-    await supabase.from("agendamentos").update({ valor_pago: Number(a.valor) }).eq("id", a.id);
+    const total = Number(a.valor);
+    await supabase.from("agendamentos").update({ valor_pago: total }).eq("id", a.id);
+    await logPagamento(a, total, "quitar");
     onUpdate();
     toast.success("Pagamento registrado como quitado");
   };
@@ -297,6 +365,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     }
     const totalAgora = Math.min(Number(pagamentoAg.valor), Number(pagamentoAg.valor_pago || 0) + valor);
     await supabase.from("agendamentos").update({ valor_pago: totalAgora }).eq("id", pagamentoAg.id);
+    await logPagamento(pagamentoAg, totalAgora, totalAgora >= Number(pagamentoAg.valor) ? "quitar" : "registro");
     onUpdate();
     setPagamentoAg(null);
     setPagamentoInput("");
@@ -805,7 +874,11 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                 <div key={a.id} className="rounded-xl border border-primary-foreground/[0.08] bg-primary-foreground/[0.03] overflow-hidden">
                   <button
                     type="button"
-                    onClick={() => setExpandedDevedorId(isExpanded ? null : a.id)}
+                    onClick={() => {
+                      const next = isExpanded ? null : a.id;
+                      setExpandedDevedorId(next);
+                      if (next && !historicoMap[a.id]) loadHistorico(a.id);
+                    }}
                     className="w-full text-left p-3 space-y-2 hover:bg-primary-foreground/[0.04] transition-colors"
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -914,6 +987,36 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                         >
                           <CheckCircle className="h-4 w-4" /> Quitar tudo
                         </button>
+                      </div>
+
+                      {/* Histórico de pagamentos */}
+                      <div className="pt-2 border-t border-primary-foreground/[0.06]">
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <History className="h-3.5 w-3.5 text-primary-foreground/50" />
+                          <p className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/50 font-semibold">Histórico de pagamentos</p>
+                        </div>
+                        {!historicoMap[a.id] ? (
+                          <p className="font-body text-[11px] text-primary-foreground/30">Carregando…</p>
+                        ) : historicoMap[a.id].length === 0 ? (
+                          <p className="font-body text-[11px] text-primary-foreground/30 italic">Nenhuma alteração registrada ainda.</p>
+                        ) : (
+                          <ul className="space-y-1.5">
+                            {historicoMap[a.id].map((h) => (
+                              <li key={h.id} className="rounded-lg border border-primary-foreground/[0.06] bg-primary-foreground/[0.02] px-2.5 py-2">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase ${statusColor(h.status_anterior)}`}>{statusLabel(h.status_anterior)}</span>
+                                  <span className="text-primary-foreground/30 text-[10px]">→</span>
+                                  <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase ${statusColor(h.status_novo)}`}>{statusLabel(h.status_novo)}</span>
+                                  <span className="ml-auto font-body text-[11px] font-semibold text-green-400">+{formatCurrency(h.valor_delta)}</span>
+                                </div>
+                                <div className="flex items-center justify-between gap-2 mt-1 font-body text-[10px] text-primary-foreground/50">
+                                  <span>por <span className="text-primary-foreground/80">{h.autor_nome}</span></span>
+                                  <span>{new Date(h.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}</span>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                       </div>
                     </div>
                   )}
