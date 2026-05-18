@@ -799,29 +799,33 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
 
                     <div className="border-t border-primary-foreground/[0.06] pt-3 space-y-2">
                       <p className="font-body text-[10px] text-primary-foreground/30 uppercase tracking-wider">Alterar status</p>
-                      <div className="flex items-center gap-1 flex-wrap">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         {a.status !== "confirmado" && (
                           <button onClick={() => updateStatus(a.id, "confirmado")}
-                            className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-gold/60 transition-all hover:bg-gold/10 hover:text-gold">
-                            <CheckCircle className="h-3.5 w-3.5" /> Confirmado
+                            className="group relative flex items-center gap-1.5 overflow-hidden rounded-xl border border-gold/30 bg-gold/[0.08] px-3 py-1.5 font-body text-[11px] font-semibold text-gold backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_4px_12px_-4px_rgba(212,175,55,0.25)] transition-all hover:border-gold/60 hover:bg-gold/15 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_6px_18px_-4px_rgba(212,175,55,0.45)] active:scale-[0.97]">
+                            <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/10 to-transparent" />
+                            <CheckCircle className="relative h-3.5 w-3.5" /> <span className="relative">Confirmado</span>
                           </button>
                         )}
                         {a.status !== "concluido" && (
                           <button onClick={() => updateStatus(a.id, "concluido")}
-                            className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-green-400/60 transition-all hover:bg-green-500/10 hover:text-green-400">
-                            <CheckCircle className="h-3.5 w-3.5" /> Concluído
+                            className="group relative flex items-center gap-1.5 overflow-hidden rounded-xl border border-green-500/30 bg-green-500/[0.08] px-3 py-1.5 font-body text-[11px] font-semibold text-green-400 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_4px_12px_-4px_rgba(34,197,94,0.25)] transition-all hover:border-green-400/60 hover:bg-green-500/15 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_6px_18px_-4px_rgba(34,197,94,0.45)] active:scale-[0.97]">
+                            <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/10 to-transparent" />
+                            <CheckCircle className="relative h-3.5 w-3.5" /> <span className="relative">Concluído</span>
                           </button>
                         )}
                         {a.status !== "falta" && (
                           <button onClick={() => updateStatus(a.id, "falta")}
-                            className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-orange-400/60 transition-all hover:bg-orange-500/10 hover:text-orange-400">
-                            <UserX className="h-3.5 w-3.5" /> Falta
+                            className="group relative flex items-center gap-1.5 overflow-hidden rounded-xl border border-orange-500/30 bg-orange-500/[0.08] px-3 py-1.5 font-body text-[11px] font-semibold text-orange-400 backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_4px_12px_-4px_rgba(249,115,22,0.25)] transition-all hover:border-orange-400/60 hover:bg-orange-500/15 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_6px_18px_-4px_rgba(249,115,22,0.45)] active:scale-[0.97]">
+                            <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/10 to-transparent" />
+                            <UserX className="relative h-3.5 w-3.5" /> <span className="relative">Falta</span>
                           </button>
                         )}
                         {a.status !== "cancelado" && (
                           <button onClick={() => updateStatus(a.id, "cancelado")}
-                            className="flex items-center gap-1 rounded-lg px-2 py-1.5 font-body text-[10px] font-medium text-rose/60 transition-all hover:bg-rose/10 hover:text-rose">
-                            <X className="h-3.5 w-3.5" /> Cancelado
+                            className="group relative flex items-center gap-1.5 overflow-hidden rounded-xl border border-rose/30 bg-rose/[0.08] px-3 py-1.5 font-body text-[11px] font-semibold text-rose backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_4px_12px_-4px_rgba(244,63,94,0.25)] transition-all hover:border-rose/60 hover:bg-rose/15 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_6px_18px_-4px_rgba(244,63,94,0.45)] active:scale-[0.97]">
+                            <span className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/10 to-transparent" />
+                            <X className="relative h-3.5 w-3.5" /> <span className="relative">Cancelado</span>
                           </button>
                         )}
                       </div>
