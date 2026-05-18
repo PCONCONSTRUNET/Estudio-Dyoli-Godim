@@ -415,7 +415,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const loadData = async () => {
     setLoading(true);
     const [agRes, clRes] = await Promise.all([
-      supabase.from("agendamentos").select("*").order("data_agendamento", { ascending: false }),
+      supabase.from("agendamentos").select("*").neq("status", "aguardando_pagamento").order("data_agendamento", { ascending: false }),
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
     ]);
     if (agRes.data) setAgendamentos(agRes.data as Agendamento[]);
