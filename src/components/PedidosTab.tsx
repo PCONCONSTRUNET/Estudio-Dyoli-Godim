@@ -273,6 +273,40 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     toast.success("Pagamento registrado como quitado");
   };
 
+  const [pagamentoAg, setPagamentoAg] = useState<Agendamento | null>(null);
+  const [pagamentoInput, setPagamentoInput] = useState<string>("");
+
+  const abrirRegistroPagamento = (a: Agendamento, sugestao?: "sinal" | "restante") => {
+    const valorTotal = Number(a.valor);
+    const pago = Number(a.valor_pago || 0);
+    const restante = Math.max(0, valorTotal - pago);
+    let sugestaoValor = restante;
+    if (sugestao === "sinal") sugestaoValor = Math.round(valorTotal * 0.5 * 100) / 100;
+    setPagamentoAg(a);
+    setPagamentoInput(sugestaoValor.toFixed(2).replace(".", ","));
+  };
+
+  const confirmarRegistroPagamento = async () => {
+    if (!pagamentoAg) return;
+    const valor = Number(pagamentoInput.replace(/\./g, "").replace(",", "."));
+    if (!Number.isFinite(valor) || valor <= 0) {
+      toast.error("Informe um valor válido");
+      return;
+    }
+    const totalAgora = Math.min(Number(pagamentoAg.valor), Number(pagamentoAg.valor_pago || 0) + valor);
+    await supabase.from("agendamentos").update({ valor_pago: totalAgora }).eq("id", pagamentoAg.id);
+    onUpdate();
+    setPagamentoAg(null);
+    setPagamentoInput("");
+    if (totalAgora >= Number(pagamentoAg.valor)) {
+      toast.success("Pagamento quitado integralmente ✅");
+    } else {
+      toast.success(`Pagamento parcial registrado · ainda falta ${formatCurrency(Number(pagamentoAg.valor) - totalAgora)}`);
+    }
+  };
+
+
+
 
   const counts = useMemo(() => ({
     todos: agendamentos.length,
