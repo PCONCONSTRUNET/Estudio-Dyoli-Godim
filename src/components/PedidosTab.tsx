@@ -131,11 +131,11 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
         notifs.push({ tipo: "proximo", agendamento: a, label: "Amanhã" });
       }
 
-      // Pagamento parcial (sinal) ou não pago — apenas para atendimentos passados/hoje
+      // Quitado parcial ou não pago — apenas para atendimentos passados/hoje
       if (a.status !== "falta" && !isPago(a) && diffDays <= 0) {
         const restante = Number(a.valor) - Number(a.valor_pago || 0);
         if (isSinalPago(a)) {
-          notifs.push({ tipo: "sinal", agendamento: a, label: `Sinal pago · a receber ${formatCurrency(restante)}` });
+          notifs.push({ tipo: "sinal", agendamento: a, label: `Quitado parcial · a receber ${formatCurrency(restante)}` });
         } else {
           notifs.push({ tipo: "pendente", agendamento: a, label: `Não pago · ${formatCurrency(restante)}` });
         }
@@ -241,8 +241,8 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     }
     if (isSinalPago(a)) {
       return (
-        <span title="Sinal pago, falta receber o restante" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-amber-400">
-          <Wallet className="h-2.5 w-2.5" /> Sinal pago
+        <span title="Quitado parcial — falta receber o restante" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-amber-400">
+          <Wallet className="h-2.5 w-2.5" /> Quitado parcial
         </span>
       );
     }
@@ -468,7 +468,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
             { value: "todos" as PagamentoFilter, label: "Tudo", activeClass: "bg-gold/15 text-gold border-gold/40 shadow-[0_0_0_1px_hsl(var(--gold)/0.2)]", inactiveClass: "bg-gold/[0.04] text-gold/60 border-gold/20 hover:bg-gold/10 hover:text-gold/80", count: pagamentoCounts.todos },
             { value: "pago" as PagamentoFilter, label: "Pago", activeClass: "bg-green-500/15 text-green-400 border-green-500/40 shadow-[0_0_0_1px_rgb(34_197_94_/_0.2)]", inactiveClass: "bg-green-500/[0.05] text-green-400/70 border-green-500/20 hover:bg-green-500/10 hover:text-green-400", count: pagamentoCounts.pago },
             { value: "recepcao" as PagamentoFilter, label: "Recepção", activeClass: "bg-blue-500/15 text-blue-400 border-blue-500/40 shadow-[0_0_0_1px_rgb(59_130_246_/_0.2)]", inactiveClass: "bg-blue-500/[0.05] text-blue-400/70 border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400", count: pagamentoCounts.recepcao },
-            { value: "sinal" as PagamentoFilter, label: "Sinal", activeClass: "bg-amber-500/15 text-amber-400 border-amber-500/40 shadow-[0_0_0_1px_rgb(245_158_11_/_0.2)]", inactiveClass: "bg-amber-500/[0.05] text-amber-400/70 border-amber-500/20 hover:bg-amber-500/10 hover:text-amber-400", count: pagamentoCounts.sinal },
+            { value: "sinal" as PagamentoFilter, label: "Parcial", activeClass: "bg-amber-500/15 text-amber-400 border-amber-500/40 shadow-[0_0_0_1px_rgb(245_158_11_/_0.2)]", inactiveClass: "bg-amber-500/[0.05] text-amber-400/70 border-amber-500/20 hover:bg-amber-500/10 hover:text-amber-400", count: pagamentoCounts.sinal },
             { value: "pendente" as PagamentoFilter, label: "Não pago", activeClass: "bg-red-500/15 text-red-400 border-red-500/40 shadow-[0_0_0_1px_rgb(239_68_68_/_0.2)]", inactiveClass: "bg-red-500/[0.05] text-red-400/70 border-red-500/20 hover:bg-red-500/10 hover:text-red-400", count: pagamentoCounts.pendente },
           ]).map((f) => (
             <button key={f.value} onClick={() => setPagamentoFilter(f.value)}
@@ -502,7 +502,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
           </div>
           <div className="flex flex-col items-end shrink-0">
             {pagamentoCounts.sinal > 0 && (
-              <span className="font-body text-[10px] text-amber-300/80">{pagamentoCounts.sinal} c/ sinal</span>
+              <span className="font-body text-[10px] text-amber-300/80">{pagamentoCounts.sinal} parcial</span>
             )}
             {pagamentoCounts.pendente > 0 && (
               <span className="font-body text-[10px] text-red-300/80">{pagamentoCounts.pendente} sem pagar</span>
@@ -587,7 +587,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                         <div className="col-span-2 rounded-xl border border-amber-500/40 bg-gradient-to-br from-amber-500/15 to-amber-500/[0.04] px-3 py-3 space-y-2">
                           <div className="flex items-center gap-1.5">
                             <Wallet className="h-4 w-4 text-amber-400" />
-                            <p className="font-body text-[11px] font-semibold uppercase tracking-wider text-amber-400">Pagamento parcial (sinal)</p>
+                            <p className="font-body text-[11px] font-semibold uppercase tracking-wider text-amber-400">Quitado parcial</p>
                           </div>
                           <div className="grid grid-cols-3 gap-2 text-[11px]">
                             <div>
@@ -595,7 +595,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                               <p className="text-primary-foreground/90 font-medium">{formatCurrency(Number(a.valor))}</p>
                             </div>
                             <div>
-                              <p className="text-primary-foreground/45 text-[10px]">Sinal pago</p>
+                              <p className="text-primary-foreground/45 text-[10px]">Pago parcial</p>
                               <p className="text-green-400 font-semibold">{formatCurrency(Number(a.valor_pago || 0))}</p>
                             </div>
                             <div>
@@ -604,7 +604,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                             </div>
                           </div>
                           <p className="font-body text-[11px] text-amber-200/80 leading-snug">
-                            💡 O cliente já pagou o sinal. Cobre o valor restante na recepção e marque como pago integralmente abaixo.
+                            💡 O cliente pagou parte do valor. Cobre o restante na recepção e marque como pago integralmente abaixo.
                           </p>
                           <button
                             onClick={(e) => { e.stopPropagation(); registrarPagamentoIntegral(a); }}
@@ -778,7 +778,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                       <p className="font-heading text-[15px] font-bold text-amber-300 leading-tight">{formatCurrency(restante)}</p>
                       {sinal ? (
                         <span className="inline-flex items-center gap-0.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-amber-400 mt-0.5">
-                          Sinal pago
+                          Quitado parcial
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-0.5 rounded-full border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-red-400 mt-0.5">
