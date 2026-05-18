@@ -89,7 +89,10 @@ const matchesPagamentoFilter = (
   return true;
 };
 
-const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
+const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Props) => {
+  const [devedoresOpen, setDevedoresOpen] = useState(false);
+  const getClienteWhatsapp = (userId: string): string => clientes.find((c) => c.id === userId)?.whatsapp || "";
+  const formatWhatsapp = (w: string) => (w ? `(${w.slice(0, 2)}) ${w.slice(2, 7)}-${w.slice(7)}` : "");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("todos");
   const [pagamentoFilter, setPagamentoFilter] = useState<PagamentoFilter>("todos");
