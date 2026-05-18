@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, Trash2, CheckCircle, X, UserX, ChevronDown, Bell, Clock, AlertTriangle, Eye } from "lucide-react";
+import { Search, Trash2, CheckCircle, X, UserX, ChevronDown, Bell, Clock, AlertTriangle, Eye, Wallet } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
