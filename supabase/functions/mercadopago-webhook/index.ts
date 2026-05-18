@@ -75,11 +75,11 @@ Deno.serve(async (req) => {
             // Buscar dados do agendamento pra montar a notificação
             const { data: ag } = await supabase
               .from("agendamentos")
-              .select("servico, valor_pago, cliente_nome, user_id")
+              .select("servico, valor_pago, cliente_nome, user_id, data_agendamento, horario, origem")
               .eq("id", agendamentoId)
               .single();
             if (ag) {
-              // Push pra admin
+              // Push pra admin — pagamento confirmado
               try {
                 await supabase.functions.invoke("send-push", {
                   body: {
@@ -90,7 +90,43 @@ Deno.serve(async (req) => {
                   },
                 });
               } catch (e) {
-                console.warn("send-push failed:", e);
+                console.warn("send-push (pagamento) failed:", e);
+              }
+
+              // Push pra admin — novo agendamento confirmado
+              try {
+                await supabase.functions.invoke("send-push", {
+                  body: {
+                    role: "admin",
+                    title: ag.origem === "whatsapp_bot" ? "🔔 Novo Agendamento (WhatsApp)" : "🔔 Novo Agendamento!",
+                    message: `${ag.cliente_nome || "Cliente"} — ${ag.servico} em ${ag.data_agendamento} às ${ag.horario}`,
+                    url: "/admin",
+                  },
+                });
+              } catch (e) {
+                console.warn("send-push (novo) failed:", e);
+              }
+
+              // WhatsApp de confirmação pro cliente
+              try {
+                const { data: prof } = await supabase
+                  .from("profiles")
+                  .select("nome, whatsapp")
+                  .eq("id", ag.user_id)
+                  .maybeSingle();
+                if (prof?.whatsapp) {
+                  const [y, mo, d] = String(ag.data_agendamento).split("-");
+                  const dataFmt = `${d}/${mo}/${y}`;
+                  const nome = prof.nome || ag.cliente_nome || "";
+                  const mensagem = `✅ *Agendamento Confirmado no Estudio Dyoli Godim!* 🌸\n\nOlá ${nome}, recebemos a confirmação do seu pagamento e do agendamento para o dia ${dataFmt} às ${ag.horario}. Te esperamos!`;
+                  fetch("http://localhost:3000/webhook/notificacao", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ numero: prof.whatsapp, mensagem, token: "dyoli123" }),
+                  }).catch((e) => console.log("notify webhook failed", e));
+                }
+              } catch (e) {
+                console.warn("whatsapp confirm failed:", e);
               }
             }
           }
