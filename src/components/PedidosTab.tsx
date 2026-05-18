@@ -490,7 +490,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
 
       {totalAReceber > 0 && (
         <button
-          onClick={() => setPagamentoFilter(pagamentoCounts.sinal > 0 ? "sinal" : "pendente")}
+          onClick={() => setDevedoresOpen(true)}
           className="w-full flex items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-amber-500/[0.03] px-3 py-2.5 hover:border-amber-500/50 hover:bg-amber-500/15 transition-all text-left"
         >
           <div className="flex items-center gap-2 min-w-0">
