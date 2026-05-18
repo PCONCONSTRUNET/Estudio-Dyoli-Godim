@@ -406,10 +406,14 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     loadData();
   }, []);
 
+  const handleAgendamentoChange = useCallback(() => {
+    loadData();
+  }, []);
+
   const {
     notificationsEnabled,
     toggleNotifications,
-  } = useAdminNotifications(true, handleNewAgendamento);
+  } = useAdminNotifications(true, handleNewAgendamento, handleAgendamentoChange);
 
   useEffect(() => {
     loadData();
