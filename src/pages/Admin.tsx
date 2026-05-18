@@ -536,7 +536,22 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     return <span className={`px-2 py-0.5 rounded-full text-[10px] font-body font-medium border ${map[s] || "bg-secondary text-muted-foreground border-border"}`}>{labels[s] || s}</span>;
   };
 
+  const formatFormaPagamento = (f: string | null | undefined) => {
+    if (!f) return "—";
+    const map: Record<string, string> = {
+      pix: "PIX",
+      pix_mp: "PIX (online)",
+      pix_woovi: "PIX (online)",
+      cartao: "Cartão",
+      boleto: "Boleto",
+      dinheiro: "Dinheiro",
+      pendente: "A combinar",
+    };
+    return map[f.toLowerCase()] || f.charAt(0).toUpperCase() + f.slice(1);
+  };
+
   const pagamentoBadge = (a: Agendamento) => {
+
     const pago = Number(a.valor_pago || 0);
     const totalValor = Number(a.valor);
     if (pago >= totalValor) return <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-medium border bg-green-500/10 text-green-500 border-green-500/20">Pago</span>;
