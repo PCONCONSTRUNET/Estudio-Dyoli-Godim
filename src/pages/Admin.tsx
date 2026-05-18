@@ -326,7 +326,7 @@ const Admin = () => {
 
               <button
                 type="submit"
-                className="ios-press w-full rounded-full bg-rose py-4 text-primary-foreground font-body text-[15px] font-semibold tracking-wide shadow-[0_8px_24px_-6px_hsl(340_30%_50%/0.5)] hover:shadow-[0_10px_28px_-6px_hsl(340_30%_50%/0.6)] transition-all"
+                className="btn-entrar-admin"
               >
                 Entrar no painel
               </button>
