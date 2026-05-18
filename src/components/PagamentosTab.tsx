@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Search, CreditCard, QrCode, Barcode, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, Filter, AlertCircle } from "lucide-react";
+import pixIcon from "@/assets/pix-icon.png";
 
 interface Agendamento {
   id: string;
@@ -55,8 +56,8 @@ const PagamentosTab = ({ agendamentos, getClientName }: Props) => {
     switch (method) {
       case "cartao": return <CreditCard className="h-4 w-4" />;
       case "boleto": return <Barcode className="h-4 w-4" />;
-      case "pix": return <QrCode className="h-4 w-4" />;
-      default: return <QrCode className="h-4 w-4" />;
+      case "pix": return <img src={pixIcon} alt="PIX" className="h-4 w-4" />;
+      default: return <img src={pixIcon} alt="PIX" className="h-4 w-4" />;
     }
   };
 

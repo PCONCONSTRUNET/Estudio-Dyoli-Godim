@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, Calendar, Clock, CheckCircle2, Copy, Check, CreditCard, FileText, Loader2, ExternalLink, Info } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
-import pixIcon from "@/assets/pix-icon.svg";
+import pixIcon from "@/assets/pix-icon.png";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";

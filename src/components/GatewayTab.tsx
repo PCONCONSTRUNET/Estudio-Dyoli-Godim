@@ -1,7 +1,12 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Save, Eye, EyeOff, Copy, Check, CreditCard, QrCode, FileText, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
+import pixIconImg from "@/assets/pix-icon.png";
+
+const PixIcon = ({ className, style }: { className?: string; style?: React.CSSProperties }) => (
+  <img src={pixIconImg} alt="PIX" className={className} style={style} />
+);
 
 interface GatewayConfig {
   id: string;
@@ -19,7 +24,7 @@ interface GatewayMeta {
   key: string;
   label: string;
   color: string;
-  icon: typeof CreditCard;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   tokenPlaceholder: string;
   publicKeyPlaceholder: string;
   publicKeyLabel: string;
@@ -55,7 +60,7 @@ const GATEWAYS: GatewayMeta[] = [
     key: "woovi",
     label: "Woovi (OpenPix)",
     color: "#03d69d",
-    icon: QrCode,
+    icon: PixIcon,
     tokenPlaceholder: "Q2xpZW50X0lk...",
     publicKeyPlaceholder: "(opcional)",
     publicKeyLabel: "App ID",
@@ -280,7 +285,7 @@ const GatewayTab = () => {
                   <label className="font-body text-[11px] text-primary-foreground/40 mb-2 block">Métodos de Pagamento</label>
                   <div className="space-y-2">
                     {([
-                      { field: "pixEnabled", label: "PIX", desc: "Pagamento instantâneo", icon: QrCode, show: true },
+                      { field: "pixEnabled", label: "PIX", desc: "Pagamento instantâneo", icon: PixIcon, show: true },
                       { field: "cartaoEnabled", label: "Cartão de Crédito", desc: "Visa, Master, Elo, etc.", icon: CreditCard, show: gw.supportsCartao },
                       { field: "boletoEnabled", label: "Boleto Bancário", desc: "Compensação em até 3 dias", icon: FileText, show: gw.supportsBoleto },
                     ] as const).filter(m => m.show).map((m) => {
