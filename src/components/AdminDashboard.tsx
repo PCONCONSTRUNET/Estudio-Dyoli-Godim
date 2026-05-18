@@ -366,76 +366,200 @@ const AdminDashboard = ({
       {/* ── Charts Section ── */}
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Revenue Chart */}
-        <div className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-4">
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-4 h-4 text-gold" />
-            <h3 className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest font-medium">
-              Receita — 7 dias
-            </h3>
-          </div>
-          <div className="h-[160px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={weeklyData}>
-                <defs>
-                  <linearGradient id="dashGold" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(40 40% 55%)" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="hsl(40 40% 55%)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  dataKey="label"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 10, fill: "hsl(0 0% 100% / 0.25)" }}
-                />
-                <YAxis hide />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} wrapperStyle={{ outline: "none" }} />
-                <Area
-                  type="monotone"
-                  dataKey="receita"
-                  stroke="hsl(40 40% 55%)"
-                  strokeWidth={2}
-                  fill="url(#dashGold)"
-                  name="receita"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        {(() => {
+          const totalSemana = weeklyData.reduce((s, d) => s + d.receita, 0);
+          const mediaSemana = totalSemana / 7;
+          const melhorDia = weeklyData.reduce((acc, d) => (d.receita > acc.receita ? d : acc), weeklyData[0] || { receita: 0, label: "-" } as any);
+          const ult3 = weeklyData.slice(-3).reduce((s, d) => s + d.receita, 0);
+          const prim3 = weeklyData.slice(0, 3).reduce((s, d) => s + d.receita, 0);
+          const variacao = prim3 > 0 ? ((ult3 - prim3) / prim3) * 100 : ult3 > 0 ? 100 : 0;
+          const trendUp = variacao >= 0;
+          const isEmpty = totalSemana === 0;
+
+          return (
+            <div className="group relative overflow-hidden rounded-2xl border border-gold/20 bg-gradient-to-br from-gold/[0.06] via-primary-foreground/[0.02] to-transparent p-5 transition-all hover:border-gold/30">
+              <div className="pointer-events-none absolute -top-20 -right-16 w-48 h-48 rounded-full bg-gold/10 blur-3xl group-hover:bg-gold/15 transition-all" />
+              <div className="pointer-events-none absolute -bottom-16 -left-12 w-40 h-40 rounded-full bg-purple-500/[0.06] blur-3xl" />
+
+              <div className="relative flex items-start justify-between gap-3 mb-4">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gold/15 border border-gold/25">
+                      <TrendingUp className="w-3 h-3 text-gold" />
+                    </div>
+                    <h3 className="font-body text-[10px] text-primary-foreground/45 uppercase tracking-[0.18em] font-medium">
+                      Receita — 7 dias
+                    </h3>
+                  </div>
+                  <p className="font-heading text-[22px] font-bold text-primary-foreground tabular-nums leading-none mt-1">
+                    {formatCurrency(totalSemana)}
+                  </p>
+                  <p className="font-body text-[10px] text-primary-foreground/35 mt-1">
+                    Média {formatCurrency(mediaSemana)} / dia
+                  </p>
+                </div>
+                <div className={`shrink-0 flex items-center gap-1 px-2 py-1 rounded-full border text-[10px] font-body font-semibold tabular-nums ${
+                  trendUp
+                    ? "bg-green-500/10 text-green-400 border-green-500/25"
+                    : "bg-red-500/10 text-red-400 border-red-500/25"
+                }`}>
+                  <span>{trendUp ? "↗" : "↘"}</span>
+                  {Math.abs(variacao).toFixed(0)}%
+                </div>
+              </div>
+
+              {isEmpty ? (
+                <div className="h-[160px] flex flex-col items-center justify-center gap-2">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06]">
+                    <DollarSign className="w-4 h-4 text-primary-foreground/25" />
+                  </div>
+                  <p className="font-body text-[11px] text-primary-foreground/25">Sem receita nos últimos 7 dias</p>
+                </div>
+              ) : (
+                <>
+                  <div className="relative h-[160px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={weeklyData} margin={{ top: 8, right: 4, left: 4, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="dashGold" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="hsl(40 65% 60%)" stopOpacity={0.45} />
+                            <stop offset="100%" stopColor="hsl(40 65% 60%)" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <XAxis
+                          dataKey="label"
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fontSize: 10, fill: "hsl(0 0% 100% / 0.3)" }}
+                        />
+                        <YAxis hide />
+                        <Tooltip content={<CustomTooltip />} cursor={{ stroke: "hsl(40 65% 60% / 0.3)", strokeWidth: 1, strokeDasharray: "3 3" }} wrapperStyle={{ outline: "none" }} />
+                        <Area
+                          type="monotone"
+                          dataKey="receita"
+                          stroke="hsl(40 65% 60%)"
+                          strokeWidth={2.5}
+                          fill="url(#dashGold)"
+                          name="receita"
+                          dot={{ r: 3, fill: "hsl(40 65% 60%)", strokeWidth: 0 }}
+                          activeDot={{ r: 5, fill: "hsl(40 65% 60%)", stroke: "hsl(var(--charcoal))", strokeWidth: 2 }}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="relative flex items-center justify-between gap-2 mt-3 pt-3 border-t border-primary-foreground/[0.05]">
+                    <div className="min-w-0">
+                      <p className="font-body text-[9px] text-primary-foreground/35 uppercase tracking-wider">Melhor dia</p>
+                      <p className="font-body text-[12px] font-semibold text-gold capitalize mt-0.5 truncate">
+                        {melhorDia?.label} · {formatCurrency(melhorDia?.receita || 0)}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-body text-[9px] text-primary-foreground/35 uppercase tracking-wider">Últimos 3d</p>
+                      <p className="font-body text-[12px] font-semibold text-primary-foreground/80 tabular-nums mt-0.5">
+                        {formatCurrency(ult3)}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Top Services */}
-        <div className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-4">
-          <h3 className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest font-medium mb-4">
-            Top Serviços — Mês
-          </h3>
-          {topServices.length === 0 ? (
-            <p className="font-body text-[13px] text-primary-foreground/30 text-center py-8">Sem dados</p>
-          ) : (
-            <div className="h-[160px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={topServices} layout="vertical">
-                  <XAxis type="number" hide />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 10, fill: "hsl(0 0% 100% / 0.35)" }}
-                    width={100}
-                  />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} wrapperStyle={{ outline: "none" }} />
-                  <Bar
-                    dataKey="count"
-                    fill="hsl(40 40% 55%)"
-                    radius={[0, 6, 6, 0]}
-                    name="agendamentos"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+        {(() => {
+          const totalAtend = topServices.reduce((s, x) => s + x.count, 0);
+          const maxCount = Math.max(1, ...topServices.map((s) => s.count));
+          const isEmpty = topServices.length === 0;
+          const destaque = topServices[0];
+
+          return (
+            <div className="group relative overflow-hidden rounded-2xl border border-rose/20 bg-gradient-to-br from-rose/[0.06] via-primary-foreground/[0.02] to-transparent p-5 transition-all hover:border-rose/30">
+              <div className="pointer-events-none absolute -top-20 -right-16 w-48 h-48 rounded-full bg-rose/10 blur-3xl group-hover:bg-rose/15 transition-all" />
+              <div className="pointer-events-none absolute -bottom-16 -left-12 w-40 h-40 rounded-full bg-gold/[0.05] blur-3xl" />
+
+              <div className="relative flex items-start justify-between gap-3 mb-4">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-rose/15 border border-rose/25">
+                      <Sparkles className="w-3 h-3 text-rose" />
+                    </div>
+                    <h3 className="font-body text-[10px] text-primary-foreground/45 uppercase tracking-[0.18em] font-medium">
+                      Top Serviços — Mês
+                    </h3>
+                  </div>
+                  <p className="font-heading text-[22px] font-bold text-primary-foreground tabular-nums leading-none mt-1">
+                    {totalAtend}
+                  </p>
+                  <p className="font-body text-[10px] text-primary-foreground/35 mt-1">
+                    {topServices.length} serviço{topServices.length !== 1 ? "s" : ""} · {totalAtend} atendimento{totalAtend !== 1 ? "s" : ""}
+                  </p>
+                </div>
+                {destaque && (
+                  <div className="shrink-0 flex items-center gap-1 px-2 py-1 rounded-full border bg-rose/10 text-rose border-rose/25 text-[10px] font-body font-semibold">
+                    ★ {destaque.count}x
+                  </div>
+                )}
+              </div>
+
+              {isEmpty ? (
+                <div className="h-[160px] flex flex-col items-center justify-center gap-2">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06]">
+                    <Sparkles className="w-4 h-4 text-primary-foreground/25" />
+                  </div>
+                  <p className="font-body text-[11px] text-primary-foreground/25">Sem atendimentos no mês</p>
+                </div>
+              ) : (
+                <div className="relative space-y-2.5">
+                  {topServices.map((s, i) => {
+                    const pct = (s.count / maxCount) * 100;
+                    const pctTotal = totalAtend > 0 ? (s.count / totalAtend) * 100 : 0;
+                    const isTop = i === 0;
+                    return (
+                      <div key={s.name} className="group/row">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className={`font-body text-[10px] font-bold tabular-nums w-4 text-center ${
+                              isTop ? "text-rose" : "text-primary-foreground/30"
+                            }`}>
+                              {i + 1}
+                            </span>
+                            <span className="font-body text-[12px] font-medium text-primary-foreground/85 truncate">
+                              {s.name}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="font-body text-[10px] text-primary-foreground/35 tabular-nums">
+                              {pctTotal.toFixed(0)}%
+                            </span>
+                            <span className={`font-heading text-[13px] font-bold tabular-nums ${
+                              isTop ? "text-rose" : "text-primary-foreground/70"
+                            }`}>
+                              {s.count}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="h-1.5 w-full rounded-full bg-primary-foreground/[0.04] overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-700 ease-out ${
+                              isTop
+                                ? "bg-gradient-to-r from-rose via-rose/80 to-gold/60 shadow-[0_0_8px_hsl(var(--rose)/0.4)]"
+                                : "bg-gradient-to-r from-rose/40 to-rose/20"
+                            }`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          );
+        })()}
       </div>
+
 
       {/* ── Notification Settings (compact) ── */}
       <div className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-4">
