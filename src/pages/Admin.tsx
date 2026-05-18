@@ -906,13 +906,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <h2 className="font-heading text-lg font-semibold text-primary-foreground">Agenda</h2>
-                  <button
-                    onClick={openManualRegister}
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-gold/10 text-gold font-body text-[11px] font-medium hover:bg-gold/20 transition-all"
-                  >
-                    <PlusCircle className="w-3.5 h-3.5" />
-                    Registrar
-                  </button>
+                  <PlusButton size={28} title="Registrar manualmente" onClick={openManualRegister} />
                 </div>
 
                 {/* Bell */}
