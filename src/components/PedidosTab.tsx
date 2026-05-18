@@ -474,9 +474,33 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
         </p>
       </div>
 
+      {totalAReceber > 0 && (
+        <button
+          onClick={() => setPagamentoFilter(pagamentoCounts.sinal > 0 ? "sinal" : "pendente")}
+          className="w-full flex items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-amber-500/[0.03] px-3 py-2.5 hover:border-amber-500/50 hover:bg-amber-500/15 transition-all text-left"
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <Wallet className="h-4 w-4 text-amber-400 shrink-0" />
+            <div className="min-w-0">
+              <p className="font-body text-[10px] text-amber-400/70 uppercase tracking-wider">Total a receber</p>
+              <p className="font-heading text-[15px] font-bold text-amber-300 leading-tight">{formatCurrency(totalAReceber)}</p>
+            </div>
+          </div>
+          <div className="flex flex-col items-end shrink-0">
+            {pagamentoCounts.sinal > 0 && (
+              <span className="font-body text-[10px] text-amber-300/80">{pagamentoCounts.sinal} c/ sinal</span>
+            )}
+            {pagamentoCounts.pendente > 0 && (
+              <span className="font-body text-[10px] text-red-300/80">{pagamentoCounts.pendente} sem pagar</span>
+            )}
+          </div>
+        </button>
+      )}
+
       <p className="font-body text-[11px] text-primary-foreground/30">
         {filtered.length} pedido{filtered.length !== 1 ? "s" : ""} encontrado{filtered.length !== 1 ? "s" : ""}
       </p>
+
 
       {/* List */}
       {filtered.length === 0 ? (
