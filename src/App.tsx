@@ -45,7 +45,6 @@ const App = () => (
           <Route path="/instalar" element={<Instalar />} />
           <Route path="/admin-bot-wpp" element={<AdminBotWpp />} />
           <Route path="/avaliar" element={<Avaliar />} />
-          <Route path="/avaliar/:id" element={<Avaliar />} />
           <Route path="/anamnese/:id/pdf" element={<AnamnesePdfView />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
