@@ -2632,13 +2632,7 @@ const ServicosTab = ({
             <h2 className="font-heading text-base font-semibold text-primary-foreground">Categorias</h2>
             <span className="font-body text-[10px] text-primary-foreground/30">({categorias.length})</span>
           </div>
-          <button
-            onClick={() => setShowNewCatInput(!showNewCatInput)}
-            className="shrink-0"
-            title="Nova categoria"
-          >
-            <PlusButton size={28} title="Nova categoria" onClick={() => setShowNewCatInput(!showNewCatInput)} />
-          </button>
+          <PlusButton size={28} title="Nova categoria" onClick={() => setShowNewCatInput(!showNewCatInput)} />
         </div>
 
         {showNewCatInput && (
