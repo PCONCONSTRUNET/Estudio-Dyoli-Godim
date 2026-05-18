@@ -2847,7 +2847,7 @@ const ServicosTab = ({
                         {s.active ? "Ativo" : "Inativo"}
                       </button>
                       <button onClick={() => startEdit(s)} className="p-2 rounded-lg hover:bg-primary-foreground/[0.06] text-primary-foreground/40 hover:text-gold transition-all active:scale-95"><Edit2 className="w-3.5 h-3.5" /></button>
-                      <button onClick={() => removeService(s.id)} className="p-2 rounded-lg hover:bg-rose/10 text-primary-foreground/30 hover:text-rose transition-all active:scale-95"><Trash2 className="w-3.5 h-3.5" /></button>
+                      <BinButton size="sm" onClick={() => removeService(s.id)} />
                     </div>
                   </div>
                 )}
