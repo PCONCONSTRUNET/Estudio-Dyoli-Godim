@@ -252,6 +252,8 @@ const DespesasTab = () => {
     setDataVencimento("");
     setCategoria("Outros");
     setObservacao("");
+    setFixa(false);
+    setMeses("12");
   };
 
   const totalAtrasado = useMemo(
