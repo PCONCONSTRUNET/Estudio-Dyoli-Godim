@@ -99,9 +99,9 @@ Deno.serve(async (req) => {
 
       const cfgMap = new Map((configs || []).map((c: any) => [c.tipo, c]));
 
-      // Fire webhooks for each completed appointment (somente origem='app')
+      // Fire webhooks for each completed appointment (app + assistente)
       for (const a of toComplete) {
-        if (a.origem !== "app") continue;
+        if (a.origem !== "app" && a.origem !== "whatsapp_bot") continue;
         const { data: prof } = await supabase
           .from("profiles")
           .select("nome, whatsapp")
@@ -112,16 +112,20 @@ Deno.serve(async (req) => {
         if (!numero) continue;
 
         const nome = a.cliente_nome || prof?.nome || "";
+        const link_avaliacao = `${SITE_URL}/avaliar/${a.id}`;
 
         for (const tipo of ["comparecimento", "pos_atendimento"] as const) {
           const cfg: any = cfgMap.get(tipo);
           if (cfg && cfg.ativo === false) continue;
+          // Para agendamentos via assistente, só envia o pós-atendimento (avaliação)
+          if (a.origem === "whatsapp_bot" && tipo !== "pos_atendimento") continue;
           const template = (cfg?.mensagem && cfg.mensagem.trim()) || fallbackMessages[tipo];
           const mensagem = interpolate(template, {
             nome,
             data: a.data_agendamento,
             horario: a.horario,
             servico: a.servico || undefined,
+            link_avaliacao,
           });
 
           fetch(WEBHOOK_URL, {
