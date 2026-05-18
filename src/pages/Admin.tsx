@@ -45,7 +45,7 @@ interface Agendamento {
   origem?: string | null;
   observacao?: string | null;
 }
-interface Profile { id: string; nome: string; whatsapp: string; created_at: string; }
+interface Profile { id: string; nome: string; whatsapp: string; cpf?: string | null; created_at: string; }
 interface LembreteConfig { id: string; tipo: string; ativo: boolean; mensagem: string; horas_antes: number; }
 
 type Tab = "dashboard" | "agendamentos" | "pedidos" | "clientes" | "horarios" | "servicos" | "servicos_app" | "financeiro" | "caixa" | "pagamentos" | "produtos" | "despesas" | "gateway" | "chatbot" | "anamnese";
@@ -1772,6 +1772,9 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                         <div className="space-y-4">
                           <div className="space-y-1 rounded-xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-3">
                             <p className="font-body text-[12px] text-primary-foreground/50">📱 {formatWhatsapp(selProfile.whatsapp)}</p>
+                            {selProfile.cpf && (
+                              <p className="font-body text-[12px] text-primary-foreground/50">🪪 CPF {selProfile.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}</p>
+                            )}
                             <p className="font-body text-[12px] text-primary-foreground/50">📅 Cliente desde {new Date(selProfile.created_at).toLocaleDateString("pt-BR")}</p>
                           </div>
                           <div className="grid grid-cols-2 gap-2">
