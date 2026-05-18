@@ -35,6 +35,9 @@ const formatCurrency = (v?: number) => {
  * Supports: {nome} {cliente} {data} {horario} {hora} {servico} {valor}
  * (Aliases also supported with [BRACKETS], e.g. [Nome_do_cliente])
  */
+const SITE_URL = "https://estudiodyoli.lovable.app";
+const LINK_AVALIACAO = `${SITE_URL}/avaliar`;
+
 const interpolate = (template: string, params: NotifyParams) => {
   const map: Record<string, string> = {
     nome: params.nome || "cliente",
@@ -47,6 +50,8 @@ const interpolate = (template: string, params: NotifyParams) => {
     tempo: params.horario,
     servico: params.servico || "",
     valor: formatCurrency(params.valor),
+    link_avaliacao: LINK_AVALIACAO,
+    link: LINK_AVALIACAO,
   };
 
   let out = template;
@@ -73,7 +78,7 @@ const fallbackMessages: Record<LembreteTipo, string> = {
   comparecimento:
     "💖 Obrigada por comparecer, {nome}! Esperamos te ver novamente em breve.",
   pos_atendimento:
-    "⭐ Olá {nome}, como foi seu atendimento? Sua opinião é muito importante!",
+    "⭐ Olá {nome}, esperamos que tenha amado seu atendimento no Estúdio Dyoli Godim! Conte pra gente como foi: {link_avaliacao} 💛",
 };
 
 const sendWebhook = async (numero: string, mensagem: string) => {
