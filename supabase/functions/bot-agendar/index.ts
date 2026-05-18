@@ -145,11 +145,14 @@ Deno.serve(async (req) => {
 
     if (existingProfile?.id) {
       userId = existingProfile.id;
-      // Upgrade legacy whatsapp value to canonical format
-      if (existingProfile.whatsapp !== wa) {
+      // Atualiza whatsapp legado + grava CPF se ainda não tiver
+      const updates: Record<string, unknown> = {};
+      if (existingProfile.whatsapp !== wa) updates.whatsapp = wa;
+      if (cpfFinal) updates.cpf = cpfFinal;
+      if (Object.keys(updates).length > 0) {
         await admin
           .from("profiles")
-          .update({ whatsapp: wa })
+          .update(updates)
           .eq("id", existingProfile.id);
       }
     } else {
@@ -158,7 +161,7 @@ Deno.serve(async (req) => {
         email,
         password: DEFAULT_BOT_PASSWORD,
         email_confirm: true,
-        user_metadata: { nome, whatsapp: wa, source: "whatsapp_bot" },
+        user_metadata: { nome, whatsapp: wa, cpf: cpfFinal, source: "whatsapp_bot" },
       });
 
       if (createErr) {
@@ -179,7 +182,7 @@ Deno.serve(async (req) => {
         await admin
           .from("profiles")
           .upsert(
-            { id: userId, nome, whatsapp: wa },
+            { id: userId, nome, whatsapp: wa, ...(cpfFinal ? { cpf: cpfFinal } : {}) },
             { onConflict: "id" }
           );
       }
