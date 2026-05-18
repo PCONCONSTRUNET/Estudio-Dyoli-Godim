@@ -1655,6 +1655,13 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
               const confirmedCount = selAgendamentos.filter((a) => a.status === "confirmado" || a.status === "concluido").length;
               const faltaCount = selAgendamentos.filter((a) => a.status === "falta").length;
               const cancelCount = selAgendamentos.filter((a) => a.status === "cancelado").length;
+              // Saldo devedor: soma das diferenças em pedidos não cancelados/faltas
+              const saldoDevedor = selAgendamentos
+                .filter((a) => a.status !== "cancelado" && a.status !== "falta")
+                .reduce((s, a) => s + Math.max(0, Number(a.valor) - Number(a.valor_pago || 0)), 0);
+              const pedidosDevendo = selAgendamentos.filter(
+                (a) => a.status !== "cancelado" && a.status !== "falta" && Number(a.valor_pago || 0) < Number(a.valor)
+              ).length;
 
               const clientSearch = searchTerm.toLowerCase();
               const filteredClientes = clientes.filter((c) => {
@@ -1777,6 +1784,36 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                               <p className="font-body text-[10px] text-primary-foreground/30">Valor total</p>
                             </div>
                           </div>
+
+                          {saldoDevedor > 0 && (
+                            <div className="rounded-2xl border border-amber-500/40 bg-gradient-to-br from-amber-500/15 via-amber-500/[0.06] to-transparent p-3.5 shadow-[0_0_0_1px_rgba(245,158,11,0.08),0_8px_24px_-8px_rgba(245,158,11,0.35)]">
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="font-body text-[10px] uppercase tracking-wider text-amber-400/80 font-semibold">Saldo devedor</p>
+                                  <p className="font-heading text-[22px] font-bold text-amber-300 leading-tight mt-0.5">
+                                    R$ {saldoDevedor.toFixed(2).replace(".", ",")}
+                                  </p>
+                                  <p className="font-body text-[11px] text-amber-200/70 mt-0.5">
+                                    {pedidosDevendo} {pedidosDevendo === 1 ? "pedido em aberto" : "pedidos em aberto"}
+                                  </p>
+                                </div>
+                                <div className="shrink-0 h-11 w-11 rounded-full bg-amber-500/15 border border-amber-500/40 flex items-center justify-center">
+                                  <span className="font-heading text-[18px] text-amber-300">⌛</span>
+                                </div>
+                              </div>
+                              <p className="font-body text-[11px] text-amber-200/70 mt-2 leading-snug">
+                                💡 Conforme os pagamentos forem registrados na aba <span className="font-semibold text-amber-200">Pedidos</span>, este saldo é descontado automaticamente.
+                              </p>
+                            </div>
+                          )}
+
+                          {saldoDevedor <= 0 && totalValor > 0 && (
+                            <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.06] p-2.5 flex items-center gap-2">
+                              <span className="text-emerald-400 text-[14px]">✓</span>
+                              <p className="font-body text-[11px] text-emerald-300/90">Cliente sem pendências financeiras.</p>
+                            </div>
+                          )}
+
                           <div className="grid grid-cols-3 gap-2">
                             <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-2 text-center">
                               <p className="font-body text-[16px] font-bold text-emerald-400">{confirmedCount}</p>
@@ -1804,20 +1841,30 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                       <p className="font-body text-[10px] text-primary-foreground/30">{formatDate(a.data_agendamento)} às {a.horario}</p>
                                     </div>
                                     <div className="ml-2 text-right shrink-0">
-                                      <p className="font-body text-[12px] font-medium text-gold">R$ {(a.valor_pago || 0).toFixed(2).replace(".", ",")}</p>
-                                      <span
-                                        className={`px-1.5 py-0.5 rounded-full font-body text-[9px] ${
-                                          a.status === "confirmado" || a.status === "concluido"
-                                            ? "bg-emerald-500/10 text-emerald-400"
-                                            : a.status === "falta"
-                                              ? "bg-red-500/10 text-red-400"
-                                              : a.status === "cancelado"
-                                                ? "bg-primary-foreground/[0.05] text-primary-foreground/30"
-                                                : "bg-gold/10 text-gold"
-                                        }`}
-                                      >
-                                        {a.status}
-                                      </span>
+                                      <p className="font-body text-[12px] font-medium text-gold leading-tight">
+                                        R$ {(a.valor_pago || 0).toFixed(2).replace(".", ",")}
+                                        <span className="text-primary-foreground/30 font-normal"> / R$ {Number(a.valor).toFixed(2).replace(".", ",")}</span>
+                                      </p>
+                                      <div className="flex items-center justify-end gap-1 mt-0.5 flex-wrap">
+                                        {a.status !== "cancelado" && a.status !== "falta" && Number(a.valor_pago || 0) < Number(a.valor) && (
+                                          <span className="px-1.5 py-0.5 rounded-full font-body text-[9px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                                            Devendo R$ {(Number(a.valor) - Number(a.valor_pago || 0)).toFixed(2).replace(".", ",")}
+                                          </span>
+                                        )}
+                                        <span
+                                          className={`px-1.5 py-0.5 rounded-full font-body text-[9px] ${
+                                            a.status === "confirmado" || a.status === "concluido"
+                                              ? "bg-emerald-500/10 text-emerald-400"
+                                              : a.status === "falta"
+                                                ? "bg-red-500/10 text-red-400"
+                                                : a.status === "cancelado"
+                                                  ? "bg-primary-foreground/[0.05] text-primary-foreground/30"
+                                                  : "bg-gold/10 text-gold"
+                                          }`}
+                                        >
+                                          {a.status}
+                                        </span>
+                                      </div>
                                     </div>
                                   </div>
                                 ))}
