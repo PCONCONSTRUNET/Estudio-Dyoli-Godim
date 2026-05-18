@@ -192,7 +192,7 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
       concluido: "bg-green-500/10 text-green-500 border-green-500/20",
       falta: "bg-orange-500/10 text-orange-500 border-orange-500/20",
     };
-    const labels: Record<string, string> = { confirmado: "Confirmado", cancelado: "Cancelado", concluido: "Concluído", falta: "Falta" };
+    const labels: Record<string, string> = { confirmado: "Confirmado", cancelado: "Cancelado", concluido: "Concluído", falta: "Não veio" };
     return (
       <span className={`px-2 py-0.5 rounded-full text-[10px] font-body font-medium border ${map[s] || "bg-secondary text-muted-foreground border-border"}`}>
         {labels[s] || s}
