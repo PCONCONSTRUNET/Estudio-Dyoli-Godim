@@ -1841,20 +1841,30 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                       <p className="font-body text-[10px] text-primary-foreground/30">{formatDate(a.data_agendamento)} às {a.horario}</p>
                                     </div>
                                     <div className="ml-2 text-right shrink-0">
-                                      <p className="font-body text-[12px] font-medium text-gold">R$ {(a.valor_pago || 0).toFixed(2).replace(".", ",")}</p>
-                                      <span
-                                        className={`px-1.5 py-0.5 rounded-full font-body text-[9px] ${
-                                          a.status === "confirmado" || a.status === "concluido"
-                                            ? "bg-emerald-500/10 text-emerald-400"
-                                            : a.status === "falta"
-                                              ? "bg-red-500/10 text-red-400"
-                                              : a.status === "cancelado"
-                                                ? "bg-primary-foreground/[0.05] text-primary-foreground/30"
-                                                : "bg-gold/10 text-gold"
-                                        }`}
-                                      >
-                                        {a.status}
-                                      </span>
+                                      <p className="font-body text-[12px] font-medium text-gold leading-tight">
+                                        R$ {(a.valor_pago || 0).toFixed(2).replace(".", ",")}
+                                        <span className="text-primary-foreground/30 font-normal"> / R$ {Number(a.valor).toFixed(2).replace(".", ",")}</span>
+                                      </p>
+                                      <div className="flex items-center justify-end gap-1 mt-0.5 flex-wrap">
+                                        {a.status !== "cancelado" && a.status !== "falta" && Number(a.valor_pago || 0) < Number(a.valor) && (
+                                          <span className="px-1.5 py-0.5 rounded-full font-body text-[9px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                                            Devendo R$ {(Number(a.valor) - Number(a.valor_pago || 0)).toFixed(2).replace(".", ",")}
+                                          </span>
+                                        )}
+                                        <span
+                                          className={`px-1.5 py-0.5 rounded-full font-body text-[9px] ${
+                                            a.status === "confirmado" || a.status === "concluido"
+                                              ? "bg-emerald-500/10 text-emerald-400"
+                                              : a.status === "falta"
+                                                ? "bg-red-500/10 text-red-400"
+                                                : a.status === "cancelado"
+                                                  ? "bg-primary-foreground/[0.05] text-primary-foreground/30"
+                                                  : "bg-gold/10 text-gold"
+                                          }`}
+                                        >
+                                          {a.status}
+                                        </span>
+                                      </div>
                                     </div>
                                   </div>
                                 ))}
