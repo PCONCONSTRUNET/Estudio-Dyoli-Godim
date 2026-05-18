@@ -269,8 +269,76 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     );
   };
 
+  // ===== Histórico/auditoria de pagamentos =====
+  interface HistoricoEntry {
+    id: string;
+    agendamento_id: string;
+    status_anterior: string;
+    status_novo: string;
+    valor_anterior: number;
+    valor_novo: number;
+    valor_delta: number;
+    total: number;
+    acao: string;
+    autor_nome: string;
+    created_at: string;
+  }
+  const [historicoMap, setHistoricoMap] = useState<Record<string, HistoricoEntry[]>>({});
+
+  const statusFromValor = (valor_pago: number, total: number): "nao_pago" | "quitado_parcial" | "quitado" => {
+    if (valor_pago <= 0) return "nao_pago";
+    if (valor_pago >= total) return "quitado";
+    return "quitado_parcial";
+  };
+  const statusLabel = (s: string) =>
+    s === "quitado" ? "Quitado" : s === "quitado_parcial" ? "Quitado parcial" : s === "nao_pago" ? "Não pago" : s;
+  const statusColor = (s: string) =>
+    s === "quitado" ? "text-green-400 border-green-500/30 bg-green-500/10"
+    : s === "quitado_parcial" ? "text-amber-400 border-amber-500/40 bg-amber-500/10"
+    : "text-red-400 border-red-500/30 bg-red-500/10";
+
+  const loadHistorico = async (agendamentoId: string) => {
+    const { data } = await supabase
+      .from("pagamento_historico")
+      .select("*")
+      .eq("agendamento_id", agendamentoId)
+      .order("created_at", { ascending: false });
+    setHistoricoMap((prev) => ({ ...prev, [agendamentoId]: (data || []) as HistoricoEntry[] }));
+  };
+
+  const logPagamento = async (a: Agendamento, valor_novo: number, acao: "registro" | "quitar" | "estorno") => {
+    const valor_anterior = Number(a.valor_pago || 0);
+    const total = Number(a.valor);
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      const autor_id = userRes?.user?.id || null;
+      const autor_nome =
+        (userRes?.user?.user_metadata as any)?.nome ||
+        userRes?.user?.email ||
+        "Admin";
+      await supabase.from("pagamento_historico").insert({
+        agendamento_id: a.id,
+        status_anterior: statusFromValor(valor_anterior, total),
+        status_novo: statusFromValor(valor_novo, total),
+        valor_anterior,
+        valor_novo,
+        valor_delta: valor_novo - valor_anterior,
+        total,
+        acao,
+        autor_id,
+        autor_nome,
+      });
+      // refresh if already loaded
+      if (historicoMap[a.id]) await loadHistorico(a.id);
+    } catch (err) {
+      console.error("Falha ao registrar histórico de pagamento", err);
+    }
+  };
+
   const registrarPagamentoIntegral = async (a: Agendamento) => {
-    await supabase.from("agendamentos").update({ valor_pago: Number(a.valor) }).eq("id", a.id);
+    const total = Number(a.valor);
+    await supabase.from("agendamentos").update({ valor_pago: total }).eq("id", a.id);
+    await logPagamento(a, total, "quitar");
     onUpdate();
     toast.success("Pagamento registrado como quitado");
   };
@@ -297,6 +365,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     }
     const totalAgora = Math.min(Number(pagamentoAg.valor), Number(pagamentoAg.valor_pago || 0) + valor);
     await supabase.from("agendamentos").update({ valor_pago: totalAgora }).eq("id", pagamentoAg.id);
+    await logPagamento(pagamentoAg, totalAgora, totalAgora >= Number(pagamentoAg.valor) ? "quitar" : "registro");
     onUpdate();
     setPagamentoAg(null);
     setPagamentoInput("");
