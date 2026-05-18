@@ -285,7 +285,7 @@ const GatewayTab = () => {
                   <label className="font-body text-[11px] text-primary-foreground/40 mb-2 block">Métodos de Pagamento</label>
                   <div className="space-y-2">
                     {([
-                      { field: "pixEnabled", label: "PIX", desc: "Pagamento instantâneo", icon: QrCode, show: true },
+                      { field: "pixEnabled", label: "PIX", desc: "Pagamento instantâneo", icon: PixIcon, show: true },
                       { field: "cartaoEnabled", label: "Cartão de Crédito", desc: "Visa, Master, Elo, etc.", icon: CreditCard, show: gw.supportsCartao },
                       { field: "boletoEnabled", label: "Boleto Bancário", desc: "Compensação em até 3 dias", icon: FileText, show: gw.supportsBoleto },
                     ] as const).filter(m => m.show).map((m) => {
