@@ -421,12 +421,7 @@ const DespesasTab = () => {
                 </SheetContent>
               </Sheet>
 
-              <button
-                onClick={() => setShowForm(true)}
-                className="ios-press flex items-center gap-1.5 rounded-2xl bg-gradient-to-br from-gold to-gold/80 px-4 h-10 font-body text-[12px] font-semibold text-charcoal shadow-[0_8px_24px_-6px_hsl(40_60%_55%/0.45)] transition-all hover:shadow-[0_12px_28px_-6px_hsl(40_60%_55%/0.6)] hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <Plus className="h-4 w-4" /> Nova
-              </button>
+              <PlusButton size={32} title="Nova despesa" onClick={() => setShowForm(true)} />
             </div>
           </div>
 
