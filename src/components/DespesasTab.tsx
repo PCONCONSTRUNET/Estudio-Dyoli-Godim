@@ -47,6 +47,14 @@ const DespesasTab = () => {
   const [fixa, setFixa] = useState(false);
   const [meses, setMeses] = useState("12");
   const [saving, setSaving] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  const toggleGroup = (id: string) =>
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
 
   useEffect(() => {
     loadDespesas();
