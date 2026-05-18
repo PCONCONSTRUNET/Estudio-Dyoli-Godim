@@ -972,12 +972,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                     >
                                       <CheckCircle className="h-3 w-3" /> Lida
                                     </button>
-                                    <button
-                                      onClick={() => deleteAgendamento(n.ag.id)}
-                                      className="flex items-center gap-1 rounded-lg px-2 py-1 bg-rose/10 text-rose/60 text-[10px] font-body font-medium border border-rose/20 hover:bg-rose/20 hover:text-rose transition-all"
-                                    >
-                                      <Trash2 className="h-3 w-3" /> Excluir
-                                    </button>
+                                    <BinButton size="sm" onClick={() => deleteAgendamento(n.ag.id)} />
+
                                   </div>
                                 </div>
                               </div>
