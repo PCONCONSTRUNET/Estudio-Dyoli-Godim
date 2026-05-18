@@ -26,6 +26,10 @@ export type Database = {
           id: string
           observacao: string
           origem: string
+          paid_at: string | null
+          payer_name: string | null
+          payment_id: string | null
+          receipt_url: string | null
           servico: string
           status: string
           updated_at: string
@@ -45,6 +49,10 @@ export type Database = {
           id?: string
           observacao?: string
           origem?: string
+          paid_at?: string | null
+          payer_name?: string | null
+          payment_id?: string | null
+          receipt_url?: string | null
           servico: string
           status?: string
           updated_at?: string
@@ -64,6 +72,10 @@ export type Database = {
           id?: string
           observacao?: string
           origem?: string
+          paid_at?: string | null
+          payer_name?: string | null
+          payment_id?: string | null
+          receipt_url?: string | null
           servico?: string
           status?: string
           updated_at?: string

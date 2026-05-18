@@ -21,6 +21,11 @@ interface Agendamento {
   origem?: string | null;
   forma_pagamento?: string | null;
   observacao?: string | null;
+  payment_id?: string | null;
+  paid_at?: string | null;
+  payer_name?: string | null;
+  receipt_url?: string | null;
+
 }
 
 interface Props {
@@ -509,7 +514,45 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                           <p className="font-body text-[12px] text-amber-200/95 leading-snug whitespace-pre-wrap break-words">📝 {a.observacao}</p>
                         </div>
                       )}
+                      {a.payment_id && (
+                        <div className="col-span-2 rounded-lg border border-green-500/30 bg-gradient-to-br from-green-500/10 to-green-500/[0.03] px-3 py-2.5 space-y-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <CheckCircle className="h-3.5 w-3.5 text-green-400" />
+                            <p className="font-body text-[11px] font-semibold uppercase tracking-wider text-green-400">Pagamento aprovado</p>
+                          </div>
+                          {a.paid_at && (
+                            <div className="flex justify-between gap-2">
+                              <span className="text-primary-foreground/45 text-[11px]">Pago em</span>
+                              <span className="text-primary-foreground/90 text-[11px] font-medium">
+                                {new Date(a.paid_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                              </span>
+                            </div>
+                          )}
+                          {a.payer_name && (
+                            <div className="flex justify-between gap-2">
+                              <span className="text-primary-foreground/45 text-[11px]">Pagador</span>
+                              <span className="text-primary-foreground/90 text-[11px] font-medium truncate max-w-[60%]" title={a.payer_name}>{a.payer_name}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between gap-2">
+                            <span className="text-primary-foreground/45 text-[11px]">ID da transação</span>
+                            <span className="text-primary-foreground/70 text-[10px] font-mono truncate max-w-[55%]" title={a.payment_id}>{a.payment_id}</span>
+                          </div>
+                          {a.receipt_url && (
+                            <a
+                              href={a.receipt_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="mt-1 flex items-center justify-center gap-1.5 rounded-lg border border-green-500/40 bg-green-500/15 px-3 py-1.5 font-body text-[11px] font-semibold text-green-300 hover:bg-green-500/25 hover:text-green-200 transition-all"
+                            >
+                              🧾 Ver comprovante oficial
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </div>
+
                     <div className="border-t border-primary-foreground/[0.06] pt-3 space-y-2">
                       <p className="font-body text-[10px] text-primary-foreground/30 uppercase tracking-wider">Alterar status</p>
                       <div className="flex items-center gap-1 flex-wrap">

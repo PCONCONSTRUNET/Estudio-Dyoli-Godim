@@ -44,14 +44,29 @@ Deno.serve(async (req) => {
           // Aceita "WEB_<uuid>" (vindo do app/site) ou UUID puro (legado)
           const agendamentoId = String(payment.external_reference).replace(/^WEB_/, "");
 
+          // Monta nome do pagador (first + last, ou e-mail como fallback)
+          const payerName = [payment.payer?.first_name, payment.payer?.last_name]
+            .filter(Boolean).join(" ").trim() || payment.payer?.email || null;
+          // Link do comprovante (ticket PIX). Em cartão fica vazio.
+          const receiptUrl = payment.point_of_interaction?.transaction_data?.ticket_url
+            || payment.transaction_details?.external_resource_url
+            || null;
+          // Data de aprovação
+          const paidAt = payment.date_approved || new Date().toISOString();
+
           const { error } = await supabase
             .from("agendamentos")
             .update({
               status: "confirmado",
               valor_pago: payment.transaction_amount,
               forma_pagamento: payment.payment_type_id || "mercadopago",
+              payment_id: String(payment.id),
+              paid_at: paidAt,
+              payer_name: payerName,
+              receipt_url: receiptUrl,
             })
             .eq("id", agendamentoId);
+
 
           if (error) {
             console.error("Error updating agendamento:", error);
