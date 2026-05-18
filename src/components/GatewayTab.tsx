@@ -24,7 +24,7 @@ interface GatewayMeta {
   key: string;
   label: string;
   color: string;
-  icon: typeof CreditCard;
+  icon: React.ComponentType<{ className?: string }>;
   tokenPlaceholder: string;
   publicKeyPlaceholder: string;
   publicKeyLabel: string;
