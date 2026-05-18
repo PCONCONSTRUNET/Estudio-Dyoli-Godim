@@ -318,7 +318,10 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
         return;
       }
 
-      // 1. Create agendamento as pending while the Mercado Pago Pix is unpaid.
+      // 1. Create agendamento with status "aguardando_pagamento".
+      // Esse status reserva o slot na agenda (via trigger), mas é OCULTADO
+      // do painel admin e do histórico do cliente até o webhook do gateway
+      // confirmar o pagamento — só então vira "confirmado" e aparece no sistema.
       const { data: agData, error: agError } = await supabase.from("agendamentos").insert({
         user_id: user.id,
         servico: service,
@@ -328,7 +331,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
         valor: numericPrice,
         valor_pago: 0,
         forma_pagamento: selectedPaymentMethod,
-        status: "pendente",
+        status: "aguardando_pagamento",
         duracao_minutos: serviceDuration,
         observacao: observacao.trim(),
       }).select("id").single();
