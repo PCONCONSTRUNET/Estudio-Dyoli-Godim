@@ -23,6 +23,7 @@ Deno.serve(async (req) => {
     const {
       whatsapp,
       nome,
+      cpf,
       servico_id,
       data,
       horario,
@@ -31,6 +32,7 @@ Deno.serve(async (req) => {
     } = body as {
       whatsapp?: string;
       nome?: string;
+      cpf?: string;
       servico_id?: string;
       data?: string;
       horario?: string;
@@ -48,6 +50,10 @@ Deno.serve(async (req) => {
         400
       );
     }
+
+    // Normaliza CPF (apenas dígitos) — campo opcional
+    const cpfDigits = cpf ? cpf.replace(/\D/g, "") : "";
+    const cpfFinal = cpfDigits.length === 11 ? cpfDigits : null;
 
     if (!/^\d{4}-\d{2}-\d{2}$/.test(data)) {
       return jsonResponse(
