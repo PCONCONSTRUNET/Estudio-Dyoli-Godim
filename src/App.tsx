@@ -16,6 +16,7 @@ import Sucesso from "./pages/Sucesso";
 import Cuidados from "./pages/Cuidados";
 import Instalar from "./pages/Instalar";
 import AdminBotWpp from "./pages/AdminBotWpp";
+import Avaliar from "./pages/Avaliar";
 import AnamnesePdfView from "./pages/AnamnesePdfView";
 import NotFound from "./pages/NotFound";
 import PushPromptModal from "./components/PushPromptModal";
