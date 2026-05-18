@@ -532,17 +532,33 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
       concluido: "bg-green-500/10 text-green-500 border-green-500/20",
       falta: "bg-orange-500/10 text-orange-500 border-orange-500/20",
     };
-    const labels: Record<string, string> = { confirmado: "Confirmado", cancelado: "Cancelado", concluido: "Concluído", falta: "Falta" };
+    const labels: Record<string, string> = { confirmado: "Confirmado", cancelado: "Cancelado", concluido: "Concluído", falta: "Não veio" };
     return <span className={`px-2 py-0.5 rounded-full text-[10px] font-body font-medium border ${map[s] || "bg-secondary text-muted-foreground border-border"}`}>{labels[s] || s}</span>;
   };
 
+  const formatFormaPagamento = (f: string | null | undefined) => {
+    if (!f) return "—";
+    const map: Record<string, string> = {
+      pix: "PIX",
+      pix_mp: "PIX (online)",
+      pix_woovi: "PIX (online)",
+      cartao: "Cartão",
+      boleto: "Boleto",
+      dinheiro: "Dinheiro",
+      pendente: "A combinar",
+    };
+    return map[f.toLowerCase()] || f.charAt(0).toUpperCase() + f.slice(1);
+  };
+
   const pagamentoBadge = (a: Agendamento) => {
+
     const pago = Number(a.valor_pago || 0);
     const totalValor = Number(a.valor);
     if (pago >= totalValor) return <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-medium border bg-green-500/10 text-green-500 border-green-500/20">Pago</span>;
-    if (pago > 0) return <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-medium border bg-gold/10 text-gold border-gold/20">Sinal</span>;
-    return <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-medium border bg-primary-foreground/5 text-primary-foreground/30 border-primary-foreground/[0.06]">Pendente</span>;
+    if (pago > 0) return <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-medium border bg-gold/10 text-gold border-gold/20">Sinal pago</span>;
+    return <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-medium border bg-amber-500/10 text-amber-400 border-amber-500/30">Não pago</span>;
   };
+
 
   const updatePayment = async (id: string, type: "sinal" | "completo") => {
     const a = agendamentos.find((item) => item.id === id);
@@ -1125,12 +1141,13 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                           : "bg-gradient-to-b from-red-400 to-red-600 shadow-[0_0_12px_-2px_rgba(239,68,68,0.5)]";
 
                         const barLabel = isCancelado
-                          ? a.status === "falta" ? "Falta" : "Cancelado"
+                          ? a.status === "falta" ? "Não veio" : "Cancelado"
                           : isPagoIntegral
                           ? "Pago"
                           : isPagoParcial
-                          ? "Sinal"
+                          ? "Sinal pago"
                           : "Não pago";
+
 
                         return (
                         <article
@@ -1217,6 +1234,13 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                 <p className="font-body text-[12px] font-medium text-green-400">R$ {Number(a.valor_pago || 0).toFixed(2).replace(".", ",")}</p>
                               </div>
                             )}
+                            {!isCancelado && Number(a.valor) - Number(a.valor_pago || 0) > 0 && (
+                              <div className="mt-1 flex flex-wrap items-center justify-between gap-2 border-t border-gold/10 pt-1.5">
+                                <p className="font-body text-[11px] text-primary-foreground/55">A receber</p>
+                                <p className="font-body text-[12px] font-medium text-red-400">R$ {(Number(a.valor) - Number(a.valor_pago || 0)).toFixed(2).replace(".", ",")}</p>
+                              </div>
+                            )}
+
                           </div>
 
                           <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-primary-foreground/10 pt-3">
@@ -1346,14 +1370,15 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                           </div>
                           {restante > 0 && (
                             <div className="flex items-center justify-between border-t border-gold/10 pt-1.5">
-                              <p className="font-body text-[12px] text-primary-foreground/60">Falta</p>
+                              <p className="font-body text-[12px] text-primary-foreground/60">A receber</p>
                               <p className="font-body text-[13px] font-medium text-red-400">R$ {restante.toFixed(2).replace(".", ",")}</p>
                             </div>
                           )}
                           <div className="flex items-center justify-between border-t border-gold/10 pt-1.5">
                             <p className="font-body text-[12px] text-primary-foreground/60">Forma</p>
-                            <p className="font-body text-[12px] font-medium text-primary-foreground capitalize">{a.forma_pagamento || "—"}</p>
+                            <p className="font-body text-[12px] font-medium text-primary-foreground">{formatFormaPagamento(a.forma_pagamento)}</p>
                           </div>
+
                         </div>
 
                         {/* Status + origem */}
