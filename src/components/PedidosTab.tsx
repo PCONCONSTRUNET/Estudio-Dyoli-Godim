@@ -638,14 +638,22 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                             </div>
                           </div>
                           <p className="font-body text-[11px] text-amber-200/80 leading-snug">
-                            💡 O cliente pagou parte do valor. Cobre o restante na recepção e marque como pago integralmente abaixo.
+                            💡 O cliente pagou parte do valor. Registre quanto recebeu agora ou quite tudo de uma vez.
                           </p>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); registrarPagamentoIntegral(a); }}
-                            className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-green-500/40 bg-green-500/15 px-3 py-2 font-body text-[12px] font-semibold text-green-300 hover:bg-green-500/25 hover:text-green-200 transition-all"
-                          >
-                            <CheckCircle className="h-4 w-4" /> Recebi o restante — marcar como pago
-                          </button>
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); abrirRegistroPagamento(a, "restante"); }}
+                              className="flex items-center justify-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/15 px-2 py-2 font-body text-[12px] font-semibold text-amber-200 hover:bg-amber-500/25 transition-all"
+                            >
+                              <Wallet className="h-4 w-4" /> Registrar pagamento
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); registrarPagamentoIntegral(a); }}
+                              className="flex items-center justify-center gap-1.5 rounded-lg border border-green-500/40 bg-green-500/15 px-2 py-2 font-body text-[12px] font-semibold text-green-300 hover:bg-green-500/25 hover:text-green-200 transition-all"
+                            >
+                              <CheckCircle className="h-4 w-4" /> Quitar tudo
+                            </button>
+                          </div>
                         </div>
                       )}
 
