@@ -342,37 +342,9 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       const realAgendamentoId = agData.id;
       setAgendamentoId(realAgendamentoId);
 
-      // Webhook de confirmação (background, não bloqueia o fluxo)
-      try {
-        const { data: prof } = await supabase
-          .from("profiles")
-          .select("nome, whatsapp")
-          .eq("id", user.id)
-          .maybeSingle();
-        notifyAgendamentoConfirmado({
-          numero: prof?.whatsapp || "",
-          nome: prof?.nome || user.user_metadata?.nome || "",
-          data: selectedDate,
-          horario: selectedTime,
-        });
-        // Push nativo pra admin
-        sendPush({
-          role: "admin",
-          title: "🔔 Novo Agendamento!",
-          message: `${prof?.nome || "Cliente"} — ${service} em ${selectedDate} às ${selectedTime}`,
-          url: "/admin/",
-        });
-        // Push de confirmação pro cliente
-        sendPush({
-          role: "cliente",
-          user_id: user.id,
-          title: "✅ Agendamento confirmado!",
-          message: `${service} em ${selectedDate} às ${selectedTime}. Te esperamos!`,
-          url: "/",
-        });
-      } catch (e) {
-        console.log("notify webhook skipped", e);
-      }
+      // ⚠️ NÃO dispara push/webhook de confirmação aqui — o agendamento está PENDENTE.
+      // O admin e o cliente só serão notificados depois que o webhook do gateway
+      // (mercadopago-webhook / woovi-webhook) confirmar o pagamento de fato.
 
       // 2. Create payment with real agendamento_id
       const res = await supabase.functions.invoke("create-payment", {
