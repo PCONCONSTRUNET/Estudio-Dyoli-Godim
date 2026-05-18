@@ -524,13 +524,8 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                         <p className="text-primary-foreground font-medium">{formatDate(a.data_agendamento)}</p>
                       </div>
                       <div>
-                        <p className="text-primary-foreground/30">Valor pago</p>
-                        <p className="text-primary-foreground font-medium">
-                          {formatCurrency(Number(a.valor_pago || 0))}
-                          {Number(a.valor_pago || 0) < Number(a.valor) && (
-                            <span className="text-red-400 ml-1">(falta {formatCurrency(Number(a.valor) - Number(a.valor_pago || 0))})</span>
-                          )}
-                        </p>
+                        <p className="text-primary-foreground/30">Valor total</p>
+                        <p className="text-primary-foreground font-medium">{formatCurrency(Number(a.valor))}</p>
                       </div>
                       <div>
                         <p className="text-primary-foreground/30">Criado em</p>
