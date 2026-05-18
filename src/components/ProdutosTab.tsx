@@ -334,12 +334,8 @@ const ProdutosTab = () => {
                       >
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
-                      <button
-                        onClick={() => removeProduto(p.id)}
-                        className="p-1.5 rounded-lg hover:bg-rose/10 text-primary-foreground/20 hover:text-rose transition-all"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <BinButton size="sm" onClick={() => removeProduto(p.id)} />
+
                     </div>
                   </div>
                 </div>
