@@ -16,6 +16,8 @@ interface Despesa {
   categoria: string;
   observacao: string | null;
   created_at: string;
+  fixa?: boolean;
+  recorrencia_id?: string | null;
 }
 
 const CATEGORIAS = ["Aluguel", "Fornecedor", "Material", "Conta de Luz", "Conta de Água", "Internet", "Outros"];
