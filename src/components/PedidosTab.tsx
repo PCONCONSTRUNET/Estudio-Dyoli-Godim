@@ -544,6 +544,56 @@ const PedidosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                           {paymentBadge(a)}
                         </div>
                       </div>
+
+                      {isSinalPago(a) && a.status !== "cancelado" && (
+                        <div className="col-span-2 rounded-xl border border-amber-500/40 bg-gradient-to-br from-amber-500/15 to-amber-500/[0.04] px-3 py-3 space-y-2">
+                          <div className="flex items-center gap-1.5">
+                            <Wallet className="h-4 w-4 text-amber-400" />
+                            <p className="font-body text-[11px] font-semibold uppercase tracking-wider text-amber-400">Pagamento parcial (sinal)</p>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 text-[11px]">
+                            <div>
+                              <p className="text-primary-foreground/45 text-[10px]">Total</p>
+                              <p className="text-primary-foreground/90 font-medium">{formatCurrency(Number(a.valor))}</p>
+                            </div>
+                            <div>
+                              <p className="text-primary-foreground/45 text-[10px]">Sinal pago</p>
+                              <p className="text-green-400 font-semibold">{formatCurrency(Number(a.valor_pago || 0))}</p>
+                            </div>
+                            <div>
+                              <p className="text-primary-foreground/45 text-[10px]">A receber</p>
+                              <p className="text-amber-300 font-bold">{formatCurrency(Number(a.valor) - Number(a.valor_pago || 0))}</p>
+                            </div>
+                          </div>
+                          <p className="font-body text-[11px] text-amber-200/80 leading-snug">
+                            💡 O cliente já pagou o sinal. Cobre o valor restante na recepção e marque como pago integralmente abaixo.
+                          </p>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); registrarPagamentoIntegral(a); }}
+                            className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-green-500/40 bg-green-500/15 px-3 py-2 font-body text-[12px] font-semibold text-green-300 hover:bg-green-500/25 hover:text-green-200 transition-all"
+                          >
+                            <CheckCircle className="h-4 w-4" /> Recebi o restante — marcar como pago
+                          </button>
+                        </div>
+                      )}
+
+                      {isNaoPago(a) && a.status !== "cancelado" && a.status !== "falta" && (
+                        <div className="col-span-2 rounded-xl border border-red-500/30 bg-gradient-to-br from-red-500/10 to-red-500/[0.03] px-3 py-3 space-y-2">
+                          <div className="flex items-center gap-1.5">
+                            <AlertTriangle className="h-4 w-4 text-red-400" />
+                            <p className="font-body text-[11px] font-semibold uppercase tracking-wider text-red-400">Nada pago ainda</p>
+                          </div>
+                          <p className="font-body text-[11px] text-primary-foreground/70">
+                            A receber: <span className="font-bold text-red-300">{formatCurrency(Number(a.valor))}</span>
+                          </p>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); registrarPagamentoIntegral(a); }}
+                            className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-green-500/40 bg-green-500/15 px-3 py-2 font-body text-[12px] font-semibold text-green-300 hover:bg-green-500/25 hover:text-green-200 transition-all"
+                          >
+                            <CheckCircle className="h-4 w-4" /> Recebi o valor — marcar como pago
+                          </button>
+                        </div>
+                      )}
                       {a.observacao && (
                         <div className="col-span-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-2">
                           <p className="font-body text-[10px] text-amber-400/70 uppercase tracking-wider mb-0.5">Observações do cliente</p>
