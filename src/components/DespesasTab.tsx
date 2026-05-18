@@ -605,6 +605,40 @@ const DespesasTab = () => {
                 ))}
               </select>
             </div>
+
+            {/* Despesa fixa (mensal recorrente) */}
+            <div className={`rounded-xl border p-3 transition-all ${fixa ? "border-gold/40 bg-gold/[0.06]" : "border-primary-foreground/[0.06] bg-primary-foreground/[0.03]"}`}>
+              <button
+                type="button"
+                onClick={() => setFixa((v) => !v)}
+                className="flex w-full items-center justify-between gap-3"
+              >
+                <div className="flex items-center gap-2 text-left">
+                  <Repeat className={`h-4 w-4 ${fixa ? "text-gold" : "text-primary-foreground/40"}`} />
+                  <div>
+                    <p className={`font-body text-[12px] font-semibold ${fixa ? "text-primary-foreground" : "text-primary-foreground/70"}`}>Despesa fixa (mensal)</p>
+                    <p className="font-body text-[10px] text-primary-foreground/40">Cria automaticamente uma cópia por mês</p>
+                  </div>
+                </div>
+                <span className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${fixa ? "bg-gold" : "bg-primary-foreground/15"}`}>
+                  <span className={`inline-block h-4 w-4 rounded-full bg-charcoal shadow transition-transform ${fixa ? "translate-x-4" : "translate-x-0.5"}`} />
+                </span>
+              </button>
+              {fixa && (
+                <div className="mt-3 flex items-center gap-2">
+                  <label className="font-body text-[11px] text-primary-foreground/60 shrink-0">Repetir por</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={60}
+                    value={meses}
+                    onChange={(e) => setMeses(e.target.value)}
+                    className="w-20 rounded-lg bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] py-1.5 px-2 text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  />
+                  <span className="font-body text-[11px] text-primary-foreground/60">meses</span>
+                </div>
+              )}
+            </div>
             <div>
               <label className="font-body text-[11px] text-primary-foreground/40 mb-1 block">Observação</label>
               <input
