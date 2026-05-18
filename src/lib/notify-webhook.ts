@@ -35,6 +35,9 @@ const formatCurrency = (v?: number) => {
  * Supports: {nome} {cliente} {data} {horario} {hora} {servico} {valor}
  * (Aliases also supported with [BRACKETS], e.g. [Nome_do_cliente])
  */
+const SITE_URL = "https://estudiodyoli.lovable.app";
+const LINK_AVALIACAO = `${SITE_URL}/avaliar`;
+
 const interpolate = (template: string, params: NotifyParams) => {
   const map: Record<string, string> = {
     nome: params.nome || "cliente",
@@ -47,6 +50,8 @@ const interpolate = (template: string, params: NotifyParams) => {
     tempo: params.horario,
     servico: params.servico || "",
     valor: formatCurrency(params.valor),
+    link_avaliacao: LINK_AVALIACAO,
+    link: LINK_AVALIACAO,
   };
 
   let out = template;
