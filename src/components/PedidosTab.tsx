@@ -28,9 +28,16 @@ interface Agendamento {
 
 }
 
+interface ClienteProfile {
+  id: string;
+  nome: string;
+  whatsapp: string;
+}
+
 interface Props {
   agendamentos: Agendamento[];
   getClientName: (userId: string, clienteNome?: string | null) => string;
+  clientes?: ClienteProfile[];
   onUpdate: () => void;
 }
 
