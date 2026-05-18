@@ -1655,6 +1655,13 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
               const confirmedCount = selAgendamentos.filter((a) => a.status === "confirmado" || a.status === "concluido").length;
               const faltaCount = selAgendamentos.filter((a) => a.status === "falta").length;
               const cancelCount = selAgendamentos.filter((a) => a.status === "cancelado").length;
+              // Saldo devedor: soma das diferenças em pedidos não cancelados/faltas
+              const saldoDevedor = selAgendamentos
+                .filter((a) => a.status !== "cancelado" && a.status !== "falta")
+                .reduce((s, a) => s + Math.max(0, Number(a.valor) - Number(a.valor_pago || 0)), 0);
+              const pedidosDevendo = selAgendamentos.filter(
+                (a) => a.status !== "cancelado" && a.status !== "falta" && Number(a.valor_pago || 0) < Number(a.valor)
+              ).length;
 
               const clientSearch = searchTerm.toLowerCase();
               const filteredClientes = clientes.filter((c) => {
