@@ -1234,6 +1234,13 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                 <p className="font-body text-[12px] font-medium text-green-400">R$ {Number(a.valor_pago || 0).toFixed(2).replace(".", ",")}</p>
                               </div>
                             )}
+                            {!isCancelado && Number(a.valor) - Number(a.valor_pago || 0) > 0 && (
+                              <div className="mt-1 flex flex-wrap items-center justify-between gap-2 border-t border-gold/10 pt-1.5">
+                                <p className="font-body text-[11px] text-primary-foreground/55">A receber</p>
+                                <p className="font-body text-[12px] font-medium text-red-400">R$ {(Number(a.valor) - Number(a.valor_pago || 0)).toFixed(2).replace(".", ",")}</p>
+                              </div>
+                            )}
+
                           </div>
 
                           <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-primary-foreground/10 pt-3">
