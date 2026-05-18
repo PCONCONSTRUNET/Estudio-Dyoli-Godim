@@ -13,6 +13,7 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription
 } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import PlusButton from "@/components/ui/plus-button";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -905,13 +906,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <h2 className="font-heading text-lg font-semibold text-primary-foreground">Agenda</h2>
-                  <button
-                    onClick={openManualRegister}
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-gold/10 text-gold font-body text-[11px] font-medium hover:bg-gold/20 transition-all"
-                  >
-                    <PlusCircle className="w-3.5 h-3.5" />
-                    Registrar
-                  </button>
+                  <PlusButton size={28} title="Registrar manualmente" onClick={openManualRegister} />
                 </div>
 
                 {/* Bell */}
@@ -2637,12 +2632,7 @@ const ServicosTab = ({
             <h2 className="font-heading text-base font-semibold text-primary-foreground">Categorias</h2>
             <span className="font-body text-[10px] text-primary-foreground/30">({categorias.length})</span>
           </div>
-          <button
-            onClick={() => setShowNewCatInput(!showNewCatInput)}
-            className="flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/70 font-body text-[12px] font-medium hover:bg-primary-foreground/[0.08] transition-all active:scale-95"
-          >
-            <Plus className="w-3.5 h-3.5" />Nova
-          </button>
+          <PlusButton size={28} title="Nova categoria" onClick={() => setShowNewCatInput(!showNewCatInput)} />
         </div>
 
         {showNewCatInput && (
@@ -2762,9 +2752,7 @@ const ServicosTab = ({
             <h2 className="font-heading text-base font-semibold text-primary-foreground">Serviços</h2>
             <span className="font-body text-[10px] text-primary-foreground/30">({servicosFiltrados.length}/{services.length})</span>
           </div>
-          <button onClick={() => setShowAdd(!showAdd)} className="flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-br from-gold/20 to-gold/10 text-gold font-body text-[12px] font-medium hover:from-gold/25 hover:to-gold/15 active:scale-95 transition-all shadow-sm shadow-gold/10">
-            <Plus className="w-3.5 h-3.5" />Adicionar
-          </button>
+          <PlusButton size={28} title="Adicionar serviço" onClick={() => setShowAdd(!showAdd)} />
         </div>
 
         {/* Busca + Filtro */}
