@@ -93,7 +93,7 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
 
     const [profileRes, agendamentosRes, avaliacoesRes] = await Promise.all([
       supabase.from("profiles").select("nome, whatsapp, data_nascimento, created_at").eq("id", user.id).single(),
-      supabase.from("agendamentos").select("*").eq("user_id", user.id).order("data_agendamento", { ascending: false }),
+      supabase.from("agendamentos").select("*").eq("user_id", user.id).neq("status", "aguardando_pagamento").order("data_agendamento", { ascending: false }),
       supabase.from("avaliacoes").select("agendamento_id, nota, comentario").eq("user_id", user.id),
     ]);
 
