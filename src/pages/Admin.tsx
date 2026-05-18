@@ -2752,9 +2752,7 @@ const ServicosTab = ({
             <h2 className="font-heading text-base font-semibold text-primary-foreground">Serviços</h2>
             <span className="font-body text-[10px] text-primary-foreground/30">({servicosFiltrados.length}/{services.length})</span>
           </div>
-          <button onClick={() => setShowAdd(!showAdd)} className="flex shrink-0 items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-br from-gold/20 to-gold/10 text-gold font-body text-[12px] font-medium hover:from-gold/25 hover:to-gold/15 active:scale-95 transition-all shadow-sm shadow-gold/10">
-            <Plus className="w-3.5 h-3.5" />Adicionar
-          </button>
+          <PlusButton size={28} title="Adicionar serviço" onClick={() => setShowAdd(!showAdd)} />
         </div>
 
         {/* Busca + Filtro */}
