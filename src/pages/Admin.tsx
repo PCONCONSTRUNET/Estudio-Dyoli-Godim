@@ -347,7 +347,20 @@ const Admin = () => {
 
 // ─── Admin Panel (Mobile First) ───
 const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
-  const [tab, setTab] = useState<Tab>("dashboard");
+  const [tab, setTab] = useState<Tab>(() => {
+    try {
+      const saved = localStorage.getItem("admin_active_tab");
+      return (saved as Tab) || "dashboard";
+    } catch {
+      return "dashboard";
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("admin_active_tab", tab);
+    } catch {}
+  }, [tab]);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [clientes, setClientes] = useState<Profile[]>([]);
