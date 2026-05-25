@@ -397,6 +397,12 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [extendMinutes, setExtendMinutes] = useState("30");
   const [extendSaving, setExtendSaving] = useState(false);
 
+  // Search terms for manual register dropdowns
+  const [manualServicoSearch, setManualServicoSearch] = useState("");
+  const [manualClienteSearch, setManualClienteSearch] = useState("");
+  const [manualServicoOpen, setManualServicoOpen] = useState(false);
+  const [manualClienteOpen, setManualClienteOpen] = useState(false);
+
   // Edit client name state
   const [editingClientId, setEditingClientId] = useState<string | null>(null);
   const [editClientName, setEditClientName] = useState("");
@@ -618,6 +624,10 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setManualDuracao("60");
     setManualFormaPagamento("pix");
     setManualPago(false);
+    setManualServicoSearch("");
+    setManualClienteSearch("");
+    setManualServicoOpen(false);
+    setManualClienteOpen(false);
     setShowManualRegister(true);
   };
 
@@ -1455,36 +1465,143 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                     </DialogTitle>
                   </DialogHeader>
                   <div className="space-y-3 w-full min-w-0">
-                    <div>
+                    {/* ── Serviço com busca ── */}
+                    <div className="relative">
                       <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Serviço *</label>
-                      <select
-                        value={manualServico}
-                        onChange={(e) => handleSelectManualServico(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
-                      >
-                        <option value="">Selecione o serviço</option>
-                        {manualServicos.map(s => (
-                          <option key={s.id} value={s.nome}>{s.nome} — R$ {s.preco.toFixed(2).replace(".", ",")}</option>
-                        ))}
-                      </select>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary-foreground/25 pointer-events-none" />
+                        <input
+                          type="text"
+                          placeholder={manualServico || "Buscar serviço..."}
+                          value={manualServicoSearch}
+                          onFocus={() => setManualServicoOpen(true)}
+                          onChange={(e) => { setManualServicoSearch(e.target.value); setManualServicoOpen(true); }}
+                          className={`w-full pl-9 pr-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20 placeholder:text-primary-foreground/40 ${
+                            manualServico ? "border-gold/30 text-gold" : "border-primary-foreground/[0.06] text-primary-foreground"
+                          }`}
+                        />
+                        {manualServico && (
+                          <button
+                            onClick={() => { setManualServico(""); setManualServicoSearch(""); setManualValor(""); setManualDuracao("60"); }}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-foreground/30 hover:text-rose transition-colors"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
+                      {manualServicoOpen && (
+                        <div className="absolute z-50 mt-1 w-full rounded-xl border border-primary-foreground/[0.08] bg-charcoal shadow-2xl overflow-hidden">
+                          <div className="max-h-48 overflow-y-auto">
+                            {manualServicos
+                              .filter(s => s.nome.toLowerCase().includes(manualServicoSearch.toLowerCase()))
+                              .length === 0 ? (
+                              <p className="px-3 py-3 font-body text-[12px] text-primary-foreground/30 text-center">Nenhum serviço encontrado</p>
+                            ) : (
+                              manualServicos
+                                .filter(s => s.nome.toLowerCase().includes(manualServicoSearch.toLowerCase()))
+                                .map(s => (
+                                  <button
+                                    key={s.id}
+                                    onMouseDown={(e) => e.preventDefault()}
+                                    onClick={() => {
+                                      handleSelectManualServico(s.nome);
+                                      setManualServicoSearch("");
+                                      setManualServicoOpen(false);
+                                    }}
+                                    className={`w-full text-left px-3 py-2.5 font-body text-[13px] transition-all hover:bg-gold/10 ${
+                                      manualServico === s.nome ? "bg-gold/10 text-gold" : "text-primary-foreground"
+                                    }`}
+                                  >
+                                    <span className="font-medium">{s.nome}</span>
+                                    <span className="ml-2 text-[11px] text-primary-foreground/40">R$ {s.preco.toFixed(2).replace(".", ",")}</span>
+                                  </button>
+                                ))
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {/* Overlay para fechar */}
+                      {manualServicoOpen && (
+                        <div className="fixed inset-0 z-40" onClick={() => setManualServicoOpen(false)} />
+                      )}
                     </div>
 
-                    <div>
+                    {/* ── Cliente com busca ── */}
+                    <div className="relative">
                       <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Cliente</label>
-                      <select
-                        value={manualCliente}
-                        onChange={(e) => {
-                          setManualCliente(e.target.value);
-                          const cl = clientes.find(c => c.id === e.target.value);
-                          setManualClienteNome(cl?.nome || "");
-                        }}
-                        className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
-                      >
-                        <option value="">Sem cliente (presencial)</option>
-                        {clientes.map(c => (
-                          <option key={c.id} value={c.id}>{c.nome} — {c.whatsapp}</option>
-                        ))}
-                      </select>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary-foreground/25 pointer-events-none" />
+                        <input
+                          type="text"
+                          placeholder={manualCliente ? clientes.find(c => c.id === manualCliente)?.nome || "Cliente selecionado" : "Buscar cliente..."}
+                          value={manualClienteSearch}
+                          onFocus={() => setManualClienteOpen(true)}
+                          onChange={(e) => { setManualClienteSearch(e.target.value); setManualClienteOpen(true); }}
+                          className={`w-full pl-9 pr-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20 placeholder:text-primary-foreground/40 ${
+                            manualCliente ? "border-gold/30 text-gold" : "border-primary-foreground/[0.06] text-primary-foreground"
+                          }`}
+                        />
+                        {manualCliente && (
+                          <button
+                            onClick={() => { setManualCliente(""); setManualClienteSearch(""); setManualClienteNome(""); }}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-foreground/30 hover:text-rose transition-colors"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
+                      {manualClienteOpen && (
+                        <div className="absolute z-50 mt-1 w-full rounded-xl border border-primary-foreground/[0.08] bg-charcoal shadow-2xl overflow-hidden">
+                          <div className="max-h-48 overflow-y-auto">
+                            {/* Opção presencial */}
+                            <button
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={() => { setManualCliente(""); setManualClienteNome(""); setManualClienteSearch(""); setManualClienteOpen(false); }}
+                              className={`w-full text-left px-3 py-2.5 font-body text-[13px] transition-all hover:bg-primary-foreground/[0.06] ${
+                                !manualCliente ? "bg-primary-foreground/[0.04] text-primary-foreground/60" : "text-primary-foreground/40"
+                              }`}
+                            >
+                              Sem cliente (presencial)
+                            </button>
+                            {clientes
+                              .filter(c =>
+                                c.nome.toLowerCase().includes(manualClienteSearch.toLowerCase()) ||
+                                c.whatsapp.includes(manualClienteSearch)
+                              )
+                              .length === 0 && manualClienteSearch ? (
+                              <p className="px-3 py-3 font-body text-[12px] text-primary-foreground/30 text-center">Nenhum cliente encontrado</p>
+                            ) : (
+                              clientes
+                                .filter(c =>
+                                  c.nome.toLowerCase().includes(manualClienteSearch.toLowerCase()) ||
+                                  c.whatsapp.includes(manualClienteSearch)
+                                )
+                                .map(c => (
+                                  <button
+                                    key={c.id}
+                                    onMouseDown={(e) => e.preventDefault()}
+                                    onClick={() => {
+                                      setManualCliente(c.id);
+                                      setManualClienteNome(c.nome);
+                                      setManualClienteSearch("");
+                                      setManualClienteOpen(false);
+                                    }}
+                                    className={`w-full text-left px-3 py-2.5 font-body text-[13px] transition-all hover:bg-gold/10 ${
+                                      manualCliente === c.id ? "bg-gold/10 text-gold" : "text-primary-foreground"
+                                    }`}
+                                  >
+                                    <span className="font-medium">{c.nome}</span>
+                                    <span className="ml-2 text-[11px] text-primary-foreground/40">{c.whatsapp}</span>
+                                  </button>
+                                ))
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {/* Overlay para fechar */}
+                      {manualClienteOpen && (
+                        <div className="fixed inset-0 z-40" onClick={() => setManualClienteOpen(false)} />
+                      )}
                     </div>
 
                     {!manualCliente && (
