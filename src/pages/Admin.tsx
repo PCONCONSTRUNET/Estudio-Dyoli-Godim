@@ -2141,7 +2141,15 @@ const HorariosTab = () => {
 
   useEffect(() => {
     supabase.from("horarios_funcionamento").select("*").order("dia_semana").then(({ data }) => {
-      if (data) setHours(data.map(d => ({ id: d.id, day: d.dia_semana, open: d.aberto, start: d.hora_inicio, end: d.hora_fim })));
+      if (data) {
+        setHours(data.map(d => ({ 
+          id: d.id, 
+          day: d.dia_semana, 
+          open: d.aberto, 
+          start: d.hora_inicio?.slice(0, 5) || "00:00", 
+          end: d.hora_fim?.slice(0, 5) || "00:00" 
+        })));
+      }
       setLoading(false);
     });
   }, []);
@@ -2162,10 +2170,33 @@ const HorariosTab = () => {
 
   const handleSave = async () => {
     setSaving(true);
+    let hasError = false;
     for (const h of hours) {
-      await supabase.from("horarios_funcionamento").update({ aberto: h.open, hora_inicio: h.start, hora_fim: h.end, updated_at: new Date().toISOString() }).eq("id", h.id);
+      const start = h.start || "00:00";
+      const end = h.end || "00:00";
+      const { error } = await supabase
+        .from("horarios_funcionamento")
+        .update({ 
+          aberto: h.open, 
+          hora_inicio: start, 
+          hora_fim: end, 
+          updated_at: new Date().toISOString() 
+        })
+        .eq("id", h.id);
+        
+      if (error) {
+        console.error("Erro ao salvar horário", h, error);
+        hasError = true;
+      }
     }
-    setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000);
+    setSaving(false);
+    if (hasError) {
+      toast.error("Erro ao salvar horários. Verifique se os dados estão corretos.");
+    } else {
+      setSaved(true); 
+      setTimeout(() => setSaved(false), 2000);
+      toast.success("Horários salvos com sucesso!");
+    }
   };
 
   // Get time slots for the selected block date
