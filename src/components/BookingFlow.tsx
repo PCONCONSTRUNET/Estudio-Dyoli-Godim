@@ -194,11 +194,25 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
   };
 
   const today = new Date();
-  const dates = Array.from({ length: 14 }, (_, i) => {
-    const d = new Date(today);
-    d.setDate(d.getDate() + i + 1);
-    return d;
-  });
+  
+  // Find exactly the next 3 open days
+  const getNextOpenDates = (count: number) => {
+    const openDates: Date[] = [];
+    let offset = 1;
+    // We check up to 30 days ahead to find the open ones, but stop as soon as we reach the desired count
+    while (openDates.length < count && offset <= 30) {
+      const d = new Date(today);
+      d.setDate(d.getDate() + offset);
+      // Check if this day of week is open
+      if (businessHours[d.getDay()] !== null) {
+        openDates.push(d);
+      }
+      offset++;
+    }
+    return openDates;
+  };
+
+  const dates = getNextOpenDates(3);
 
   const isDayOpen = (d: Date) => businessHours[d.getDay()] !== null;
 
