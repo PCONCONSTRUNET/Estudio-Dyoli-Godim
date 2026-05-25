@@ -389,6 +389,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [manualDuracao, setManualDuracao] = useState("60");
   const [manualFormaPagamento, setManualFormaPagamento] = useState("pix");
   const [manualPago, setManualPago] = useState(false);
+  const [manualConcluido, setManualConcluido] = useState(false);
   const [manualSaving, setManualSaving] = useState(false);
 
   // Extend appointment state
@@ -624,6 +625,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setManualDuracao("60");
     setManualFormaPagamento("pix");
     setManualPago(false);
+    setManualConcluido(false);
     setManualServicoSearch("");
     setManualClienteSearch("");
     setManualServicoOpen(false);
@@ -662,7 +664,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         valor: valor,
         valor_pago: manualPago ? valor : 0,
         duracao_minutos: duracao,
-        status: "confirmado",
+        status: manualConcluido ? "concluido" : "confirmado",
         forma_pagamento: manualFormaPagamento,
         user_id: userId,
         cliente_nome: clienteNome || null,
@@ -1680,6 +1682,20 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                         <p className="font-body text-[10px] text-primary-foreground/30">Marcar como pagamento recebido</p>
                       </div>
                       <Switch checked={manualPago} onCheckedChange={setManualPago} />
+                    </div>
+
+                    <div className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
+                      manualConcluido
+                        ? "bg-green-500/10 border-green-500/30"
+                        : "bg-primary-foreground/[0.03] border-primary-foreground/[0.06]"
+                    }`}>
+                      <div>
+                        <p className={`font-body text-[13px] font-medium ${
+                          manualConcluido ? "text-green-400" : "text-primary-foreground"
+                        }`}>Já foi atendida? ✅</p>
+                        <p className="font-body text-[10px] text-primary-foreground/30">Marcar agendamento como concluído</p>
+                      </div>
+                      <Switch checked={manualConcluido} onCheckedChange={setManualConcluido} />
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 pt-1">
