@@ -118,13 +118,15 @@ const DespesasTab = () => {
 
   const filtered = useMemo(() => {
     return despesas.filter((d) => {
+      if (tipoFilter !== "todos" && (d.tipo || "estudio") !== tipoFilter) return false;
       const s = getStatus(d);
       if (filter === "pendentes") return s === "pendente" || s === "hoje";
       if (filter === "pagas") return s === "pago";
       if (filter === "atrasadas") return s === "atrasado";
       return true;
     });
-  }, [despesas, filter, today]);
+  }, [despesas, filter, tipoFilter, today]);
+
 
   const alertCount = useMemo(() => {
     return despesas.filter((d) => {
