@@ -48,7 +48,9 @@ const DespesasTab = () => {
   const [valor, setValor] = useState("");
   const [dataVencimento, setDataVencimento] = useState("");
   const [categoria, setCategoria] = useState("Outros");
+  const [tipo, setTipo] = useState<"estudio" | "pessoal">("estudio");
   const [observacao, setObservacao] = useState("");
+
   const [fixa, setFixa] = useState(false);
   const [meses, setMeses] = useState("12");
   const [saving, setSaving] = useState(false);
