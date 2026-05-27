@@ -152,6 +152,9 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
     const desp = despesas
       .filter((d) => (d.tipo || "estudio") === "estudio" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO)
       .reduce((s, d) => s + Number(d.valor), 0);
+    const despPessoal = despesas
+      .filter((d) => d.tipo === "pessoal" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO)
+      .reduce((s, d) => s + Number(d.valor), 0);
 
     const lucro = recebido - desp;
     const comissao = recebido * (comissaoPct / 100);
@@ -159,7 +162,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
     const totalDays = Math.round((ciclo.endDate.getTime() - ciclo.startDate.getTime()) / 86400000) + 1;
     const elapsedDays = Math.max(0, Math.min(totalDays, Math.round((today.getTime() - ciclo.startDate.getTime()) / 86400000) + 1));
     const progress = cicloOffset === 0 ? Math.round((elapsedDays / totalDays) * 100) : (cicloOffset < 0 ? 100 : 0);
-    return { recebido, total, desp, lucro, comissao, totalDays, elapsedDays, progress, qtd: cicloAgs.length, items: cicloAgs };
+    return { recebido, total, desp, despPessoal, lucro, comissao, totalDays, elapsedDays, progress, qtd: cicloAgs.length, items: cicloAgs };
   }, [agendamentos, ciclo, despesas, comissaoPct, cicloOffset]);
 
   // Detalhamento da comissão por dia (apenas dias com valor recebido)
@@ -309,9 +312,12 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
               <p className="font-body text-[9px] text-primary-foreground/30 mt-0.5">total bruto</p>
             </div>
             <div className="p-3 rounded-2xl bg-red-500/[0.05] border border-red-500/15 hover:border-red-500/25 transition-all">
-              <p className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-widest font-medium">Despesas</p>
+              <p className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-widest font-medium">Despesas Estúdio</p>
               <p className="font-heading text-[15px] font-bold text-red-400 tabular-nums mt-1 leading-tight">- {formatCurrency(cicloStats.desp)}</p>
               <p className="font-body text-[9px] text-primary-foreground/30 mt-0.5">no período</p>
+              {cicloStats.despPessoal > 0 && (
+                <p className="font-body text-[8px] text-purple-400/70 mt-0.5">Pessoal: {formatCurrency(cicloStats.despPessoal)}</p>
+              )}
             </div>
           </div>
 

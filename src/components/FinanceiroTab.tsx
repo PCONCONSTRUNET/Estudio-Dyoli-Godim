@@ -657,7 +657,11 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
         <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-red-500/[0.07] via-primary-foreground/[0.02] to-transparent border border-red-500/15">
           <div className="pointer-events-none absolute -top-10 -right-10 w-24 h-24 rounded-full bg-red-500/10 blur-2xl" />
           <p className="relative font-body text-[11px] font-medium text-primary-foreground/60 uppercase tracking-[0.2em] flex items-center gap-1"><ArrowDown className="w-3 h-3" /> Despesas</p>
-          <p className="relative font-heading text-2xl font-bold text-red-400 mt-1.5 tabular-nums">- {formatCurrency(totalDespesas)}</p>
+          <p className="relative font-heading text-xl font-bold text-red-400 mt-1.5 tabular-nums leading-tight">- {formatCurrency(totalDespesas)}</p>
+          <p className="relative font-body text-[10px] text-primary-foreground/40 mt-1">Estúdio</p>
+          {totalDespesasPessoais > 0 && (
+            <p className="relative font-body text-[10px] text-purple-400/70 mt-0.5">Pessoal: {formatCurrency(totalDespesasPessoais)}</p>
+          )}
         </div>
         <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-primary-foreground/[0.06] via-primary-foreground/[0.02] to-transparent border border-primary-foreground/15">
           <div className="pointer-events-none absolute -top-10 -right-10 w-24 h-24 rounded-full bg-primary-foreground/[0.08] blur-2xl" />
