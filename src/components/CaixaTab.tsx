@@ -52,10 +52,19 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
 
-  const [comissaoPct] = useState(() => {
+  const [comissaoPct, setComissaoPct] = useState(() => {
     const saved = localStorage.getItem("dyoli_comissao_pct");
     return saved ? Number(saved) : 40;
   });
+  const [editingComissao, setEditingComissao] = useState(false);
+  const [tempComissao, setTempComissao] = useState(comissaoPct.toString());
+
+  const saveComissao = () => {
+    const v = Math.min(100, Math.max(0, Number(tempComissao) || 0));
+    setComissaoPct(v);
+    localStorage.setItem("dyoli_comissao_pct", String(v));
+    setEditingComissao(false);
+  };
 
   // Dia de corte do ciclo mensal (1-28)
   const [diaCorte, setDiaCorte] = useState<number>(() => {
