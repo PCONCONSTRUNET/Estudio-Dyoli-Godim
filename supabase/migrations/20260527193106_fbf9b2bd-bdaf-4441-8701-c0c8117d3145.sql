@@ -1,0 +1,1 @@
+CREATE POLICY "Admin insert agendamentos" ON public.agendamentos FOR INSERT TO authenticated WITH CHECK (true);
