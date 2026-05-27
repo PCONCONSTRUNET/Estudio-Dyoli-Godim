@@ -649,7 +649,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     }
     setManualSaving(true);
     try {
-      const userId = manualCliente || "00000000-0000-0000-0000-000000000000";
+      const userId = manualCliente || null;
       const duracao = Number(manualDuracao) || 60;
       const valor = Number(manualValor);
       
