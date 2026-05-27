@@ -615,6 +615,39 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     if (data) setManualServicos(data.map(s => ({ id: s.id, nome: s.nome, preco: Number(s.preco), duracao_minutos: s.duracao_minutos, categoria: s.categoria })));
   };
 
+  // Helpers para converter horário <-> minutos
+  const timeToMinutes = (t: string): number => {
+    const [h, m] = t.split(":").map(Number);
+    return (h || 0) * 60 + (m || 0);
+  };
+  const minutesToTime = (mins: number): string => {
+    const total = ((mins % 1440) + 1440) % 1440;
+    const h = Math.floor(total / 60);
+    const m = total % 60;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  };
+  const calcFim = (inicio: string, duracao: string | number): string => {
+    return minutesToTime(timeToMinutes(inicio) + (Number(duracao) || 0));
+  };
+  const calcDuracao = (inicio: string, fim: string): number => {
+    let diff = timeToMinutes(fim) - timeToMinutes(inicio);
+    if (diff <= 0) diff += 1440; // passa da meia-noite
+    return diff;
+  };
+
+  const handleManualHorarioChange = (novoInicio: string) => {
+    setManualHorario(novoInicio);
+    setManualHorarioFim(calcFim(novoInicio, manualDuracao));
+  };
+  const handleManualHorarioFimChange = (novoFim: string) => {
+    setManualHorarioFim(novoFim);
+    setManualDuracao(String(calcDuracao(manualHorario, novoFim)));
+  };
+  const handleManualDuracaoChange = (novaDuracao: string) => {
+    setManualDuracao(novaDuracao);
+    setManualHorarioFim(calcFim(manualHorario, novaDuracao));
+  };
+
   const openManualRegister = () => {
     loadManualServicos();
     setManualServico("");
@@ -622,6 +655,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setManualClienteNome("");
     setManualData(selectedAgendaDate);
     setManualHorario("09:00");
+    setManualHorarioFim("10:00");
     setManualValor("");
     setManualDuracao("60");
     setManualFormaPagamento("pix");
@@ -640,8 +674,10 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     if (svc) {
       setManualValor(svc.preco.toString());
       setManualDuracao(svc.duracao_minutos.toString());
+      setManualHorarioFim(calcFim(manualHorario, svc.duracao_minutos));
     }
   };
+
 
   const saveManualRegistration = async () => {
     if (!manualServico || !manualData || !manualHorario || !manualValor) {
