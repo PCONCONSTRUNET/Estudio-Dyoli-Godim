@@ -1656,24 +1656,56 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                       </div>
                     )}
 
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Data *</label>
-                        <input
-                          type="date"
-                          value={manualData}
-                          onChange={(e) => setManualData(e.target.value)}
-                          className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
-                        />
+                    <div>
+                      <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Data *</label>
+                      <input
+                        type="date"
+                        value={manualData}
+                        onChange={(e) => setManualData(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="font-body text-[10px] text-primary-foreground/30 block">Horário do atendimento *</label>
+                        <span className="font-body text-[10px] text-gold/80">{manualDuracao || 0} min</span>
                       </div>
-                      <div>
-                        <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Horário *</label>
-                        <input
-                          type="time"
-                          value={manualHorario}
-                          onChange={(e) => setManualHorario(e.target.value)}
-                          className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
-                        />
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-[9px] uppercase tracking-wider text-primary-foreground/30 pointer-events-none">Início</span>
+                          <input
+                            type="time"
+                            value={manualHorario}
+                            onChange={(e) => handleManualHorarioChange(e.target.value)}
+                            className="w-full pl-12 pr-2 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                          />
+                        </div>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-[9px] uppercase tracking-wider text-primary-foreground/30 pointer-events-none">Fim</span>
+                          <input
+                            type="time"
+                            value={manualHorarioFim}
+                            onChange={(e) => handleManualHorarioFimChange(e.target.value)}
+                            className="w-full pl-10 pr-2 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {[30, 60, 90, 120, 150, 180].map((min) => (
+                          <button
+                            key={min}
+                            type="button"
+                            onClick={() => handleManualDuracaoChange(String(min))}
+                            className={`px-2.5 py-1 rounded-full font-body text-[10px] transition ${
+                              Number(manualDuracao) === min
+                                ? "bg-gold/15 text-gold border border-gold/30"
+                                : "bg-primary-foreground/[0.04] text-primary-foreground/50 border border-primary-foreground/[0.06] hover:text-primary-foreground/80"
+                            }`}
+                          >
+                            {min >= 60 ? `${min / 60}h${min % 60 ? ` ${min % 60}m` : ""}` : `${min}m`}
+                          </button>
+                        ))}
                       </div>
                     </div>
 
@@ -1692,12 +1724,15 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                         <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Duração (min)</label>
                         <input
                           type="number"
+                          min={5}
+                          step={5}
                           value={manualDuracao}
-                          onChange={(e) => setManualDuracao(e.target.value)}
+                          onChange={(e) => handleManualDuracaoChange(e.target.value)}
                           className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
                         />
                       </div>
                     </div>
+
 
                     <div>
                       <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Forma de pagamento</label>
