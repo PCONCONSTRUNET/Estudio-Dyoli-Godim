@@ -421,21 +421,33 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     lines.push(`TOTAL RECEITA BRUTA;${qtdAtendimentos};${fmtNum(totalReceita)};${fmtNum(totalRecebido)}`);
     lines.push(`RECEITA PENDENTE;;;${fmtNum(totalPendente)}`);
     lines.push("");
-    lines.push("DESPESAS POR CATEGORIA");
+    lines.push("DESPESAS DO ESTÚDIO POR CATEGORIA");
     lines.push("Categoria;Qtd;Pago;Pendente;Total");
     despesasPorCategoria.forEach(c => lines.push(`"${c.categoria}";${c.qtd};${fmtNum(c.pago)};${fmtNum(c.pendente)};${fmtNum(c.total)}`));
-    lines.push(`TOTAL DESPESAS;${despesasPeriodo.length};;;${fmtNum(totalDespesas)}`);
+    lines.push(`TOTAL DESPESAS ESTÚDIO;${despesasPeriodo.length};;;${fmtNum(totalDespesas)}`);
+    lines.push("");
+    lines.push("DESPESAS PESSOAIS POR CATEGORIA (não entram no resultado)");
+    lines.push("Categoria;Qtd;Pago;Pendente;Total");
+    despesasPorCategoriaPessoal.forEach(c => lines.push(`"${c.categoria}";${c.qtd};${fmtNum(c.pago)};${fmtNum(c.pendente)};${fmtNum(c.total)}`));
+    lines.push(`TOTAL DESPESAS PESSOAIS;${despesasPessoaisPeriodo.length};;;${fmtNum(totalDespesasPessoais)}`);
     lines.push("");
     lines.push("APURAÇÃO");
     lines.push(`(+) Receita Recebida;${fmtNum(totalRecebido)}`);
-    lines.push(`(-) Despesas;${fmtNum(totalDespesas)}`);
+    lines.push(`(-) Despesas do Estúdio;${fmtNum(totalDespesas)}`);
     lines.push(`(-) Comissão (${comissaoPct}%);${fmtNum(comissaoValor)}`);
     lines.push(`(=) Resultado Operacional;${fmtNum(totalRecebido - totalDespesas - comissaoValor)}`);
     lines.push(`(=) Resultado Líquido;${fmtNum(lucroLiquido)}`);
     lines.push("");
-    lines.push("DETALHE DESPESAS");
+    lines.push("DETALHE DESPESAS DO ESTÚDIO");
     lines.push("Vencimento;Categoria;Descrição;Status;Valor");
     despesasPeriodo.forEach(d => lines.push(`${fmtDate(d.data_vencimento)};"${d.categoria || "Geral"}";"${(d.descricao || "").replace(/"/g, '""')}";${d.pago ? "Pago" : "Pendente"};${fmtNum(Number(d.valor))}`));
+    if (despesasPessoaisPeriodo.length) {
+      lines.push("");
+      lines.push("DETALHE DESPESAS PESSOAIS");
+      lines.push("Vencimento;Categoria;Descrição;Status;Valor");
+      despesasPessoaisPeriodo.forEach(d => lines.push(`${fmtDate(d.data_vencimento)};"${d.categoria || "Geral"}";"${(d.descricao || "").replace(/"/g, '""')}";${d.pago ? "Pago" : "Pendente"};${fmtNum(Number(d.valor))}`));
+    }
+
 
     const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
