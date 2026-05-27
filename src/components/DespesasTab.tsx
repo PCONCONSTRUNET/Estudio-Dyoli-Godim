@@ -748,6 +748,40 @@ const DespesasTab = () => {
               </select>
             </div>
 
+            <div>
+              <label className="font-body text-[11px] text-primary-foreground/40 mb-1 block">Tipo da despesa *</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTipo("estudio")}
+                  className={`rounded-xl border px-3 py-3 font-body text-[12px] font-semibold transition-all flex flex-col items-center gap-1 ${
+                    tipo === "estudio"
+                      ? "bg-blue-500/15 text-blue-300 border-blue-500/40 shadow-[0_0_0_1px_rgb(59_130_246_/_0.2)]"
+                      : "bg-primary-foreground/[0.04] text-primary-foreground/50 border-primary-foreground/[0.06] hover:text-primary-foreground/80"
+                  }`}
+                >
+                  <span className="text-base">🏛</span>
+                  Estúdio
+                  <span className="font-normal text-[9px] opacity-70">Entra no DRE</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTipo("pessoal")}
+                  className={`rounded-xl border px-3 py-3 font-body text-[12px] font-semibold transition-all flex flex-col items-center gap-1 ${
+                    tipo === "pessoal"
+                      ? "bg-purple-500/15 text-purple-300 border-purple-500/40 shadow-[0_0_0_1px_rgb(168_85_247_/_0.2)]"
+                      : "bg-primary-foreground/[0.04] text-primary-foreground/50 border-primary-foreground/[0.06] hover:text-primary-foreground/80"
+                  }`}
+                >
+                  <span className="text-base">👤</span>
+                  Pessoal
+                  <span className="font-normal text-[9px] opacity-70">Conta da dona</span>
+                </button>
+              </div>
+            </div>
+
+
+
             {/* Despesa fixa (mensal recorrente) */}
             <div className={`rounded-xl border p-3 transition-all ${fixa ? "border-gold/40 bg-gold/[0.06]" : "border-primary-foreground/[0.06] bg-primary-foreground/[0.03]"}`}>
               <button
