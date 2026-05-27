@@ -15,11 +15,13 @@ interface Despesa {
   pago: boolean;
   data_pagamento: string | null;
   categoria: string;
+  tipo: "estudio" | "pessoal";
   observacao: string | null;
   created_at: string;
   fixa?: boolean;
   recorrencia_id?: string | null;
 }
+
 
 const CATEGORIAS = ["Aluguel", "Fornecedor", "Material", "Conta de Luz", "Conta de Água", "Internet", "Outros"];
 
