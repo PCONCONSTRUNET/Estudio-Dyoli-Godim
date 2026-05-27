@@ -671,9 +671,39 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
                 <p className="font-body text-[8.5px] text-primary-foreground/40 uppercase tracking-wider">Base</p>
                 <p className="font-heading text-[13px] font-bold text-green-400 tabular-nums leading-tight mt-0.5">{formatCurrency(cicloStats.recebido)}</p>
               </div>
-              <div className="p-2.5 rounded-xl bg-purple-500/[0.06] border border-purple-500/15">
+              <div className="p-2.5 rounded-xl bg-purple-500/[0.06] border border-purple-500/15 relative">
                 <p className="font-body text-[8.5px] text-primary-foreground/40 uppercase tracking-wider">Taxa</p>
-                <p className="font-heading text-[13px] font-bold text-purple-300 tabular-nums leading-tight mt-0.5">{comissaoPct}%</p>
+                {editingComissao ? (
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={tempComissao}
+                      onChange={(e) => setTempComissao(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") saveComissao(); if (e.key === "Escape") setEditingComissao(false); }}
+                      autoFocus
+                      className="w-12 bg-purple-500/10 border border-purple-400/30 rounded px-1 py-0.5 font-heading text-[13px] font-bold text-purple-200 tabular-nums focus:outline-none focus:border-purple-400"
+                    />
+                    <button type="button" onClick={saveComissao} className="w-5 h-5 rounded bg-green-500/20 hover:bg-green-500/40 flex items-center justify-center" aria-label="Salvar">
+                      <Check className="w-3 h-3 text-green-300" />
+                    </button>
+                    <button type="button" onClick={() => { setEditingComissao(false); setTempComissao(comissaoPct.toString()); }} className="w-5 h-5 rounded bg-red-500/20 hover:bg-red-500/40 flex items-center justify-center" aria-label="Cancelar">
+                      <X className="w-3 h-3 text-red-300" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => { setTempComissao(comissaoPct.toString()); setEditingComissao(true); }}
+                    className="mt-0.5 flex items-center gap-1.5 group"
+                    aria-label="Alterar % de comissão"
+                  >
+                    <span className="font-heading text-[13px] font-bold text-purple-300 tabular-nums leading-tight">{comissaoPct}%</span>
+                    <Pencil className="w-3 h-3 text-purple-300/50 group-hover:text-purple-200 transition-colors" />
+                  </button>
+                )}
               </div>
               <div className="p-2.5 rounded-xl bg-gold/[0.06] border border-gold/15">
                 <p className="font-body text-[8.5px] text-primary-foreground/40 uppercase tracking-wider">Dias</p>
