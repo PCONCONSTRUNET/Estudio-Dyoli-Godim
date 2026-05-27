@@ -308,6 +308,7 @@ export type Database = {
           observacao: string | null
           pago: boolean
           recorrencia_id: string | null
+          tipo: string
           updated_at: string
           valor: number
         }
@@ -322,6 +323,7 @@ export type Database = {
           observacao?: string | null
           pago?: boolean
           recorrencia_id?: string | null
+          tipo?: string
           updated_at?: string
           valor: number
         }
@@ -336,6 +338,7 @@ export type Database = {
           observacao?: string | null
           pago?: boolean
           recorrencia_id?: string | null
+          tipo?: string
           updated_at?: string
           valor?: number
         }
