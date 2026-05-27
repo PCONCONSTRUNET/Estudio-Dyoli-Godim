@@ -101,12 +101,13 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
   }, [diaCorte, cicloOffset]);
 
   // Despesas (para lucro do ciclo)
-  const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string }[]>([]);
+  const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string; tipo?: string }[]>([]);
   useEffect(() => {
-    (supabase.from as any)("despesas").select("valor,pago,data_vencimento").then(({ data }: any) => {
+    (supabase.from as any)("despesas").select("valor,pago,data_vencimento,tipo").then(({ data }: any) => {
       if (data) setDespesas(data);
     });
   }, []);
+
 
   // Fechamento do dia
   const caixaData = useMemo(() => {
