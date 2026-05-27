@@ -657,6 +657,16 @@ const DespesasTab = () => {
                         <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-medium border bg-primary-foreground/[0.05] text-primary-foreground/40 border-primary-foreground/[0.06]">
                           {grupo[0]?.categoria}
                         </span>
+                        {(grupo[0]?.tipo || "estudio") === "pessoal" ? (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-semibold border bg-purple-500/10 text-purple-300 border-purple-500/30 flex items-center gap-1">
+                            👤 Pessoal
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-semibold border bg-blue-500/10 text-blue-300 border-blue-500/30 flex items-center gap-1">
+                            🏛 Estúdio
+                          </span>
+                        )}
+
                         <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-medium border bg-green-500/10 text-green-400 border-green-500/20">
                           {pagas}/{grupo.length} pagas
                         </span>
