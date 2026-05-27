@@ -11,6 +11,9 @@ import {
   Info,
   Calculator,
   TrendingUp,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
