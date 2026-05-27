@@ -385,6 +385,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [manualClienteNome, setManualClienteNome] = useState("");
   const [manualData, setManualData] = useState(() => getDateKey(new Date()));
   const [manualHorario, setManualHorario] = useState("09:00");
+  const [manualHorarioFim, setManualHorarioFim] = useState("10:00");
   const [manualValor, setManualValor] = useState("");
   const [manualDuracao, setManualDuracao] = useState("60");
   const [manualFormaPagamento, setManualFormaPagamento] = useState("pix");
