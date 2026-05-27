@@ -33,7 +33,7 @@ export type Database = {
           servico: string
           status: string
           updated_at: string
-          user_id: string
+          user_id: string | null
           valor: number
           valor_pago: number | null
           variacao: string | null
@@ -56,7 +56,7 @@ export type Database = {
           servico: string
           status?: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           valor: number
           valor_pago?: number | null
           variacao?: string | null
@@ -79,7 +79,7 @@ export type Database = {
           servico?: string
           status?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           valor?: number
           valor_pago?: number | null
           variacao?: string | null
