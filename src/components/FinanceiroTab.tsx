@@ -134,9 +134,13 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const qtdAtendimentos = filtered.length;
   const comissaoValor = totalRecebido * (comissaoPct / 100);
   const totalDespesas = despesas
-    .filter(d => d.data_vencimento >= periodRange.start && d.data_vencimento <= periodRange.end)
+    .filter(d => (d.tipo || "estudio") === "estudio" && d.data_vencimento >= periodRange.start && d.data_vencimento <= periodRange.end)
+    .reduce((s, d) => s + Number(d.valor), 0);
+  const totalDespesasPessoais = despesas
+    .filter(d => d.tipo === "pessoal" && d.data_vencimento >= periodRange.start && d.data_vencimento <= periodRange.end)
     .reduce((s, d) => s + Number(d.valor), 0);
   const lucroLiquido = totalRecebido - totalDespesas;
+
 
   // Chart: receita por dia
   const dailyData = useMemo(() => {
