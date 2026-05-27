@@ -270,6 +270,8 @@ const DespesasTab = () => {
     setValor("");
     setDataVencimento("");
     setCategoria("Outros");
+    setTipo("estudio");
+
     setObservacao("");
     setFixa(false);
     setMeses("12");
