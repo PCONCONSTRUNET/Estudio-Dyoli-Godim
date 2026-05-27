@@ -78,12 +78,13 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   }, [diaCorte, cicloOffset]);
 
   // Load despesas
-  const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string; categoria: string; descricao: string; data_pagamento: string | null }[]>([]);
+  const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string; categoria: string; descricao: string; data_pagamento: string | null; tipo?: string }[]>([]);
   useEffect(() => {
-    (supabase.from as any)("despesas").select("valor,pago,data_vencimento,categoria,descricao,data_pagamento").then(({ data }: any) => {
+    (supabase.from as any)("despesas").select("valor,pago,data_vencimento,categoria,descricao,data_pagamento,tipo").then(({ data }: any) => {
       if (data) setDespesas(data);
     });
   }, []);
+
 
   // Filter agendamentos by period (Mês = ciclo configurado pelo dia de corte)
   const filtered = useMemo(() => {
