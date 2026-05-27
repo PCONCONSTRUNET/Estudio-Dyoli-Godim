@@ -150,8 +150,9 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
     const recebido = cicloAgs.reduce((s, a) => s + Number(a.valor_pago || 0), 0);
     const total = cicloAgs.reduce((s, a) => s + Number(a.valor), 0);
     const desp = despesas
-      .filter((d) => d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO)
+      .filter((d) => (d.tipo || "estudio") === "estudio" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO)
       .reduce((s, d) => s + Number(d.valor), 0);
+
     const lucro = recebido - desp;
     const comissao = recebido * (comissaoPct / 100);
     const today = new Date(); today.setHours(12, 0, 0, 0);
