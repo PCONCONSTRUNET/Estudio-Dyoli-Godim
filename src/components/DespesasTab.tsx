@@ -220,11 +220,13 @@ const DespesasTab = () => {
         valor: parseFloat(valor),
         data_vencimento: vencStr,
         categoria,
+        tipo,
         observacao: observacao || null,
         fixa,
         recorrencia_id: recorrenciaId,
       };
     });
+
 
     const { error } = await (supabase.from as any)("despesas").insert(rows);
     if (error) {
