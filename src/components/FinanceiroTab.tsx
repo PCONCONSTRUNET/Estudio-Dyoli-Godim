@@ -343,14 +343,24 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
       </tbody>
     </table>
 
-    <h2>2. Despesas por Categoria</h2>
+    <h2>2. Despesas do Estúdio por Categoria</h2>
     <table>
       <thead><tr><th>Categoria</th><th style="text-align:center">Qtd</th><th style="text-align:right">Pago</th><th style="text-align:right">Pendente</th><th style="text-align:right">Total</th></tr></thead>
       <tbody>
-        ${linhasDespesa || '<tr><td colspan="5" style="text-align:center;color:#999;padding:16px">Sem despesas no período</td></tr>'}
-        <tr class="total"><td>(=) Despesas Totais</td><td style="text-align:center">${despesasPeriodo.length}</td><td style="text-align:right" class="green">${formatCurrency(despesasPeriodo.filter(d=>d.pago).reduce((s,d)=>s+Number(d.valor),0))}</td><td style="text-align:right" class="rose">${formatCurrency(despesasPeriodo.filter(d=>!d.pago).reduce((s,d)=>s+Number(d.valor),0))}</td><td style="text-align:right" class="red">${formatCurrency(totalDespesas)}</td></tr>
+        ${linhasDespesa || '<tr><td colspan="5" style="text-align:center;color:#999;padding:16px">Sem despesas do estúdio no período</td></tr>'}
+        <tr class="total"><td>(=) Despesas do Estúdio</td><td style="text-align:center">${despesasPeriodo.length}</td><td style="text-align:right" class="green">${formatCurrency(despesasPeriodo.filter(d=>d.pago).reduce((s,d)=>s+Number(d.valor),0))}</td><td style="text-align:right" class="rose">${formatCurrency(despesasPeriodo.filter(d=>!d.pago).reduce((s,d)=>s+Number(d.valor),0))}</td><td style="text-align:right" class="red">${formatCurrency(totalDespesas)}</td></tr>
       </tbody>
     </table>
+
+    <h2>2.1 Despesas Pessoais <span style="font-size:10px;color:#888;text-transform:none;letter-spacing:0">(não entram no resultado do estúdio)</span></h2>
+    <table>
+      <thead><tr><th>Categoria</th><th style="text-align:center">Qtd</th><th style="text-align:right">Pago</th><th style="text-align:right">Pendente</th><th style="text-align:right">Total</th></tr></thead>
+      <tbody>
+        ${despesasPorCategoriaPessoal.map(c => `<tr><td>${c.categoria}</td><td style="text-align:center">${c.qtd}</td><td style="text-align:right" class="green">${formatCurrency(c.pago)}</td><td style="text-align:right" class="rose">${formatCurrency(c.pendente)}</td><td style="text-align:right">${formatCurrency(c.total)}</td></tr>`).join("") || '<tr><td colspan="5" style="text-align:center;color:#999;padding:16px">Sem despesas pessoais no período</td></tr>'}
+        <tr class="total"><td>(=) Despesas Pessoais</td><td style="text-align:center">${despesasPessoaisPeriodo.length}</td><td style="text-align:right" class="green">${formatCurrency(despesasPessoaisPeriodo.filter(d=>d.pago).reduce((s,d)=>s+Number(d.valor),0))}</td><td style="text-align:right" class="rose">${formatCurrency(despesasPessoaisPeriodo.filter(d=>!d.pago).reduce((s,d)=>s+Number(d.valor),0))}</td><td style="text-align:right">${formatCurrency(totalDespesasPessoais)}</td></tr>
+      </tbody>
+    </table>
+
 
     <h2>3. Apuração do Resultado</h2>
     <table>
