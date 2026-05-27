@@ -185,9 +185,12 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   }, [filtered]);
 
 
-  // Despesas no período (com categoria/descrição) para DRE
+  // Despesas no período separadas por tipo
   const despesasPeriodo = useMemo(() => {
-    return despesas.filter(d => d.data_vencimento >= periodRange.start && d.data_vencimento <= periodRange.end);
+    return despesas.filter(d => (d.tipo || "estudio") === "estudio" && d.data_vencimento >= periodRange.start && d.data_vencimento <= periodRange.end);
+  }, [despesas, periodRange]);
+  const despesasPessoaisPeriodo = useMemo(() => {
+    return despesas.filter(d => d.tipo === "pessoal" && d.data_vencimento >= periodRange.start && d.data_vencimento <= periodRange.end);
   }, [despesas, periodRange]);
 
   // Receita por serviço (DRE - faturamento bruto)
@@ -202,10 +205,10 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     return Object.entries(map).map(([nome, v]) => ({ nome, ...v })).sort((a, b) => b.recebido - a.recebido);
   }, [filtered]);
 
-  // Despesas agrupadas por categoria (DRE)
-  const despesasPorCategoria = useMemo(() => {
+  // Agrupa por categoria (helper reutilizável)
+  const groupByCategoria = (lista: typeof despesas) => {
     const map: Record<string, { total: number; pago: number; pendente: number; qtd: number }> = {};
-    despesasPeriodo.forEach(d => {
+    lista.forEach(d => {
       const cat = d.categoria || "Geral";
       if (!map[cat]) map[cat] = { total: 0, pago: 0, pendente: 0, qtd: 0 };
       const v = Number(d.valor);
@@ -215,7 +218,10 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
       map[cat].qtd += 1;
     });
     return Object.entries(map).map(([categoria, v]) => ({ categoria, ...v })).sort((a, b) => b.total - a.total);
-  }, [despesasPeriodo]);
+  };
+  const despesasPorCategoria = useMemo(() => groupByCategoria(despesasPeriodo), [despesasPeriodo]);
+  const despesasPorCategoriaPessoal = useMemo(() => groupByCategoria(despesasPessoaisPeriodo), [despesasPessoaisPeriodo]);
+
 
   // Export CSV
   const exportCSV = () => {
