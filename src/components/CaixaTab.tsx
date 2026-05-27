@@ -312,9 +312,12 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
               <p className="font-body text-[9px] text-primary-foreground/30 mt-0.5">total bruto</p>
             </div>
             <div className="p-3 rounded-2xl bg-red-500/[0.05] border border-red-500/15 hover:border-red-500/25 transition-all">
-              <p className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-widest font-medium">Despesas</p>
+              <p className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-widest font-medium">Despesas Estúdio</p>
               <p className="font-heading text-[15px] font-bold text-red-400 tabular-nums mt-1 leading-tight">- {formatCurrency(cicloStats.desp)}</p>
               <p className="font-body text-[9px] text-primary-foreground/30 mt-0.5">no período</p>
+              {cicloStats.despPessoal > 0 && (
+                <p className="font-body text-[8px] text-purple-400/70 mt-0.5">Pessoal: {formatCurrency(cicloStats.despPessoal)}</p>
+              )}
             </div>
           </div>
 
