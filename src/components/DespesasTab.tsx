@@ -15,11 +15,13 @@ interface Despesa {
   pago: boolean;
   data_pagamento: string | null;
   categoria: string;
+  tipo: "estudio" | "pessoal";
   observacao: string | null;
   created_at: string;
   fixa?: boolean;
   recorrencia_id?: string | null;
 }
+
 
 const CATEGORIAS = ["Aluguel", "Fornecedor", "Material", "Conta de Luz", "Conta de Água", "Internet", "Outros"];
 
@@ -34,6 +36,8 @@ const DespesasTab = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState<"todas" | "pendentes" | "pagas" | "atrasadas">("todas");
+  const [tipoFilter, setTipoFilter] = useState<"todos" | "estudio" | "pessoal">("todos");
+
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => {
     const saved = localStorage.getItem("despesas_dismissed");
     return saved ? new Set(JSON.parse(saved)) : new Set();
@@ -44,7 +48,9 @@ const DespesasTab = () => {
   const [valor, setValor] = useState("");
   const [dataVencimento, setDataVencimento] = useState("");
   const [categoria, setCategoria] = useState("Outros");
+  const [tipo, setTipo] = useState<"estudio" | "pessoal">("estudio");
   const [observacao, setObservacao] = useState("");
+
   const [fixa, setFixa] = useState(false);
   const [meses, setMeses] = useState("12");
   const [saving, setSaving] = useState(false);
@@ -112,13 +118,15 @@ const DespesasTab = () => {
 
   const filtered = useMemo(() => {
     return despesas.filter((d) => {
+      if (tipoFilter !== "todos" && (d.tipo || "estudio") !== tipoFilter) return false;
       const s = getStatus(d);
       if (filter === "pendentes") return s === "pendente" || s === "hoje";
       if (filter === "pagas") return s === "pago";
       if (filter === "atrasadas") return s === "atrasado";
       return true;
     });
-  }, [despesas, filter, today]);
+  }, [despesas, filter, tipoFilter, today]);
+
 
   const alertCount = useMemo(() => {
     return despesas.filter((d) => {
@@ -212,11 +220,13 @@ const DespesasTab = () => {
         valor: parseFloat(valor),
         data_vencimento: vencStr,
         categoria,
+        tipo,
         observacao: observacao || null,
         fixa,
         recorrencia_id: recorrenciaId,
       };
     });
+
 
     const { error } = await (supabase.from as any)("despesas").insert(rows);
     if (error) {
@@ -260,6 +270,8 @@ const DespesasTab = () => {
     setValor("");
     setDataVencimento("");
     setCategoria("Outros");
+    setTipo("estudio");
+
     setObservacao("");
     setFixa(false);
     setMeses("12");
@@ -474,6 +486,30 @@ const DespesasTab = () => {
         </div>
       )}
 
+      {/* Filtro por tipo (Estúdio / Pessoal) */}
+      <div className="flex gap-2 p-1 rounded-2xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06]">
+        {([
+          { value: "todos", label: "Todas", icon: "✦", active: "bg-gold/20 text-gold shadow-[0_0_0_1px_hsl(var(--gold)/0.25)]" },
+          { value: "estudio", label: "Estúdio", icon: "🏛", active: "bg-blue-500/20 text-blue-300 shadow-[0_0_0_1px_rgb(59_130_246_/_0.25)]" },
+          { value: "pessoal", label: "Pessoal", icon: "👤", active: "bg-purple-500/20 text-purple-300 shadow-[0_0_0_1px_rgb(168_85_247_/_0.25)]" },
+        ] as const).map((t) => {
+          const count = despesas.filter((d) => t.value === "todos" || (d.tipo || "estudio") === t.value).length;
+          return (
+            <button
+              key={t.value}
+              onClick={() => setTipoFilter(t.value)}
+              className={`flex-1 rounded-xl px-3 py-2 font-body text-[11px] font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                tipoFilter === t.value ? t.active : "text-primary-foreground/50 hover:text-primary-foreground/80"
+              }`}
+            >
+              <span className="text-[13px]">{t.icon}</span>
+              {t.label}
+              <span className="text-[10px] opacity-60 font-normal">({count})</span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Filters */}
       <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
         {([
@@ -493,6 +529,7 @@ const DespesasTab = () => {
           </button>
         ))}
       </div>
+
 
       {/* Despesas list */}
       {filtered.length === 0 ? (
@@ -539,6 +576,16 @@ const DespesasTab = () => {
                         <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-medium border bg-primary-foreground/[0.05] text-primary-foreground/40 border-primary-foreground/[0.06]">
                           {d.categoria}
                         </span>
+                        {(d.tipo || "estudio") === "pessoal" ? (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-semibold border bg-purple-500/10 text-purple-300 border-purple-500/30 flex items-center gap-1">
+                            👤 Pessoal
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-semibold border bg-blue-500/10 text-blue-300 border-blue-500/30 flex items-center gap-1">
+                            🏛 Estúdio
+                          </span>
+                        )}
+
                         {d.fixa && !inGroup && (
                           <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-semibold border bg-gold/10 text-gold border-gold/30 flex items-center gap-1">
                             <Repeat className="h-2.5 w-2.5" /> Fixa
@@ -610,6 +657,16 @@ const DespesasTab = () => {
                         <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-medium border bg-primary-foreground/[0.05] text-primary-foreground/40 border-primary-foreground/[0.06]">
                           {grupo[0]?.categoria}
                         </span>
+                        {(grupo[0]?.tipo || "estudio") === "pessoal" ? (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-semibold border bg-purple-500/10 text-purple-300 border-purple-500/30 flex items-center gap-1">
+                            👤 Pessoal
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-semibold border bg-blue-500/10 text-blue-300 border-blue-500/30 flex items-center gap-1">
+                            🏛 Estúdio
+                          </span>
+                        )}
+
                         <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-medium border bg-green-500/10 text-green-400 border-green-500/20">
                           {pagas}/{grupo.length} pagas
                         </span>
@@ -690,6 +747,40 @@ const DespesasTab = () => {
                 ))}
               </select>
             </div>
+
+            <div>
+              <label className="font-body text-[11px] text-primary-foreground/40 mb-1 block">Tipo da despesa *</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTipo("estudio")}
+                  className={`rounded-xl border px-3 py-3 font-body text-[12px] font-semibold transition-all flex flex-col items-center gap-1 ${
+                    tipo === "estudio"
+                      ? "bg-blue-500/15 text-blue-300 border-blue-500/40 shadow-[0_0_0_1px_rgb(59_130_246_/_0.2)]"
+                      : "bg-primary-foreground/[0.04] text-primary-foreground/50 border-primary-foreground/[0.06] hover:text-primary-foreground/80"
+                  }`}
+                >
+                  <span className="text-base">🏛</span>
+                  Estúdio
+                  <span className="font-normal text-[9px] opacity-70">Entra no DRE</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTipo("pessoal")}
+                  className={`rounded-xl border px-3 py-3 font-body text-[12px] font-semibold transition-all flex flex-col items-center gap-1 ${
+                    tipo === "pessoal"
+                      ? "bg-purple-500/15 text-purple-300 border-purple-500/40 shadow-[0_0_0_1px_rgb(168_85_247_/_0.2)]"
+                      : "bg-primary-foreground/[0.04] text-primary-foreground/50 border-primary-foreground/[0.06] hover:text-primary-foreground/80"
+                  }`}
+                >
+                  <span className="text-base">👤</span>
+                  Pessoal
+                  <span className="font-normal text-[9px] opacity-70">Conta da dona</span>
+                </button>
+              </div>
+            </div>
+
+
 
             {/* Despesa fixa (mensal recorrente) */}
             <div className={`rounded-xl border p-3 transition-all ${fixa ? "border-gold/40 bg-gold/[0.06]" : "border-primary-foreground/[0.06] bg-primary-foreground/[0.03]"}`}>

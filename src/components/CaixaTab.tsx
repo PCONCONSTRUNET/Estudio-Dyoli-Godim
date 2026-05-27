@@ -101,12 +101,13 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
   }, [diaCorte, cicloOffset]);
 
   // Despesas (para lucro do ciclo)
-  const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string }[]>([]);
+  const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string; tipo?: string }[]>([]);
   useEffect(() => {
-    (supabase.from as any)("despesas").select("valor,pago,data_vencimento").then(({ data }: any) => {
+    (supabase.from as any)("despesas").select("valor,pago,data_vencimento,tipo").then(({ data }: any) => {
       if (data) setDespesas(data);
     });
   }, []);
+
 
   // Fechamento do dia
   const caixaData = useMemo(() => {
@@ -149,8 +150,9 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
     const recebido = cicloAgs.reduce((s, a) => s + Number(a.valor_pago || 0), 0);
     const total = cicloAgs.reduce((s, a) => s + Number(a.valor), 0);
     const desp = despesas
-      .filter((d) => d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO)
+      .filter((d) => (d.tipo || "estudio") === "estudio" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO)
       .reduce((s, d) => s + Number(d.valor), 0);
+
     const lucro = recebido - desp;
     const comissao = recebido * (comissaoPct / 100);
     const today = new Date(); today.setHours(12, 0, 0, 0);

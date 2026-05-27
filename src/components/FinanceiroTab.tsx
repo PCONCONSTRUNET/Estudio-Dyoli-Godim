@@ -78,12 +78,13 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   }, [diaCorte, cicloOffset]);
 
   // Load despesas
-  const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string; categoria: string; descricao: string; data_pagamento: string | null }[]>([]);
+  const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string; categoria: string; descricao: string; data_pagamento: string | null; tipo?: string }[]>([]);
   useEffect(() => {
-    (supabase.from as any)("despesas").select("valor,pago,data_vencimento,categoria,descricao,data_pagamento").then(({ data }: any) => {
+    (supabase.from as any)("despesas").select("valor,pago,data_vencimento,categoria,descricao,data_pagamento,tipo").then(({ data }: any) => {
       if (data) setDespesas(data);
     });
   }, []);
+
 
   // Filter agendamentos by period (Mês = ciclo configurado pelo dia de corte)
   const filtered = useMemo(() => {
@@ -133,9 +134,13 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const qtdAtendimentos = filtered.length;
   const comissaoValor = totalRecebido * (comissaoPct / 100);
   const totalDespesas = despesas
-    .filter(d => d.data_vencimento >= periodRange.start && d.data_vencimento <= periodRange.end)
+    .filter(d => (d.tipo || "estudio") === "estudio" && d.data_vencimento >= periodRange.start && d.data_vencimento <= periodRange.end)
+    .reduce((s, d) => s + Number(d.valor), 0);
+  const totalDespesasPessoais = despesas
+    .filter(d => d.tipo === "pessoal" && d.data_vencimento >= periodRange.start && d.data_vencimento <= periodRange.end)
     .reduce((s, d) => s + Number(d.valor), 0);
   const lucroLiquido = totalRecebido - totalDespesas;
+
 
   // Chart: receita por dia
   const dailyData = useMemo(() => {
@@ -180,9 +185,12 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   }, [filtered]);
 
 
-  // Despesas no período (com categoria/descrição) para DRE
+  // Despesas no período separadas por tipo
   const despesasPeriodo = useMemo(() => {
-    return despesas.filter(d => d.data_vencimento >= periodRange.start && d.data_vencimento <= periodRange.end);
+    return despesas.filter(d => (d.tipo || "estudio") === "estudio" && d.data_vencimento >= periodRange.start && d.data_vencimento <= periodRange.end);
+  }, [despesas, periodRange]);
+  const despesasPessoaisPeriodo = useMemo(() => {
+    return despesas.filter(d => d.tipo === "pessoal" && d.data_vencimento >= periodRange.start && d.data_vencimento <= periodRange.end);
   }, [despesas, periodRange]);
 
   // Receita por serviço (DRE - faturamento bruto)
@@ -197,10 +205,10 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     return Object.entries(map).map(([nome, v]) => ({ nome, ...v })).sort((a, b) => b.recebido - a.recebido);
   }, [filtered]);
 
-  // Despesas agrupadas por categoria (DRE)
-  const despesasPorCategoria = useMemo(() => {
+  // Agrupa por categoria (helper reutilizável)
+  const groupByCategoria = (lista: typeof despesas) => {
     const map: Record<string, { total: number; pago: number; pendente: number; qtd: number }> = {};
-    despesasPeriodo.forEach(d => {
+    lista.forEach(d => {
       const cat = d.categoria || "Geral";
       if (!map[cat]) map[cat] = { total: 0, pago: 0, pendente: 0, qtd: 0 };
       const v = Number(d.valor);
@@ -210,7 +218,10 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
       map[cat].qtd += 1;
     });
     return Object.entries(map).map(([categoria, v]) => ({ categoria, ...v })).sort((a, b) => b.total - a.total);
-  }, [despesasPeriodo]);
+  };
+  const despesasPorCategoria = useMemo(() => groupByCategoria(despesasPeriodo), [despesasPeriodo]);
+  const despesasPorCategoriaPessoal = useMemo(() => groupByCategoria(despesasPessoaisPeriodo), [despesasPessoaisPeriodo]);
+
 
   // Export CSV
   const exportCSV = () => {
@@ -332,14 +343,24 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
       </tbody>
     </table>
 
-    <h2>2. Despesas por Categoria</h2>
+    <h2>2. Despesas do Estúdio por Categoria</h2>
     <table>
       <thead><tr><th>Categoria</th><th style="text-align:center">Qtd</th><th style="text-align:right">Pago</th><th style="text-align:right">Pendente</th><th style="text-align:right">Total</th></tr></thead>
       <tbody>
-        ${linhasDespesa || '<tr><td colspan="5" style="text-align:center;color:#999;padding:16px">Sem despesas no período</td></tr>'}
-        <tr class="total"><td>(=) Despesas Totais</td><td style="text-align:center">${despesasPeriodo.length}</td><td style="text-align:right" class="green">${formatCurrency(despesasPeriodo.filter(d=>d.pago).reduce((s,d)=>s+Number(d.valor),0))}</td><td style="text-align:right" class="rose">${formatCurrency(despesasPeriodo.filter(d=>!d.pago).reduce((s,d)=>s+Number(d.valor),0))}</td><td style="text-align:right" class="red">${formatCurrency(totalDespesas)}</td></tr>
+        ${linhasDespesa || '<tr><td colspan="5" style="text-align:center;color:#999;padding:16px">Sem despesas do estúdio no período</td></tr>'}
+        <tr class="total"><td>(=) Despesas do Estúdio</td><td style="text-align:center">${despesasPeriodo.length}</td><td style="text-align:right" class="green">${formatCurrency(despesasPeriodo.filter(d=>d.pago).reduce((s,d)=>s+Number(d.valor),0))}</td><td style="text-align:right" class="rose">${formatCurrency(despesasPeriodo.filter(d=>!d.pago).reduce((s,d)=>s+Number(d.valor),0))}</td><td style="text-align:right" class="red">${formatCurrency(totalDespesas)}</td></tr>
       </tbody>
     </table>
+
+    <h2>2.1 Despesas Pessoais <span style="font-size:10px;color:#888;text-transform:none;letter-spacing:0">(não entram no resultado do estúdio)</span></h2>
+    <table>
+      <thead><tr><th>Categoria</th><th style="text-align:center">Qtd</th><th style="text-align:right">Pago</th><th style="text-align:right">Pendente</th><th style="text-align:right">Total</th></tr></thead>
+      <tbody>
+        ${despesasPorCategoriaPessoal.map(c => `<tr><td>${c.categoria}</td><td style="text-align:center">${c.qtd}</td><td style="text-align:right" class="green">${formatCurrency(c.pago)}</td><td style="text-align:right" class="rose">${formatCurrency(c.pendente)}</td><td style="text-align:right">${formatCurrency(c.total)}</td></tr>`).join("") || '<tr><td colspan="5" style="text-align:center;color:#999;padding:16px">Sem despesas pessoais no período</td></tr>'}
+        <tr class="total"><td>(=) Despesas Pessoais</td><td style="text-align:center">${despesasPessoaisPeriodo.length}</td><td style="text-align:right" class="green">${formatCurrency(despesasPessoaisPeriodo.filter(d=>d.pago).reduce((s,d)=>s+Number(d.valor),0))}</td><td style="text-align:right" class="rose">${formatCurrency(despesasPessoaisPeriodo.filter(d=>!d.pago).reduce((s,d)=>s+Number(d.valor),0))}</td><td style="text-align:right">${formatCurrency(totalDespesasPessoais)}</td></tr>
+      </tbody>
+    </table>
+
 
     <h2>3. Apuração do Resultado</h2>
     <table>
@@ -363,11 +384,19 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     </table>
 
     ${linhasDespesaDetalhe ? `
-    <h2>5. Detalhamento das Despesas</h2>
+    <h2>5. Detalhamento das Despesas do Estúdio</h2>
     <table>
       <thead><tr><th>Vencimento</th><th>Categoria</th><th>Descrição</th><th style="text-align:center">Status</th><th style="text-align:right">Valor</th></tr></thead>
       <tbody>${linhasDespesaDetalhe}</tbody>
     </table>` : ""}
+
+    ${despesasPessoaisPeriodo.length ? `
+    <h2>6. Detalhamento das Despesas Pessoais</h2>
+    <table>
+      <thead><tr><th>Vencimento</th><th>Categoria</th><th>Descrição</th><th style="text-align:center">Status</th><th style="text-align:right">Valor</th></tr></thead>
+      <tbody>${despesasPessoaisPeriodo.slice().sort((a,b)=>a.data_vencimento.localeCompare(b.data_vencimento)).map(d=>`<tr><td>${fmtDate(d.data_vencimento)}</td><td>${d.categoria||"Geral"}</td><td>${d.descricao||"-"}</td><td style="text-align:center">${d.pago?'<span class="green">Pago</span>':'<span class="rose">Pendente</span>'}</td><td style="text-align:right">${formatCurrency(Number(d.valor))}</td></tr>`).join("")}</tbody>
+    </table>` : ""}
+
 
     <div class="footer">
       Documento gerado automaticamente pelo sistema do Estúdio Dyoli — Uso contábil interno.
@@ -392,21 +421,33 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     lines.push(`TOTAL RECEITA BRUTA;${qtdAtendimentos};${fmtNum(totalReceita)};${fmtNum(totalRecebido)}`);
     lines.push(`RECEITA PENDENTE;;;${fmtNum(totalPendente)}`);
     lines.push("");
-    lines.push("DESPESAS POR CATEGORIA");
+    lines.push("DESPESAS DO ESTÚDIO POR CATEGORIA");
     lines.push("Categoria;Qtd;Pago;Pendente;Total");
     despesasPorCategoria.forEach(c => lines.push(`"${c.categoria}";${c.qtd};${fmtNum(c.pago)};${fmtNum(c.pendente)};${fmtNum(c.total)}`));
-    lines.push(`TOTAL DESPESAS;${despesasPeriodo.length};;;${fmtNum(totalDespesas)}`);
+    lines.push(`TOTAL DESPESAS ESTÚDIO;${despesasPeriodo.length};;;${fmtNum(totalDespesas)}`);
+    lines.push("");
+    lines.push("DESPESAS PESSOAIS POR CATEGORIA (não entram no resultado)");
+    lines.push("Categoria;Qtd;Pago;Pendente;Total");
+    despesasPorCategoriaPessoal.forEach(c => lines.push(`"${c.categoria}";${c.qtd};${fmtNum(c.pago)};${fmtNum(c.pendente)};${fmtNum(c.total)}`));
+    lines.push(`TOTAL DESPESAS PESSOAIS;${despesasPessoaisPeriodo.length};;;${fmtNum(totalDespesasPessoais)}`);
     lines.push("");
     lines.push("APURAÇÃO");
     lines.push(`(+) Receita Recebida;${fmtNum(totalRecebido)}`);
-    lines.push(`(-) Despesas;${fmtNum(totalDespesas)}`);
+    lines.push(`(-) Despesas do Estúdio;${fmtNum(totalDespesas)}`);
     lines.push(`(-) Comissão (${comissaoPct}%);${fmtNum(comissaoValor)}`);
     lines.push(`(=) Resultado Operacional;${fmtNum(totalRecebido - totalDespesas - comissaoValor)}`);
     lines.push(`(=) Resultado Líquido;${fmtNum(lucroLiquido)}`);
     lines.push("");
-    lines.push("DETALHE DESPESAS");
+    lines.push("DETALHE DESPESAS DO ESTÚDIO");
     lines.push("Vencimento;Categoria;Descrição;Status;Valor");
     despesasPeriodo.forEach(d => lines.push(`${fmtDate(d.data_vencimento)};"${d.categoria || "Geral"}";"${(d.descricao || "").replace(/"/g, '""')}";${d.pago ? "Pago" : "Pendente"};${fmtNum(Number(d.valor))}`));
+    if (despesasPessoaisPeriodo.length) {
+      lines.push("");
+      lines.push("DETALHE DESPESAS PESSOAIS");
+      lines.push("Vencimento;Categoria;Descrição;Status;Valor");
+      despesasPessoaisPeriodo.forEach(d => lines.push(`${fmtDate(d.data_vencimento)};"${d.categoria || "Geral"}";"${(d.descricao || "").replace(/"/g, '""')}";${d.pago ? "Pago" : "Pendente"};${fmtNum(Number(d.valor))}`));
+    }
+
 
     const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
