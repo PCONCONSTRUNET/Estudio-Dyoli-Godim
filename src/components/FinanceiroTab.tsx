@@ -384,11 +384,19 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     </table>
 
     ${linhasDespesaDetalhe ? `
-    <h2>5. Detalhamento das Despesas</h2>
+    <h2>5. Detalhamento das Despesas do Estúdio</h2>
     <table>
       <thead><tr><th>Vencimento</th><th>Categoria</th><th>Descrição</th><th style="text-align:center">Status</th><th style="text-align:right">Valor</th></tr></thead>
       <tbody>${linhasDespesaDetalhe}</tbody>
     </table>` : ""}
+
+    ${despesasPessoaisPeriodo.length ? `
+    <h2>6. Detalhamento das Despesas Pessoais</h2>
+    <table>
+      <thead><tr><th>Vencimento</th><th>Categoria</th><th>Descrição</th><th style="text-align:center">Status</th><th style="text-align:right">Valor</th></tr></thead>
+      <tbody>${despesasPessoaisPeriodo.slice().sort((a,b)=>a.data_vencimento.localeCompare(b.data_vencimento)).map(d=>`<tr><td>${fmtDate(d.data_vencimento)}</td><td>${d.categoria||"Geral"}</td><td>${d.descricao||"-"}</td><td style="text-align:center">${d.pago?'<span class="green">Pago</span>':'<span class="rose">Pendente</span>'}</td><td style="text-align:right">${formatCurrency(Number(d.valor))}</td></tr>`).join("")}</tbody>
+    </table>` : ""}
+
 
     <div class="footer">
       Documento gerado automaticamente pelo sistema do Estúdio Dyoli — Uso contábil interno.
