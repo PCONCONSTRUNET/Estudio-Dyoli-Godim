@@ -486,6 +486,30 @@ const DespesasTab = () => {
         </div>
       )}
 
+      {/* Filtro por tipo (Estúdio / Pessoal) */}
+      <div className="flex gap-2 p-1 rounded-2xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06]">
+        {([
+          { value: "todos", label: "Todas", icon: "✦", active: "bg-gold/20 text-gold shadow-[0_0_0_1px_hsl(var(--gold)/0.25)]" },
+          { value: "estudio", label: "Estúdio", icon: "🏛", active: "bg-blue-500/20 text-blue-300 shadow-[0_0_0_1px_rgb(59_130_246_/_0.25)]" },
+          { value: "pessoal", label: "Pessoal", icon: "👤", active: "bg-purple-500/20 text-purple-300 shadow-[0_0_0_1px_rgb(168_85_247_/_0.25)]" },
+        ] as const).map((t) => {
+          const count = despesas.filter((d) => t.value === "todos" || (d.tipo || "estudio") === t.value).length;
+          return (
+            <button
+              key={t.value}
+              onClick={() => setTipoFilter(t.value)}
+              className={`flex-1 rounded-xl px-3 py-2 font-body text-[11px] font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                tipoFilter === t.value ? t.active : "text-primary-foreground/50 hover:text-primary-foreground/80"
+              }`}
+            >
+              <span className="text-[13px]">{t.icon}</span>
+              {t.label}
+              <span className="text-[10px] opacity-60 font-normal">({count})</span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Filters */}
       <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
         {([
@@ -505,6 +529,7 @@ const DespesasTab = () => {
           </button>
         ))}
       </div>
+
 
       {/* Despesas list */}
       {filtered.length === 0 ? (
