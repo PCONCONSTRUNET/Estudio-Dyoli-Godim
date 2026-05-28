@@ -420,49 +420,113 @@ const DividasTab = () => {
 
       {/* MODAL: DAR BAIXA */}
       <Dialog open={isBaixaOpen} onOpenChange={setIsBaixaOpen}>
-        <DialogContent className="max-w-sm bg-charcoal border-gold/20 p-6 [&>button]:text-primary-foreground/60 [&>button]:hover:text-primary-foreground">
-          <DialogHeader className="mb-4">
-            <DialogTitle className="font-heading text-xl font-bold text-primary-foreground flex items-center gap-2">
-              <CreditCard className="w-5 h-5 text-gold" /> Receber Pagamento
-            </DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-w-md bg-charcoal border-gold/20 p-0 overflow-hidden [&>button]:text-primary-foreground/60 [&>button]:hover:text-primary-foreground">
+          <div className="relative p-6 border-b border-primary-foreground/[0.06]">
+            <div className="pointer-events-none absolute -top-10 -right-10 w-32 h-32 rounded-full bg-gold/10 blur-3xl" />
+            <DialogHeader>
+              <DialogTitle className="font-heading text-xl font-bold text-primary-foreground flex items-center gap-3">
+                <span className="w-10 h-10 rounded-full bg-gradient-to-br from-gold/20 to-gold/5 flex items-center justify-center border border-gold/20 shadow-[0_0_15px_-3px_hsl(40_70%_60%/0.3)]">
+                  <CreditCard className="w-5 h-5 text-gold" />
+                </span>
+                Receber Pagamento
+              </DialogTitle>
+            </DialogHeader>
+          </div>
 
           {selectedDivida && (
-            <div className="space-y-5">
-              <div className="p-4 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06] text-center">
-                <p className="font-body text-sm text-primary-foreground/60 mb-1">Valor restante da dívida</p>
-                <p className="font-heading text-2xl font-bold text-rose">
-                  {formatCurrency(selectedDivida.valor_total - selectedDivida.valor_pago)}
-                </p>
+            <div className="p-6 pt-5 space-y-6">
+              {/* Detalhes da Dívida */}
+              <div className="p-5 rounded-2xl bg-gradient-to-br from-primary-foreground/[0.04] to-primary-foreground/[0.01] border border-primary-foreground/[0.08] shadow-inner">
+                <div className="flex justify-between items-start mb-4 pb-4 border-b border-primary-foreground/[0.05]">
+                  <div>
+                    <p className="font-body text-[10px] text-primary-foreground/40 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                      <span className="w-1 h-1 rounded-full bg-primary-foreground/30" /> Cliente
+                    </p>
+                    <p className="font-heading text-lg font-bold text-primary-foreground/90 leading-none">
+                      {selectedDivida.cliente_nome}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-body text-[10px] text-primary-foreground/40 uppercase tracking-widest mb-1.5 flex items-center justify-end gap-1.5">
+                      Data <span className="w-1 h-1 rounded-full bg-primary-foreground/30" />
+                    </p>
+                    <p className="font-body text-[12px] font-medium text-primary-foreground/70 bg-primary-foreground/[0.05] px-2 py-0.5 rounded-md border border-primary-foreground/[0.05]">
+                      {formatDateShort(selectedDivida.data_criacao)}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="mb-5">
+                  <p className="font-body text-[10px] text-primary-foreground/40 uppercase tracking-widest mb-1.5">Referente a</p>
+                  <p className="font-body text-sm text-primary-foreground/80 leading-relaxed bg-primary-foreground/[0.02] p-3 rounded-xl border border-primary-foreground/[0.04]">
+                    {selectedDivida.descricao}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="p-2.5 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.04] text-center">
+                    <p className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-widest mb-1">Total</p>
+                    <p className="font-heading text-[13px] font-bold text-primary-foreground/70">{formatCurrency(selectedDivida.valor_total)}</p>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-green-500/[0.05] border border-green-500/10 text-center">
+                    <p className="font-body text-[9px] text-green-400/60 uppercase tracking-widest mb-1">Já Pago</p>
+                    <p className="font-heading text-[13px] font-bold text-green-400/80">{formatCurrency(selectedDivida.valor_pago)}</p>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-gradient-to-b from-rose/[0.08] to-rose/[0.02] border border-rose/15 text-center shadow-[inset_0_0_10px_rgba(0,0,0,0.1)] relative overflow-hidden">
+                    <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-rose/30 to-transparent" />
+                    <p className="font-body text-[9px] text-rose/70 uppercase tracking-widest mb-1">Restante</p>
+                    <p className="font-heading text-[15px] font-bold text-rose drop-shadow-[0_0_8px_rgba(244,63,94,0.3)]">{formatCurrency(selectedDivida.valor_total - selectedDivida.valor_pago)}</p>
+                  </div>
+                </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="font-body text-xs font-semibold text-primary-foreground/70 uppercase tracking-wider">Valor Sendo Pago Agora (R$)</label>
-                <input
-                  type="text"
-                  placeholder="0,00"
-                  value={valorBaixa}
-                  onChange={(e) => setValorBaixa(e.target.value.replace(/[^0-9.,]/g, ''))}
-                  className="w-full px-3 py-3 rounded-xl bg-primary-foreground/[0.05] border border-gold/30 text-primary-foreground text-center font-heading text-2xl focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors"
-                  autoFocus
-                />
-                <p className="font-body text-[10px] text-primary-foreground/40 text-center mt-2">
-                  Esse valor será adicionado no Caixa de hoje como receita recebida.
-                </p>
+              {/* Input de Pagamento */}
+              <div className="space-y-2.5">
+                <label className="font-body text-[11px] font-bold text-gold uppercase tracking-[0.15em] flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse shadow-[0_0_8px_hsl(40_70%_50%)]" />
+                  Valor a receber agora
+                </label>
+                <div className="relative group">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 font-heading text-xl text-primary-foreground/30 group-focus-within:text-gold transition-colors">
+                    R$
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="0,00"
+                    value={valorBaixa}
+                    onChange={(e) => setValorBaixa(e.target.value.replace(/[^0-9.,]/g, ''))}
+                    className="w-full pl-12 pr-4 py-4 rounded-2xl bg-charcoal border border-primary-foreground/[0.15] text-primary-foreground font-heading text-3xl font-bold focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 focus:bg-primary-foreground/[0.02] shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)] transition-all"
+                    autoFocus
+                  />
+                  {/* Botão flutuante "TUDO" no input */}
+                  <button 
+                    type="button"
+                    onClick={() => setValorBaixa((selectedDivida.valor_total - selectedDivida.valor_pago).toFixed(2).replace('.', ','))}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg bg-gold/10 hover:bg-gold/20 text-gold font-body text-[10px] font-bold uppercase tracking-wider transition-all"
+                  >
+                    Restante
+                  </button>
+                </div>
+                <div className="flex items-center justify-between px-1">
+                  <p className="font-body text-[10px] text-primary-foreground/40 flex items-center gap-1.5">
+                    <span className="w-1 h-1 rounded-full bg-primary-foreground/20" />
+                    Valor será adicionado ao Caixa de hoje
+                  </p>
+                </div>
               </div>
 
               <div className="pt-2 flex gap-3">
                 <button
                   onClick={() => setIsBaixaOpen(false)}
-                  className="flex-1 py-3 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground font-heading font-bold uppercase tracking-widest hover:bg-primary-foreground/[0.1] transition-all"
+                  className="flex-1 py-3.5 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/70 hover:text-primary-foreground font-heading text-sm font-bold uppercase tracking-widest hover:bg-primary-foreground/[0.08] transition-all border border-transparent hover:border-primary-foreground/[0.1]"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleDarBaixa}
-                  className="flex-1 py-3 rounded-xl bg-green-500 text-charcoal font-heading font-bold uppercase tracking-widest shadow-[0_0_15px_hsl(142_70%_50%/0.3)] hover:bg-green-400 transition-all"
+                  className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-green-500 to-emerald-400 text-charcoal font-heading text-sm font-bold uppercase tracking-widest shadow-[0_0_20px_hsl(142_70%_50%/0.25)] hover:shadow-[0_0_25px_hsl(142_70%_50%/0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all"
                 >
-                  Confirmar
+                  Confirmar Pagamento
                 </button>
               </div>
             </div>
