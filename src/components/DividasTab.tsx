@@ -50,6 +50,7 @@ const DividasTab = () => {
   const [newClienteNome, setNewClienteNome] = useState("");
   const [newDescricao, setNewDescricao] = useState("");
   const [newValorTotal, setNewValorTotal] = useState("");
+  const [newDataCriacao, setNewDataCriacao] = useState(() => new Date().toISOString().split('T')[0]);
 
   // States para Baixa
   const [selectedDivida, setSelectedDivida] = useState<Divida | null>(null);
@@ -110,7 +111,8 @@ const DividasTab = () => {
         descricao: newDescricao,
         valor_total: valor,
         valor_pago: 0,
-        status: "pendente"
+        status: "pendente",
+        data_criacao: newDataCriacao
       }).select().single();
 
       if (error) throw error;
@@ -122,6 +124,7 @@ const DividasTab = () => {
       setNewClienteNome("");
       setNewDescricao("");
       setNewValorTotal("");
+      setNewDataCriacao(new Date().toISOString().split('T')[0]);
     } catch (error: any) {
       console.error(error);
       toast.error(error.message || "Erro ao criar dívida.");
@@ -390,6 +393,16 @@ const DividasTab = () => {
                 value={newValorTotal}
                 onChange={(e) => setNewValorTotal(e.target.value.replace(/[^0-9.,]/g, ''))}
                 className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.1] text-primary-foreground placeholder:text-primary-foreground/30 font-heading text-lg focus:outline-none focus:border-gold/40 transition-colors"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="font-body text-xs font-semibold text-primary-foreground/70 uppercase tracking-wider">Data da Dívida / Serviço</label>
+              <input
+                type="date"
+                value={newDataCriacao}
+                onChange={(e) => setNewDataCriacao(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.1] text-primary-foreground font-body focus:outline-none focus:border-gold/40 transition-colors"
               />
             </div>
 
