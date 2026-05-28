@@ -426,7 +426,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
         <Sheet>
           <SheetTrigger asChild>
             <button className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] transition-all hover:bg-primary-foreground/[0.1]">
-              <Bell className={`h-4 w-4 ${activeNotifications.length > 0 ? "text-gold" : "text-primary-foreground/30"}`} />
+              <Bell className={`h-4 w-4 ${activeNotifications.length > 0 ? "text-gold" : "text-primary-foreground/95"}`} />
               {activeNotifications.length > 0 && (
                 <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white animate-pulse">
                   {activeNotifications.length}
@@ -450,7 +450,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
             {activeNotifications.length > 0 && (
               <div className="px-4 pt-3 flex justify-end">
                 <button onClick={clearAllNotifications}
-                  className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 font-body text-[10px] font-medium text-primary-foreground/30 transition-all hover:bg-primary-foreground/[0.06] hover:text-primary-foreground/50">
+                  className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 font-body text-[10px] font-medium text-primary-foreground/95 transition-all hover:bg-primary-foreground/[0.06] hover:text-primary-foreground/85">
                   <X className="h-3 w-3" /> Limpar tudo
                 </button>
               </div>
@@ -460,8 +460,8 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
               {activeNotifications.length === 0 ? (
                 <div className="py-16 text-center">
                   <CheckCircle className="h-8 w-8 text-green-400/40 mx-auto mb-3" />
-                  <p className="font-body text-[13px] text-primary-foreground/30">Tudo em dia! 🎉</p>
-                  <p className="font-body text-[11px] text-primary-foreground/20 mt-1">Nenhuma notificação pendente</p>
+                  <p className="font-body text-[13px] text-primary-foreground/95">Tudo em dia! 🎉</p>
+                  <p className="font-body text-[11px] text-primary-foreground/85 mt-1">Nenhuma notificação pendente</p>
                 </div>
               ) : (
                 activeNotifications.map((n, i) => {
@@ -478,21 +478,21 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                           <p className="font-body text-[13px] font-medium text-primary-foreground truncate mt-0.5">
                             {getClientName(n.agendamento.user_id, n.agendamento.cliente_nome)}
                           </p>
-                          <p className="font-body text-[11px] text-primary-foreground/40 truncate">
+                          <p className="font-body text-[11px] text-primary-foreground/75 truncate">
                             {n.agendamento.servico}{n.agendamento.variacao ? ` · ${n.agendamento.variacao}` : ""}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
                             <span className="font-heading text-[13px] font-bold text-primary-foreground">
                               {formatCurrency(Number(n.agendamento.valor))}
                             </span>
-                            <span className="font-body text-[10px] text-primary-foreground/30">
+                            <span className="font-body text-[10px] text-primary-foreground/95">
                               {formatDate(n.agendamento.data_agendamento)} · {n.agendamento.horario}
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5 mt-2">
                             <button
                               onClick={() => dismissNotification(n.agendamento.id, n.tipo)}
-                              className="flex items-center gap-1 rounded-lg px-2 py-1 bg-primary-foreground/[0.06] text-primary-foreground/40 text-[10px] font-body font-medium border border-primary-foreground/[0.08] hover:bg-primary-foreground/[0.1] hover:text-primary-foreground/60 transition-all"
+                              className="flex items-center gap-1 rounded-lg px-2 py-1 bg-primary-foreground/[0.06] text-primary-foreground/75 text-[10px] font-body font-medium border border-primary-foreground/[0.08] hover:bg-primary-foreground/[0.1] hover:text-primary-foreground/95 transition-all"
                             >
                               <Eye className="h-3 w-3" /> Lida
                             </button>
@@ -537,19 +537,19 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
         ] as const).map((s) => (
           <div key={s.key} className="rounded-xl border border-gold/15 bg-gradient-to-br from-gold/[0.06] to-nude/[0.03] p-2 text-center shadow-[0_2px_8px_-4px_hsl(var(--gold)/0.15)]">
             <p className={`font-heading text-[16px] font-bold ${s.color}`}>{counts[s.key]}</p>
-            <p className="font-body text-[8px] text-primary-foreground/40 uppercase tracking-wider">{s.label}</p>
+            <p className="font-body text-[8px] text-primary-foreground/75 uppercase tracking-wider">{s.label}</p>
           </div>
         ))}
       </div>
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary-foreground/25" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary-foreground/85" />
         <input
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Buscar por cliente, serviço ou data..."
-          className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] py-2.5 pl-10 pr-4 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
+          className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] py-2.5 pl-10 pr-4 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/85 focus:outline-none focus:ring-2 focus:ring-gold/20"
         />
       </div>
 
@@ -587,7 +587,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
 
       <div className="flex items-center gap-2 rounded-lg border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] px-3 py-2">
         <Clock className="h-3.5 w-3.5 text-gold" />
-        <p className="font-body text-[11px] text-primary-foreground/50">
+        <p className="font-body text-[11px] text-primary-foreground/85">
           Lista em ordem de <span className="text-primary-foreground font-medium">data mais próxima</span> para a <span className="text-primary-foreground font-medium">mais distante</span>
         </p>
       </div>
@@ -615,7 +615,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
         </button>
       )}
 
-      <p className="font-body text-[11px] text-primary-foreground/30">
+      <p className="font-body text-[11px] text-primary-foreground/95">
         {filtered.length} pedido{filtered.length !== 1 ? "s" : ""} encontrado{filtered.length !== 1 ? "s" : ""}
       </p>
 
@@ -623,7 +623,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
       {/* List */}
       {filtered.length === 0 ? (
         <div className="py-12 text-center">
-          <p className="font-body text-[13px] text-primary-foreground/30">Nenhum pedido encontrado</p>
+          <p className="font-body text-[13px] text-primary-foreground/95">Nenhum pedido encontrado</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -649,36 +649,36 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                       )}
                       {paymentBadge(a)}
                     </div>
-                    <p className="font-body text-[11px] text-primary-foreground/45 truncate">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""}</p>
+                    <p className="font-body text-[11px] text-primary-foreground/75 truncate">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     <p className="font-heading text-[14px] font-bold text-gold">{formatCurrency(Number(a.valor))}</p>
                     {statusBadge(a.status)}
                   </div>
-                  <ChevronDown className={`h-3.5 w-3.5 text-primary-foreground/30 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`h-3.5 w-3.5 text-primary-foreground/95 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                 </button>
 
                 {isExpanded && (
                   <div className="border-t border-primary-foreground/[0.06] p-3 space-y-3 animate-fade-in">
                     <div className="grid grid-cols-2 gap-2 text-[11px] font-body">
                       <div>
-                        <p className="text-primary-foreground/30">Data completa</p>
+                        <p className="text-primary-foreground/95">Data completa</p>
                         <p className="text-primary-foreground font-medium">{formatDate(a.data_agendamento)}</p>
                       </div>
                       <div>
-                        <p className="text-primary-foreground/30">Valor total</p>
+                        <p className="text-primary-foreground/95">Valor total</p>
                         <p className="text-primary-foreground font-medium">{formatCurrency(Number(a.valor))}</p>
                       </div>
                       <div>
-                        <p className="text-primary-foreground/30">Criado em</p>
+                        <p className="text-primary-foreground/95">Criado em</p>
                         <p className="text-primary-foreground font-medium">{new Date(a.created_at).toLocaleDateString("pt-BR")}</p>
                       </div>
                       <div>
-                        <p className="text-primary-foreground/30">Serviço</p>
+                        <p className="text-primary-foreground/95">Serviço</p>
                         <p className="text-primary-foreground font-medium">{a.servico}</p>
                       </div>
                       <div className="col-span-2">
-                        <p className="text-primary-foreground/30">Forma de pagamento</p>
+                        <p className="text-primary-foreground/95">Forma de pagamento</p>
                         <div className="flex items-center gap-2 mt-0.5">
                           <p className="text-primary-foreground font-medium capitalize">
                             {a.forma_pagamento || "—"}
@@ -695,15 +695,15 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                           </div>
                           <div className="grid grid-cols-3 gap-2 text-[11px]">
                             <div>
-                              <p className="text-primary-foreground/45 text-[10px]">Total</p>
+                              <p className="text-primary-foreground/75 text-[10px]">Total</p>
                               <p className="text-primary-foreground/90 font-medium">{formatCurrency(Number(a.valor))}</p>
                             </div>
                             <div>
-                              <p className="text-primary-foreground/45 text-[10px]">Pago parcial</p>
+                              <p className="text-primary-foreground/75 text-[10px]">Pago parcial</p>
                               <p className="text-green-400 font-semibold">{formatCurrency(Number(a.valor_pago || 0))}</p>
                             </div>
                             <div>
-                              <p className="text-primary-foreground/45 text-[10px]">A receber</p>
+                              <p className="text-primary-foreground/75 text-[10px]">A receber</p>
                               <p className="text-amber-300 font-bold">{formatCurrency(Number(a.valor) - Number(a.valor_pago || 0))}</p>
                             </div>
                           </div>
@@ -733,7 +733,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                             <AlertTriangle className="h-4 w-4 text-red-400" />
                             <p className="font-body text-[11px] font-semibold uppercase tracking-wider text-red-400">Nada pago ainda</p>
                           </div>
-                          <p className="font-body text-[11px] text-primary-foreground/70">
+                          <p className="font-body text-[11px] text-primary-foreground/100">
                             A receber: <span className="font-bold text-red-300">{formatCurrency(Number(a.valor))}</span>
                           </p>
                           <div className="grid grid-cols-2 gap-2">
@@ -766,7 +766,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                           </div>
                           {a.paid_at && (
                             <div className="flex justify-between gap-2">
-                              <span className="text-primary-foreground/45 text-[11px]">Pago em</span>
+                              <span className="text-primary-foreground/75 text-[11px]">Pago em</span>
                               <span className="text-primary-foreground/90 text-[11px] font-medium">
                                 {new Date(a.paid_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                               </span>
@@ -774,13 +774,13 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                           )}
                           {a.payer_name && (
                             <div className="flex justify-between gap-2">
-                              <span className="text-primary-foreground/45 text-[11px]">Pagador</span>
+                              <span className="text-primary-foreground/75 text-[11px]">Pagador</span>
                               <span className="text-primary-foreground/90 text-[11px] font-medium truncate max-w-[60%]" title={a.payer_name}>{a.payer_name}</span>
                             </div>
                           )}
                           <div className="flex justify-between gap-2">
-                            <span className="text-primary-foreground/45 text-[11px]">ID da transação</span>
-                            <span className="text-primary-foreground/70 text-[10px] font-mono truncate max-w-[55%]" title={a.payment_id}>{a.payment_id}</span>
+                            <span className="text-primary-foreground/75 text-[11px]">ID da transação</span>
+                            <span className="text-primary-foreground/100 text-[10px] font-mono truncate max-w-[55%]" title={a.payment_id}>{a.payment_id}</span>
                           </div>
                           {a.receipt_url && (
                             <a
@@ -798,7 +798,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                     </div>
 
                     <div className="border-t border-primary-foreground/[0.06] pt-3 space-y-2">
-                      <p className="font-body text-[10px] text-primary-foreground/30 uppercase tracking-wider">Alterar status</p>
+                      <p className="font-body text-[10px] text-primary-foreground/95 uppercase tracking-wider">Alterar status</p>
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {a.status !== "confirmado" && (
                           <button onClick={() => updateStatus(a.id, "confirmado")}
@@ -856,7 +856,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                 <p className="font-heading text-[20px] font-bold text-amber-300 leading-tight">{formatCurrency(totalAReceber)}</p>
               </div>
               <div className="ml-auto text-right">
-                <p className="font-body text-[10px] text-primary-foreground/40 uppercase tracking-wider">Pedidos</p>
+                <p className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-wider">Pedidos</p>
                 <p className="font-heading text-[16px] font-semibold text-primary-foreground">{devedores.length}</p>
               </div>
             </div>
@@ -864,7 +864,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
             {devedores.length === 0 ? (
               <div className="py-12 text-center">
-                <p className="font-body text-[13px] text-primary-foreground/40">🎉 Ninguém devendo no momento</p>
+                <p className="font-body text-[13px] text-primary-foreground/75">🎉 Ninguém devendo no momento</p>
               </div>
             ) : devedores.map((a) => {
               const nome = getClientName(a.user_id, a.cliente_nome);
@@ -893,7 +893,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                             a.origem === "whatsapp_bot" ? "border-green-500/30 bg-green-500/10 text-green-400" : "border-blue-500/30 bg-blue-500/10 text-blue-400"
                           }`}>{origemLabel}</span>
                         </div>
-                        <p className="font-body text-[11px] text-primary-foreground/50 mt-0.5 truncate">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""}</p>
+                        <p className="font-body text-[11px] text-primary-foreground/85 mt-0.5 truncate">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""}</p>
                       </div>
                       <div className="text-right shrink-0">
                         <p className="font-body text-[9px] text-amber-400/70 uppercase tracking-wider">A receber</p>
@@ -909,7 +909,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center justify-between gap-2 pt-1 text-[10px] font-body text-primary-foreground/40 uppercase tracking-wider">
+                    <div className="flex items-center justify-between gap-2 pt-1 text-[10px] font-body text-primary-foreground/75 uppercase tracking-wider">
                       <span>{isExpanded ? "Recolher detalhes" : "Toque para ver detalhes"}</span>
                       <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                     </div>
@@ -919,16 +919,16 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                     <div className="px-3 pb-3 pt-1 space-y-3 border-t border-primary-foreground/[0.06]">
                       <div className="space-y-2 pt-2">
                         <div>
-                          <p className="text-primary-foreground/40 text-[9px] uppercase tracking-wider font-body">Nome completo</p>
+                          <p className="text-primary-foreground/75 text-[9px] uppercase tracking-wider font-body">Nome completo</p>
                           <p className="text-primary-foreground/90 font-body text-[13px] font-medium">{nome}</p>
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <p className="text-primary-foreground/40 text-[9px] uppercase tracking-wider font-body">CPF</p>
-                            <p className="text-primary-foreground/50 font-body text-[12px] italic">Não cadastrado</p>
+                            <p className="text-primary-foreground/75 text-[9px] uppercase tracking-wider font-body">CPF</p>
+                            <p className="text-primary-foreground/85 font-body text-[12px] italic">Não cadastrado</p>
                           </div>
                           <div>
-                            <p className="text-primary-foreground/40 text-[9px] uppercase tracking-wider font-body">Telefone</p>
+                            <p className="text-primary-foreground/75 text-[9px] uppercase tracking-wider font-body">Telefone</p>
                             {whats ? (
                               <a
                                 href={`https://wa.me/55${whats.replace(/\D/g, "")}?text=${encodeURIComponent(`Olá ${nome}! Passando para lembrar do valor restante do seu atendimento (${formatCurrency(restante)}). Obrigada!`)}`}
@@ -940,39 +940,39 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                                 <WhatsAppIcon className="h-3 w-3" /> {formatWhatsapp(whats)}
                               </a>
                             ) : (
-                              <p className="text-primary-foreground/50 font-body text-[12px] italic">Não cadastrado</p>
+                              <p className="text-primary-foreground/85 font-body text-[12px] italic">Não cadastrado</p>
                             )}
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <p className="text-primary-foreground/40 text-[9px] uppercase tracking-wider font-body">Gerado em</p>
+                            <p className="text-primary-foreground/75 text-[9px] uppercase tracking-wider font-body">Gerado em</p>
                             <p className="text-primary-foreground/80 font-body text-[12px]">{new Date(a.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
                           </div>
                           <div>
-                            <p className="text-primary-foreground/40 text-[9px] uppercase tracking-wider font-body">Tipo</p>
+                            <p className="text-primary-foreground/75 text-[9px] uppercase tracking-wider font-body">Tipo</p>
                             <p className="text-primary-foreground/80 font-body text-[12px]">{tipoAgendamento}</p>
                           </div>
                         </div>
                         <div>
-                          <p className="text-primary-foreground/40 text-[9px] uppercase tracking-wider font-body">Serviço</p>
+                          <p className="text-primary-foreground/75 text-[9px] uppercase tracking-wider font-body">Serviço</p>
                           <p className="text-primary-foreground/90 font-body text-[13px] font-medium">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""}</p>
                         </div>
                         <div>
-                          <p className="text-primary-foreground/40 text-[9px] uppercase tracking-wider font-body">Atendimento</p>
+                          <p className="text-primary-foreground/75 text-[9px] uppercase tracking-wider font-body">Atendimento</p>
                           <p className="text-primary-foreground/80 font-body text-[12px]">{formatDate(a.data_agendamento)} · {a.horario}</p>
                         </div>
                         <div className="grid grid-cols-3 gap-2 pt-2 border-t border-primary-foreground/[0.06]">
                           <div>
-                            <p className="text-primary-foreground/40 text-[9px] uppercase tracking-wider font-body">Total</p>
+                            <p className="text-primary-foreground/75 text-[9px] uppercase tracking-wider font-body">Total</p>
                             <p className="text-primary-foreground/90 font-body text-[13px] font-semibold">{formatCurrency(Number(a.valor))}</p>
                           </div>
                           <div>
-                            <p className="text-primary-foreground/40 text-[9px] uppercase tracking-wider font-body">Pago</p>
+                            <p className="text-primary-foreground/75 text-[9px] uppercase tracking-wider font-body">Pago</p>
                             <p className="text-green-400 font-body text-[13px] font-semibold">{formatCurrency(Number(a.valor_pago || 0))}</p>
                           </div>
                           <div>
-                            <p className="text-primary-foreground/40 text-[9px] uppercase tracking-wider font-body">Em aberto</p>
+                            <p className="text-primary-foreground/75 text-[9px] uppercase tracking-wider font-body">Em aberto</p>
                             <p className="text-amber-300 font-body text-[13px] font-semibold">{formatCurrency(restante)}</p>
                           </div>
                         </div>
@@ -996,24 +996,24 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                       {/* Histórico de pagamentos */}
                       <div className="pt-2 border-t border-primary-foreground/[0.06]">
                         <div className="flex items-center gap-1.5 mb-2">
-                          <History className="h-3.5 w-3.5 text-primary-foreground/50" />
-                          <p className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/50 font-semibold">Histórico de pagamentos</p>
+                          <History className="h-3.5 w-3.5 text-primary-foreground/85" />
+                          <p className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/85 font-semibold">Histórico de pagamentos</p>
                         </div>
                         {!historicoMap[a.id] ? (
-                          <p className="font-body text-[11px] text-primary-foreground/30">Carregando…</p>
+                          <p className="font-body text-[11px] text-primary-foreground/95">Carregando…</p>
                         ) : historicoMap[a.id].length === 0 ? (
-                          <p className="font-body text-[11px] text-primary-foreground/30 italic">Nenhuma alteração registrada ainda.</p>
+                          <p className="font-body text-[11px] text-primary-foreground/95 italic">Nenhuma alteração registrada ainda.</p>
                         ) : (
                           <ul className="space-y-1.5">
                             {historicoMap[a.id].map((h) => (
                               <li key={h.id} className="rounded-lg border border-primary-foreground/[0.06] bg-primary-foreground/[0.02] px-2.5 py-2">
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase ${statusColor(h.status_anterior)}`}>{statusLabel(h.status_anterior)}</span>
-                                  <span className="text-primary-foreground/30 text-[10px]">→</span>
+                                  <span className="text-primary-foreground/95 text-[10px]">→</span>
                                   <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase ${statusColor(h.status_novo)}`}>{statusLabel(h.status_novo)}</span>
                                   <span className="ml-auto font-body text-[11px] font-semibold text-green-400">+{formatCurrency(h.valor_delta)}</span>
                                 </div>
-                                <div className="flex items-center justify-between gap-2 mt-1 font-body text-[10px] text-primary-foreground/50">
+                                <div className="flex items-center justify-between gap-2 mt-1 font-body text-[10px] text-primary-foreground/85">
                                   <span>por <span className="text-primary-foreground/80">{h.autor_nome}</span></span>
                                   <span>{new Date(h.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}</span>
                                 </div>
@@ -1051,30 +1051,30 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
               <div className="p-5 space-y-4 max-w-md mx-auto">
                 <div>
                   <p className="font-heading text-[18px] font-semibold text-primary-foreground">Registrar pagamento</p>
-                  <p className="font-body text-[12px] text-primary-foreground/50 mt-0.5">
+                  <p className="font-body text-[12px] text-primary-foreground/85 mt-0.5">
                     {getClientName(pagamentoAg.user_id, pagamentoAg.cliente_nome)} · {pagamentoAg.servico}
                   </p>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 rounded-xl border border-primary-foreground/[0.08] bg-primary-foreground/[0.03] p-3 text-[11px] font-body">
                   <div>
-                    <p className="text-primary-foreground/40 text-[9px] uppercase tracking-wider">Total</p>
+                    <p className="text-primary-foreground/75 text-[9px] uppercase tracking-wider">Total</p>
                     <p className="text-primary-foreground/90 font-medium">{formatCurrency(valorTotal)}</p>
                   </div>
                   <div>
-                    <p className="text-primary-foreground/40 text-[9px] uppercase tracking-wider">Já pago</p>
+                    <p className="text-primary-foreground/75 text-[9px] uppercase tracking-wider">Já pago</p>
                     <p className="text-green-400 font-semibold">{formatCurrency(jaPago)}</p>
                   </div>
                   <div>
-                    <p className="text-primary-foreground/40 text-[9px] uppercase tracking-wider">A receber</p>
+                    <p className="text-primary-foreground/75 text-[9px] uppercase tracking-wider">A receber</p>
                     <p className="text-amber-300 font-bold">{formatCurrency(restante)}</p>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="font-body text-[11px] text-primary-foreground/60 uppercase tracking-wider">Valor recebido agora</label>
+                  <label className="font-body text-[11px] text-primary-foreground/95 uppercase tracking-wider">Valor recebido agora</label>
                   <div className="flex items-center gap-2 rounded-xl border border-primary-foreground/[0.1] bg-primary-foreground/[0.04] px-3 py-2.5">
-                    <span className="font-heading text-[16px] text-primary-foreground/50">R$</span>
+                    <span className="font-heading text-[16px] text-primary-foreground/85">R$</span>
                     <input
                       type="text"
                       inputMode="decimal"
@@ -1099,11 +1099,11 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
 
                 <div className="rounded-xl border border-primary-foreground/[0.08] bg-primary-foreground/[0.03] p-3 space-y-1 text-[12px] font-body">
                   <div className="flex justify-between">
-                    <span className="text-primary-foreground/50">Pago após registro</span>
+                    <span className="text-primary-foreground/85">Pago após registro</span>
                     <span className="text-green-400 font-semibold">{formatCurrency(novoTotal)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-primary-foreground/50">Ainda a receber</span>
+                    <span className="text-primary-foreground/85">Ainda a receber</span>
                     <span className={`font-bold ${novoRestante === 0 ? "text-green-400" : "text-amber-300"}`}>{formatCurrency(novoRestante)}</span>
                   </div>
                   <div className="pt-1 mt-1 border-t border-primary-foreground/[0.06] flex items-center gap-1.5">
@@ -1114,14 +1114,14 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                     }`}>
                       {quitaTudo ? "Pago" : novoTotal > 0 ? "Quitado parcial" : "Não pago"}
                     </span>
-                    <span className="text-primary-foreground/40 text-[10px]">novo status</span>
+                    <span className="text-primary-foreground/75 text-[10px]">novo status</span>
                   </div>
                 </div>
 
                 <div className="flex gap-2 pt-1">
                   <button
                     onClick={() => { setPagamentoAg(null); setPagamentoInput(""); }}
-                    className="flex-1 rounded-xl border border-primary-foreground/15 bg-primary-foreground/[0.04] px-3 py-2.5 font-body text-[13px] font-medium text-primary-foreground/70 hover:bg-primary-foreground/[0.08] transition-all"
+                    className="flex-1 rounded-xl border border-primary-foreground/15 bg-primary-foreground/[0.04] px-3 py-2.5 font-body text-[13px] font-medium text-primary-foreground/100 hover:bg-primary-foreground/[0.08] transition-all"
                   >
                     Cancelar
                   </button>

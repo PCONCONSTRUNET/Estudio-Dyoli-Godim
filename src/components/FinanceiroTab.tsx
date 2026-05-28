@@ -464,7 +464,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     if (!active || !payload?.length) return null;
     return (
       <div className="bg-charcoal/95 border border-primary-foreground/[0.1] rounded-xl px-3 py-2 shadow-xl">
-        <p className="font-body text-[10px] text-primary-foreground/50 mb-1">{label}</p>
+        <p className="font-body text-[10px] text-primary-foreground/85 mb-1">{label}</p>
         {payload.map((p: any, i: number) => (
           <p key={i} className="font-body text-[11px] font-semibold text-emerald-400">
             {p.name}: {formatCurrency(p.value)}
@@ -481,10 +481,10 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
           <TrendingUp className="w-5 h-5 text-gold" /> Financeiro
         </h2>
         <div className="flex gap-1.5">
-          <button onClick={exportCSV} className="p-2 rounded-xl hover:bg-green-500/10 text-primary-foreground/30 hover:text-green-500 transition-all" title="Exportar planilha de agendamentos">
+          <button onClick={exportCSV} className="p-2 rounded-xl hover:bg-green-500/10 text-primary-foreground/95 hover:text-green-500 transition-all" title="Exportar planilha de agendamentos">
             <Table2 className="w-4 h-4" />
           </button>
-          <button onClick={exportPDF} className="p-2 rounded-xl hover:bg-rose/10 text-primary-foreground/30 hover:text-rose transition-all" title="Exportar PDF resumo">
+          <button onClick={exportPDF} className="p-2 rounded-xl hover:bg-rose/10 text-primary-foreground/95 hover:text-rose transition-all" title="Exportar PDF resumo">
             <FileText className="w-4 h-4" />
           </button>
           <button
@@ -519,7 +519,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
               </button>
               <button
                 onClick={exportDRECsv}
-                className="px-3 py-1.5 rounded-lg bg-primary-foreground/[0.04] hover:bg-primary-foreground/[0.08] border border-primary-foreground/[0.1] text-primary-foreground/70 font-body text-[11px] font-semibold transition-all flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg bg-primary-foreground/[0.04] hover:bg-primary-foreground/[0.08] border border-primary-foreground/[0.1] text-primary-foreground/100 font-body text-[11px] font-semibold transition-all flex items-center gap-1.5"
               >
                 <FileSpreadsheet className="w-3 h-3" /> Planilha CSV
               </button>
@@ -628,7 +628,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
         <div className="flex items-center justify-center animate-fade-in" aria-live="polite">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-gold/[0.08] via-gold/[0.04] to-gold/[0.08] border border-gold/20">
             <Calendar className="w-3.5 h-3.5 text-gold/70" />
-            <span className="font-body text-[11px] font-medium text-primary-foreground/70 tabular-nums tracking-wide">
+            <span className="font-body text-[11px] font-medium text-primary-foreground/100 tabular-nums tracking-wide">
               {formatDateShort(periodRange.start)}
               <span className="mx-1.5 text-gold/60">→</span>
               {formatDateShort(periodRange.end)}
@@ -641,36 +641,36 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
       <div className="grid grid-cols-2 gap-3">
         <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-gold/[0.06] via-primary-foreground/[0.02] to-transparent border border-gold/15">
           <div className="pointer-events-none absolute -top-10 -right-10 w-24 h-24 rounded-full bg-gold/10 blur-2xl" />
-          <p className="relative font-body text-[11px] font-medium text-primary-foreground/60 uppercase tracking-[0.2em]">Receita</p>
+          <p className="relative font-body text-[11px] font-medium text-primary-foreground/95 uppercase tracking-[0.2em]">Receita</p>
           <p className="relative font-heading text-2xl font-bold text-gold mt-1.5 tabular-nums">{formatCurrency(totalReceita)}</p>
         </div>
         <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-green-500/[0.07] via-primary-foreground/[0.02] to-transparent border border-green-500/15">
           <div className="pointer-events-none absolute -top-10 -right-10 w-24 h-24 rounded-full bg-green-500/10 blur-2xl" />
-          <p className="relative font-body text-[11px] font-medium text-primary-foreground/60 uppercase tracking-[0.2em]">Recebido</p>
+          <p className="relative font-body text-[11px] font-medium text-primary-foreground/95 uppercase tracking-[0.2em]">Recebido</p>
           <p className="relative font-heading text-2xl font-bold text-green-400 mt-1.5 tabular-nums">{formatCurrency(totalRecebido)}</p>
         </div>
         <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-rose/[0.07] via-primary-foreground/[0.02] to-transparent border border-rose/15">
           <div className="pointer-events-none absolute -top-10 -right-10 w-24 h-24 rounded-full bg-rose/10 blur-2xl" />
-          <p className="relative font-body text-[11px] font-medium text-primary-foreground/60 uppercase tracking-[0.2em]">Pendente</p>
+          <p className="relative font-body text-[11px] font-medium text-primary-foreground/95 uppercase tracking-[0.2em]">Pendente</p>
           <p className="relative font-heading text-2xl font-bold text-rose mt-1.5 tabular-nums">{formatCurrency(totalPendente)}</p>
         </div>
         <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-red-500/[0.07] via-primary-foreground/[0.02] to-transparent border border-red-500/15">
           <div className="pointer-events-none absolute -top-10 -right-10 w-24 h-24 rounded-full bg-red-500/10 blur-2xl" />
-          <p className="relative font-body text-[11px] font-medium text-primary-foreground/60 uppercase tracking-[0.2em] flex items-center gap-1"><ArrowDown className="w-3 h-3" /> Despesas</p>
+          <p className="relative font-body text-[11px] font-medium text-primary-foreground/95 uppercase tracking-[0.2em] flex items-center gap-1"><ArrowDown className="w-3 h-3" /> Despesas</p>
           <p className="relative font-heading text-xl font-bold text-red-400 mt-1.5 tabular-nums leading-tight">- {formatCurrency(totalDespesas)}</p>
-          <p className="relative font-body text-[10px] text-primary-foreground/40 mt-1">Estúdio</p>
+          <p className="relative font-body text-[10px] text-primary-foreground/75 mt-1">Estúdio</p>
           {totalDespesasPessoais > 0 && (
             <p className="relative font-body text-[10px] text-purple-400/70 mt-0.5">Pessoal: {formatCurrency(totalDespesasPessoais)}</p>
           )}
         </div>
         <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-primary-foreground/[0.06] via-primary-foreground/[0.02] to-transparent border border-primary-foreground/15">
           <div className="pointer-events-none absolute -top-10 -right-10 w-24 h-24 rounded-full bg-primary-foreground/[0.08] blur-2xl" />
-          <p className="relative font-body text-[11px] font-medium text-primary-foreground/60 uppercase tracking-[0.2em]">Atendimentos</p>
+          <p className="relative font-body text-[11px] font-medium text-primary-foreground/95 uppercase tracking-[0.2em]">Atendimentos</p>
           <p className="relative font-heading text-2xl font-bold text-primary-foreground mt-1.5 tabular-nums">{qtdAtendimentos}</p>
         </div>
         <div className={`relative overflow-hidden p-4 rounded-2xl border ${lucroLiquido >= 0 ? "bg-gradient-to-br from-green-500/[0.1] via-green-500/[0.03] to-transparent border-green-500/25" : "bg-gradient-to-br from-red-500/[0.1] via-red-500/[0.03] to-transparent border-red-500/25"}`}>
           <div className={`pointer-events-none absolute -top-10 -right-10 w-28 h-28 rounded-full blur-2xl ${lucroLiquido >= 0 ? "bg-green-500/15" : "bg-red-500/15"}`} />
-          <p className="relative font-body text-[11px] font-medium text-primary-foreground/60 uppercase tracking-[0.2em]">Lucro Líquido</p>
+          <p className="relative font-body text-[11px] font-medium text-primary-foreground/95 uppercase tracking-[0.2em]">Lucro Líquido</p>
           <p className={`relative font-heading text-2xl font-bold mt-1.5 tabular-nums ${lucroLiquido >= 0 ? "text-green-400" : "text-red-400"}`}>{formatCurrency(lucroLiquido)}</p>
         </div>
       </div>
@@ -728,7 +728,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
                   className={`px-2.5 py-1 rounded-full font-body text-[10px] border transition-all ${
                     Number(tempComissao) === p
                       ? "bg-purple-500/20 text-purple-400 border-purple-500/30"
-                      : "bg-primary-foreground/[0.03] text-primary-foreground/30 border-primary-foreground/[0.06] hover:border-purple-500/20"
+                      : "bg-primary-foreground/[0.03] text-primary-foreground/95 border-primary-foreground/[0.06] hover:border-purple-500/20"
                   }`}
                 >
                   {p}%
@@ -768,13 +768,13 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
               </ResponsiveContainer>
             </div>
             <div className="flex items-center justify-center gap-4 mt-2">
-              <span className="flex items-center gap-1.5 font-body text-[10px] text-primary-foreground/40"><span className="w-2.5 h-2.5 rounded-full bg-gold" /> Receita</span>
-              <span className="flex items-center gap-1.5 font-body text-[10px] text-primary-foreground/40"><span className="w-2.5 h-2.5 rounded-full bg-green-500" /> Recebido</span>
+              <span className="flex items-center gap-1.5 font-body text-[10px] text-primary-foreground/75"><span className="w-2.5 h-2.5 rounded-full bg-gold" /> Receita</span>
+              <span className="flex items-center gap-1.5 font-body text-[10px] text-primary-foreground/75"><span className="w-2.5 h-2.5 rounded-full bg-green-500" /> Recebido</span>
             </div>
           </>
         ) : (
           <div className="h-[120px] flex items-center justify-center">
-            <p className="font-body text-[12px] text-primary-foreground/20">Sem dados no período</p>
+            <p className="font-body text-[12px] text-primary-foreground/85">Sem dados no período</p>
           </div>
         )}
       </div>
@@ -809,7 +809,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
           </div>
         ) : (
           <div className="h-[120px] flex items-center justify-center">
-            <p className="font-body text-[12px] text-primary-foreground/20">Sem dados no período</p>
+            <p className="font-body text-[12px] text-primary-foreground/85">Sem dados no período</p>
           </div>
         )}
       </div>
@@ -840,7 +840,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
             </div>
             <div className="flex items-center justify-center gap-4">
               {paymentStatus.map(d => (
-                <span key={d.name} className="flex items-center gap-1.5 font-body text-[10px] text-primary-foreground/40">
+                <span key={d.name} className="flex items-center gap-1.5 font-body text-[10px] text-primary-foreground/75">
                   <span className="w-2.5 h-2.5 rounded-full" style={{ background: d.color }} /> {d.name} ({d.value})
                 </span>
               ))}
@@ -848,7 +848,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
           </>
         ) : (
           <div className="h-[120px] flex items-center justify-center">
-            <p className="font-body text-[12px] text-primary-foreground/20">Sem dados no período</p>
+            <p className="font-body text-[12px] text-primary-foreground/85">Sem dados no período</p>
           </div>
         )}
       </div>

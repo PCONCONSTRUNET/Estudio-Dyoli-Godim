@@ -201,7 +201,7 @@ const GatewayTab = () => {
                 </div>
                 <div className="text-left">
                   <h3 className="font-heading text-[14px] font-semibold text-primary-foreground">{gw.label}</h3>
-                  <p className="font-body text-[11px] text-primary-foreground/35">
+                  <p className="font-body text-[11px] text-primary-foreground/95">
                     {form.ativo ? "Ativo" : "Inativo"}
                     {form.ativo && (
                       <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
@@ -216,7 +216,7 @@ const GatewayTab = () => {
                 >
                   <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all duration-200 ${form.ativo ? "left-5" : "left-0.5"}`} />
                 </div>
-                {isExpanded ? <ChevronUp className="h-4 w-4 text-primary-foreground/30" /> : <ChevronDown className="h-4 w-4 text-primary-foreground/30" />}
+                {isExpanded ? <ChevronUp className="h-4 w-4 text-primary-foreground/95" /> : <ChevronDown className="h-4 w-4 text-primary-foreground/95" />}
               </div>
             </button>
 
@@ -224,23 +224,23 @@ const GatewayTab = () => {
               <div className="p-4 space-y-4">
                 {/* Access Token */}
                 <div>
-                  <label className="font-body text-[11px] text-primary-foreground/40 mb-1.5 block">Access Token *</label>
+                  <label className="font-body text-[11px] text-primary-foreground/75 mb-1.5 block">Access Token *</label>
                   <div className="relative">
                     <input
                       type={tokenVisible ? "text" : "password"}
                       value={form.accessToken}
                       onChange={(e) => updateForm(gw.key, "accessToken", e.target.value)}
                       placeholder={gw.tokenPlaceholder}
-                      className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] py-2.5 pl-3 pr-20 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
+                      className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] py-2.5 pl-3 pr-20 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/85 focus:outline-none focus:ring-2 focus:ring-gold/20"
                     />
                     <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
                       <button onClick={() => setShowToken((p) => ({ ...p, [gw.key]: !tokenVisible }))}
-                        className="p-1.5 rounded-lg text-primary-foreground/25 hover:text-primary-foreground/50 transition-all">
+                        className="p-1.5 rounded-lg text-primary-foreground/85 hover:text-primary-foreground/85 transition-all">
                         {tokenVisible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                       </button>
                       {form.accessToken && (
                         <button onClick={() => copyToClipboard(form.accessToken, `Token ${gw.label}`)}
-                          className="p-1.5 rounded-lg text-primary-foreground/25 hover:text-primary-foreground/50 transition-all">
+                          className="p-1.5 rounded-lg text-primary-foreground/85 hover:text-primary-foreground/85 transition-all">
                           {copied === `Token ${gw.label}` ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
                         </button>
                       )}
@@ -250,39 +250,39 @@ const GatewayTab = () => {
 
                 {/* Public Key / App ID */}
                 <div>
-                  <label className="font-body text-[11px] text-primary-foreground/40 mb-1.5 block">{gw.publicKeyLabel}</label>
+                  <label className="font-body text-[11px] text-primary-foreground/75 mb-1.5 block">{gw.publicKeyLabel}</label>
                   <input
                     value={form.publicKey}
                     onChange={(e) => updateForm(gw.key, "publicKey", e.target.value)}
                     placeholder={gw.publicKeyPlaceholder}
-                    className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] py-2.5 px-3 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
+                    className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] py-2.5 px-3 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/85 focus:outline-none focus:ring-2 focus:ring-gold/20"
                   />
                 </div>
 
                 {/* Webhook URL */}
                 <div>
-                  <label className="font-body text-[11px] text-primary-foreground/40 mb-1.5 block">URL do Webhook</label>
+                  <label className="font-body text-[11px] text-primary-foreground/75 mb-1.5 block">URL do Webhook</label>
                   <div className="relative">
                     <input
                       readOnly
                       value={cfg.webhook_url || ""}
-                      className="w-full rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.06] py-2.5 pl-3 pr-10 text-primary-foreground/50 font-body text-[12px] cursor-default"
+                      className="w-full rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.06] py-2.5 pl-3 pr-10 text-primary-foreground/85 font-body text-[12px] cursor-default"
                     />
                     <button
                       onClick={() => copyToClipboard(cfg.webhook_url || "", `Webhook ${gw.label}`)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-primary-foreground/25 hover:text-primary-foreground/50 transition-all"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-primary-foreground/85 hover:text-primary-foreground/85 transition-all"
                     >
                       {copied === `Webhook ${gw.label}` ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
                     </button>
                   </div>
-                  <p className="font-body text-[10px] text-primary-foreground/25 mt-1">
+                  <p className="font-body text-[10px] text-primary-foreground/85 mt-1">
                     Cole esta URL nas configurações de webhook do {gw.label}
                   </p>
                 </div>
 
                 {/* Métodos de pagamento */}
                 <div>
-                  <label className="font-body text-[11px] text-primary-foreground/40 mb-2 block">Métodos de Pagamento</label>
+                  <label className="font-body text-[11px] text-primary-foreground/75 mb-2 block">Métodos de Pagamento</label>
                   <div className="space-y-2">
                     {([
                       { field: "pixEnabled", label: "PIX", desc: "Pagamento instantâneo", icon: PixIcon, show: true },
@@ -294,10 +294,10 @@ const GatewayTab = () => {
                         <div key={m.field}
                           className={`flex items-center justify-between rounded-xl border p-3 transition-all ${enabled ? "bg-primary-foreground/[0.04] border-gold/20" : "bg-primary-foreground/[0.02] border-primary-foreground/[0.06]"}`}>
                           <div className="flex items-center gap-2.5">
-                            <m.icon className={`h-4 w-4 ${enabled ? "text-gold" : "text-primary-foreground/25"}`} />
+                            <m.icon className={`h-4 w-4 ${enabled ? "text-gold" : "text-primary-foreground/85"}`} />
                             <div>
-                              <p className={`font-body text-[12px] font-medium ${enabled ? "text-primary-foreground" : "text-primary-foreground/40"}`}>{m.label}</p>
-                              <p className="font-body text-[10px] text-primary-foreground/25">{m.desc}</p>
+                              <p className={`font-body text-[12px] font-medium ${enabled ? "text-primary-foreground" : "text-primary-foreground/75"}`}>{m.label}</p>
+                              <p className="font-body text-[10px] text-primary-foreground/85">{m.desc}</p>
                             </div>
                           </div>
                           <button onClick={() => updateForm(gw.key, m.field, !enabled)}
@@ -312,8 +312,8 @@ const GatewayTab = () => {
 
                 {/* Como configurar */}
                 <div className="rounded-xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.02] p-3">
-                  <p className="font-body text-[11px] font-medium text-primary-foreground/50 mb-2">📋 Como configurar:</p>
-                  <ol className="font-body text-[10px] text-primary-foreground/30 space-y-1 list-decimal list-inside">
+                  <p className="font-body text-[11px] font-medium text-primary-foreground/85 mb-2">📋 Como configurar:</p>
+                  <ol className="font-body text-[10px] text-primary-foreground/95 space-y-1 list-decimal list-inside">
                     {gw.helpSteps.map((step, i) => (
                       <li key={i}>{step}</li>
                     ))}

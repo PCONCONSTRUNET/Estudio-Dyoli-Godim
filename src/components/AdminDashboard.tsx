@@ -123,7 +123,7 @@ const AdminDashboard = ({
     if (!active || !payload?.length) return null;
     return (
       <div className="rounded-xl border border-primary-foreground/[0.08] bg-charcoal/95 backdrop-blur-xl px-3 py-2 shadow-lg">
-        <p className="font-body text-[11px] text-primary-foreground/50 mb-1">{label}</p>
+        <p className="font-body text-[11px] text-primary-foreground/85 mb-1">{label}</p>
         {payload.map((p: any, i: number) => (
           <p key={i} className="font-body text-[12px] font-medium" style={{ color: p.color }}>
             {p.name === "receita" ? formatCurrency(p.value) : p.value}
@@ -157,7 +157,7 @@ const AdminDashboard = ({
               <h2 className="font-heading text-xl font-semibold text-primary-foreground tracking-tight">
                 {now.getHours() < 12 ? "Bom dia ☀️" : now.getHours() < 18 ? "Boa tarde 🌤️" : "Boa noite 🌙"}
               </h2>
-              <p className="font-body text-[12px] text-primary-foreground/45 mt-0.5 capitalize">
+              <p className="font-body text-[12px] text-primary-foreground/75 mt-0.5 capitalize">
                 {now.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
               </p>
             </div>
@@ -168,7 +168,7 @@ const AdminDashboard = ({
                   :{brasiliaTime.toLocaleTimeString("pt-BR", { second: "2-digit" }).slice(-2)}
                 </span>
               </p>
-              <p className="font-body text-[9px] text-primary-foreground/30 uppercase tracking-[0.2em] mt-0.5 flex items-center justify-end gap-1">
+              <p className="font-body text-[9px] text-primary-foreground/95 uppercase tracking-[0.2em] mt-0.5 flex items-center justify-end gap-1">
                 <span className="w-1 h-1 rounded-full bg-green-400 animate-pulse" /> Brasília
               </p>
             </div>
@@ -180,7 +180,7 @@ const AdminDashboard = ({
             return (
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="font-body text-[9px] text-primary-foreground/35 uppercase tracking-[0.2em]">Progresso do dia</span>
+                  <span className="font-body text-[9px] text-primary-foreground/95 uppercase tracking-[0.2em]">Progresso do dia</span>
                   <span className="font-heading text-[10px] font-bold text-gold tabular-nums">{dayPct}%</span>
                 </div>
                 <div className="relative h-1.5 rounded-full bg-primary-foreground/[0.06] overflow-hidden">
@@ -199,23 +199,23 @@ const AdminDashboard = ({
             <div className="group relative p-2.5 rounded-2xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06] hover:border-gold/20 hover:bg-gold/[0.04] transition-all">
               <CalendarCheck className="w-3 h-3 text-gold/60 mb-1 group-hover:scale-110 transition-transform" />
               <p className="font-heading text-lg font-bold text-gold tabular-nums leading-none">{totalHoje}</p>
-              <p className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-wider mt-1">Hoje</p>
+              <p className="font-body text-[9px] text-primary-foreground/75 uppercase tracking-wider mt-1">Hoje</p>
             </div>
             <div className="group relative p-2.5 rounded-2xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06] hover:border-primary-foreground/15 transition-all">
-              <Clock className="w-3 h-3 text-primary-foreground/40 mb-1 group-hover:scale-110 transition-transform" />
+              <Clock className="w-3 h-3 text-primary-foreground/75 mb-1 group-hover:scale-110 transition-transform" />
               <p className="font-heading text-lg font-bold text-primary-foreground tabular-nums leading-none">{confirmadosHoje}</p>
-              <p className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-wider mt-1">Pendentes</p>
+              <p className="font-body text-[9px] text-primary-foreground/75 uppercase tracking-wider mt-1">Pendentes</p>
             </div>
             <div className="group relative p-2.5 rounded-2xl bg-green-500/[0.04] border border-green-500/[0.08] hover:border-green-500/20 transition-all">
               <CheckCircle2 className="w-3 h-3 text-green-400/70 mb-1 group-hover:scale-110 transition-transform" />
               <p className="font-heading text-lg font-bold text-green-400 tabular-nums leading-none">{concluidosHoje}</p>
-              <p className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-wider mt-1">Feitos</p>
+              <p className="font-body text-[9px] text-primary-foreground/75 uppercase tracking-wider mt-1">Feitos</p>
             </div>
             <div className="group relative p-2.5 rounded-2xl bg-gold/[0.05] border border-gold/[0.12] hover:border-gold/25 transition-all overflow-hidden">
               <div className="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-gold/10 blur-xl group-hover:bg-gold/20 transition-all" />
               <DollarSign className="relative w-3 h-3 text-gold/70 mb-1 group-hover:scale-110 transition-transform" />
               <p className="relative font-heading text-sm font-bold text-gold tabular-nums leading-none truncate">{formatCurrency(recebidoHoje)}</p>
-              <p className="relative font-body text-[9px] text-primary-foreground/40 uppercase tracking-wider mt-1">Recebido</p>
+              <p className="relative font-body text-[9px] text-primary-foreground/75 uppercase tracking-wider mt-1">Recebido</p>
             </div>
           </div>
         </div>
@@ -224,7 +224,7 @@ const AdminDashboard = ({
       {/* ── Próximos Clientes (Cards) ── */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest font-medium">
+          <h3 className="font-body text-[11px] text-primary-foreground/75 uppercase tracking-widest font-medium">
             Próximos atendimentos
           </h3>
           <button
@@ -236,8 +236,8 @@ const AdminDashboard = ({
         </div>
         {upcomingItems.length === 0 ? (
           <div className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-6 text-center">
-            <Calendar className="w-8 h-8 text-primary-foreground/15 mx-auto mb-2" />
-            <p className="font-body text-[13px] text-primary-foreground/30">Nenhum atendimento pendente hoje</p>
+            <Calendar className="w-8 h-8 text-primary-foreground/75 mx-auto mb-2" />
+            <p className="font-body text-[13px] text-primary-foreground/95">Nenhum atendimento pendente hoje</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -258,7 +258,7 @@ const AdminDashboard = ({
                 >
                   <div className="flex items-start gap-3">
                     <div className={`mt-0.5 w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                      isNext ? "bg-gold/15 text-gold" : "bg-primary-foreground/[0.06] text-primary-foreground/30"
+                      isNext ? "bg-gold/15 text-gold" : "bg-primary-foreground/[0.06] text-primary-foreground/95"
                     }`}>
                       <User className="w-5 h-5" />
                     </div>
@@ -273,11 +273,11 @@ const AdminDashboard = ({
                           </span>
                         )}
                       </div>
-                      <p className="font-body text-[12px] text-primary-foreground/40 truncate mt-0.5">
+                      <p className="font-body text-[12px] text-primary-foreground/75 truncate mt-0.5">
                         {a.servico}{a.variacao ? ` — ${a.variacao}` : ""}
                       </p>
                       <div className="flex items-center gap-3 mt-2">
-                        <div className="flex items-center gap-1.5 text-primary-foreground/50">
+                        <div className="flex items-center gap-1.5 text-primary-foreground/85">
                           <Clock className="w-3 h-3" />
                           <span className="font-body text-[11px]">
                             {a.horario} — {String(endH).padStart(2, "0")}:{String(endM).padStart(2, "0")}
@@ -298,12 +298,12 @@ const AdminDashboard = ({
 
       {/* ── Timeline do Dia ── */}
       <div>
-        <h3 className="mb-3 font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest font-medium">
+        <h3 className="mb-3 font-body text-[11px] text-primary-foreground/75 uppercase tracking-widest font-medium">
           Timeline de Hoje
         </h3>
         {todayItems.length === 0 ? (
           <div className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-6 text-center">
-            <p className="font-body text-[13px] text-primary-foreground/30">Sem atendimentos hoje</p>
+            <p className="font-body text-[13px] text-primary-foreground/95">Sem atendimentos hoje</p>
           </div>
         ) : (
           <div className="relative pl-6">
@@ -331,12 +331,12 @@ const AdminDashboard = ({
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0">
                           <span className={`font-body text-[12px] font-semibold shrink-0 ${
-                            isCurrent ? "text-gold" : isPast ? "text-primary-foreground/30" : "text-primary-foreground/60"
+                            isCurrent ? "text-gold" : isPast ? "text-primary-foreground/95" : "text-primary-foreground/95"
                           }`}>
                             {a.horario}
                           </span>
                           <span className={`font-body text-[12px] truncate ${
-                            isPast ? "text-primary-foreground/25" : "text-primary-foreground/70"
+                            isPast ? "text-primary-foreground/85" : "text-primary-foreground/100"
                           }`}>
                             {getClientName(a.user_id)}
                           </span>
@@ -350,7 +350,7 @@ const AdminDashboard = ({
                         {statusBadge(a.status)}
                       </div>
                       <p className={`font-body text-[11px] mt-0.5 ${
-                        isPast ? "text-primary-foreground/15" : "text-primary-foreground/30"
+                        isPast ? "text-primary-foreground/75" : "text-primary-foreground/95"
                       }`}>
                         {a.servico}{a.variacao ? ` · ${a.variacao}` : ""} · {a.duracao_minutos || 60}min
                       </p>
@@ -387,14 +387,14 @@ const AdminDashboard = ({
                     <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gold/15 border border-gold/25">
                       <TrendingUp className="w-3 h-3 text-gold" />
                     </div>
-                    <h3 className="font-body text-[10px] text-primary-foreground/45 uppercase tracking-[0.18em] font-medium">
+                    <h3 className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-[0.18em] font-medium">
                       Receita — 7 dias
                     </h3>
                   </div>
                   <p className="font-heading text-[22px] font-bold text-primary-foreground tabular-nums leading-none mt-1">
                     {formatCurrency(totalSemana)}
                   </p>
-                  <p className="font-body text-[10px] text-primary-foreground/35 mt-1">
+                  <p className="font-body text-[10px] text-primary-foreground/95 mt-1">
                     Média {formatCurrency(mediaSemana)} / dia
                   </p>
                 </div>
@@ -411,9 +411,9 @@ const AdminDashboard = ({
               {isEmpty ? (
                 <div className="h-[160px] flex flex-col items-center justify-center gap-2">
                   <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06]">
-                    <DollarSign className="w-4 h-4 text-primary-foreground/25" />
+                    <DollarSign className="w-4 h-4 text-primary-foreground/85" />
                   </div>
-                  <p className="font-body text-[11px] text-primary-foreground/25">Sem receita nos últimos 7 dias</p>
+                  <p className="font-body text-[11px] text-primary-foreground/85">Sem receita nos últimos 7 dias</p>
                 </div>
               ) : (
                 <>
@@ -449,13 +449,13 @@ const AdminDashboard = ({
                   </div>
                   <div className="relative flex items-center justify-between gap-2 mt-3 pt-3 border-t border-primary-foreground/[0.05]">
                     <div className="min-w-0">
-                      <p className="font-body text-[9px] text-primary-foreground/35 uppercase tracking-wider">Melhor dia</p>
+                      <p className="font-body text-[9px] text-primary-foreground/95 uppercase tracking-wider">Melhor dia</p>
                       <p className="font-body text-[12px] font-semibold text-gold capitalize mt-0.5 truncate">
                         {melhorDia?.label} · {formatCurrency(melhorDia?.receita || 0)}
                       </p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-body text-[9px] text-primary-foreground/35 uppercase tracking-wider">Últimos 3d</p>
+                      <p className="font-body text-[9px] text-primary-foreground/95 uppercase tracking-wider">Últimos 3d</p>
                       <p className="font-body text-[12px] font-semibold text-primary-foreground/80 tabular-nums mt-0.5">
                         {formatCurrency(ult3)}
                       </p>
@@ -485,14 +485,14 @@ const AdminDashboard = ({
                     <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-rose/15 border border-rose/25">
                       <Sparkles className="w-3 h-3 text-rose" />
                     </div>
-                    <h3 className="font-body text-[10px] text-primary-foreground/45 uppercase tracking-[0.18em] font-medium">
+                    <h3 className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-[0.18em] font-medium">
                       Top Serviços — Mês
                     </h3>
                   </div>
                   <p className="font-heading text-[22px] font-bold text-primary-foreground tabular-nums leading-none mt-1">
                     {totalAtend}
                   </p>
-                  <p className="font-body text-[10px] text-primary-foreground/35 mt-1">
+                  <p className="font-body text-[10px] text-primary-foreground/95 mt-1">
                     {topServices.length} serviço{topServices.length !== 1 ? "s" : ""} · {totalAtend} atendimento{totalAtend !== 1 ? "s" : ""}
                   </p>
                 </div>
@@ -506,9 +506,9 @@ const AdminDashboard = ({
               {isEmpty ? (
                 <div className="h-[160px] flex flex-col items-center justify-center gap-2">
                   <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06]">
-                    <Sparkles className="w-4 h-4 text-primary-foreground/25" />
+                    <Sparkles className="w-4 h-4 text-primary-foreground/85" />
                   </div>
-                  <p className="font-body text-[11px] text-primary-foreground/25">Sem atendimentos no mês</p>
+                  <p className="font-body text-[11px] text-primary-foreground/85">Sem atendimentos no mês</p>
                 </div>
               ) : (
                 <div className="relative space-y-2.5">
@@ -521,7 +521,7 @@ const AdminDashboard = ({
                         <div className="flex items-center justify-between gap-2 mb-1">
                           <div className="flex items-center gap-1.5 min-w-0">
                             <span className={`font-body text-[10px] font-bold tabular-nums w-4 text-center ${
-                              isTop ? "text-rose" : "text-primary-foreground/30"
+                              isTop ? "text-rose" : "text-primary-foreground/95"
                             }`}>
                               {i + 1}
                             </span>
@@ -530,11 +530,11 @@ const AdminDashboard = ({
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5 shrink-0">
-                            <span className="font-body text-[10px] text-primary-foreground/35 tabular-nums">
+                            <span className="font-body text-[10px] text-primary-foreground/95 tabular-nums">
                               {pctTotal.toFixed(0)}%
                             </span>
                             <span className={`font-heading text-[13px] font-bold tabular-nums ${
-                              isTop ? "text-rose" : "text-primary-foreground/70"
+                              isTop ? "text-rose" : "text-primary-foreground/100"
                             }`}>
                               {s.count}
                             </span>
@@ -565,7 +565,7 @@ const AdminDashboard = ({
       <div className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-4">
         <div className="flex items-center gap-2 mb-3">
           <Bell className="w-4 h-4 text-gold" />
-          <h3 className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest font-medium">
+          <h3 className="font-body text-[11px] text-primary-foreground/75 uppercase tracking-widest font-medium">
             Notificações
           </h3>
         </div>
@@ -573,7 +573,7 @@ const AdminDashboard = ({
           <div className="flex items-center justify-between lg:flex-col lg:items-start lg:gap-2">
             <div>
               <p className="font-body text-[13px] text-primary-foreground">Pop-up de pedidos</p>
-              <p className="font-body text-[10px] text-primary-foreground/30">Alerta ao chegar agendamento</p>
+              <p className="font-body text-[10px] text-primary-foreground/95">Alerta ao chegar agendamento</p>
             </div>
             <Switch checked={notificationsEnabled} onCheckedChange={toggleNotifications} />
           </div>
@@ -582,7 +582,7 @@ const AdminDashboard = ({
         {/* Push nativo (PWA + desktop) */}
         <div className="mt-3 pt-3 border-t border-primary-foreground/[0.06]">
           <PushToggle role="admin" variant="default" showTestButton />
-          <p className="font-body text-[10px] text-primary-foreground/30 mt-2">
+          <p className="font-body text-[10px] text-primary-foreground/95 mt-2">
             Funciona no Chrome desktop e no celular (Android sempre, iPhone só com o app instalado na tela inicial).
           </p>
         </div>

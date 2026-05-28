@@ -204,16 +204,16 @@ const AnamneseTab = () => {
             <ClipboardList className="w-5 h-5 text-gold" />
             Anamnese
           </h2>
-          <p className="font-body text-[12px] text-primary-foreground/45 mt-0.5">
+          <p className="font-body text-[12px] text-primary-foreground/75 mt-0.5">
             Fichas enviadas pelo chatbot do WhatsApp
           </p>
         </div>
         <div className="text-right shrink-0">
           <p className="font-heading text-2xl font-bold text-gold tabular-nums leading-none">{totalPendentes}</p>
-          <p className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-wider mt-1">Pendentes</p>
+          <p className="font-body text-[9px] text-primary-foreground/75 uppercase tracking-wider mt-1">Pendentes</p>
           <div className="mt-1.5 inline-flex items-center gap-1">
             <span className={`w-1.5 h-1.5 rounded-full ${live ? "bg-green-400 animate-pulse" : "bg-primary-foreground/30"}`} />
-            <span className={`text-[9px] font-body uppercase tracking-wider ${live ? "text-green-400/80" : "text-primary-foreground/40"}`}>
+            <span className={`text-[9px] font-body uppercase tracking-wider ${live ? "text-green-400/80" : "text-primary-foreground/75"}`}>
               {live ? "Ao vivo" : "Conectando"}
             </span>
           </div>
@@ -223,12 +223,12 @@ const AnamneseTab = () => {
       {/* Search + filtros */}
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/30" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/95" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por nome ou WhatsApp..."
-            className="w-full h-11 pl-10 pr-3 rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] text-primary-foreground text-[13px] font-body placeholder:text-primary-foreground/30 focus:border-gold/40 focus:outline-none"
+            className="w-full h-11 pl-10 pr-3 rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] text-primary-foreground text-[13px] font-body placeholder:text-primary-foreground/95 focus:border-gold/40 focus:outline-none"
           />
         </div>
         <div className="flex gap-1 rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] p-1 overflow-x-auto">
@@ -254,12 +254,12 @@ const AnamneseTab = () => {
       {/* List */}
       {loading ? (
         <div className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-8 text-center">
-          <p className="font-body text-[13px] text-primary-foreground/40">Carregando fichas...</p>
+          <p className="font-body text-[13px] text-primary-foreground/75">Carregando fichas...</p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-8 text-center">
-          <FileText className="w-10 h-10 text-primary-foreground/15 mx-auto mb-3" />
-          <p className="font-body text-[13px] text-primary-foreground/40">
+          <FileText className="w-10 h-10 text-primary-foreground/75 mx-auto mb-3" />
+          <p className="font-body text-[13px] text-primary-foreground/75">
             {items.length === 0 ? "Nenhuma ficha recebida ainda" : "Nenhuma ficha encontrada"}
           </p>
         </div>
@@ -283,7 +283,7 @@ const AnamneseTab = () => {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-body text-[14px] font-medium text-primary-foreground truncate flex items-center gap-1.5">
-                        <User className="w-3.5 h-3.5 text-primary-foreground/40 shrink-0" />
+                        <User className="w-3.5 h-3.5 text-primary-foreground/75 shrink-0" />
                         {a.cliente_nome || "Sem nome"}
                       </p>
                       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[#25D366]/10 border border-[#25D366]/20 text-[#25D366] text-[10px] font-body font-medium">
@@ -291,11 +291,11 @@ const AnamneseTab = () => {
                         WhatsApp
                       </span>
                     </div>
-                    <p className="font-body text-[12px] text-primary-foreground/50 truncate mt-1 flex items-center gap-1.5">
+                    <p className="font-body text-[12px] text-primary-foreground/85 truncate mt-1 flex items-center gap-1.5">
                       <WhatsAppIcon className="w-3 h-3 text-[#25D366] shrink-0" />
                       {formatWhatsapp(a.whatsapp) || "—"}
                     </p>
-                    <div className="flex items-center gap-3 mt-1.5 text-[11px] text-primary-foreground/45">
+                    <div className="flex items-center gap-3 mt-1.5 text-[11px] text-primary-foreground/75">
                       <span className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
                         {formatDate(a.created_at)}
@@ -343,7 +343,7 @@ const AnamneseTab = () => {
                   {st !== "pendente" && (
                     <button
                       onClick={() => setStatus(a, "pendente")}
-                      className="h-9 px-3 rounded-lg bg-primary-foreground/[0.04] hover:bg-primary-foreground/[0.08] border border-primary-foreground/[0.08] text-primary-foreground/70 text-[12px] font-body font-medium flex items-center gap-1.5 active:scale-95 transition-all"
+                      className="h-9 px-3 rounded-lg bg-primary-foreground/[0.04] hover:bg-primary-foreground/[0.08] border border-primary-foreground/[0.08] text-primary-foreground/100 text-[12px] font-body font-medium flex items-center gap-1.5 active:scale-95 transition-all"
                     >
                       <RotateCcw className="w-3.5 h-3.5" /> Reabrir
                     </button>
@@ -392,15 +392,15 @@ const AnamneseTab = () => {
           {selected && (
             <div className="space-y-4 mt-2">
               <div className="rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] p-3 space-y-1">
-                <p className="font-body text-[13px] text-primary-foreground"><span className="text-primary-foreground/50">Cliente:</span> {selected.cliente_nome || "—"}</p>
+                <p className="font-body text-[13px] text-primary-foreground"><span className="text-primary-foreground/85">Cliente:</span> {selected.cliente_nome || "—"}</p>
                 <p className="font-body text-[13px] text-primary-foreground flex items-center gap-1.5">
-                  <span className="text-primary-foreground/50">WhatsApp:</span>
+                  <span className="text-primary-foreground/85">WhatsApp:</span>
                   <WhatsAppIcon className="w-3.5 h-3.5 text-[#25D366]" />
                   {formatWhatsapp(selected.whatsapp)}
                 </p>
-                <p className="font-body text-[12px] text-primary-foreground/60"><span className="text-primary-foreground/40">Recebida em:</span> {formatDate(selected.created_at)}</p>
+                <p className="font-body text-[12px] text-primary-foreground/95"><span className="text-primary-foreground/75">Recebida em:</span> {formatDate(selected.created_at)}</p>
                 <p className="font-body text-[12px] mt-1">
-                  <span className="text-primary-foreground/40">Status: </span>
+                  <span className="text-primary-foreground/75">Status: </span>
                   <span className={
                     getStatus(selected) === "aprovada" ? "text-green-400" :
                     getStatus(selected) === "negada" ? "text-red-400" : "text-gold"
@@ -411,14 +411,14 @@ const AnamneseTab = () => {
               </div>
 
               <div>
-                <p className="font-body text-[10px] text-primary-foreground/40 uppercase tracking-widest mb-2">Respostas</p>
+                <p className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-widest mb-2">Respostas</p>
                 {Object.keys(selected.dados || {}).length === 0 ? (
-                  <p className="font-body text-[12px] text-primary-foreground/40">Sem dados estruturados.</p>
+                  <p className="font-body text-[12px] text-primary-foreground/75">Sem dados estruturados.</p>
                 ) : (
                   <div className="space-y-2">
                     {Object.entries(selected.dados).map(([k, v]) => (
                       <div key={k} className="rounded-lg bg-primary-foreground/[0.03] border border-primary-foreground/[0.06] p-3">
-                        <p className="font-body text-[10px] text-primary-foreground/45 uppercase tracking-wider">{k.replace(/_/g, " ")}</p>
+                        <p className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-wider">{k.replace(/_/g, " ")}</p>
                         <p className="font-body text-[13px] text-primary-foreground mt-1 whitespace-pre-wrap break-words">
                           {typeof v === "object" ? JSON.stringify(v, null, 2) : String(v)}
                         </p>
@@ -430,7 +430,7 @@ const AnamneseTab = () => {
 
               {selected.observacao && (
                 <div>
-                  <p className="font-body text-[10px] text-primary-foreground/40 uppercase tracking-widest mb-1">Observação</p>
+                  <p className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-widest mb-1">Observação</p>
                   <p className="font-body text-[13px] text-primary-foreground/80 whitespace-pre-wrap">{selected.observacao}</p>
                 </div>
               )}
@@ -484,23 +484,23 @@ const AnamneseTab = () => {
 
           {toDelete && (
             <div className="space-y-4">
-              <p className="font-body text-[13px] text-primary-foreground/70 leading-relaxed">
+              <p className="font-body text-[13px] text-primary-foreground/100 leading-relaxed">
                 Você está prestes a excluir permanentemente a ficha de anamnese de{" "}
                 <span className="text-primary-foreground font-medium">{toDelete.cliente_nome || "este cliente"}</span>.
                 Esta ação não pode ser desfeita.
               </p>
 
               <div className="rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] p-3 space-y-1.5">
-                <div className="flex items-center gap-2 text-[12px] text-primary-foreground/70">
-                  <User className="w-3.5 h-3.5 text-primary-foreground/40" />
+                <div className="flex items-center gap-2 text-[12px] text-primary-foreground/100">
+                  <User className="w-3.5 h-3.5 text-primary-foreground/75" />
                   {toDelete.cliente_nome || "Sem nome"}
                 </div>
-                <div className="flex items-center gap-2 text-[12px] text-primary-foreground/70">
+                <div className="flex items-center gap-2 text-[12px] text-primary-foreground/100">
                   <WhatsAppIcon className="w-3.5 h-3.5 text-[#25D366]" />
                   {formatWhatsapp(toDelete.whatsapp) || "—"}
                 </div>
-                <div className="flex items-center gap-2 text-[12px] text-primary-foreground/70">
-                  <Calendar className="w-3.5 h-3.5 text-primary-foreground/40" />
+                <div className="flex items-center gap-2 text-[12px] text-primary-foreground/100">
+                  <Calendar className="w-3.5 h-3.5 text-primary-foreground/75" />
                   {formatDate(toDelete.created_at)}
                 </div>
                 {(toDelete.pdf_url || toDelete.pdf_path) && (

@@ -67,23 +67,23 @@ const AvaliacoesTab = () => {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="font-heading text-lg font-semibold text-primary-foreground">Avaliações dos clientes</h2>
-          <p className="font-body text-[12px] text-primary-foreground/50 mt-0.5">
+          <p className="font-body text-[12px] text-primary-foreground/85 mt-0.5">
             {list.length} {list.length === 1 ? "avaliação" : "avaliações"} · aparecem na Home (nota ≥ 4 com comentário)
           </p>
         </div>
         <button
           onClick={load}
-          className="ios-press flex items-center gap-1.5 px-3 py-2 rounded-full bg-primary-foreground/[0.06] border border-primary-foreground/[0.08] text-primary-foreground/70 font-body text-[12px]"
+          className="ios-press flex items-center gap-1.5 px-3 py-2 rounded-full bg-primary-foreground/[0.06] border border-primary-foreground/[0.08] text-primary-foreground/100 font-body text-[12px]"
         >
           <RefreshCw className="w-3.5 h-3.5" /> Atualizar
         </button>
       </div>
 
       {loading ? (
-        <p className="font-body text-[13px] text-primary-foreground/50">Carregando...</p>
+        <p className="font-body text-[13px] text-primary-foreground/85">Carregando...</p>
       ) : list.length === 0 ? (
         <div className="rounded-2xl border border-primary-foreground/[0.08] bg-primary-foreground/[0.03] p-8 text-center">
-          <p className="font-body text-[13px] text-primary-foreground/60">Nenhuma avaliação ainda.</p>
+          <p className="font-body text-[13px] text-primary-foreground/95">Nenhuma avaliação ainda.</p>
         </div>
       ) : (
         <div className="grid gap-3">
@@ -100,18 +100,18 @@ const AvaliacoesTab = () => {
                       {Array.from({ length: 5 }).map((_, i) => (
                         <Star
                           key={i}
-                          className={`w-3 h-3 ${i < r.nota ? "fill-gold text-gold" : "text-primary-foreground/20"}`}
+                          className={`w-3 h-3 ${i < r.nota ? "fill-gold text-gold" : "text-primary-foreground/85"}`}
                           strokeWidth={1.5}
                         />
                       ))}
                     </span>
                     {!r.agendamento_id && (
-                      <span className="px-1.5 py-0.5 rounded-full bg-primary-foreground/[0.08] font-body text-[9px] uppercase tracking-wider text-primary-foreground/50">
+                      <span className="px-1.5 py-0.5 rounded-full bg-primary-foreground/[0.08] font-body text-[9px] uppercase tracking-wider text-primary-foreground/85">
                         Avulsa
                       </span>
                     )}
                   </div>
-                  <p className="font-body text-[11px] text-primary-foreground/40 mt-0.5">{formatDate(r.created_at)}</p>
+                  <p className="font-body text-[11px] text-primary-foreground/75 mt-0.5">{formatDate(r.created_at)}</p>
                   {r.comentario && (
                     <p className="font-body text-[13px] text-primary-foreground/80 mt-2 leading-relaxed whitespace-pre-wrap">
                       {r.comentario}
@@ -141,7 +141,7 @@ const AvaliacoesTab = () => {
             <button
               onClick={() => setToDelete(null)}
               disabled={!!deleting}
-              className="ios-press absolute top-4 right-4 w-8 h-8 rounded-full bg-primary-foreground/[0.08] flex items-center justify-center text-primary-foreground/40 hover:text-primary-foreground/70"
+              className="ios-press absolute top-4 right-4 w-8 h-8 rounded-full bg-primary-foreground/[0.08] flex items-center justify-center text-primary-foreground/75 hover:text-primary-foreground/100"
             >
               <X className="w-4 h-4" />
             </button>
@@ -152,7 +152,7 @@ const AvaliacoesTab = () => {
             <h3 className="font-heading text-lg font-semibold text-primary-foreground leading-tight">
               Excluir avaliação?
             </h3>
-            <p className="font-body text-[13px] text-primary-foreground/60 mt-1">
+            <p className="font-body text-[13px] text-primary-foreground/95 mt-1">
               Esta avaliação de <span className="text-primary-foreground/90 font-medium">{nomeOf(toDelete)}</span> sairá da Home e não poderá ser recuperada.
             </p>
 
@@ -162,12 +162,12 @@ const AvaliacoesTab = () => {
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star
                       key={i}
-                      className={`w-3 h-3 ${i < toDelete.nota ? "fill-gold text-gold" : "text-primary-foreground/20"}`}
+                      className={`w-3 h-3 ${i < toDelete.nota ? "fill-gold text-gold" : "text-primary-foreground/85"}`}
                       strokeWidth={1.5}
                     />
                   ))}
                 </span>
-                <span className="font-body text-[11px] text-primary-foreground/50">{formatDate(toDelete.created_at)}</span>
+                <span className="font-body text-[11px] text-primary-foreground/85">{formatDate(toDelete.created_at)}</span>
               </div>
               {toDelete.comentario && (
                 <p className="font-body text-[12px] text-primary-foreground/75 line-clamp-3">

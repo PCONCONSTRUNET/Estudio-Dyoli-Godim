@@ -75,7 +75,7 @@ const PushPromptModal = ({ excludePaths = ["/admin"] }: Props) => {
         <button
           onClick={dismiss}
           aria-label="Fechar"
-          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-primary-foreground/[0.08] flex items-center justify-center text-primary-foreground/40 hover:text-primary-foreground/80 hover:bg-primary-foreground/[0.12] transition-all z-10"
+          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-primary-foreground/[0.08] flex items-center justify-center text-primary-foreground/75 hover:text-primary-foreground/80 hover:bg-primary-foreground/[0.12] transition-all z-10"
         >
           <X className="w-4 h-4" />
         </button>
@@ -125,7 +125,7 @@ const PushPromptModal = ({ excludePaths = ["/admin"] }: Props) => {
           </button>
           <button
             onClick={dismiss}
-            className="ios-press w-full py-3 rounded-2xl text-primary-foreground/50 font-body text-[14px] font-medium hover:text-primary-foreground/80 transition-all"
+            className="ios-press w-full py-3 rounded-2xl text-primary-foreground/85 font-body text-[14px] font-medium hover:text-primary-foreground/80 transition-all"
           >
             Agora não
           </button>

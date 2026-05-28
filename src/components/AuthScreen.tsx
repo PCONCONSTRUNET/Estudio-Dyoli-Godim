@@ -131,7 +131,7 @@ const AuthScreen = ({ onSuccess, onBack, initialMode = "signup" }: AuthScreenPro
         {/* Close */}
         <button
           onClick={onBack}
-          className="ios-press absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-primary-foreground/[0.08] flex items-center justify-center text-primary-foreground/40 hover:text-primary-foreground/70 hover:bg-primary-foreground/[0.12] transition-all z-10"
+          className="ios-press absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-primary-foreground/[0.08] flex items-center justify-center text-primary-foreground/75 hover:text-primary-foreground/100 hover:bg-primary-foreground/[0.12] transition-all z-10"
         >
           <ArrowLeft className="w-4 h-4" />
         </button>
@@ -149,7 +149,7 @@ const AuthScreen = ({ onSuccess, onBack, initialMode = "signup" }: AuthScreenPro
           <h1 className="font-heading text-[22px] font-semibold text-primary-foreground tracking-wide">
             {mode === "signup" ? "Criar Conta" : "Entrar"}
           </h1>
-          <p className="font-body text-[12px] text-primary-foreground/45 font-light">
+          <p className="font-body text-[12px] text-primary-foreground/75 font-light">
             {mode === "signup"
               ? "Cadastre-se para agendar seu procedimento"
               : "Acesse sua conta para agendar"}
@@ -160,7 +160,7 @@ const AuthScreen = ({ onSuccess, onBack, initialMode = "signup" }: AuthScreenPro
         <form onSubmit={handleSubmit} className="relative space-y-3">
           {mode === "signup" && (
             <div className="space-y-1.5">
-              <label className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest font-medium">
+              <label className="font-body text-[11px] text-primary-foreground/75 uppercase tracking-widest font-medium">
                 Nome
               </label>
               <input
@@ -168,14 +168,14 @@ const AuthScreen = ({ onSuccess, onBack, initialMode = "signup" }: AuthScreenPro
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 placeholder="Seu nome completo"
-                className="w-full px-4 py-3 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[15px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-transparent focus:bg-primary-foreground/[0.07] transition-all duration-200"
+                className="w-full px-4 py-3 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[15px] placeholder:text-primary-foreground/85 focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-transparent focus:bg-primary-foreground/[0.07] transition-all duration-200"
                 maxLength={100}
               />
             </div>
           )}
 
           <div className="space-y-1.5">
-            <label className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest font-medium">
+            <label className="font-body text-[11px] text-primary-foreground/75 uppercase tracking-widest font-medium">
               WhatsApp
             </label>
             <input
@@ -183,12 +183,12 @@ const AuthScreen = ({ onSuccess, onBack, initialMode = "signup" }: AuthScreenPro
               value={whatsapp}
               onChange={(e) => setWhatsapp(formatWhatsapp(e.target.value))}
               placeholder="(00) 00000-0000"
-              className="w-full px-4 py-3 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[15px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-transparent focus:bg-primary-foreground/[0.07] transition-all duration-200"
+              className="w-full px-4 py-3 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[15px] placeholder:text-primary-foreground/85 focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-transparent focus:bg-primary-foreground/[0.07] transition-all duration-200"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-widest font-medium">
+            <label className="font-body text-[11px] text-primary-foreground/75 uppercase tracking-widest font-medium">
               Senha
             </label>
             <div className="relative">
@@ -197,13 +197,13 @@ const AuthScreen = ({ onSuccess, onBack, initialMode = "signup" }: AuthScreenPro
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
                 placeholder="Mínimo 6 caracteres"
-                className="w-full px-4 py-3 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[15px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-transparent focus:bg-primary-foreground/[0.07] transition-all duration-200 pr-12"
+                className="w-full px-4 py-3 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[15px] placeholder:text-primary-foreground/85 focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-transparent focus:bg-primary-foreground/[0.07] transition-all duration-200 pr-12"
                 maxLength={72}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="ios-press absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-primary-foreground/25 hover:text-primary-foreground/50 hover:bg-primary-foreground/[0.06] transition-all"
+                className="ios-press absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center text-primary-foreground/85 hover:text-primary-foreground/85 hover:bg-primary-foreground/[0.06] transition-all"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -232,7 +232,7 @@ const AuthScreen = ({ onSuccess, onBack, initialMode = "signup" }: AuthScreenPro
             <button
               type="button"
               onClick={() => setShowForgot(true)}
-              className="block mx-auto pt-1 font-body text-[12px] text-primary-foreground/45 hover:text-gold transition-colors"
+              className="block mx-auto pt-1 font-body text-[12px] text-primary-foreground/75 hover:text-gold transition-colors"
             >
               Esqueci minha senha
             </button>
@@ -246,7 +246,7 @@ const AuthScreen = ({ onSuccess, onBack, initialMode = "signup" }: AuthScreenPro
               setMode(mode === "signup" ? "login" : "signup");
               setError("");
             }}
-            className="font-body text-[13px] text-primary-foreground/35 hover:text-gold transition-colors duration-200"
+            className="font-body text-[13px] text-primary-foreground/95 hover:text-gold transition-colors duration-200"
           >
             {mode === "signup"
               ? "Já tenho conta · Entrar"

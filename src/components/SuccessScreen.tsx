@@ -65,7 +65,7 @@ const SuccessScreen = ({ onHome, onProfile }: SuccessScreenProps) => {
           <h2 className="font-heading text-2xl font-semibold text-primary-foreground tracking-wide">
             Agendamento Confirmado!
           </h2>
-          <p className="font-body text-[13px] text-primary-foreground/45 font-light max-w-[260px] mx-auto leading-relaxed">
+          <p className="font-body text-[13px] text-primary-foreground/75 font-light max-w-[260px] mx-auto leading-relaxed">
             Você receberá uma confirmação via WhatsApp e um lembrete 24h antes. O pagamento será feito diretamente na recepção.
           </p>
         </div>

@@ -169,19 +169,19 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary-foreground/30" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary-foreground/95" />
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar por cliente, serviço, ID..."
-          className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] pl-10 pr-4 py-3 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
+          className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] pl-10 pr-4 py-3 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/85 focus:outline-none focus:ring-2 focus:ring-gold/20"
         />
       </div>
 
       {/* Status filters */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
-        <Filter className="h-3.5 w-3.5 shrink-0 text-primary-foreground/30" />
+        <Filter className="h-3.5 w-3.5 shrink-0 text-primary-foreground/95" />
         {(["todos", "pendente", "confirmado", "concluido", "cancelado", "falta"] as StatusFilter[]).map((s) => {
           const colors: Record<StatusFilter, { active: string; inactive: string }> = {
             todos: { active: "bg-gold/15 text-gold border-gold/40", inactive: "bg-gold/[0.04] text-gold/60 border-gold/20 hover:bg-gold/10 hover:text-gold/80" },
@@ -208,7 +208,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
 
       {/* Sort bar */}
       <div className="flex items-center gap-2 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-        <span className="font-body text-[10px] text-primary-foreground/30 shrink-0">Ordenar:</span>
+        <span className="font-body text-[10px] text-primary-foreground/95 shrink-0">Ordenar:</span>
         {([
           { field: "data" as SortField, label: "Data" },
           { field: "valor" as SortField, label: "Valor" },
@@ -219,7 +219,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
             key={s.field}
             onClick={() => toggleSort(s.field)}
             className={`flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1 font-body text-[11px] transition-all ${
-              sortField === s.field ? "text-gold" : "text-primary-foreground/30"
+              sortField === s.field ? "text-gold" : "text-primary-foreground/95"
             }`}
           >
             {s.label} <SortIcon field={s.field} />
@@ -232,7 +232,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
         {filtered.length === 0 && (
           <div className="py-12 text-center">
             <CreditCard className="mx-auto h-8 w-8 text-primary-foreground/10 mb-2" />
-            <p className="font-body text-[13px] text-primary-foreground/30">Nenhum pagamento encontrado</p>
+            <p className="font-body text-[13px] text-primary-foreground/95">Nenhum pagamento encontrado</p>
           </div>
         )}
 
@@ -273,7 +273,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                       </span>
                     )}
                   </div>
-                  <p className="font-body text-[11px] text-primary-foreground/45 truncate">
+                  <p className="font-body text-[11px] text-primary-foreground/75 truncate">
                     {ag.servico}{ag.variacao ? ` · ${ag.variacao}` : ""} · {formatDate(ag.data_agendamento)}
                   </p>
                 </div>
@@ -285,7 +285,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                     <span className={`font-body text-[10px] font-medium ${cfg.text}`}>{cfg.label}</span>
                   </div>
                 </div>
-                <ChevronDown className={`h-4 w-4 shrink-0 text-primary-foreground/30 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                <ChevronDown className={`h-4 w-4 shrink-0 text-primary-foreground/95 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
               </button>
 
               {/* Expanded details */}
@@ -329,7 +329,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
         })}
       </div>
 
-      <p className="text-center font-body text-[11px] text-primary-foreground/20 pb-4">
+      <p className="text-center font-body text-[11px] text-primary-foreground/85 pb-4">
         Exibindo {filtered.length} de {agendamentos.length} pagamentos
       </p>
     </div>
@@ -338,7 +338,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
 
 const Detail = ({ label, value }: { label: string; value: React.ReactNode }) => (
   <div>
-    <p className="font-body text-[10px] text-primary-foreground/30">{label}</p>
+    <p className="font-body text-[10px] text-primary-foreground/95">{label}</p>
     <div className="font-body text-[12px] text-primary-foreground/80 mt-0.5">{value}</div>
   </div>
 );

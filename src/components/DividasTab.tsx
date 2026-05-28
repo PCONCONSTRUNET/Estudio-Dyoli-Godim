@@ -222,7 +222,7 @@ const DividasTab = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-rose/[0.1] via-primary-foreground/[0.02] to-transparent border border-rose/20">
           <div className="pointer-events-none absolute -top-10 -right-10 w-32 h-32 rounded-full bg-rose/10 blur-3xl" />
-          <p className="font-body text-[11px] font-medium text-primary-foreground/60 uppercase tracking-[0.2em] flex items-center gap-1.5">
+          <p className="font-body text-[11px] font-medium text-primary-foreground/95 uppercase tracking-[0.2em] flex items-center gap-1.5">
             <AlertCircle className="w-3.5 h-3.5 text-rose" /> Total a Receber
           </p>
           <p className="font-heading text-3xl font-bold text-rose mt-2 tabular-nums">
@@ -232,7 +232,7 @@ const DividasTab = () => {
 
         <div className="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-green-500/[0.1] via-primary-foreground/[0.02] to-transparent border border-green-500/20">
           <div className="pointer-events-none absolute -top-10 -right-10 w-32 h-32 rounded-full bg-green-500/10 blur-3xl" />
-          <p className="font-body text-[11px] font-medium text-primary-foreground/60 uppercase tracking-[0.2em] flex items-center gap-1.5">
+          <p className="font-body text-[11px] font-medium text-primary-foreground/95 uppercase tracking-[0.2em] flex items-center gap-1.5">
             <CheckCircle2 className="w-3.5 h-3.5 text-green-400" /> Dívidas Recebidas
           </p>
           <p className="font-heading text-3xl font-bold text-green-400 mt-2 tabular-nums">
@@ -244,13 +244,13 @@ const DividasTab = () => {
       {/* AÇÕES E FILTROS */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/40" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/75" />
           <input
             type="text"
             placeholder="Buscar por cliente ou descrição..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.08] text-primary-foreground placeholder:text-primary-foreground/30 font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/30 transition-all"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.08] text-primary-foreground placeholder:text-primary-foreground/95 font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/30 transition-all"
           />
         </div>
         <button
@@ -264,11 +264,11 @@ const DividasTab = () => {
       {/* LISTAGEM DE DÍVIDAS */}
       <div className="space-y-3">
         {loading ? (
-          <p className="text-center py-10 text-primary-foreground/40 font-body text-sm">Carregando dívidas...</p>
+          <p className="text-center py-10 text-primary-foreground/75 font-body text-sm">Carregando dívidas...</p>
         ) : filteredDividas.length === 0 ? (
           <div className="text-center py-12 rounded-2xl border border-dashed border-primary-foreground/[0.08] bg-primary-foreground/[0.01]">
-            <BadgeDollarSign className="w-8 h-8 text-primary-foreground/20 mx-auto mb-3" />
-            <p className="text-primary-foreground/40 font-body text-sm">Nenhuma dívida encontrada.</p>
+            <BadgeDollarSign className="w-8 h-8 text-primary-foreground/85 mx-auto mb-3" />
+            <p className="text-primary-foreground/75 font-body text-sm">Nenhuma dívida encontrada.</p>
           </div>
         ) : (
           filteredDividas.map(divida => {
@@ -294,7 +294,7 @@ const DividasTab = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 relative pr-8">
-                      <h3 className={`font-heading text-lg font-bold truncate ${isPaga ? "text-primary-foreground/70" : "text-primary-foreground"}`}>
+                      <h3 className={`font-heading text-lg font-bold truncate ${isPaga ? "text-primary-foreground/100" : "text-primary-foreground"}`}>
                         {divida.cliente_nome}
                       </h3>
                       {isPaga ? (
@@ -316,14 +316,14 @@ const DividasTab = () => {
                           e.stopPropagation();
                           handleDeleteDivida(divida.id);
                         }}
-                        className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-primary-foreground/20 hover:bg-rose/10 hover:text-rose transition-colors"
+                        className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-primary-foreground/85 hover:bg-rose/10 hover:text-rose transition-colors"
                         title="Excluir Dívida"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
-                    <p className="font-body text-sm text-primary-foreground/60">{divida.descricao}</p>
-                    <p className="font-body text-[11px] text-primary-foreground/40 mt-1">
+                    <p className="font-body text-sm text-primary-foreground/95">{divida.descricao}</p>
+                    <p className="font-body text-[11px] text-primary-foreground/75 mt-1">
                       Registrado em {formatDateShort(divida.data_criacao)}
                     </p>
                   </div>
@@ -333,12 +333,12 @@ const DividasTab = () => {
                       {isPaga ? (
                         <>
                           <p className="font-heading text-lg font-bold text-green-400">{formatCurrency(divida.valor_pago)}</p>
-                          <p className="font-body text-[10px] text-primary-foreground/40 uppercase tracking-widest">Quitado</p>
+                          <p className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-widest">Quitado</p>
                         </>
                       ) : (
                         <>
                           <p className="font-heading text-xl font-bold text-rose">{formatCurrency(restante)}</p>
-                          <p className="font-body text-[10px] text-primary-foreground/50 uppercase tracking-widest flex items-center gap-1">
+                          <p className="font-body text-[10px] text-primary-foreground/85 uppercase tracking-widest flex items-center gap-1">
                             De {formatCurrency(divida.valor_total)}
                           </p>
                         </>
@@ -368,7 +368,7 @@ const DividasTab = () => {
 
       {/* MODAL: NOVA DÍVIDA */}
       <Dialog open={isNovaDividaOpen} onOpenChange={setIsNovaDividaOpen}>
-        <DialogContent className="max-w-md bg-charcoal border-gold/20 p-6 [&>button]:text-primary-foreground/60 [&>button]:hover:text-primary-foreground">
+        <DialogContent className="max-w-md bg-charcoal border-gold/20 p-6 [&>button]:text-primary-foreground/95 [&>button]:hover:text-primary-foreground">
           <DialogHeader className="mb-4">
             <DialogTitle className="font-heading text-xl font-bold text-primary-foreground flex items-center gap-2">
               <Plus className="w-5 h-5 text-gold" /> Registrar Dívida
@@ -377,7 +377,7 @@ const DividasTab = () => {
 
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="font-body text-xs font-semibold text-primary-foreground/70 uppercase tracking-wider">Cliente (Cadastrado)</label>
+              <label className="font-body text-xs font-semibold text-primary-foreground/100 uppercase tracking-wider">Cliente (Cadastrado)</label>
               <select
                 value={newClienteId}
                 onChange={(e) => {
@@ -386,7 +386,7 @@ const DividasTab = () => {
                 }}
                 className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.1] text-primary-foreground font-body focus:outline-none focus:border-gold/40 transition-colors"
               >
-                <option value="" className="bg-charcoal text-primary-foreground/50">Selecione um cliente (opcional)</option>
+                <option value="" className="bg-charcoal text-primary-foreground/85">Selecione um cliente (opcional)</option>
                 {profiles.map(p => (
                   <option key={p.id} value={p.id} className="bg-charcoal">
                     {p.nome || 'Cliente Sem Nome'} {p.telefone ? `(${p.telefone})` : ''}
@@ -397,41 +397,41 @@ const DividasTab = () => {
 
             {!newClienteId && (
               <div className="space-y-1.5">
-                <label className="font-body text-xs font-semibold text-primary-foreground/70 uppercase tracking-wider">Ou Nome do Cliente Manual</label>
+                <label className="font-body text-xs font-semibold text-primary-foreground/100 uppercase tracking-wider">Ou Nome do Cliente Manual</label>
                 <input
                   type="text"
                   placeholder="Ex: Maria José"
                   value={newClienteNome}
                   onChange={(e) => setNewClienteNome(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.1] text-primary-foreground placeholder:text-primary-foreground/30 font-body focus:outline-none focus:border-gold/40 transition-colors"
+                  className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.1] text-primary-foreground placeholder:text-primary-foreground/95 font-body focus:outline-none focus:border-gold/40 transition-colors"
                 />
               </div>
             )}
 
             <div className="space-y-1.5">
-              <label className="font-body text-xs font-semibold text-primary-foreground/70 uppercase tracking-wider">Descrição / Motivo</label>
+              <label className="font-body text-xs font-semibold text-primary-foreground/100 uppercase tracking-wider">Descrição / Motivo</label>
               <input
                 type="text"
                 placeholder="Ex: Ficou devendo o procedimento X..."
                 value={newDescricao}
                 onChange={(e) => setNewDescricao(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.1] text-primary-foreground placeholder:text-primary-foreground/30 font-body focus:outline-none focus:border-gold/40 transition-colors"
+                className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.1] text-primary-foreground placeholder:text-primary-foreground/95 font-body focus:outline-none focus:border-gold/40 transition-colors"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="font-body text-xs font-semibold text-primary-foreground/70 uppercase tracking-wider">Valor da Dívida (R$)</label>
+              <label className="font-body text-xs font-semibold text-primary-foreground/100 uppercase tracking-wider">Valor da Dívida (R$)</label>
               <input
                 type="text"
                 placeholder="0,00"
                 value={newValorTotal}
                 onChange={(e) => setNewValorTotal(e.target.value.replace(/[^0-9.,]/g, ''))}
-                className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.1] text-primary-foreground placeholder:text-primary-foreground/30 font-heading text-lg focus:outline-none focus:border-gold/40 transition-colors"
+                className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.1] text-primary-foreground placeholder:text-primary-foreground/95 font-heading text-lg focus:outline-none focus:border-gold/40 transition-colors"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="font-body text-xs font-semibold text-primary-foreground/70 uppercase tracking-wider">Data da Dívida / Serviço</label>
+              <label className="font-body text-xs font-semibold text-primary-foreground/100 uppercase tracking-wider">Data da Dívida / Serviço</label>
               <input
                 type="date"
                 value={newDataCriacao}
@@ -454,7 +454,7 @@ const DividasTab = () => {
 
       {/* MODAL: DAR BAIXA */}
       <Dialog open={isBaixaOpen} onOpenChange={setIsBaixaOpen}>
-        <DialogContent className="max-w-md bg-charcoal border-gold/20 p-0 overflow-hidden [&>button]:text-primary-foreground/60 [&>button]:hover:text-primary-foreground">
+        <DialogContent className="max-w-md bg-charcoal border-gold/20 p-0 overflow-hidden [&>button]:text-primary-foreground/95 [&>button]:hover:text-primary-foreground">
           <div className="relative p-6 border-b border-primary-foreground/[0.06]">
             <div className="pointer-events-none absolute -top-10 -right-10 w-32 h-32 rounded-full bg-gold/10 blur-3xl" />
             <DialogHeader>
@@ -473,7 +473,7 @@ const DividasTab = () => {
               <div className="p-5 rounded-2xl bg-gradient-to-br from-primary-foreground/[0.04] to-primary-foreground/[0.01] border border-primary-foreground/[0.08] shadow-inner">
                 <div className="flex justify-between items-start mb-4 pb-4 border-b border-primary-foreground/[0.05]">
                   <div>
-                    <p className="font-body text-[10px] text-primary-foreground/40 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                    <p className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
                       <span className="w-1 h-1 rounded-full bg-primary-foreground/30" /> Cliente
                     </p>
                     <p className="font-heading text-lg font-bold text-primary-foreground/90 leading-none">
@@ -481,17 +481,17 @@ const DividasTab = () => {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-body text-[10px] text-primary-foreground/40 uppercase tracking-widest mb-1.5 flex items-center justify-end gap-1.5">
+                    <p className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-widest mb-1.5 flex items-center justify-end gap-1.5">
                       Data <span className="w-1 h-1 rounded-full bg-primary-foreground/30" />
                     </p>
-                    <p className="font-body text-[12px] font-medium text-primary-foreground/70 bg-primary-foreground/[0.05] px-2 py-0.5 rounded-md border border-primary-foreground/[0.05]">
+                    <p className="font-body text-[12px] font-medium text-primary-foreground/100 bg-primary-foreground/[0.05] px-2 py-0.5 rounded-md border border-primary-foreground/[0.05]">
                       {formatDateShort(selectedDivida.data_criacao)}
                     </p>
                   </div>
                 </div>
                 
                 <div className="mb-5">
-                  <p className="font-body text-[10px] text-primary-foreground/40 uppercase tracking-widest mb-1.5">Referente a</p>
+                  <p className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-widest mb-1.5">Referente a</p>
                   <p className="font-body text-sm text-primary-foreground/80 leading-relaxed bg-primary-foreground/[0.02] p-3 rounded-xl border border-primary-foreground/[0.04]">
                     {selectedDivida.descricao}
                   </p>
@@ -499,8 +499,8 @@ const DividasTab = () => {
 
                 <div className="grid grid-cols-3 gap-2">
                   <div className="p-2.5 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.04] text-center">
-                    <p className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-widest mb-1">Total</p>
-                    <p className="font-heading text-[13px] font-bold text-primary-foreground/70">{formatCurrency(selectedDivida.valor_total)}</p>
+                    <p className="font-body text-[9px] text-primary-foreground/75 uppercase tracking-widest mb-1">Total</p>
+                    <p className="font-heading text-[13px] font-bold text-primary-foreground/100">{formatCurrency(selectedDivida.valor_total)}</p>
                   </div>
                   <div className="p-2.5 rounded-xl bg-green-500/[0.05] border border-green-500/10 text-center">
                     <p className="font-body text-[9px] text-green-400/60 uppercase tracking-widest mb-1">Já Pago</p>
@@ -521,7 +521,7 @@ const DividasTab = () => {
                   Valor a receber agora
                 </label>
                 <div className="relative group">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 font-heading text-xl text-primary-foreground/30 group-focus-within:text-gold transition-colors">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 font-heading text-xl text-primary-foreground/95 group-focus-within:text-gold transition-colors">
                     R$
                   </span>
                   <input
@@ -542,7 +542,7 @@ const DividasTab = () => {
                   </button>
                 </div>
                 <div className="flex items-center justify-between px-1">
-                  <p className="font-body text-[10px] text-primary-foreground/40 flex items-center gap-1.5">
+                  <p className="font-body text-[10px] text-primary-foreground/75 flex items-center gap-1.5">
                     <span className="w-1 h-1 rounded-full bg-primary-foreground/20" />
                     Valor será adicionado ao Caixa de hoje
                   </p>
@@ -552,7 +552,7 @@ const DividasTab = () => {
               <div className="pt-2 flex gap-3">
                 <button
                   onClick={() => setIsBaixaOpen(false)}
-                  className="flex-1 py-3.5 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/70 hover:text-primary-foreground font-heading text-sm font-bold uppercase tracking-widest hover:bg-primary-foreground/[0.08] transition-all border border-transparent hover:border-primary-foreground/[0.1]"
+                  className="flex-1 py-3.5 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/100 hover:text-primary-foreground font-heading text-sm font-bold uppercase tracking-widest hover:bg-primary-foreground/[0.08] transition-all border border-transparent hover:border-primary-foreground/[0.1]"
                 >
                   Cancelar
                 </button>

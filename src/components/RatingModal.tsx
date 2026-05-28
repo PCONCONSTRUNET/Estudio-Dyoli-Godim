@@ -86,7 +86,7 @@ const RatingModal = ({
       <div className="relative w-full max-w-sm rounded-3xl border border-primary-foreground/[0.08] bg-charcoal/90 backdrop-blur-2xl shadow-[0_25px_60px_-12px_rgba(0,0,0,0.7)] animate-scale-in p-6">
         <button
           onClick={onClose}
-          className="ios-press absolute top-4 right-4 w-8 h-8 rounded-full bg-primary-foreground/[0.08] flex items-center justify-center text-primary-foreground/40 hover:text-primary-foreground/70 hover:bg-primary-foreground/[0.12] transition-all"
+          className="ios-press absolute top-4 right-4 w-8 h-8 rounded-full bg-primary-foreground/[0.08] flex items-center justify-center text-primary-foreground/75 hover:text-primary-foreground/100 hover:bg-primary-foreground/[0.12] transition-all"
         >
           <X className="w-4 h-4" />
         </button>
@@ -100,7 +100,7 @@ const RatingModal = ({
         <h3 className="font-heading text-lg font-semibold text-primary-foreground leading-tight pr-8">
           {servico}
         </h3>
-        <p className="font-body text-[12px] text-primary-foreground/45 mt-1">
+        <p className="font-body text-[12px] text-primary-foreground/75 mt-1">
           Sua opinião nos ajuda a melhorar ✨
         </p>
 
@@ -119,7 +119,7 @@ const RatingModal = ({
                 className={`w-9 h-9 transition-all ${
                   n <= displayNota
                     ? "fill-gold text-gold drop-shadow-[0_0_8px_hsl(40_40%_55%/0.5)]"
-                    : "text-primary-foreground/20"
+                    : "text-primary-foreground/85"
                 }`}
                 strokeWidth={1.5}
               />
@@ -139,9 +139,9 @@ const RatingModal = ({
           onChange={(e) => setComentario(e.target.value.slice(0, 500))}
           placeholder="Conte como foi (opcional)..."
           rows={3}
-          className="w-full px-4 py-3 rounded-2xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.08] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/30 outline-none focus:border-gold/40 resize-none"
+          className="w-full px-4 py-3 rounded-2xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.08] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/95 outline-none focus:border-gold/40 resize-none"
         />
-        <p className="text-right font-body text-[10px] text-primary-foreground/30 mt-1">
+        <p className="text-right font-body text-[10px] text-primary-foreground/95 mt-1">
           {comentario.length}/500
         </p>
 
@@ -152,7 +152,7 @@ const RatingModal = ({
         <div className="flex gap-2 mt-4">
           <button
             onClick={onClose}
-            className="ios-press flex-1 py-3 rounded-full bg-primary-foreground/[0.06] border border-primary-foreground/[0.08] text-primary-foreground/70 font-body text-[14px] font-medium transition-all hover:bg-primary-foreground/[0.1]"
+            className="ios-press flex-1 py-3 rounded-full bg-primary-foreground/[0.06] border border-primary-foreground/[0.08] text-primary-foreground/100 font-body text-[14px] font-medium transition-all hover:bg-primary-foreground/[0.1]"
           >
             Cancelar
           </button>

@@ -208,7 +208,7 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
       case "cancelado": return "text-rose bg-rose/10 border-rose/20";
       case "concluido": return "text-green-500 bg-green-500/10 border-green-500/20";
       case "falta": return "text-rose bg-rose/10 border-rose/20";
-      default: return "text-primary-foreground/50 bg-primary-foreground/[0.05] border-primary-foreground/[0.08]";
+      default: return "text-primary-foreground/85 bg-primary-foreground/[0.05] border-primary-foreground/[0.08]";
     }
   };
 
@@ -246,7 +246,7 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
     }
 
     // Loyalty tiers
-    let tier = { label: "Cliente", color: "text-primary-foreground/60", bg: "bg-primary-foreground/[0.06]", next: 3, progress: totalAtendimentos / 3 };
+    let tier = { label: "Cliente", color: "text-primary-foreground/95", bg: "bg-primary-foreground/[0.06]", next: 3, progress: totalAtendimentos / 3 };
     if (totalAtendimentos >= 10) tier = { label: "VIP Diamond", color: "text-gold", bg: "bg-gold/15", next: 10, progress: 1 };
     else if (totalAtendimentos >= 5) tier = { label: "VIP Gold", color: "text-gold", bg: "bg-gold/10", next: 10, progress: totalAtendimentos / 10 };
     else if (totalAtendimentos >= 3) tier = { label: "Cliente Fiel", color: "text-nude", bg: "bg-nude/10", next: 5, progress: totalAtendimentos / 5 };
@@ -283,7 +283,7 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
         <div className="px-6 pt-6 pb-4">
           <button
             onClick={onBack}
-            className="ios-press absolute top-4 right-4 w-8 h-8 rounded-full bg-primary-foreground/[0.08] flex items-center justify-center text-primary-foreground/40 hover:text-primary-foreground/70 hover:bg-primary-foreground/[0.12] transition-all z-10"
+            className="ios-press absolute top-4 right-4 w-8 h-8 rounded-full bg-primary-foreground/[0.08] flex items-center justify-center text-primary-foreground/75 hover:text-primary-foreground/100 hover:bg-primary-foreground/[0.12] transition-all z-10"
           >
             <X className="w-4 h-4" />
           </button>
@@ -292,7 +292,7 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
           <div className="flex items-center gap-4 mb-4">
             <div className="relative">
               <div className="w-[68px] h-[68px] rounded-full overflow-hidden border-2 border-gold/20 shadow-[0_4px_16px_-4px_hsl(40_40%_55%/0.2)] bg-primary-foreground/[0.06] flex items-center justify-center">
-                <User className="w-8 h-8 text-primary-foreground/40" strokeWidth={1.5} />
+                <User className="w-8 h-8 text-primary-foreground/75" strokeWidth={1.5} />
               </div>
               {stats.totalAtendimentos >= 3 && (
                 <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full ${stats.tier.bg} border-2 border-charcoal flex items-center justify-center`}>
@@ -308,7 +308,7 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-body font-medium ${stats.tier.bg} ${stats.tier.color}`}>
                   {stats.tier.label}
                 </span>
-                <span className="font-body text-[11px] text-primary-foreground/35">
+                <span className="font-body text-[11px] text-primary-foreground/95">
                   desde {clienteDesde}
                 </span>
               </div>
@@ -320,19 +320,19 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
             <div className="rounded-2xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06] px-2 py-2.5 text-center">
               <Award className="w-3.5 h-3.5 text-gold mx-auto mb-1" />
               <p className="font-heading text-[17px] leading-none text-primary-foreground font-semibold">{stats.totalAtendimentos}</p>
-              <p className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/40 mt-1">Atendim.</p>
+              <p className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/75 mt-1">Atendim.</p>
             </div>
             <div className="rounded-2xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06] px-2 py-2.5 text-center">
               <TrendingUp className="w-3.5 h-3.5 text-nude mx-auto mb-1" />
               <p className="font-heading text-[17px] leading-none text-primary-foreground font-semibold">
                 R${stats.totalInvestido.toFixed(0)}
               </p>
-              <p className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/40 mt-1">Investido</p>
+              <p className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/75 mt-1">Investido</p>
             </div>
             <div className="rounded-2xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06] px-2 py-2.5 text-center">
               <Heart className="w-3.5 h-3.5 text-rose mx-auto mb-1" />
               <p className="font-heading text-[17px] leading-none text-primary-foreground font-semibold">{proximosList.length}</p>
-              <p className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/40 mt-1">Próx.</p>
+              <p className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/75 mt-1">Próx.</p>
             </div>
           </div>
 
@@ -340,7 +340,7 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
           {stats.totalAtendimentos < 10 && (
             <div className="mb-4 px-3 py-2.5 rounded-xl bg-gradient-to-r from-gold/[0.06] to-nude/[0.06] border border-gold/[0.12]">
               <div className="flex items-center justify-between mb-1.5">
-                <span className="font-body text-[11px] text-primary-foreground/70">
+                <span className="font-body text-[11px] text-primary-foreground/100">
                   Faltam <span className="text-gold font-semibold">{stats.tier.next - stats.totalAtendimentos}</span> para <span className="text-gold font-medium">{stats.totalAtendimentos < 3 ? "Cliente Fiel" : stats.totalAtendimentos < 5 ? "VIP Gold" : "VIP Diamond"}</span>
                 </span>
                 <Sparkles className="w-3 h-3 text-gold" />
@@ -361,7 +361,7 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
               className={`ios-press py-2.5 rounded-xl font-body text-[13px] font-medium transition-all duration-200 ${
                 tab === "dados"
                   ? "bg-primary-foreground/[0.1] text-primary-foreground shadow-[0_2px_8px_-2px_rgba(0,0,0,0.2)]"
-                  : "text-primary-foreground/40"
+                  : "text-primary-foreground/75"
               }`}
             >
               <User className="w-4 h-4 inline-block mr-1.5 -mt-0.5" />
@@ -372,7 +372,7 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
               className={`ios-press py-2.5 rounded-xl font-body text-[13px] font-medium transition-all duration-200 ${
                 tab === "agendamentos"
                   ? "bg-primary-foreground/[0.1] text-primary-foreground shadow-[0_2px_8px_-2px_rgba(0,0,0,0.2)]"
-                  : "text-primary-foreground/40"
+                  : "text-primary-foreground/75"
               }`}
             >
               <Calendar className="w-4 h-4 inline-block mr-1.5 -mt-0.5" />
@@ -399,11 +399,11 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
                     <p className="font-body text-[12px] text-primary-foreground/55 mt-0.5">{stats.proximo.variacao}</p>
                   )}
                   <div className="flex items-center gap-3 mt-2.5">
-                    <div className="flex items-center gap-1.5 text-primary-foreground/70">
+                    <div className="flex items-center gap-1.5 text-primary-foreground/100">
                       <Calendar className="w-3.5 h-3.5" />
                       <span className="font-body text-[12px]">{formatDate(stats.proximo.data_agendamento)}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-primary-foreground/70">
+                    <div className="flex items-center gap-1.5 text-primary-foreground/100">
                       <Clock className="w-3.5 h-3.5" />
                       <span className="font-body text-[12px]">{stats.proximo.horario}</span>
                     </div>
@@ -421,11 +421,11 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
               {/* Nome editável */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest font-medium">Nome</label>
+                  <label className="font-body text-[10px] text-primary-foreground/95 uppercase tracking-widest font-medium">Nome</label>
                   {!editingNome && (
                     <button
                       onClick={() => setEditingNome(true)}
-                      className="ios-press text-primary-foreground/40 hover:text-gold transition-colors"
+                      className="ios-press text-primary-foreground/75 hover:text-gold transition-colors"
                     >
                       <Pencil className="w-3 h-3" />
                     </button>
@@ -457,8 +457,8 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
               {/* WhatsApp (também é o login) */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest font-medium">
-                    WhatsApp <span className="text-primary-foreground/25 normal-case tracking-normal">(seu login)</span>
+                  <label className="font-body text-[10px] text-primary-foreground/95 uppercase tracking-widest font-medium">
+                    WhatsApp <span className="text-primary-foreground/85 normal-case tracking-normal">(seu login)</span>
                   </label>
                   {!editingWpp && !loading && (
                     <button
@@ -467,7 +467,7 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
                         setWppError(null);
                         setEditingWpp(true);
                       }}
-                      className="ios-press text-primary-foreground/40 hover:text-gold transition-colors"
+                      className="ios-press text-primary-foreground/75 hover:text-gold transition-colors"
                     >
                       <Pencil className="w-3 h-3" />
                     </button>
@@ -495,7 +495,7 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
                       <button
                         disabled={savingWpp}
                         onClick={() => { setEditingWpp(false); setWppError(null); }}
-                        className="ios-press px-3 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.08] text-primary-foreground/60 disabled:opacity-40"
+                        className="ios-press px-3 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.08] text-primary-foreground/95 disabled:opacity-40"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -503,7 +503,7 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
                     {wppError && (
                       <p className="font-body text-[11px] text-rose px-1">{wppError}</p>
                     )}
-                    <p className="font-body text-[10px] text-primary-foreground/35 px-1">
+                    <p className="font-body text-[10px] text-primary-foreground/95 px-1">
                       Sua senha continua a mesma. Use o novo número no próximo login.
                     </p>
                   </div>
@@ -518,14 +518,14 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
               {/* Aniversário */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="font-body text-[10px] text-primary-foreground/35 uppercase tracking-widest font-medium flex items-center gap-1.5">
+                  <label className="font-body text-[10px] text-primary-foreground/95 uppercase tracking-widest font-medium flex items-center gap-1.5">
                     <Cake className="w-3 h-3" />
                     Aniversário
                   </label>
                   {!editingNasc && (
                     <button
                       onClick={() => setEditingNasc(true)}
-                      className="ios-press text-primary-foreground/40 hover:text-gold transition-colors"
+                      className="ios-press text-primary-foreground/75 hover:text-gold transition-colors"
                     >
                       <Pencil className="w-3 h-3" />
                     </button>
@@ -551,7 +551,7 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
                 ) : (
                   <div className="px-4 py-3 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[15px] flex items-center justify-between">
                     <span>
-                      {loading ? "Carregando..." : profile?.data_nascimento ? formatDateLong(profile.data_nascimento) : <span className="text-primary-foreground/40">Adicione para receber um mimo 🎁</span>}
+                      {loading ? "Carregando..." : profile?.data_nascimento ? formatDateLong(profile.data_nascimento) : <span className="text-primary-foreground/75">Adicione para receber um mimo 🎁</span>}
                     </span>
                   </div>
                 )}
@@ -568,7 +568,7 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
                   </div>
                   <div className="flex-1">
                     <p className="font-body text-[13px] text-primary-foreground font-medium">Cuidados pós-procedimento</p>
-                    <p className="font-body text-[11px] text-primary-foreground/40">Recomendações para sua pele</p>
+                    <p className="font-body text-[11px] text-primary-foreground/75">Recomendações para sua pele</p>
                   </div>
                 </a>
               </div>
@@ -611,7 +611,7 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
                   className={`py-2 rounded-lg font-body text-[12px] font-medium transition-all ${
                     agendamentosTab === "proximos"
                       ? "bg-gold/15 text-gold"
-                      : "text-primary-foreground/40"
+                      : "text-primary-foreground/75"
                   }`}
                 >
                   Próximos {proximosList.length > 0 && `(${proximosList.length})`}
@@ -621,7 +621,7 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
                   className={`py-2 rounded-lg font-body text-[12px] font-medium transition-all ${
                     agendamentosTab === "historico"
                       ? "bg-primary-foreground/[0.1] text-primary-foreground"
-                      : "text-primary-foreground/40"
+                      : "text-primary-foreground/75"
                   }`}
                 >
                   Histórico {historico.length > 0 && `(${historico.length})`}
@@ -631,15 +631,15 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
               <div className="space-y-3">
                 {loading ? (
                   <div className="text-center py-8">
-                    <p className="font-body text-[13px] text-primary-foreground/40">Carregando...</p>
+                    <p className="font-body text-[13px] text-primary-foreground/75">Carregando...</p>
                   </div>
                 ) : (agendamentosTab === "proximos" ? proximosList : historico).length === 0 ? (
                   <div className="text-center py-10">
-                    <Calendar className="w-10 h-10 text-primary-foreground/15 mx-auto mb-3" />
-                    <p className="font-body text-[14px] text-primary-foreground/40">
+                    <Calendar className="w-10 h-10 text-primary-foreground/75 mx-auto mb-3" />
+                    <p className="font-body text-[14px] text-primary-foreground/75">
                       {agendamentosTab === "proximos" ? "Nenhum agendamento futuro" : "Sem histórico ainda"}
                     </p>
-                    <p className="font-body text-[12px] text-primary-foreground/25 mt-1">
+                    <p className="font-body text-[12px] text-primary-foreground/85 mt-1">
                       {agendamentosTab === "proximos" ? "Que tal agendar um cuidado?" : "Seus atendimentos passados aparecerão aqui"}
                     </p>
                   </div>
@@ -652,7 +652,7 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
                             {a.servico}
                           </p>
                           {a.variacao && (
-                            <p className="font-body text-[12px] text-primary-foreground/40 mt-0.5">{a.variacao}</p>
+                            <p className="font-body text-[12px] text-primary-foreground/75 mt-0.5">{a.variacao}</p>
                           )}
                         </div>
                         <span className={`px-2.5 py-1 rounded-full text-[11px] font-body font-medium border whitespace-nowrap ${getStatusColor(a.status)}`}>
@@ -660,11 +660,11 @@ const ProfileScreen = ({ onBack, onLogout }: ProfileScreenProps) => {
                         </span>
                       </div>
                       <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-1.5 text-primary-foreground/50">
+                        <div className="flex items-center gap-1.5 text-primary-foreground/85">
                           <Calendar className="w-3.5 h-3.5" />
                           <span className="font-body text-[12px]">{formatDate(a.data_agendamento)}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-primary-foreground/50">
+                        <div className="flex items-center gap-1.5 text-primary-foreground/85">
                           <Clock className="w-3.5 h-3.5" />
                           <span className="font-body text-[12px]">{a.horario}</span>
                         </div>

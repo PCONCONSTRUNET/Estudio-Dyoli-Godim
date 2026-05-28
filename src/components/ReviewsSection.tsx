@@ -137,7 +137,7 @@ const ReviewsSection = () => {
             type="button"
             onClick={() => slideBy("prev")}
             aria-label="Avaliações anteriores"
-            className="ios-press flex h-7 w-7 items-center justify-center rounded-full border border-primary-foreground/10 bg-primary-foreground/5 text-primary-foreground/70 disabled:opacity-30"
+            className="ios-press flex h-7 w-7 items-center justify-center rounded-full border border-primary-foreground/10 bg-primary-foreground/5 text-primary-foreground/100 disabled:opacity-30"
             disabled={currentX >= -1}
           >
             <ChevronLeft className="h-3.5 w-3.5" />
@@ -146,7 +146,7 @@ const ReviewsSection = () => {
             type="button"
             onClick={() => slideBy("next")}
             aria-label="Próximas avaliações"
-            className="ios-press flex h-7 w-7 items-center justify-center rounded-full border border-primary-foreground/10 bg-primary-foreground/5 text-primary-foreground/70 disabled:opacity-30"
+            className="ios-press flex h-7 w-7 items-center justify-center rounded-full border border-primary-foreground/10 bg-primary-foreground/5 text-primary-foreground/100 disabled:opacity-30"
             disabled={currentX <= leftLimit + 1}
           >
             <ChevronRight className="h-3.5 w-3.5" />
@@ -177,7 +177,7 @@ const ReviewsSection = () => {
                   </div>
                   <div className="min-w-0">
                     <p className="truncate font-body text-[12px] font-semibold text-primary-foreground leading-tight">{review.name}</p>
-                    <p className="truncate font-body text-[9px] text-primary-foreground/50 leading-tight">
+                    <p className="truncate font-body text-[9px] text-primary-foreground/85 leading-tight">
                       {review.isReal ? "✨ Cliente Dyoli" : review.city}
                     </p>
                   </div>

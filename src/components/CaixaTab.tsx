@@ -210,10 +210,10 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <button onClick={() => setCicloOffset((o) => o - 1)} className="w-8 h-8 rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06] hover:bg-gold/10 hover:border-gold/20 hover:text-gold flex items-center justify-center text-primary-foreground/50 transition-all" aria-label="Ciclo anterior">
+              <button onClick={() => setCicloOffset((o) => o - 1)} className="w-8 h-8 rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06] hover:bg-gold/10 hover:border-gold/20 hover:text-gold flex items-center justify-center text-primary-foreground/85 transition-all" aria-label="Ciclo anterior">
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <button onClick={() => setCicloOffset((o) => o + 1)} className="w-8 h-8 rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06] hover:bg-gold/10 hover:border-gold/20 hover:text-gold flex items-center justify-center text-primary-foreground/50 transition-all" aria-label="Próximo ciclo">
+              <button onClick={() => setCicloOffset((o) => o + 1)} className="w-8 h-8 rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06] hover:bg-gold/10 hover:border-gold/20 hover:text-gold flex items-center justify-center text-primary-foreground/85 transition-all" aria-label="Próximo ciclo">
                 <ChevronRight className="w-4 h-4" />
               </button>
               {cicloOffset !== 0 && (
@@ -221,7 +221,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
                   Hoje
                 </button>
               )}
-              <button onClick={() => { setShowCorteConfig(!showCorteConfig); setTempCorte(diaCorte.toString()); }} className="w-8 h-8 rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06] hover:bg-gold/10 hover:border-gold/20 hover:text-gold flex items-center justify-center text-primary-foreground/40 transition-all" aria-label="Configurar dia de corte">
+              <button onClick={() => { setShowCorteConfig(!showCorteConfig); setTempCorte(diaCorte.toString()); }} className="w-8 h-8 rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06] hover:bg-gold/10 hover:border-gold/20 hover:text-gold flex items-center justify-center text-primary-foreground/75 transition-all" aria-label="Configurar dia de corte">
                 <Settings className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -229,7 +229,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
 
           {/* Número-herói: LUCRO */}
           <div className="text-center py-2">
-            <p className="font-body text-[10px] text-primary-foreground/40 uppercase tracking-[0.3em] mb-1 flex items-center justify-center gap-1.5">
+            <p className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-[0.3em] mb-1 flex items-center justify-center gap-1.5">
               <span className={`w-1.5 h-1.5 rounded-full ${cicloStats.lucro >= 0 ? "bg-green-400 animate-pulse" : "bg-red-400 animate-pulse"}`} />
               Lucro do ciclo
             </p>
@@ -256,10 +256,10 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
           {/* Barra de progresso */}
           <div>
             <div className="flex items-center justify-between mb-1.5 px-0.5">
-              <span className="font-body text-[10px] text-primary-foreground/45 uppercase tracking-[0.2em] flex items-center gap-1 font-medium">
+              <span className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-[0.2em] flex items-center gap-1 font-medium">
                 <Clock className="w-3 h-3 text-gold/60" />
                 {cicloOffset === 0 ? `Dia ${cicloStats.elapsedDays}` : "Fechado"}
-                <span className="text-primary-foreground/25">/ {cicloStats.totalDays}</span>
+                <span className="text-primary-foreground/85">/ {cicloStats.totalDays}</span>
               </span>
               <span className="font-heading text-[11px] font-bold text-gold tabular-nums tracking-tight">
                 {cicloStats.progress}%
@@ -280,7 +280,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
               )}
             </div>
             <div className="flex items-center justify-between mt-1.5 px-0.5">
-              <span className="font-body text-[9px] text-primary-foreground/40 tabular-nums">
+              <span className="font-body text-[9px] text-primary-foreground/75 tabular-nums">
                 {fmtShort(ciclo.startDate)}
               </span>
               {cicloOffset === 0 ? (
@@ -289,11 +289,11 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
                   {Math.max(0, cicloStats.totalDays - cicloStats.elapsedDays)} {cicloStats.totalDays - cicloStats.elapsedDays === 1 ? "dia restante" : "dias restantes"}
                 </span>
               ) : (
-                <span className="font-body text-[9px] text-primary-foreground/40">
+                <span className="font-body text-[9px] text-primary-foreground/75">
                   corte dia {diaCorte}
                 </span>
               )}
-              <span className="font-body text-[9px] text-primary-foreground/40 tabular-nums">
+              <span className="font-body text-[9px] text-primary-foreground/75 tabular-nums">
                 {fmtShort(ciclo.endDate)}
               </span>
             </div>
@@ -302,19 +302,19 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
           {/* Cards de métricas */}
           <div className="grid grid-cols-3 gap-2">
             <div className="p-3 rounded-2xl bg-green-500/[0.06] border border-green-500/15 hover:border-green-500/25 transition-all">
-              <p className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-widest font-medium">Recebido</p>
+              <p className="font-body text-[9px] text-primary-foreground/75 uppercase tracking-widest font-medium">Recebido</p>
               <p className="font-heading text-[15px] font-bold text-green-400 tabular-nums mt-1 leading-tight">{formatCurrency(cicloStats.recebido)}</p>
-              <p className="font-body text-[9px] text-primary-foreground/30 mt-0.5">{cicloStats.qtd} atend.</p>
+              <p className="font-body text-[9px] text-primary-foreground/95 mt-0.5">{cicloStats.qtd} atend.</p>
             </div>
             <div className="p-3 rounded-2xl bg-gold/[0.06] border border-gold/15 hover:border-gold/25 transition-all">
-              <p className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-widest font-medium">Previsto</p>
+              <p className="font-body text-[9px] text-primary-foreground/75 uppercase tracking-widest font-medium">Previsto</p>
               <p className="font-heading text-[15px] font-bold text-gold tabular-nums mt-1 leading-tight">{formatCurrency(cicloStats.total)}</p>
-              <p className="font-body text-[9px] text-primary-foreground/30 mt-0.5">total bruto</p>
+              <p className="font-body text-[9px] text-primary-foreground/95 mt-0.5">total bruto</p>
             </div>
             <div className="p-3 rounded-2xl bg-red-500/[0.05] border border-red-500/15 hover:border-red-500/25 transition-all">
-              <p className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-widest font-medium">Despesas Estúdio</p>
+              <p className="font-body text-[9px] text-primary-foreground/75 uppercase tracking-widest font-medium">Despesas Estúdio</p>
               <p className="font-heading text-[15px] font-bold text-red-400 tabular-nums mt-1 leading-tight">- {formatCurrency(cicloStats.desp)}</p>
-              <p className="font-body text-[9px] text-primary-foreground/30 mt-0.5">no período</p>
+              <p className="font-body text-[9px] text-primary-foreground/95 mt-0.5">no período</p>
               {cicloStats.despPessoal > 0 && (
                 <p className="font-body text-[8px] text-purple-400/70 mt-0.5">Pessoal: {formatCurrency(cicloStats.despPessoal)}</p>
               )}
@@ -324,7 +324,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
           {/* Config dia de corte */}
           {showCorteConfig && (
             <div className="pt-3 border-t border-primary-foreground/[0.08] space-y-2 animate-fade-in">
-              <label className="font-body text-[10px] text-primary-foreground/50 uppercase tracking-wider">Dia que fecha o mês (1 a 28)</label>
+              <label className="font-body text-[10px] text-primary-foreground/85 uppercase tracking-wider">Dia que fecha o mês (1 a 28)</label>
               <div className="flex gap-2">
                 <input type="number" min="1" max="28" value={tempCorte} onChange={(e) => setTempCorte(e.target.value)} className="flex-1 px-3 py-2 rounded-xl bg-primary-foreground/[0.05] border border-gold/20 text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/30 tabular-nums" />
                 <button onClick={() => {
@@ -339,12 +339,12 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
               </div>
               <div className="flex gap-1.5 flex-wrap">
                 {[1, 5, 10, 15, 20, 25].map((d) => (
-                  <button key={d} onClick={() => setTempCorte(d.toString())} className={`px-2.5 py-1 rounded-full font-body text-[10px] border transition-all tabular-nums ${Number(tempCorte) === d ? "bg-gold/15 text-gold border-gold/30" : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06] hover:border-gold/20"}`}>
+                  <button key={d} onClick={() => setTempCorte(d.toString())} className={`px-2.5 py-1 rounded-full font-body text-[10px] border transition-all tabular-nums ${Number(tempCorte) === d ? "bg-gold/15 text-gold border-gold/30" : "bg-primary-foreground/[0.03] text-primary-foreground/75 border-primary-foreground/[0.06] hover:border-gold/20"}`}>
                     dia {d}
                   </button>
                 ))}
               </div>
-              <p className="font-body text-[10px] text-primary-foreground/35 leading-relaxed">
+              <p className="font-body text-[10px] text-primary-foreground/95 leading-relaxed">
                 O ciclo do "Mês" começa neste dia e termina um dia antes do próximo corte. Ao virar, as finanças do período zeram automaticamente e um novo ciclo começa.
               </p>
             </div>
@@ -356,11 +356,11 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
       <div className="relative overflow-hidden rounded-3xl border border-primary-foreground/[0.08] bg-gradient-to-br from-primary-foreground/[0.03] to-transparent">
         <div className="relative p-5 flex items-center gap-3">
           <span className="w-9 h-9 rounded-2xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.08] flex items-center justify-center">
-            <Wallet className="w-4 h-4 text-primary-foreground/60" />
+            <Wallet className="w-4 h-4 text-primary-foreground/95" />
           </span>
           <div>
             <span className="block font-heading text-[15px] font-semibold text-primary-foreground tracking-tight">Fechamento de Caixa</span>
-            <span className="block font-body text-[10px] text-primary-foreground/40 uppercase tracking-[0.2em] mt-0.5">Resumo do dia</span>
+            <span className="block font-body text-[10px] text-primary-foreground/75 uppercase tracking-[0.2em] mt-0.5">Resumo do dia</span>
           </div>
         </div>
 
@@ -368,7 +368,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
           {/* Navegador de dia */}
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2 p-1.5 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-              <button onClick={() => { const d = new Date(caixaDate + "T12:00:00"); d.setDate(d.getDate() - 1); setCaixaDate(d.toISOString().split("T")[0]); }} className="w-9 h-9 rounded-xl hover:bg-primary-foreground/[0.05] flex items-center justify-center text-primary-foreground/50 hover:text-primary-foreground transition-all" aria-label="Dia anterior">
+              <button onClick={() => { const d = new Date(caixaDate + "T12:00:00"); d.setDate(d.getDate() - 1); setCaixaDate(d.toISOString().split("T")[0]); }} className="w-9 h-9 rounded-xl hover:bg-primary-foreground/[0.05] flex items-center justify-center text-primary-foreground/85 hover:text-primary-foreground transition-all" aria-label="Dia anterior">
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <Popover>
@@ -406,7 +406,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
                   />
                 </PopoverContent>
               </Popover>
-              <button onClick={() => { const d = new Date(caixaDate + "T12:00:00"); d.setDate(d.getDate() + 1); setCaixaDate(d.toISOString().split("T")[0]); }} className="w-9 h-9 rounded-xl hover:bg-primary-foreground/[0.05] flex items-center justify-center text-primary-foreground/50 hover:text-primary-foreground transition-all" aria-label="Próximo dia">
+              <button onClick={() => { const d = new Date(caixaDate + "T12:00:00"); d.setDate(d.getDate() + 1); setCaixaDate(d.toISOString().split("T")[0]); }} className="w-9 h-9 rounded-xl hover:bg-primary-foreground/[0.05] flex items-center justify-center text-primary-foreground/85 hover:text-primary-foreground transition-all" aria-label="Próximo dia">
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
@@ -417,7 +417,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
                 const dateStr = d.toISOString().split("T")[0];
                 const active = caixaDate === dateStr;
                 return (
-                  <button key={label} onClick={() => setCaixaDate(dateStr)} className={`px-3 py-1 rounded-full font-body text-[10px] font-medium border transition-all ${active ? "bg-gold/10 text-gold border-gold/30" : "bg-primary-foreground/[0.02] text-primary-foreground/40 border-primary-foreground/[0.06] hover:border-gold/20 hover:text-primary-foreground/70"}`}>
+                  <button key={label} onClick={() => setCaixaDate(dateStr)} className={`px-3 py-1 rounded-full font-body text-[10px] font-medium border transition-all ${active ? "bg-gold/10 text-gold border-gold/30" : "bg-primary-foreground/[0.02] text-primary-foreground/75 border-primary-foreground/[0.06] hover:border-gold/20 hover:text-primary-foreground/100"}`}>
                     {label}
                   </button>
                 );
@@ -427,18 +427,18 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
 
           {/* Hero number — recebido do dia */}
           <div className="text-center py-4">
-            <p className="font-body text-[10px] text-primary-foreground/40 uppercase tracking-[0.3em] mb-2">Recebido hoje</p>
+            <p className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-[0.3em] mb-2">Recebido hoje</p>
             <p className="font-heading text-5xl font-bold bg-gradient-to-br from-gold via-gold to-gold/60 bg-clip-text text-transparent leading-none">
               {formatCurrency(caixaData.recebido)}
             </p>
-            <p className="font-body text-[11px] text-primary-foreground/35 mt-2">
-              de <span className="text-primary-foreground/60 font-medium">{formatCurrency(caixaData.total)}</span> previstos
+            <p className="font-body text-[11px] text-primary-foreground/95 mt-2">
+              de <span className="text-primary-foreground/95 font-medium">{formatCurrency(caixaData.total)}</span> previstos
             </p>
             <div className="mt-4 max-w-[240px] mx-auto">
               <div className="h-1 rounded-full bg-primary-foreground/[0.06] overflow-hidden">
                 <div className="h-full rounded-full bg-gradient-to-r from-gold/80 to-green-500/80 transition-all duration-700" style={{ width: `${caixaData.total > 0 ? Math.min(100, (caixaData.recebido / caixaData.total) * 100) : 0}%` }} />
               </div>
-              <p className="font-body text-[9px] text-primary-foreground/35 uppercase tracking-[0.2em] mt-2">
+              <p className="font-body text-[9px] text-primary-foreground/95 uppercase tracking-[0.2em] mt-2">
                 {caixaData.total > 0 ? Math.round((caixaData.recebido / caixaData.total) * 100) : 0}% do dia recebido
               </p>
             </div>
@@ -448,15 +448,15 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
           <div className="grid grid-cols-3 rounded-2xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.06] divide-x divide-primary-foreground/[0.06]">
             <div className="text-center py-3 px-2">
               <p className="font-heading text-xl font-bold text-primary-foreground">{caixaData.qtd}</p>
-              <p className="font-body text-[9px] text-primary-foreground/35 uppercase tracking-widest mt-0.5">Atend.</p>
+              <p className="font-body text-[9px] text-primary-foreground/95 uppercase tracking-widest mt-0.5">Atend.</p>
             </div>
             <div className="text-center py-3 px-2">
               <p className="font-heading text-xl font-bold text-rose">{formatCurrency(caixaData.pendente)}</p>
-              <p className="font-body text-[9px] text-primary-foreground/35 uppercase tracking-widest mt-0.5">Pendente</p>
+              <p className="font-body text-[9px] text-primary-foreground/95 uppercase tracking-widest mt-0.5">Pendente</p>
             </div>
             <div className="text-center py-3 px-2">
               <p className="font-heading text-xl font-bold text-orange-500">{caixaData.faltas}</p>
-              <p className="font-body text-[9px] text-primary-foreground/35 uppercase tracking-widest mt-0.5">Faltas</p>
+              <p className="font-body text-[9px] text-primary-foreground/95 uppercase tracking-widest mt-0.5">Faltas</p>
             </div>
           </div>
 
@@ -481,7 +481,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
           {/* Atendimentos do dia */}
           {caixaData.items.length > 0 ? (
             <div>
-              <p className="font-body text-[9px] text-primary-foreground/35 uppercase tracking-[0.25em] mb-3 px-1">Atendimentos do dia</p>
+              <p className="font-body text-[9px] text-primary-foreground/95 uppercase tracking-[0.25em] mb-3 px-1">Atendimentos do dia</p>
               <div className="space-y-1.5">
                 {[...caixaData.items].sort((a, b) => a.horario.localeCompare(b.horario)).map((a) => {
                   const pago = Number(a.valor_pago || 0) >= Number(a.valor);
@@ -495,7 +495,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
                       <div className="w-px h-10 bg-primary-foreground/[0.06]" />
                       <div className="min-w-0 flex-1">
                         <p className="font-body text-[12.5px] font-medium text-primary-foreground truncate">{getClientName(a.user_id, a.cliente_nome)}</p>
-                        <p className="font-body text-[10.5px] text-primary-foreground/40 truncate">{a.servico}</p>
+                        <p className="font-body text-[10.5px] text-primary-foreground/75 truncate">{a.servico}</p>
                       </div>
                       <div className="text-right shrink-0">
                         <p className="font-heading text-[13px] font-bold text-gold tabular-nums">{formatCurrency(Number(a.valor))}</p>
@@ -506,7 +506,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
                         ) : parcial ? (
                           <p className="font-body text-[9px] text-gold/80 mt-0.5">Sinal {formatCurrency(Number(a.valor_pago))}</p>
                         ) : (
-                          <p className="font-body text-[9px] text-primary-foreground/30 flex items-center justify-end gap-0.5 mt-0.5">
+                          <p className="font-body text-[9px] text-primary-foreground/95 flex items-center justify-end gap-0.5 mt-0.5">
                             <Clock className="w-2.5 h-2.5" /> Pendente
                           </p>
                         )}
@@ -518,7 +518,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
             </div>
           ) : (
             <div className="text-center py-8 rounded-2xl bg-primary-foreground/[0.02] border border-dashed border-primary-foreground/[0.08]">
-              <p className="font-body text-[12px] text-primary-foreground/30">Nenhum atendimento neste dia</p>
+              <p className="font-body text-[12px] text-primary-foreground/95">Nenhum atendimento neste dia</p>
             </div>
           )}
         </div>
@@ -584,7 +584,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
         <div className="relative flex items-center justify-between mb-3">
           <p className="font-body text-[12px] font-medium text-primary-foreground/65 uppercase tracking-[0.2em]">Todos os pagamentos</p>
           {filtered.length > 0 && (
-            <span className="font-body text-[10px] font-medium text-primary-foreground/45 tabular-nums px-2 py-0.5 rounded-full bg-primary-foreground/[0.05] border border-primary-foreground/[0.08]">
+            <span className="font-body text-[10px] font-medium text-primary-foreground/75 tabular-nums px-2 py-0.5 rounded-full bg-primary-foreground/[0.05] border border-primary-foreground/[0.08]">
               {filtered.length} {filtered.length === 1 ? "registro" : "registros"}
             </span>
           )}
@@ -597,23 +597,23 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
             <div key={a.id} className="flex items-center justify-between p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06] hover:border-gold/20 transition-all">
               <div className="min-w-0 flex-1">
                 <p className="font-body text-[14px] font-semibold text-primary-foreground truncate">{getClientName(a.user_id, a.cliente_nome)}</p>
-                <p className="font-body text-[11px] text-primary-foreground/45">{formatDateShort(a.data_agendamento)} · {a.servico}</p>
+                <p className="font-body text-[11px] text-primary-foreground/75">{formatDateShort(a.data_agendamento)} · {a.servico}</p>
               </div>
               <div className="text-right ml-2">
                 <p className="font-heading text-[14px] text-gold font-bold tabular-nums">{formatCurrency(Number(a.valor))}</p>
-                <p className={`font-body text-[11px] font-medium ${Number(a.valor_pago || 0) >= Number(a.valor) ? "text-green-400" : Number(a.valor_pago || 0) > 0 ? "text-gold" : "text-primary-foreground/40"}`}>
+                <p className={`font-body text-[11px] font-medium ${Number(a.valor_pago || 0) >= Number(a.valor) ? "text-green-400" : Number(a.valor_pago || 0) > 0 ? "text-gold" : "text-primary-foreground/75"}`}>
                   {Number(a.valor_pago || 0) >= Number(a.valor) ? "Pago" : Number(a.valor_pago || 0) > 0 ? `Sinal: ${formatCurrency(Number(a.valor_pago))}` : "Pendente"}
                 </p>
               </div>
             </div>
           ))}
-          {filtered.length === 0 && <p className="font-body text-[13px] text-primary-foreground/30 text-center py-6">Nenhum registro no período</p>}
+          {filtered.length === 0 && <p className="font-body text-[13px] text-primary-foreground/95 text-center py-6">Nenhum registro no período</p>}
         </div>
       </div>
 
       {/* ═══════════ MODAL: DETALHE DA COMISSÃO ═══════════ */}
       <Dialog open={showComissaoDetail} onOpenChange={setShowComissaoDetail}>
-        <DialogContent className="max-w-md max-h-[85vh] overflow-hidden flex flex-col bg-charcoal border-purple-500/20 p-0 [&>button]:text-primary-foreground/60 [&>button]:hover:text-primary-foreground">
+        <DialogContent className="max-w-md max-h-[85vh] overflow-hidden flex flex-col bg-charcoal border-purple-500/20 p-0 [&>button]:text-primary-foreground/95 [&>button]:hover:text-primary-foreground">
           <div className="relative overflow-hidden">
             <div className="pointer-events-none absolute -top-16 -right-12 w-48 h-48 rounded-full bg-purple-500/15 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-16 -left-12 w-40 h-40 rounded-full bg-gold/10 blur-3xl" />
@@ -641,32 +641,32 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
               <p className="font-heading text-3xl font-bold text-purple-200 tabular-nums tracking-tight drop-shadow-[0_0_18px_hsl(280_70%_60%/0.4)]">
                 {formatCurrency(cicloStats.comissao)}
               </p>
-              <p className="font-body text-[11px] text-primary-foreground/40 mt-2 tabular-nums">
+              <p className="font-body text-[11px] text-primary-foreground/75 mt-2 tabular-nums">
                 {formatCurrency(cicloStats.recebido)} × <span className="text-purple-300 font-bold">{comissaoPct}%</span>
               </p>
             </div>
 
             {/* Regras */}
             <div>
-              <p className="font-body text-[10px] text-primary-foreground/45 uppercase tracking-[0.2em] font-medium mb-2 flex items-center gap-1.5">
+              <p className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-[0.2em] font-medium mb-2 flex items-center gap-1.5">
                 <Info className="w-3 h-3 text-gold/70" /> Como é calculado
               </p>
               <div className="space-y-2">
                 <div className="flex items-start gap-2 p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
                   <span className="font-heading text-[11px] font-bold text-gold w-5 h-5 rounded-full bg-gold/15 flex items-center justify-center shrink-0 mt-0.5">1</span>
-                  <p className="font-body text-[12px] text-primary-foreground/70 leading-relaxed">
+                  <p className="font-body text-[12px] text-primary-foreground/100 leading-relaxed">
                     A comissão é <span className="text-purple-300 font-semibold">{comissaoPct}%</span> sobre o <span className="text-green-400 font-semibold">valor recebido</span> (apenas pagamentos confirmados, não o previsto).
                   </p>
                 </div>
                 <div className="flex items-start gap-2 p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
                   <span className="font-heading text-[11px] font-bold text-gold w-5 h-5 rounded-full bg-gold/15 flex items-center justify-center shrink-0 mt-0.5">2</span>
-                  <p className="font-body text-[12px] text-primary-foreground/70 leading-relaxed">
+                  <p className="font-body text-[12px] text-primary-foreground/100 leading-relaxed">
                     O ciclo vai do <span className="text-gold font-semibold">dia {diaCorte}</span> até um dia antes do próximo corte. Cancelamentos e faltas <span className="text-red-400 font-semibold">não entram</span>.
                   </p>
                 </div>
                 <div className="flex items-start gap-2 p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
                   <span className="font-heading text-[11px] font-bold text-gold w-5 h-5 rounded-full bg-gold/15 flex items-center justify-center shrink-0 mt-0.5">3</span>
-                  <p className="font-body text-[12px] text-primary-foreground/70 leading-relaxed">
+                  <p className="font-body text-[12px] text-primary-foreground/100 leading-relaxed">
                     Sinais e pagamentos parciais contam pelo valor efetivamente pago. Despesas <span className="text-primary-foreground/80 font-semibold">não afetam</span> a comissão (apenas o lucro).
                   </p>
                 </div>
@@ -676,11 +676,11 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
             {/* Métricas do cálculo */}
             <div className="grid grid-cols-3 gap-2">
               <div className="p-2.5 rounded-xl bg-green-500/[0.06] border border-green-500/15">
-                <p className="font-body text-[8.5px] text-primary-foreground/40 uppercase tracking-wider">Base</p>
+                <p className="font-body text-[8.5px] text-primary-foreground/75 uppercase tracking-wider">Base</p>
                 <p className="font-heading text-[13px] font-bold text-green-400 tabular-nums leading-tight mt-0.5">{formatCurrency(cicloStats.recebido)}</p>
               </div>
               <div className="p-2.5 rounded-xl bg-purple-500/[0.06] border border-purple-500/15 relative">
-                <p className="font-body text-[8.5px] text-primary-foreground/40 uppercase tracking-wider">Taxa</p>
+                <p className="font-body text-[8.5px] text-primary-foreground/75 uppercase tracking-wider">Taxa</p>
                 {editingComissao ? (
                   <div className="flex items-center gap-1 mt-0.5">
                     <input
@@ -714,7 +714,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
                 )}
               </div>
               <div className="p-2.5 rounded-xl bg-gold/[0.06] border border-gold/15">
-                <p className="font-body text-[8.5px] text-primary-foreground/40 uppercase tracking-wider">Dias</p>
+                <p className="font-body text-[8.5px] text-primary-foreground/75 uppercase tracking-wider">Dias</p>
                 <p className="font-heading text-[13px] font-bold text-gold tabular-nums leading-tight mt-0.5">{comissaoBreakdown.length}</p>
               </div>
             </div>
@@ -722,14 +722,14 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
             {/* Detalhamento por dia */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <p className="font-body text-[10px] text-primary-foreground/45 uppercase tracking-[0.2em] font-medium flex items-center gap-1.5">
+                <p className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-[0.2em] font-medium flex items-center gap-1.5">
                   <TrendingUp className="w-3 h-3 text-gold/70" /> Dias que entraram
                 </p>
-                <span className="font-body text-[10px] text-primary-foreground/35 tabular-nums">{cicloStats.qtd} atend.</span>
+                <span className="font-body text-[10px] text-primary-foreground/95 tabular-nums">{cicloStats.qtd} atend.</span>
               </div>
               {comissaoBreakdown.length === 0 ? (
                 <div className="p-6 rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.06] text-center">
-                  <p className="font-body text-[12px] text-primary-foreground/35">Nenhum pagamento recebido neste ciclo ainda.</p>
+                  <p className="font-body text-[12px] text-primary-foreground/95">Nenhum pagamento recebido neste ciclo ainda.</p>
                 </div>
               ) : (
                 <div className="space-y-1.5">
@@ -745,7 +745,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
                             <p className="font-heading text-[12px] font-semibold text-primary-foreground capitalize tabular-nums leading-tight">
                               {new Date(d.date + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" })}
                             </p>
-                            <p className="font-body text-[10px] text-primary-foreground/40 mt-0.5">
+                            <p className="font-body text-[10px] text-primary-foreground/75 mt-0.5">
                               {d.qtd} {d.qtd === 1 ? "atend." : "atend."} · <span className="text-green-400/80 tabular-nums">{formatCurrency(d.recebido)}</span>
                             </p>
                           </div>

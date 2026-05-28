@@ -151,7 +151,7 @@ const ProdutosTab = () => {
     }
   };
 
-  if (loading) return <p className="font-body text-[13px] text-primary-foreground/30 text-center py-8">Carregando...</p>;
+  if (loading) return <p className="font-body text-[13px] text-primary-foreground/95 text-center py-8">Carregando...</p>;
 
   return (
     <div className="space-y-4 animate-fade-in overflow-x-hidden">
@@ -173,7 +173,7 @@ const ProdutosTab = () => {
                 {newPreview ? (
                   <img src={newPreview} alt="Preview" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="flex flex-col items-center gap-1.5 text-primary-foreground/20">
+                  <div className="flex flex-col items-center gap-1.5 text-primary-foreground/85">
                     <Upload className="w-6 h-6" />
                     <span className="font-body text-[11px]">Toque para adicionar foto</span>
                   </div>
@@ -186,14 +186,14 @@ const ProdutosTab = () => {
               value={newNome}
               onChange={(e) => setNewNome(e.target.value)}
               placeholder="Nome do produto"
-              className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
+              className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/85 focus:outline-none focus:ring-2 focus:ring-gold/20"
             />
             <textarea
               value={newDescricao}
               onChange={(e) => setNewDescricao(e.target.value)}
               placeholder="Descrição (opcional)"
               rows={2}
-              className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20 resize-none"
+              className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/85 focus:outline-none focus:ring-2 focus:ring-gold/20 resize-none"
             />
             <input
               value={newPreco}
@@ -201,7 +201,7 @@ const ProdutosTab = () => {
               placeholder="Preço (ex: 49.90)"
               type="number"
               step="0.01"
-              className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
+              className="w-full min-w-0 px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/85 focus:outline-none focus:ring-2 focus:ring-gold/20"
             />
             <div className="grid grid-cols-2 gap-2 min-w-0">
               <button
@@ -213,7 +213,7 @@ const ProdutosTab = () => {
               </button>
               <button
                 onClick={resetNewForm}
-                className="w-full min-w-0 py-2.5 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/40 font-body text-[12px] hover:text-primary-foreground/60 transition-all"
+                className="w-full min-w-0 py-2.5 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/75 font-body text-[12px] hover:text-primary-foreground/95 transition-all"
               >
                 Cancelar
               </button>
@@ -226,7 +226,7 @@ const ProdutosTab = () => {
       {produtos.length === 0 ? (
         <div className="text-center py-12">
           <ShoppingBag className="w-8 h-8 text-primary-foreground/10 mx-auto mb-2" />
-          <p className="font-body text-[13px] text-primary-foreground/30">Nenhum produto cadastrado</p>
+          <p className="font-body text-[13px] text-primary-foreground/95">Nenhum produto cadastrado</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -246,7 +246,7 @@ const ProdutosTab = () => {
                       {editPreview ? (
                         <img src={editPreview} alt="Preview" className="w-full h-full object-cover" />
                       ) : (
-                        <div className="flex flex-col items-center gap-1 text-primary-foreground/20">
+                        <div className="flex flex-col items-center gap-1 text-primary-foreground/85">
                           <Image className="w-5 h-5" />
                           <span className="font-body text-[10px]">Alterar foto</span>
                         </div>
@@ -284,7 +284,7 @@ const ProdutosTab = () => {
                     </button>
                     <button
                       onClick={() => setEditing(null)}
-                      className="px-3 py-2 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/30 hover:text-primary-foreground/50 transition-all"
+                      className="px-3 py-2 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/95 hover:text-primary-foreground/85 transition-all"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -306,7 +306,7 @@ const ProdutosTab = () => {
                   <div className="flex-1 min-w-0">
                     <p className="font-body text-[13px] font-medium text-primary-foreground truncate">{p.nome}</p>
                     {p.descricao && (
-                      <p className="font-body text-[10px] text-primary-foreground/30 truncate">{p.descricao}</p>
+                      <p className="font-body text-[10px] text-primary-foreground/95 truncate">{p.descricao}</p>
                     )}
                     <p className="font-body text-[14px] font-semibold text-gold mt-0.5">
                       R$ {p.preco.toFixed(2).replace(".", ",")}
@@ -325,7 +325,7 @@ const ProdutosTab = () => {
                     <div className="flex gap-1">
                       <button
                         onClick={() => startEdit(p)}
-                        className="p-1.5 rounded-lg hover:bg-primary-foreground/[0.06] text-primary-foreground/30 hover:text-primary-foreground/60 transition-all"
+                        className="p-1.5 rounded-lg hover:bg-primary-foreground/[0.06] text-primary-foreground/95 hover:text-primary-foreground/95 transition-all"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>

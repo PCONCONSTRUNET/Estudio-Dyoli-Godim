@@ -313,7 +313,7 @@ const DespesasTab = () => {
                 <Receipt className="w-5 h-5 text-rose" />
                 Despesas
               </h2>
-              <p className="font-body text-[12px] text-primary-foreground/45 mt-0.5">
+              <p className="font-body text-[12px] text-primary-foreground/75 mt-0.5">
                 {countPendentes > 0
                   ? `${countPendentes} pendente${countPendentes > 1 ? "s" : ""} • ${countPagas} paga${countPagas !== 1 ? "s" : ""}`
                   : "Tudo em dia ✨"}
@@ -325,7 +325,7 @@ const DespesasTab = () => {
               <Sheet>
                 <SheetTrigger asChild>
                   <button className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.08] transition-all hover:bg-primary-foreground/[0.1] hover:border-primary-foreground/[0.15]">
-                    <Bell className={`h-4 w-4 ${activeNotifications.length > 0 ? "text-yellow-400 animate-[wiggle_2s_ease-in-out_infinite]" : "text-primary-foreground/40"}`} />
+                    <Bell className={`h-4 w-4 ${activeNotifications.length > 0 ? "text-yellow-400 animate-[wiggle_2s_ease-in-out_infinite]" : "text-primary-foreground/75"}`} />
                     {activeNotifications.length > 0 && (
                       <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white animate-pulse shadow-[0_0_8px_hsl(0_70%_55%/0.6)]">
                         {activeNotifications.length}
@@ -350,7 +350,7 @@ const DespesasTab = () => {
                     <div className="px-4 pt-3 flex justify-end">
                       <button
                         onClick={clearAllNotifications}
-                        className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 font-body text-[10px] font-medium text-primary-foreground/30 transition-all hover:bg-primary-foreground/[0.06] hover:text-primary-foreground/50"
+                        className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 font-body text-[10px] font-medium text-primary-foreground/95 transition-all hover:bg-primary-foreground/[0.06] hover:text-primary-foreground/85"
                       >
                         <X className="h-3 w-3" /> Limpar tudo
                       </button>
@@ -361,8 +361,8 @@ const DespesasTab = () => {
                     {activeNotifications.length === 0 ? (
                       <div className="py-16 text-center">
                         <Check className="h-8 w-8 text-green-400/40 mx-auto mb-3" />
-                        <p className="font-body text-[13px] text-primary-foreground/30">Tudo em dia! 🎉</p>
-                        <p className="font-body text-[11px] text-primary-foreground/20 mt-1">Nenhuma notificação pendente</p>
+                        <p className="font-body text-[13px] text-primary-foreground/95">Tudo em dia! 🎉</p>
+                        <p className="font-body text-[11px] text-primary-foreground/85 mt-1">Nenhuma notificação pendente</p>
                       </div>
                     ) : (
                       activeNotifications.map((n) => {
@@ -407,17 +407,17 @@ const DespesasTab = () => {
                                   <span className="font-heading text-[13px] font-bold text-primary-foreground">
                                     {formatCurrency(Number(n.despesa.valor))}
                                   </span>
-                                  <span className="font-body text-[10px] text-primary-foreground/30">
+                                  <span className="font-body text-[10px] text-primary-foreground/95">
                                     {n.despesa.categoria}
                                   </span>
                                 </div>
-                                <p className="font-body text-[10px] text-primary-foreground/25 mt-1">
+                                <p className="font-body text-[10px] text-primary-foreground/85 mt-1">
                                   Vencimento: {formatDate(n.despesa.data_vencimento)}
                                 </p>
                                 <div className="flex items-center gap-1.5 mt-2">
                                   <button
                                     onClick={() => dismissNotification(n.despesa.id)}
-                                    className="flex items-center gap-1 rounded-lg px-2 py-1 bg-primary-foreground/[0.06] text-primary-foreground/40 text-[10px] font-body font-medium border border-primary-foreground/[0.08] hover:bg-primary-foreground/[0.1] hover:text-primary-foreground/60 transition-all"
+                                    className="flex items-center gap-1 rounded-lg px-2 py-1 bg-primary-foreground/[0.06] text-primary-foreground/75 text-[10px] font-body font-medium border border-primary-foreground/[0.08] hover:bg-primary-foreground/[0.1] hover:text-primary-foreground/95 transition-all"
                                   >
                                     <Eye className="h-3 w-3" /> Lida
                                   </button>
@@ -446,7 +446,7 @@ const DespesasTab = () => {
               <p className="relative font-heading text-base font-bold text-red-400 tabular-nums leading-none truncate">
                 {formatCurrency(totalAtrasado)}
               </p>
-              <p className="relative font-body text-[9px] text-primary-foreground/40 uppercase tracking-wider mt-1">
+              <p className="relative font-body text-[9px] text-primary-foreground/75 uppercase tracking-wider mt-1">
                 {countAtrasadas} atrasada{countAtrasadas !== 1 ? "s" : ""}
               </p>
             </div>
@@ -456,7 +456,7 @@ const DespesasTab = () => {
               <p className="relative font-heading text-base font-bold text-orange-400 tabular-nums leading-none truncate">
                 {formatCurrency(totalPendente)}
               </p>
-              <p className="relative font-body text-[9px] text-primary-foreground/40 uppercase tracking-wider mt-1">
+              <p className="relative font-body text-[9px] text-primary-foreground/75 uppercase tracking-wider mt-1">
                 Pendente
               </p>
             </div>
@@ -466,7 +466,7 @@ const DespesasTab = () => {
               <p className="relative font-heading text-base font-bold text-green-400 tabular-nums leading-none truncate">
                 {formatCurrency(totalPago)}
               </p>
-              <p className="relative font-body text-[9px] text-primary-foreground/40 uppercase tracking-wider mt-1">
+              <p className="relative font-body text-[9px] text-primary-foreground/75 uppercase tracking-wider mt-1">
                 Pago
               </p>
             </div>
@@ -499,7 +499,7 @@ const DespesasTab = () => {
               key={t.value}
               onClick={() => setTipoFilter(t.value)}
               className={`flex-1 rounded-xl px-3 py-2 font-body text-[11px] font-semibold transition-all flex items-center justify-center gap-1.5 ${
-                tipoFilter === t.value ? t.active : "text-primary-foreground/50 hover:text-primary-foreground/80"
+                tipoFilter === t.value ? t.active : "text-primary-foreground/85 hover:text-primary-foreground/80"
               }`}
             >
               <span className="text-[13px]">{t.icon}</span>
@@ -534,7 +534,7 @@ const DespesasTab = () => {
       {/* Despesas list */}
       {filtered.length === 0 ? (
         <div className="py-12 text-center">
-          <p className="font-body text-[13px] text-primary-foreground/30">Nenhuma despesa encontrada</p>
+          <p className="font-body text-[13px] text-primary-foreground/95">Nenhuma despesa encontrada</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -573,7 +573,7 @@ const DespesasTab = () => {
                           <Icon className="h-2.5 w-2.5" />
                           {cfg.label}
                         </span>
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-medium border bg-primary-foreground/[0.05] text-primary-foreground/40 border-primary-foreground/[0.06]">
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-medium border bg-primary-foreground/[0.05] text-primary-foreground/75 border-primary-foreground/[0.06]">
                           {d.categoria}
                         </span>
                         {(d.tipo || "estudio") === "pessoal" ? (
@@ -599,12 +599,12 @@ const DespesasTab = () => {
                         <p className={`font-heading text-[15px] font-bold ${cfg.text}`}>
                           {formatCurrency(Number(d.valor))}
                         </p>
-                        <p className="font-body text-[11px] text-primary-foreground/30">
+                        <p className="font-body text-[11px] text-primary-foreground/95">
                           Vence {formatDate(d.data_vencimento)}
                         </p>
                       </div>
                       {d.observacao && (
-                        <p className="font-body text-[11px] text-primary-foreground/25 mt-1 truncate">
+                        <p className="font-body text-[11px] text-primary-foreground/85 mt-1 truncate">
                           {d.observacao}
                         </p>
                       )}
@@ -615,7 +615,7 @@ const DespesasTab = () => {
                         className={`flex h-11 w-11 items-center justify-center rounded-2xl border-2 transition-all shadow-sm ${
                           d.pago
                             ? "bg-green-500/25 text-green-400 border-green-500/40 shadow-green-500/10"
-                            : "bg-primary-foreground/[0.06] text-primary-foreground/40 border-primary-foreground/[0.1] hover:bg-gold/15 hover:text-gold hover:border-gold/30 hover:shadow-gold/10"
+                            : "bg-primary-foreground/[0.06] text-primary-foreground/75 border-primary-foreground/[0.1] hover:bg-gold/15 hover:text-gold hover:border-gold/30 hover:shadow-gold/10"
                         }`}
                         title={d.pago ? "Desmarcar" : "Marcar como pago"}
                       >
@@ -654,7 +654,7 @@ const DespesasTab = () => {
                         <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-semibold border bg-gold/10 text-gold border-gold/30 flex items-center gap-1">
                           <Repeat className="h-2.5 w-2.5" /> Fixa · {grupo.length}x
                         </span>
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-medium border bg-primary-foreground/[0.05] text-primary-foreground/40 border-primary-foreground/[0.06]">
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-medium border bg-primary-foreground/[0.05] text-primary-foreground/75 border-primary-foreground/[0.06]">
                           {grupo[0]?.categoria}
                         </span>
                         {(grupo[0]?.tipo || "estudio") === "pessoal" ? (
@@ -674,17 +674,17 @@ const DespesasTab = () => {
                       <p className="font-body text-[13px] font-semibold text-primary-foreground truncate">{baseNome}</p>
                       <div className="flex items-center gap-3 mt-1 flex-wrap">
                         <p className="font-heading text-[15px] font-bold text-gold">{formatCurrency(total)}</p>
-                        <p className="font-body text-[11px] text-primary-foreground/40">
+                        <p className="font-body text-[11px] text-primary-foreground/75">
                           {inicio && formatDate(inicio)} → {fim && formatDate(fim)}
                         </p>
                       </div>
                       {proxima && (
-                        <p className="font-body text-[10px] text-primary-foreground/30 mt-0.5">
+                        <p className="font-body text-[10px] text-primary-foreground/95 mt-0.5">
                           Próxima: {formatDate(proxima.data_vencimento)} · {formatCurrency(Number(proxima.valor))}
                         </p>
                       )}
                     </div>
-                    <ChevronDown className={`h-5 w-5 text-primary-foreground/40 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+                    <ChevronDown className={`h-5 w-5 text-primary-foreground/75 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
                   </button>
                   {open && (
                     <div className="border-t border-gold/15 p-2 space-y-2 bg-charcoal/30">
@@ -706,27 +706,27 @@ const DespesasTab = () => {
           </DialogHeader>
           <div className="space-y-3 pt-2">
             <div>
-              <label className="font-body text-[11px] text-primary-foreground/40 mb-1 block">Descrição *</label>
+              <label className="font-body text-[11px] text-primary-foreground/75 mb-1 block">Descrição *</label>
               <input
                 value={descricao}
                 onChange={(e) => setDescricao(e.target.value)}
                 placeholder="Ex: Aluguel do estúdio"
-                className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] py-2.5 px-3 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
+                className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] py-2.5 px-3 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/85 focus:outline-none focus:ring-2 focus:ring-gold/20"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="font-body text-[11px] text-primary-foreground/40 mb-1 block">Valor (R$) *</label>
+                <label className="font-body text-[11px] text-primary-foreground/75 mb-1 block">Valor (R$) *</label>
                 <input
                   type="number"
                   value={valor}
                   onChange={(e) => setValor(e.target.value)}
                   placeholder="0,00"
-                  className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] py-2.5 px-3 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] py-2.5 px-3 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/85 focus:outline-none focus:ring-2 focus:ring-gold/20"
                 />
               </div>
               <div>
-                <label className="font-body text-[11px] text-primary-foreground/40 mb-1 block">Vencimento *</label>
+                <label className="font-body text-[11px] text-primary-foreground/75 mb-1 block">Vencimento *</label>
                 <input
                   type="date"
                   value={dataVencimento}
@@ -736,7 +736,7 @@ const DespesasTab = () => {
               </div>
             </div>
             <div>
-              <label className="font-body text-[11px] text-primary-foreground/40 mb-1 block">Categoria</label>
+              <label className="font-body text-[11px] text-primary-foreground/75 mb-1 block">Categoria</label>
               <select
                 value={categoria}
                 onChange={(e) => setCategoria(e.target.value)}
@@ -749,7 +749,7 @@ const DespesasTab = () => {
             </div>
 
             <div>
-              <label className="font-body text-[11px] text-primary-foreground/40 mb-1 block">Tipo da despesa *</label>
+              <label className="font-body text-[11px] text-primary-foreground/75 mb-1 block">Tipo da despesa *</label>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
@@ -757,7 +757,7 @@ const DespesasTab = () => {
                   className={`rounded-xl border px-3 py-3 font-body text-[12px] font-semibold transition-all flex flex-col items-center gap-1 ${
                     tipo === "estudio"
                       ? "bg-blue-500/15 text-blue-300 border-blue-500/40 shadow-[0_0_0_1px_rgb(59_130_246_/_0.2)]"
-                      : "bg-primary-foreground/[0.04] text-primary-foreground/50 border-primary-foreground/[0.06] hover:text-primary-foreground/80"
+                      : "bg-primary-foreground/[0.04] text-primary-foreground/85 border-primary-foreground/[0.06] hover:text-primary-foreground/80"
                   }`}
                 >
                   <span className="text-base">🏛</span>
@@ -770,7 +770,7 @@ const DespesasTab = () => {
                   className={`rounded-xl border px-3 py-3 font-body text-[12px] font-semibold transition-all flex flex-col items-center gap-1 ${
                     tipo === "pessoal"
                       ? "bg-purple-500/15 text-purple-300 border-purple-500/40 shadow-[0_0_0_1px_rgb(168_85_247_/_0.2)]"
-                      : "bg-primary-foreground/[0.04] text-primary-foreground/50 border-primary-foreground/[0.06] hover:text-primary-foreground/80"
+                      : "bg-primary-foreground/[0.04] text-primary-foreground/85 border-primary-foreground/[0.06] hover:text-primary-foreground/80"
                   }`}
                 >
                   <span className="text-base">👤</span>
@@ -790,10 +790,10 @@ const DespesasTab = () => {
                 className="flex w-full items-center justify-between gap-3"
               >
                 <div className="flex items-center gap-2 text-left">
-                  <Repeat className={`h-4 w-4 ${fixa ? "text-gold" : "text-primary-foreground/40"}`} />
+                  <Repeat className={`h-4 w-4 ${fixa ? "text-gold" : "text-primary-foreground/75"}`} />
                   <div>
-                    <p className={`font-body text-[12px] font-semibold ${fixa ? "text-primary-foreground" : "text-primary-foreground/70"}`}>Despesa fixa (mensal)</p>
-                    <p className="font-body text-[10px] text-primary-foreground/40">Cria automaticamente uma cópia por mês</p>
+                    <p className={`font-body text-[12px] font-semibold ${fixa ? "text-primary-foreground" : "text-primary-foreground/100"}`}>Despesa fixa (mensal)</p>
+                    <p className="font-body text-[10px] text-primary-foreground/75">Cria automaticamente uma cópia por mês</p>
                   </div>
                 </div>
                 <span className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${fixa ? "bg-gold" : "bg-primary-foreground/15"}`}>
@@ -802,7 +802,7 @@ const DespesasTab = () => {
               </button>
               {fixa && (
                 <div className="mt-3 flex items-center gap-2">
-                  <label className="font-body text-[11px] text-primary-foreground/60 shrink-0">Repetir por</label>
+                  <label className="font-body text-[11px] text-primary-foreground/95 shrink-0">Repetir por</label>
                   <input
                     type="number"
                     min={1}
@@ -811,17 +811,17 @@ const DespesasTab = () => {
                     onChange={(e) => setMeses(e.target.value)}
                     className="w-20 rounded-lg bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] py-1.5 px-2 text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
                   />
-                  <span className="font-body text-[11px] text-primary-foreground/60">meses</span>
+                  <span className="font-body text-[11px] text-primary-foreground/95">meses</span>
                 </div>
               )}
             </div>
             <div>
-              <label className="font-body text-[11px] text-primary-foreground/40 mb-1 block">Observação</label>
+              <label className="font-body text-[11px] text-primary-foreground/75 mb-1 block">Observação</label>
               <input
                 value={observacao}
                 onChange={(e) => setObservacao(e.target.value)}
                 placeholder="Opcional..."
-                className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] py-2.5 px-3 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
+                className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] py-2.5 px-3 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/85 focus:outline-none focus:ring-2 focus:ring-gold/20"
               />
             </div>
             <button

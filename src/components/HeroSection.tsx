@@ -26,7 +26,7 @@ const HeroSection = ({ onSchedule, onLogin, onProfile, onProdutos, isAuthenticat
       {isAuthenticated && onProfile && (
         <button
           onClick={onProfile}
-          className="ios-press absolute top-6 right-6 z-20 w-10 h-10 rounded-full bg-primary-foreground/[0.1] backdrop-blur-md border border-primary-foreground/[0.12] flex items-center justify-center text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/[0.15] transition-all"
+          className="ios-press absolute top-6 right-6 z-20 w-10 h-10 rounded-full bg-primary-foreground/[0.1] backdrop-blur-md border border-primary-foreground/[0.12] flex items-center justify-center text-primary-foreground/95 hover:text-primary-foreground hover:bg-primary-foreground/[0.15] transition-all"
         >
           <User className="w-5 h-5" />
         </button>

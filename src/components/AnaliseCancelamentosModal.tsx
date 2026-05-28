@@ -116,7 +116,7 @@ const AnaliseCancelamentosModal = ({ open, onClose }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col bg-charcoal border-purple-500/20 p-0 [&>button]:text-primary-foreground/60 [&>button]:hover:text-primary-foreground">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col bg-charcoal border-purple-500/20 p-0 [&>button]:text-primary-foreground/95 [&>button]:hover:text-primary-foreground">
         <DialogHeader className="p-5 pb-3 border-b border-primary-foreground/[0.06]">
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/10 border border-purple-500/30">
@@ -145,7 +145,7 @@ const AnaliseCancelamentosModal = ({ open, onClose }: Props) => {
                 className={`px-2.5 py-1 rounded-lg font-body text-[10px] font-semibold uppercase tracking-wider transition-all border ${
                   periodo === d
                     ? "bg-purple-500/20 border-purple-500/40 text-purple-200"
-                    : "bg-primary-foreground/[0.04] border-primary-foreground/[0.08] text-primary-foreground/50 hover:text-primary-foreground/80"
+                    : "bg-primary-foreground/[0.04] border-primary-foreground/[0.08] text-primary-foreground/85 hover:text-primary-foreground/80"
                 } disabled:opacity-50`}
               >
                 {d} dias
@@ -154,7 +154,7 @@ const AnaliseCancelamentosModal = ({ open, onClose }: Props) => {
             <button
               onClick={() => runAnalise(periodo)}
               disabled={loading}
-              className="ml-auto p-1.5 rounded-lg bg-primary-foreground/[0.04] hover:bg-primary-foreground/[0.08] border border-primary-foreground/[0.08] text-primary-foreground/60 disabled:opacity-50 transition-all"
+              className="ml-auto p-1.5 rounded-lg bg-primary-foreground/[0.04] hover:bg-primary-foreground/[0.08] border border-primary-foreground/[0.08] text-primary-foreground/95 disabled:opacity-50 transition-all"
               title="Atualizar análise"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
@@ -166,7 +166,7 @@ const AnaliseCancelamentosModal = ({ open, onClose }: Props) => {
           {loading && (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
               <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
-              <p className="font-body text-[12px] text-primary-foreground/60">
+              <p className="font-body text-[12px] text-primary-foreground/95">
                 Analisando padrões com IA...
               </p>
             </div>
@@ -183,7 +183,7 @@ const AnaliseCancelamentosModal = ({ open, onClose }: Props) => {
                         <div className={`font-display text-3xl font-bold ${scoreColor(result.analise.score_saude)}`}>
                           {result.analise.score_saude.toFixed(1)}
                         </div>
-                        <div className="font-body text-[9px] text-primary-foreground/50 uppercase tracking-wider mt-0.5">
+                        <div className="font-body text-[9px] text-primary-foreground/85 uppercase tracking-wider mt-0.5">
                           Score
                         </div>
                       </div>
@@ -205,53 +205,53 @@ const AnaliseCancelamentosModal = ({ open, onClose }: Props) => {
                 <div className="p-3 rounded-xl bg-rose-500/[0.06] border border-rose-500/15">
                   <div className="flex items-center gap-1.5 mb-1">
                     <TrendingDown className="w-3 h-3 text-rose-400" />
-                    <span className="font-body text-[9px] text-primary-foreground/50 uppercase tracking-wider">Taxa Cancelamento</span>
+                    <span className="font-body text-[9px] text-primary-foreground/85 uppercase tracking-wider">Taxa Cancelamento</span>
                   </div>
                   <div className="font-display text-lg font-bold text-rose-300">
                     {result.stats.totais.taxa_cancelamento_pct}%
                   </div>
-                  <div className="font-body text-[10px] text-primary-foreground/40">
+                  <div className="font-body text-[10px] text-primary-foreground/75">
                     {result.stats.totais.cancelados + result.stats.totais.faltas} de {result.stats.totais.cancelados + result.stats.totais.faltas + result.stats.totais.concluidos}
                   </div>
                 </div>
                 <div className="p-3 rounded-xl bg-amber-500/[0.06] border border-amber-500/15">
                   <div className="flex items-center gap-1.5 mb-1">
                     <AlertCircle className="w-3 h-3 text-amber-400" />
-                    <span className="font-body text-[9px] text-primary-foreground/50 uppercase tracking-wider">Faltas (No-show)</span>
+                    <span className="font-body text-[9px] text-primary-foreground/85 uppercase tracking-wider">Faltas (No-show)</span>
                   </div>
                   <div className="font-display text-lg font-bold text-amber-300">
                     {result.stats.totais.taxa_falta_pct}%
                   </div>
-                  <div className="font-body text-[10px] text-primary-foreground/40">
+                  <div className="font-body text-[10px] text-primary-foreground/75">
                     {result.stats.totais.faltas} ocorrências
                   </div>
                 </div>
                 <div className="p-3 rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.08]">
                   <div className="flex items-center gap-1.5 mb-1">
                     <Info className="w-3 h-3 text-blue-400" />
-                    <span className="font-body text-[9px] text-primary-foreground/50 uppercase tracking-wider">Antecedência Média</span>
+                    <span className="font-body text-[9px] text-primary-foreground/85 uppercase tracking-wider">Antecedência Média</span>
                   </div>
                   <div className="font-display text-lg font-bold text-blue-300">
                     {result.stats.totais.antecedencia_media_dias}d
                   </div>
-                  <div className="font-body text-[10px] text-primary-foreground/40">para cancelar</div>
+                  <div className="font-body text-[10px] text-primary-foreground/75">para cancelar</div>
                 </div>
                 <div className="p-3 rounded-xl bg-rose-500/[0.06] border border-rose-500/15">
                   <div className="flex items-center gap-1.5 mb-1">
                     <AlertTriangle className="w-3 h-3 text-rose-400" />
-                    <span className="font-body text-[9px] text-primary-foreground/50 uppercase tracking-wider">Receita Perdida</span>
+                    <span className="font-body text-[9px] text-primary-foreground/85 uppercase tracking-wider">Receita Perdida</span>
                   </div>
                   <div className="font-display text-base font-bold text-rose-300">
                     {formatCurrency(result.stats.totais.valor_perdido_estimado)}
                   </div>
-                  <div className="font-body text-[10px] text-primary-foreground/40">faltas + last-min</div>
+                  <div className="font-body text-[10px] text-primary-foreground/75">faltas + last-min</div>
                 </div>
               </div>
 
               {/* Padrões */}
               {result.analise.padroes.length > 0 && (
                 <div>
-                  <h3 className="font-body text-[11px] font-semibold text-primary-foreground/70 uppercase tracking-[0.15em] mb-2 flex items-center gap-1.5">
+                  <h3 className="font-body text-[11px] font-semibold text-primary-foreground/100 uppercase tracking-[0.15em] mb-2 flex items-center gap-1.5">
                     <AlertTriangle className="w-3.5 h-3.5" />
                     Padrões Identificados
                   </h3>
@@ -266,7 +266,7 @@ const AnaliseCancelamentosModal = ({ open, onClose }: Props) => {
                             {p.severidade}
                           </span>
                         </div>
-                        <p className="font-body text-[11px] text-primary-foreground/70 leading-relaxed">
+                        <p className="font-body text-[11px] text-primary-foreground/100 leading-relaxed">
                           {p.descricao}
                         </p>
                       </div>
@@ -278,7 +278,7 @@ const AnaliseCancelamentosModal = ({ open, onClose }: Props) => {
               {/* Ações sugeridas */}
               {result.analise.acoes.length > 0 && (
                 <div>
-                  <h3 className="font-body text-[11px] font-semibold text-primary-foreground/70 uppercase tracking-[0.15em] mb-2 flex items-center gap-1.5">
+                  <h3 className="font-body text-[11px] font-semibold text-primary-foreground/100 uppercase tracking-[0.15em] mb-2 flex items-center gap-1.5">
                     <Lightbulb className="w-3.5 h-3.5" />
                     Ações Sugeridas
                   </h3>
@@ -309,14 +309,14 @@ const AnaliseCancelamentosModal = ({ open, onClose }: Props) => {
               {/* Detalhes — top horários e clientes */}
               {result.stats.por_faixa_horaria && result.stats.por_faixa_horaria.length > 0 && (
                 <div>
-                  <h3 className="font-body text-[11px] font-semibold text-primary-foreground/70 uppercase tracking-[0.15em] mb-2">
+                  <h3 className="font-body text-[11px] font-semibold text-primary-foreground/100 uppercase tracking-[0.15em] mb-2">
                     Por Faixa Horária
                   </h3>
                   <div className="space-y-1.5">
                     {result.stats.por_faixa_horaria.map((f) => (
                       <div key={f.faixa} className="flex items-center gap-2 p-2 rounded-lg bg-primary-foreground/[0.03] border border-primary-foreground/[0.05]">
                         <span className="font-body text-[11px] text-primary-foreground/75 flex-1">{f.faixa}</span>
-                        <span className="font-body text-[10px] text-primary-foreground/45">
+                        <span className="font-body text-[10px] text-primary-foreground/75">
                           {f.cancelamentos}/{f.total}
                         </span>
                         <div className="w-20 h-1.5 bg-primary-foreground/[0.06] rounded-full overflow-hidden">
@@ -336,7 +336,7 @@ const AnaliseCancelamentosModal = ({ open, onClose }: Props) => {
 
               {result.stats.top_clientes_problematicos && result.stats.top_clientes_problematicos.length > 0 && (
                 <div>
-                  <h3 className="font-body text-[11px] font-semibold text-primary-foreground/70 uppercase tracking-[0.15em] mb-2">
+                  <h3 className="font-body text-[11px] font-semibold text-primary-foreground/100 uppercase tracking-[0.15em] mb-2">
                     Clientes com Mais Faltas/Cancelamentos
                   </h3>
                   <div className="space-y-1.5">
@@ -346,7 +346,7 @@ const AnaliseCancelamentosModal = ({ open, onClose }: Props) => {
                         <span className="font-body text-[10px] text-rose-300">
                           {c.cancelamentos} cancel · {c.faltas} faltas
                         </span>
-                        <span className="font-body text-[10px] text-primary-foreground/40">
+                        <span className="font-body text-[10px] text-primary-foreground/75">
                           de {c.total_agendamentos}
                         </span>
                       </div>
@@ -359,7 +359,7 @@ const AnaliseCancelamentosModal = ({ open, onClose }: Props) => {
         </div>
 
         <div className="p-3 border-t border-primary-foreground/[0.06] bg-primary-foreground/[0.02]">
-          <p className="font-body text-[10px] text-primary-foreground/40 text-center leading-relaxed">
+          <p className="font-body text-[10px] text-primary-foreground/75 text-center leading-relaxed">
             Análise gerada por IA com base em {result?.periodo_dias || periodo} dias de dados reais. Use como apoio à decisão.
           </p>
         </div>

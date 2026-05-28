@@ -80,7 +80,7 @@ const InstallAppBanner = () => {
         <button
           onClick={dismiss}
           aria-label="Fechar"
-          className="ios-press flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-primary-foreground/50 hover:bg-primary-foreground/10 hover:text-primary-foreground/80"
+          className="ios-press flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-primary-foreground/85 hover:bg-primary-foreground/10 hover:text-primary-foreground/80"
         >
           <X className="h-3.5 w-3.5" />
         </button>
