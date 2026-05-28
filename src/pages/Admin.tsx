@@ -25,6 +25,7 @@ import { Calendar as DatePickerCalendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import FinanceiroTab from "@/components/FinanceiroTab";
 import CaixaTab from "@/components/CaixaTab";
+import DividasTab from "@/components/DividasTab";
 import DespesasTab from "@/components/DespesasTab";
 import PedidosTab from "@/components/PedidosTab";
 import BinButton from "@/components/ui/bin-button";
@@ -52,7 +53,7 @@ interface Agendamento {
 interface Profile { id: string; nome: string; whatsapp: string; cpf?: string | null; created_at: string; }
 interface LembreteConfig { id: string; tipo: string; ativo: boolean; mensagem: string; horas_antes: number; }
 
-type Tab = "dashboard" | "agendamentos" | "pedidos" | "clientes" | "horarios" | "servicos" | "servicos_app" | "financeiro" | "caixa" | "pagamentos" | "produtos" | "despesas" | "gateway" | "chatbot" | "anamnese" | "avaliacoes";
+type Tab = "dashboard" | "agendamentos" | "pedidos" | "clientes" | "horarios" | "servicos" | "servicos_app" | "financeiro" | "caixa" | "dividas" | "pagamentos" | "produtos" | "despesas" | "gateway" | "chatbot" | "anamnese" | "avaliacoes";
 
 const ADMIN_PASSWORD = "dyoliadmin";
 
@@ -505,6 +506,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     { id: "pedidos", label: "Pedidos", icon: ClipboardList, anim: "tab-icon-bounce", color: "#facc15" },
     { id: "financeiro", label: "Financeiro", icon: DollarSign, anim: "tab-icon-spin", color: "#10b981" },
     { id: "caixa", label: "Caixa", icon: Wallet, anim: "tab-icon-spin", color: "#14b8a6" },
+    { id: "dividas", label: "Dívidas", icon: CreditCard, anim: "tab-icon-bounce", color: "#f43f5e" },
     { id: "pagamentos", label: "Pagamentos", icon: CreditCard, anim: "tab-icon-swipe", color: "#3b82f6" },
     { id: "despesas", label: "Despesas", icon: Receipt, anim: "tab-icon-shake", color: "#ef4444" },
     { id: "clientes", label: "Clientes", icon: Users, anim: "tab-icon-wave", color: "#a855f7" },
@@ -2155,6 +2157,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
           {tab === "financeiro" && <FinanceiroTab agendamentos={agendamentos} getClientName={getClientName} />}
           {tab === "caixa" && <CaixaTab agendamentos={agendamentos} getClientName={getClientName} />}
+          {tab === "dividas" && <DividasTab />}
           {tab === "pagamentos" && <PagamentosTab agendamentos={agendamentos} getClientName={getClientName} />}
           {tab === "pedidos" && <PedidosTab agendamentos={agendamentos} getClientName={getClientName} clientes={clientes} onUpdate={loadData} />}
           {tab === "despesas" && <DespesasTab />}
