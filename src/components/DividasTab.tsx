@@ -263,10 +263,17 @@ const DividasTab = () => {
             return (
               <div 
                 key={divida.id}
+                onClick={() => {
+                  if (!isPaga) {
+                    setSelectedDivida(divida);
+                    setValorBaixa(restante.toFixed(2).replace('.', ','));
+                    setIsBaixaOpen(true);
+                  }
+                }}
                 className={`p-4 rounded-2xl border transition-all ${
                   isPaga 
                     ? "bg-green-500/[0.02] border-green-500/10 opacity-70" 
-                    : "bg-primary-foreground/[0.03] border-primary-foreground/[0.06] hover:border-gold/20 hover:bg-primary-foreground/[0.05]"
+                    : "bg-primary-foreground/[0.03] border-primary-foreground/[0.06] hover:border-gold/20 hover:bg-primary-foreground/[0.05] cursor-pointer"
                 }`}
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -314,9 +321,10 @@ const DividasTab = () => {
                     
                     {!isPaga && (
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setSelectedDivida(divida);
-                          setValorBaixa(restante.toFixed(2));
+                          setValorBaixa(restante.toFixed(2).replace('.', ','));
                           setIsBaixaOpen(true);
                         }}
                         className="px-4 py-2 mt-1 sm:mt-2 rounded-xl bg-gold text-charcoal font-heading text-sm font-bold shadow-[0_0_15px_hsl(40_70%_60%/0.3)] hover:scale-105 hover:bg-gold/90 transition-all flex items-center gap-1.5"

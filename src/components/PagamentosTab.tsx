@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
-import { Search, CreditCard, QrCode, Barcode, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, Filter, AlertCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Search, CreditCard, QrCode, Barcode, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, Filter, AlertCircle, Trash2 } from "lucide-react";
 import pixIcon from "@/assets/pix-icon.png";
 
 interface Agendamento {
@@ -21,6 +23,7 @@ interface Agendamento {
 interface Props {
   agendamentos: Agendamento[];
   getClientName: (userId: string, clienteNome?: string | null) => string;
+  onUpdate?: () => void;
 }
 
 const formatCurrency = (v: number) =>
@@ -40,7 +43,7 @@ type StatusFilter = "todos" | "confirmado" | "pendente" | "cancelado" | "conclui
 type SortField = "data" | "valor" | "cliente" | "status";
 type SortDir = "asc" | "desc";
 
-const PagamentosTab = ({ agendamentos, getClientName }: Props) => {
+const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("todos");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -50,6 +53,20 @@ const PagamentosTab = ({ agendamentos, getClientName }: Props) => {
   const toggleSort = (field: SortField) => {
     if (sortField === field) setSortDir(sortDir === "asc" ? "desc" : "asc");
     else { setSortField(field); setSortDir("desc"); }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir este pagamento? Essa ação não pode ser desfeita e irá descontar o valor do caixa.")) return;
+    
+    try {
+      const { error } = await supabase.from("agendamentos").delete().eq("id", id);
+      if (error) throw error;
+      toast.success("Pagamento excluído com sucesso.");
+      if (onUpdate) onUpdate();
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || "Erro ao excluir pagamento.");
+    }
   };
 
   const paymentIcon = (method: string | null) => {
@@ -273,7 +290,7 @@ const PagamentosTab = ({ agendamentos, getClientName }: Props) => {
 
               {/* Expanded details */}
               {isExpanded && (
-                <div className="border-t border-primary-foreground/[0.06] bg-primary-foreground/[0.02] px-4 py-3 space-y-2.5">
+                <div className="border-t border-primary-foreground/[0.06] bg-primary-foreground/[0.02] px-4 py-3 space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <Detail label="ID do Pedido" value={ag.id.slice(0, 8) + "..."} />
                     <Detail label="Data do Agendamento" value={`${formatDate(ag.data_agendamento)} às ${ag.horario}`} />
@@ -293,6 +310,17 @@ const PagamentosTab = ({ agendamentos, getClientName }: Props) => {
                       </span>
                     } />
                     <Detail label="Criado em" value={formatDateTime(ag.created_at)} />
+                  </div>
+                  <div className="pt-2 border-t border-primary-foreground/[0.05] flex justify-end">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(ag.id);
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-rose/10 text-rose hover:bg-rose/20 font-body text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Excluir
+                    </button>
                   </div>
                 </div>
               )}
