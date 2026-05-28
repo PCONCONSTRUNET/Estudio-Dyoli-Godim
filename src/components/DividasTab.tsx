@@ -10,7 +10,8 @@ import {
   CheckCircle2, 
   ChevronRight, 
   X,
-  CreditCard
+  CreditCard,
+  Trash2
 } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -194,6 +195,20 @@ const DividasTab = () => {
     }
   };
 
+  const handleDeleteDivida = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir esta dívida? Todo o histórico dela será apagado.")) return;
+    
+    try {
+      const { error } = await supabase.from("dividas").delete().eq("id", id);
+      if (error) throw error;
+      toast.success("Dívida excluída com sucesso.");
+      setDividas(dividas.filter(d => d.id !== id));
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || "Erro ao excluir dívida.");
+    }
+  };
+
   const totalDevendo = dividas
     .filter(d => d.status !== 'paga')
     .reduce((acc, curr) => acc + (curr.valor_total - curr.valor_pago), 0);
@@ -278,7 +293,7 @@ const DividasTab = () => {
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 relative pr-8">
                       <h3 className={`font-heading text-lg font-bold truncate ${isPaga ? "text-primary-foreground/70" : "text-primary-foreground"}`}>
                         {divida.cliente_nome}
                       </h3>
@@ -295,6 +310,17 @@ const DividasTab = () => {
                           Pendente
                         </span>
                       )}
+                      
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteDivida(divida.id);
+                        }}
+                        className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-primary-foreground/20 hover:bg-rose/10 hover:text-rose transition-colors"
+                        title="Excluir Dívida"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                     <p className="font-body text-sm text-primary-foreground/60">{divida.descricao}</p>
                     <p className="font-body text-[11px] text-primary-foreground/40 mt-1">
