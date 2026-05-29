@@ -1535,30 +1535,87 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                     </DialogTitle>
                   </DialogHeader>
                   <div className="space-y-3 w-full min-w-0">
-                    {/* ── Serviço com busca ── */}
+                    {/* ── Serviços da comanda (múltiplos) ── */}
                     <div className="relative">
-                      <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Serviço *</label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="font-body text-[10px] text-primary-foreground/30 block">Serviços da comanda *</label>
+                        {manualItens.length > 0 && (
+                          <span className="font-body text-[10px] text-gold/80">{manualItens.length} {manualItens.length === 1 ? "item" : "itens"}</span>
+                        )}
+                      </div>
+
+                      {/* Lista de itens adicionados */}
+                      {manualItens.length > 0 && (
+                        <div className="mb-2 space-y-1.5">
+                          {manualItens.map((it, idx) => (
+                            <div key={it.id} className="rounded-xl border border-gold/20 bg-gold/[0.04] p-2.5">
+                              <div className="flex items-start justify-between gap-2 mb-1.5">
+                                <p className="font-body text-[12px] font-medium text-primary-foreground flex-1 min-w-0 break-words">
+                                  <span className="text-gold/60 mr-1">{idx + 1}.</span>{it.nome}
+                                </p>
+                                <button
+                                  type="button"
+                                  onClick={() => removeManualItem(it.id)}
+                                  className="flex-shrink-0 w-7 h-7 rounded-lg bg-rose/10 hover:bg-rose/20 text-rose flex items-center justify-center transition-colors"
+                                  aria-label="Remover serviço"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                              <div className="grid grid-cols-2 gap-1.5">
+                                <div>
+                                  <label className="font-body text-[9px] text-primary-foreground/40 mb-0.5 block">Valor (R$)</label>
+                                  <input
+                                    type="number"
+                                    inputMode="decimal"
+                                    min={0}
+                                    step="0.01"
+                                    value={it.valor || ""}
+                                    onChange={(e) => updateManualItem(it.id, { valor: Number(e.target.value) || 0 })}
+                                    placeholder="0,00"
+                                    className="w-full px-2 py-1.5 rounded-lg bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[12px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="font-body text-[9px] text-primary-foreground/40 mb-0.5 block">Duração (min)</label>
+                                  <input
+                                    type="number"
+                                    inputMode="numeric"
+                                    min={5}
+                                    step={5}
+                                    value={it.duracao || ""}
+                                    onChange={(e) => updateManualItem(it.id, { duracao: Number(e.target.value) || 0 })}
+                                    className="w-full px-2 py-1.5 rounded-lg bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[12px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+
+                          {/* Resumo */}
+                          <div className="flex items-center justify-between rounded-xl border border-gold/30 bg-gold/10 px-3 py-2">
+                            <span className="font-body text-[11px] text-primary-foreground/70">Total</span>
+                            <div className="text-right">
+                              <p className="font-heading text-[14px] font-semibold text-gold tabular-nums">R$ {manualValorTotal.toFixed(2).replace(".", ",")}</p>
+                              <p className="font-body text-[10px] text-primary-foreground/50">{manualDuracaoTotal} min</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Buscar / adicionar serviço */}
                       <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary-foreground/25 pointer-events-none" />
                         <input
                           type="text"
-                          placeholder={manualServico || "Buscar serviço..."}
+                          placeholder={manualItens.length === 0 ? "Buscar serviço..." : "+ Adicionar outro serviço..."}
                           value={manualServicoSearch}
                           onFocus={() => setManualServicoOpen(true)}
                           onChange={(e) => { setManualServicoSearch(e.target.value); setManualServicoOpen(true); }}
-                          className={`w-full pl-9 pr-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20 placeholder:text-primary-foreground/40 ${
-                            manualServico ? "border-gold/30 text-gold" : "border-primary-foreground/[0.06] text-primary-foreground"
-                          }`}
+                          className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20 placeholder:text-primary-foreground/40"
                         />
-                        {manualServico && (
-                          <button
-                            onClick={() => { setManualServico(""); setManualServicoSearch(""); setManualValor(""); setManualDuracao("60"); }}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-foreground/30 hover:text-rose transition-colors"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        )}
                       </div>
+
                       {manualServicoOpen && (
                         <div className="absolute z-50 mt-1 w-full rounded-xl border border-primary-foreground/[0.08] bg-charcoal shadow-2xl overflow-hidden">
                           <div className="max-h-48 overflow-y-auto">
@@ -1574,13 +1631,11 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                     key={s.id}
                                     onMouseDown={(e) => e.preventDefault()}
                                     onClick={() => {
-                                      handleSelectManualServico(s.nome);
+                                      addManualItem(s.nome);
                                       setManualServicoSearch("");
                                       setManualServicoOpen(false);
                                     }}
-                                    className={`w-full text-left px-3 py-2.5 font-body text-[13px] transition-all hover:bg-gold/10 ${
-                                      manualServico === s.nome ? "bg-gold/10 text-gold" : "text-primary-foreground"
-                                    }`}
+                                    className="w-full text-left px-3 py-2.5 font-body text-[13px] transition-all hover:bg-gold/10 text-primary-foreground"
                                   >
                                     <span className="font-medium">{s.nome}</span>
                                     <span className="ml-2 text-[11px] text-primary-foreground/40">R$ {s.preco.toFixed(2).replace(".", ",")}</span>
@@ -1590,11 +1645,12 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                           </div>
                         </div>
                       )}
-                      {/* Overlay para fechar */}
                       {manualServicoOpen && (
                         <div className="fixed inset-0 z-40" onClick={() => setManualServicoOpen(false)} />
                       )}
                     </div>
+
+
 
                     {/* ── Cliente com busca ── */}
                     <div className="relative">
