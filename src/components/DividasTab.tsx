@@ -30,7 +30,7 @@ interface Divida {
 interface Profile {
  id: string;
  nome: string | null;
- telefone: string | null;
+ whatsapp: string | null;
 }
 
 const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
