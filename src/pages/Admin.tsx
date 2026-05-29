@@ -381,14 +381,13 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [showManualRegister, setShowManualRegister] = useState(false);
   const [detalheAgendamento, setDetalheAgendamento] = useState<Agendamento | null>(null);
   const [manualServicos, setManualServicos] = useState<{ id: string; nome: string; preco: number; duracao_minutos: number; categoria: string }[]>([]);
-  const [manualServico, setManualServico] = useState("");
+  type ManualItem = { id: string; nome: string; valor: number; duracao: number };
+  const [manualItens, setManualItens] = useState<ManualItem[]>([]);
   const [manualCliente, setManualCliente] = useState("");
   const [manualClienteNome, setManualClienteNome] = useState("");
   const [manualData, setManualData] = useState(() => getDateKey(new Date()));
   const [manualHorario, setManualHorario] = useState("09:00");
   const [manualHorarioFim, setManualHorarioFim] = useState("10:00");
-  const [manualValor, setManualValor] = useState("");
-  const [manualDuracao, setManualDuracao] = useState("60");
   const [manualFormaPagamento, setManualFormaPagamento] = useState("pix");
   const [manualPago, setManualPago] = useState(false);
   const [manualConcluido, setManualConcluido] = useState(false);
