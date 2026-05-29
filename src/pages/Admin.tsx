@@ -1527,44 +1527,55 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
               {/* Manual Registration Dialog */}
               <Dialog open={showManualRegister} onOpenChange={setShowManualRegister}>
-                <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-md max-h-[85dvh] overflow-y-auto overflow-x-hidden bg-charcoal border border-gold/20 rounded-2xl p-4 sm:p-5">
-                  <DialogHeader>
-                    <DialogTitle className="font-heading text-[16px] font-semibold text-primary-foreground flex items-center gap-2">
-                      <PlusCircle className="w-4 h-4 text-gold" />
-                      Registro Manual
-                    </DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-3 w-full min-w-0">
-                    {/* ── Serviços da comanda (múltiplos) ── */}
-                    <div className="relative">
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="font-body text-[10px] text-primary-foreground/30 block">Serviços da comanda *</label>
+                <DialogContent className="relative w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-md max-h-[88dvh] overflow-y-auto overflow-x-hidden bg-charcoal/95 backdrop-blur-xl border border-gold/25 rounded-[1.75rem] p-0 shadow-2xl">
+                  {/* Gold halos */}
+                  <div aria-hidden className="pointer-events-none absolute -top-20 -left-20 w-44 h-44 bg-gold/15 blur-[80px] rounded-full" />
+                  <div aria-hidden className="pointer-events-none absolute -bottom-24 -right-20 w-52 h-52 bg-gold/[0.06] blur-[100px] rounded-full" />
+
+                  {/* Header */}
+                  <div className="relative px-5 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-white/[0.06]">
+                    <DialogHeader>
+                      <DialogTitle className="font-heading text-[17px] sm:text-[18px] font-semibold text-primary-foreground flex items-center gap-3 tracking-wide">
+                        <span className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/30 flex items-center justify-center shadow-[0_0_20px_-8px_hsl(var(--gold)/0.6)]">
+                          <PlusCircle className="w-5 h-5 text-gold" />
+                        </span>
+                        Registro Manual
+                      </DialogTitle>
+                    </DialogHeader>
+                  </div>
+
+                  {/* Body */}
+                  <div className="relative px-5 sm:px-6 py-5 space-y-5 w-full min-w-0">
+                    {/* ── Serviços da comanda ── */}
+                    <div className="relative space-y-2.5">
+                      <div className="flex items-center justify-between px-1">
+                        <label className="font-body text-[10px] uppercase tracking-[0.2em] text-gold/80 font-semibold">Serviços da comanda *</label>
                         {manualItens.length > 0 && (
-                          <span className="font-body text-[10px] text-gold/80">{manualItens.length} {manualItens.length === 1 ? "item" : "itens"}</span>
+                          <span className="font-body text-[10px] text-gold/70 tabular-nums">{manualItens.length} {manualItens.length === 1 ? "item" : "itens"}</span>
                         )}
                       </div>
 
                       {/* Lista de itens adicionados */}
                       {manualItens.length > 0 && (
-                        <div className="mb-2 space-y-1.5">
+                        <div className="space-y-2">
                           {manualItens.map((it, idx) => (
-                            <div key={it.id} className="rounded-xl border border-gold/20 bg-gold/[0.04] p-2.5">
-                              <div className="flex items-start justify-between gap-2 mb-1.5">
-                                <p className="font-body text-[12px] font-medium text-primary-foreground flex-1 min-w-0 break-words">
-                                  <span className="text-gold/60 mr-1">{idx + 1}.</span>{it.nome}
+                            <div key={it.id} className="rounded-2xl border border-gold/20 bg-gold/[0.05] backdrop-blur-sm p-3">
+                              <div className="flex items-start justify-between gap-2 mb-2">
+                                <p className="font-body text-[13px] font-medium text-primary-foreground flex-1 min-w-0 break-words">
+                                  <span className="text-gold/60 mr-1.5 tabular-nums">{idx + 1}.</span>{it.nome}
                                 </p>
                                 <button
                                   type="button"
                                   onClick={() => removeManualItem(it.id)}
-                                  className="flex-shrink-0 w-7 h-7 rounded-lg bg-rose/10 hover:bg-rose/20 text-rose flex items-center justify-center transition-colors"
+                                  className="flex-shrink-0 w-8 h-8 rounded-xl bg-rose/10 hover:bg-rose/20 text-rose flex items-center justify-center transition-colors"
                                   aria-label="Remover serviço"
                                 >
-                                  <X className="h-3.5 w-3.5" />
+                                  <X className="h-4 w-4" />
                                 </button>
                               </div>
-                              <div className="grid grid-cols-2 gap-1.5">
+                              <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                  <label className="font-body text-[9px] text-primary-foreground/40 mb-0.5 block">Valor (R$)</label>
+                                  <label className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/40 mb-1 block">Valor (R$)</label>
                                   <input
                                     type="number"
                                     inputMode="decimal"
@@ -1573,11 +1584,11 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                     value={it.valor || ""}
                                     onChange={(e) => updateManualItem(it.id, { valor: Number(e.target.value) || 0 })}
                                     placeholder="0,00"
-                                    className="w-full px-2 py-1.5 rounded-lg bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[12px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] tabular-nums focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 transition-all"
                                   />
                                 </div>
                                 <div>
-                                  <label className="font-body text-[9px] text-primary-foreground/40 mb-0.5 block">Duração (min)</label>
+                                  <label className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/40 mb-1 block">Duração (min)</label>
                                   <input
                                     type="number"
                                     inputMode="numeric"
@@ -1585,44 +1596,44 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                     step={5}
                                     value={it.duracao || ""}
                                     onChange={(e) => updateManualItem(it.id, { duracao: Number(e.target.value) || 0 })}
-                                    className="w-full px-2 py-1.5 rounded-lg bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[12px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] tabular-nums focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 transition-all"
                                   />
                                 </div>
                               </div>
                             </div>
                           ))}
 
-                          {/* Resumo */}
-                          <div className="flex items-center justify-between rounded-xl border border-gold/30 bg-gold/10 px-3 py-2">
-                            <span className="font-body text-[11px] text-primary-foreground/70">Total</span>
+                          {/* Resumo Total */}
+                          <div className="flex items-center justify-between rounded-2xl border border-gold/30 bg-gold/10 backdrop-blur-sm px-4 py-3 shadow-[0_0_24px_-12px_hsl(var(--gold)/0.6)]">
+                            <span className="font-body text-[10px] uppercase tracking-[0.2em] text-primary-foreground/70 font-semibold">Total</span>
                             <div className="text-right">
-                              <p className="font-heading text-[14px] font-semibold text-gold tabular-nums">R$ {manualValorTotal.toFixed(2).replace(".", ",")}</p>
-                              <p className="font-body text-[10px] text-primary-foreground/50">{manualDuracaoTotal} min</p>
+                              <p className="font-heading text-[16px] font-semibold text-gold tabular-nums leading-none">R$ {manualValorTotal.toFixed(2).replace(".", ",")}</p>
+                              <p className="font-body text-[10px] text-primary-foreground/50 mt-1 tabular-nums">{manualDuracaoTotal} min</p>
                             </div>
                           </div>
                         </div>
                       )}
 
                       {/* Buscar / adicionar serviço */}
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary-foreground/25 pointer-events-none" />
+                      <div className="relative group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary-foreground/30 group-focus-within:text-gold pointer-events-none transition-colors" />
                         <input
                           type="text"
                           placeholder={manualItens.length === 0 ? "Buscar serviço..." : "+ Adicionar outro serviço..."}
                           value={manualServicoSearch}
                           onFocus={() => setManualServicoOpen(true)}
                           onChange={(e) => { setManualServicoSearch(e.target.value); setManualServicoOpen(true); }}
-                          className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20 placeholder:text-primary-foreground/40"
+                          className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 placeholder:text-primary-foreground/30 backdrop-blur-sm transition-all"
                         />
                       </div>
 
                       {manualServicoOpen && (
-                        <div className="absolute z-50 mt-1 w-full rounded-xl border border-primary-foreground/[0.08] bg-charcoal shadow-2xl overflow-hidden">
-                          <div className="max-h-48 overflow-y-auto">
+                        <div className="absolute z-50 mt-1 left-0 right-0 rounded-2xl border border-gold/20 bg-charcoal/95 backdrop-blur-xl shadow-2xl overflow-hidden">
+                          <div className="max-h-52 overflow-y-auto">
                             {manualServicos
                               .filter(s => s.nome.toLowerCase().includes(manualServicoSearch.toLowerCase()))
                               .length === 0 ? (
-                              <p className="px-3 py-3 font-body text-[12px] text-primary-foreground/30 text-center">Nenhum serviço encontrado</p>
+                              <p className="px-4 py-3 font-body text-[12px] text-primary-foreground/30 text-center">Nenhum serviço encontrado</p>
                             ) : (
                               manualServicos
                                 .filter(s => s.nome.toLowerCase().includes(manualServicoSearch.toLowerCase()))
@@ -1635,10 +1646,10 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                       setManualServicoSearch("");
                                       setManualServicoOpen(false);
                                     }}
-                                    className="w-full text-left px-3 py-2.5 font-body text-[13px] transition-all hover:bg-gold/10 text-primary-foreground"
+                                    className="w-full text-left px-4 py-3 font-body text-[13px] transition-all hover:bg-gold/10 text-primary-foreground flex items-center justify-between gap-3"
                                   >
-                                    <span className="font-medium">{s.nome}</span>
-                                    <span className="ml-2 text-[11px] text-primary-foreground/40">R$ {s.preco.toFixed(2).replace(".", ",")}</span>
+                                    <span className="font-medium truncate">{s.nome}</span>
+                                    <span className="text-[11px] text-gold/70 tabular-nums flex-shrink-0">R$ {s.preco.toFixed(2).replace(".", ",")}</span>
                                   </button>
                                 ))
                             )}
@@ -1650,41 +1661,38 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                       )}
                     </div>
 
-
-
                     {/* ── Cliente com busca ── */}
-                    <div className="relative">
-                      <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Cliente</label>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary-foreground/25 pointer-events-none" />
+                    <div className="relative space-y-2.5">
+                      <label className="font-body text-[10px] uppercase tracking-[0.2em] text-primary-foreground/45 font-semibold px-1 block">Cliente</label>
+                      <div className="relative group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary-foreground/30 group-focus-within:text-gold pointer-events-none transition-colors" />
                         <input
                           type="text"
                           placeholder={manualCliente ? clientes.find(c => c.id === manualCliente)?.nome || "Cliente selecionado" : "Buscar cliente..."}
                           value={manualClienteSearch}
                           onFocus={() => setManualClienteOpen(true)}
                           onChange={(e) => { setManualClienteSearch(e.target.value); setManualClienteOpen(true); }}
-                          className={`w-full pl-9 pr-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20 placeholder:text-primary-foreground/40 ${
-                            manualCliente ? "border-gold/30 text-gold" : "border-primary-foreground/[0.06] text-primary-foreground"
+                          className={`w-full pl-11 pr-10 py-3.5 rounded-2xl bg-white/[0.04] border font-body text-[13px] focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 placeholder:text-primary-foreground/30 backdrop-blur-sm transition-all ${
+                            manualCliente ? "border-gold/40 text-gold" : "border-white/[0.08] text-primary-foreground"
                           }`}
                         />
                         {manualCliente && (
                           <button
                             onClick={() => { setManualCliente(""); setManualClienteSearch(""); setManualClienteNome(""); }}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-foreground/30 hover:text-rose transition-colors"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg bg-rose/10 hover:bg-rose/20 text-rose flex items-center justify-center transition-colors"
                           >
                             <X className="h-3.5 w-3.5" />
                           </button>
                         )}
                       </div>
                       {manualClienteOpen && (
-                        <div className="absolute z-50 mt-1 w-full rounded-xl border border-primary-foreground/[0.08] bg-charcoal shadow-2xl overflow-hidden">
-                          <div className="max-h-48 overflow-y-auto">
-                            {/* Opção presencial */}
+                        <div className="absolute z-50 mt-1 left-0 right-0 rounded-2xl border border-gold/20 bg-charcoal/95 backdrop-blur-xl shadow-2xl overflow-hidden">
+                          <div className="max-h-52 overflow-y-auto">
                             <button
                               onMouseDown={(e) => e.preventDefault()}
                               onClick={() => { setManualCliente(""); setManualClienteNome(""); setManualClienteSearch(""); setManualClienteOpen(false); }}
-                              className={`w-full text-left px-3 py-2.5 font-body text-[13px] transition-all hover:bg-primary-foreground/[0.06] ${
-                                !manualCliente ? "bg-primary-foreground/[0.04] text-primary-foreground/60" : "text-primary-foreground/40"
+                              className={`w-full text-left px-4 py-3 font-body text-[13px] transition-all hover:bg-white/[0.04] ${
+                                !manualCliente ? "bg-white/[0.04] text-primary-foreground/70" : "text-primary-foreground/40"
                               }`}
                             >
                               Sem cliente (presencial)
@@ -1695,7 +1703,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                 c.whatsapp.includes(manualClienteSearch)
                               )
                               .length === 0 && manualClienteSearch ? (
-                              <p className="px-3 py-3 font-body text-[12px] text-primary-foreground/30 text-center">Nenhum cliente encontrado</p>
+                              <p className="px-4 py-3 font-body text-[12px] text-primary-foreground/30 text-center">Nenhum cliente encontrado</p>
                             ) : (
                               clientes
                                 .filter(c =>
@@ -1712,132 +1720,142 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                       setManualClienteSearch("");
                                       setManualClienteOpen(false);
                                     }}
-                                    className={`w-full text-left px-3 py-2.5 font-body text-[13px] transition-all hover:bg-gold/10 ${
+                                    className={`w-full text-left px-4 py-3 font-body text-[13px] transition-all hover:bg-gold/10 flex items-center justify-between gap-3 ${
                                       manualCliente === c.id ? "bg-gold/10 text-gold" : "text-primary-foreground"
                                     }`}
                                   >
-                                    <span className="font-medium">{c.nome}</span>
-                                    <span className="ml-2 text-[11px] text-primary-foreground/40">{c.whatsapp}</span>
+                                    <span className="font-medium truncate">{c.nome}</span>
+                                    <span className="text-[11px] text-primary-foreground/40 tabular-nums flex-shrink-0">{c.whatsapp}</span>
                                   </button>
                                 ))
                             )}
                           </div>
                         </div>
                       )}
-                      {/* Overlay para fechar */}
                       {manualClienteOpen && (
                         <div className="fixed inset-0 z-40" onClick={() => setManualClienteOpen(false)} />
                       )}
                     </div>
 
                     {!manualCliente && (
-                      <div>
-                        <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Nome do cliente (presencial)</label>
+                      <div className="space-y-2.5">
+                        <label className="font-body text-[10px] uppercase tracking-[0.2em] text-primary-foreground/45 font-semibold px-1 block">Nome do cliente (presencial)</label>
                         <input
                           type="text"
                           placeholder="Ex: Maria Silva"
                           value={manualClienteNome}
                           onChange={(e) => setManualClienteNome(e.target.value)}
-                          className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20 placeholder:text-primary-foreground/20"
+                          className="w-full px-4 py-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 placeholder:text-primary-foreground/25 backdrop-blur-sm transition-all"
                         />
                       </div>
                     )}
 
-                    <div>
-                      <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Data *</label>
+                    {/* ── Data ── */}
+                    <div className="space-y-2.5">
+                      <label className="font-body text-[10px] uppercase tracking-[0.2em] text-primary-foreground/45 font-semibold px-1 block">Data *</label>
                       <input
                         type="date"
                         value={manualData}
                         onChange={(e) => setManualData(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                        className="w-full px-4 py-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] tabular-nums focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 backdrop-blur-sm transition-all"
                       />
                     </div>
 
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="font-body text-[10px] text-primary-foreground/30 block">Horário do atendimento *</label>
-                        <span className="font-body text-[10px] text-gold/80">{manualDuracaoTotal} min</span>
+                    {/* ── Horário ── */}
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between px-1">
+                        <label className="font-body text-[10px] uppercase tracking-[0.2em] text-primary-foreground/45 font-semibold block">Horário do atendimento *</label>
+                        <span className="font-body text-[10px] text-gold bg-gold/10 px-2 py-0.5 rounded-md font-medium tabular-nums">{manualDuracaoTotal} min</span>
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-[9px] uppercase tracking-wider text-primary-foreground/30 pointer-events-none">Início</span>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        <div className="space-y-1.5">
+                          <span className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/35 px-1 block">Início</span>
                           <input
                             type="time"
                             value={manualHorario}
                             onChange={(e) => handleManualHorarioChange(e.target.value)}
-                            className="w-full pl-12 pr-2 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                            className="w-full px-4 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] tabular-nums text-center focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 backdrop-blur-sm transition-all"
                           />
                         </div>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-[9px] uppercase tracking-wider text-primary-foreground/30 pointer-events-none">Fim</span>
+                        <div className="space-y-1.5">
+                          <span className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/35 px-1 block">Fim</span>
                           <input
                             type="time"
                             value={manualHorarioFim}
                             onChange={(e) => handleManualHorarioFimChange(e.target.value)}
-                            className="w-full pl-10 pr-2 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                            className="w-full px-4 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] tabular-nums text-center focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 backdrop-blur-sm transition-all"
                           />
                         </div>
                       </div>
-                      <p className="mt-1.5 font-body text-[10px] text-primary-foreground/40">Duração é a soma dos serviços adicionados acima.</p>
+                      <p className="px-1 font-body text-[10px] text-primary-foreground/40 italic">Duração calculada a partir dos serviços adicionados.</p>
                     </div>
 
-
-
-
-                    <div>
-                      <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Forma de pagamento</label>
+                    {/* ── Forma de pagamento ── */}
+                    <div className="space-y-2.5">
+                      <label className="font-body text-[10px] uppercase tracking-[0.2em] text-primary-foreground/45 font-semibold px-1 block">Forma de pagamento</label>
                       <select
                         value={manualFormaPagamento}
                         onChange={(e) => setManualFormaPagamento(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                        className="w-full px-4 py-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 backdrop-blur-sm transition-all appearance-none"
                       >
-                        <option value="pix">PIX</option>
-                        <option value="cartao">Cartão</option>
-                        <option value="dinheiro">Dinheiro</option>
-                        <option value="transferencia">Transferência</option>
+                        <option value="pix" className="bg-charcoal">PIX</option>
+                        <option value="cartao" className="bg-charcoal">Cartão</option>
+                        <option value="dinheiro" className="bg-charcoal">Dinheiro</option>
+                        <option value="transferencia" className="bg-charcoal">Transferência</option>
                       </select>
                     </div>
 
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-                      <div>
-                        <p className="font-body text-[13px] text-primary-foreground">Já foi pago?</p>
-                        <p className="font-body text-[10px] text-primary-foreground/30">Marcar como pagamento recebido</p>
+                    {/* ── Toggles ── */}
+                    <div className="space-y-2.5">
+                      <div className={`flex items-center justify-between p-4 rounded-2xl border backdrop-blur-sm transition-all ${
+                        manualPago
+                          ? "bg-gold/[0.06] border-gold/25 shadow-[0_0_24px_-12px_hsl(var(--gold)/0.5)]"
+                          : "bg-white/[0.03] border-white/[0.08]"
+                      }`}>
+                        <div className="min-w-0 pr-3">
+                          <p className={`font-body text-[13px] font-medium ${manualPago ? "text-gold" : "text-primary-foreground"}`}>Já foi pago?</p>
+                          <p className="font-body text-[10px] text-primary-foreground/40 mt-0.5">Marcar como pagamento recebido</p>
+                        </div>
+                        <Switch checked={manualPago} onCheckedChange={setManualPago} />
                       </div>
-                      <Switch checked={manualPago} onCheckedChange={setManualPago} />
-                    </div>
 
-                    <div className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
-                      manualConcluido
-                        ? "bg-green-500/10 border-green-500/30"
-                        : "bg-primary-foreground/[0.03] border-primary-foreground/[0.06]"
-                    }`}>
-                      <div>
-                        <p className={`font-body text-[13px] font-medium ${
-                          manualConcluido ? "text-green-400" : "text-primary-foreground"
-                        }`}>Já foi atendida? ✅</p>
-                        <p className="font-body text-[10px] text-primary-foreground/30">Marcar agendamento como concluído</p>
+                      <div className={`flex items-center justify-between p-4 rounded-2xl border backdrop-blur-sm transition-all ${
+                        manualConcluido
+                          ? "bg-green-500/[0.08] border-green-500/30 shadow-[0_0_24px_-12px_rgba(34,197,94,0.5)]"
+                          : "bg-white/[0.03] border-white/[0.08]"
+                      }`}>
+                        <div className="min-w-0 pr-3">
+                          <p className={`font-body text-[13px] font-medium flex items-center gap-1.5 ${manualConcluido ? "text-green-400" : "text-primary-foreground"}`}>
+                            Já foi atendida?
+                            {manualConcluido && <span className="text-green-400">✓</span>}
+                          </p>
+                          <p className="font-body text-[10px] text-primary-foreground/40 mt-0.5">Marcar agendamento como concluído</p>
+                        </div>
+                        <Switch checked={manualConcluido} onCheckedChange={setManualConcluido} />
                       </div>
-                      <Switch checked={manualConcluido} onCheckedChange={setManualConcluido} />
                     </div>
+                  </div>
 
-                    <div className="grid grid-cols-2 gap-2 pt-1">
-                      <button
-                        onClick={saveManualRegistration}
-                        disabled={manualSaving}
-                        className="w-full py-2.5 rounded-xl bg-gold/10 text-gold font-body text-[13px] font-medium hover:bg-gold/20 transition-all disabled:opacity-40"
-                      >
-                        {manualSaving ? "Salvando..." : "Registrar"}
-                      </button>
-                      <button
-                        onClick={() => setShowManualRegister(false)}
-                        className="w-full py-2.5 rounded-xl bg-primary-foreground/[0.05] text-primary-foreground/40 font-body text-[13px] hover:text-primary-foreground/60 transition-all"
-                      >
-                        Cancelar
-                      </button>
-                    </div>
+                  {/* Footer actions */}
+                  <div className="relative px-5 sm:px-6 pt-4 pb-5 sm:pb-6 border-t border-white/[0.06] bg-gradient-to-t from-black/30 to-transparent space-y-2.5">
+                    <button
+                      onClick={saveManualRegistration}
+                      disabled={manualSaving}
+                      className="w-full py-3.5 rounded-2xl bg-gold text-charcoal font-body text-[13px] font-bold uppercase tracking-[0.15em] shadow-[0_10px_30px_-10px_hsl(var(--gold)/0.5)] hover:shadow-[0_15px_35px_-5px_hsl(var(--gold)/0.6)] active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {manualSaving ? "Salvando..." : "Registrar Atendimento"}
+                    </button>
+                    <button
+                      onClick={() => setShowManualRegister(false)}
+                      className="w-full py-3 rounded-2xl bg-transparent text-primary-foreground/45 hover:text-primary-foreground/80 font-body text-[12px] uppercase tracking-[0.15em] transition-colors"
+                    >
+                      Cancelar
+                    </button>
                   </div>
                 </DialogContent>
               </Dialog>
+
+
 
               {/* Extend Duration Dialog */}
               <Dialog open={showExtendDialog} onOpenChange={setShowExtendDialog}>
