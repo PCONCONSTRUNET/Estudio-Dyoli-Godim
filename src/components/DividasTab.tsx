@@ -389,7 +389,7 @@ const DividasTab = () => {
  <option value="" className="bg-charcoal text-primary-foreground/85">Selecione um cliente (opcional)</option>
  {profiles.map(p => (
  <option key={p.id} value={p.id} className="bg-charcoal">
- {p.nome || 'Cliente Sem Nome'} {p.telefone ? `(${p.telefone})` : ''}
+ {p.nome || 'Cliente Sem Nome'} {p.whatsapp ? `(${p.whatsapp})` : ''}
  </option>
  ))}
  </select>
