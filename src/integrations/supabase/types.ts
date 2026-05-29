@@ -344,6 +344,50 @@ export type Database = {
         }
         Relationships: []
       }
+      dividas: {
+        Row: {
+          cliente_nome: string
+          created_at: string
+          data_criacao: string
+          descricao: string
+          id: string
+          status: string
+          user_id: string | null
+          valor_pago: number
+          valor_total: number
+        }
+        Insert: {
+          cliente_nome: string
+          created_at?: string
+          data_criacao?: string
+          descricao: string
+          id?: string
+          status?: string
+          user_id?: string | null
+          valor_pago?: number
+          valor_total: number
+        }
+        Update: {
+          cliente_nome?: string
+          created_at?: string
+          data_criacao?: string
+          descricao?: string
+          id?: string
+          status?: string
+          user_id?: string | null
+          valor_pago?: number
+          valor_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dividas_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gateway_configs: {
         Row: {
           access_token: string | null
