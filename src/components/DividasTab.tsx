@@ -30,7 +30,7 @@ interface Divida {
 interface Profile {
  id: string;
  nome: string | null;
- telefone: string | null;
+ whatsapp: string | null;
 }
 
 const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
@@ -66,7 +66,7 @@ const DividasTab = () => {
  try {
  const [dividasRes, profilesRes] = await Promise.all([
  supabase.from("dividas").select("*").order("data_criacao", { ascending: false }),
- supabase.from("profiles").select("id, nome, telefone")
+ supabase.from("profiles").select("id, nome, whatsapp")
  ]);
  
  if (dividasRes.data) setDividas(dividasRes.data);
@@ -389,7 +389,7 @@ const DividasTab = () => {
  <option value="" className="bg-charcoal text-primary-foreground/85">Selecione um cliente (opcional)</option>
  {profiles.map(p => (
  <option key={p.id} value={p.id} className="bg-charcoal">
- {p.nome || 'Cliente Sem Nome'} {p.telefone ? `(${p.telefone})` : ''}
+ {p.nome || 'Cliente Sem Nome'} {p.whatsapp ? `(${p.whatsapp})` : ''}
  </option>
  ))}
  </select>

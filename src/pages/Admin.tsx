@@ -381,14 +381,13 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [showManualRegister, setShowManualRegister] = useState(false);
   const [detalheAgendamento, setDetalheAgendamento] = useState<Agendamento | null>(null);
   const [manualServicos, setManualServicos] = useState<{ id: string; nome: string; preco: number; duracao_minutos: number; categoria: string }[]>([]);
-  const [manualServico, setManualServico] = useState("");
+  type ManualItem = { id: string; nome: string; valor: number; duracao: number };
+  const [manualItens, setManualItens] = useState<ManualItem[]>([]);
   const [manualCliente, setManualCliente] = useState("");
   const [manualClienteNome, setManualClienteNome] = useState("");
   const [manualData, setManualData] = useState(() => getDateKey(new Date()));
   const [manualHorario, setManualHorario] = useState("09:00");
   const [manualHorarioFim, setManualHorarioFim] = useState("10:00");
-  const [manualValor, setManualValor] = useState("");
-  const [manualDuracao, setManualDuracao] = useState("60");
   const [manualFormaPagamento, setManualFormaPagamento] = useState("pix");
   const [manualPago, setManualPago] = useState(false);
   const [manualConcluido, setManualConcluido] = useState(false);
@@ -637,29 +636,52 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     return diff;
   };
 
+  const manualDuracaoTotal = manualItens.reduce((s, it) => s + (Number(it.duracao) || 0), 0);
+  const manualValorTotal = manualItens.reduce((s, it) => s + (Number(it.valor) || 0), 0);
+
   const handleManualHorarioChange = (novoInicio: string) => {
     setManualHorario(novoInicio);
-    setManualHorarioFim(calcFim(novoInicio, manualDuracao));
+    setManualHorarioFim(calcFim(novoInicio, manualDuracaoTotal));
   };
   const handleManualHorarioFimChange = (novoFim: string) => {
     setManualHorarioFim(novoFim);
-    setManualDuracao(String(calcDuracao(manualHorario, novoFim)));
+    // Ajusta proporcionalmente: se houver itens, mantém soma; senão apenas atualiza fim
+    if (manualItens.length === 1) {
+      const nova = calcDuracao(manualHorario, novoFim);
+      setManualItens(prev => prev.map((it, i) => i === 0 ? { ...it, duracao: nova } : it));
+    }
   };
-  const handleManualDuracaoChange = (novaDuracao: string) => {
-    setManualDuracao(novaDuracao);
-    setManualHorarioFim(calcFim(manualHorario, novaDuracao));
+
+  // Recalcula horário fim sempre que a duração total mudar
+  useEffect(() => {
+    setManualHorarioFim(calcFim(manualHorario, manualDuracaoTotal));
+  }, [manualDuracaoTotal, manualHorario]);
+
+  const addManualItem = (servicoNome: string) => {
+    const svc = manualServicos.find(s => s.nome === servicoNome);
+    const novo: ManualItem = {
+      id: (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`),
+      nome: servicoNome,
+      valor: svc ? Number(svc.preco) : 0,
+      duracao: svc ? Number(svc.duracao_minutos) : 60,
+    };
+    setManualItens(prev => [...prev, novo]);
+  };
+  const updateManualItem = (id: string, patch: Partial<ManualItem>) => {
+    setManualItens(prev => prev.map(it => it.id === id ? { ...it, ...patch } : it));
+  };
+  const removeManualItem = (id: string) => {
+    setManualItens(prev => prev.filter(it => it.id !== id));
   };
 
   const openManualRegister = () => {
     loadManualServicos();
-    setManualServico("");
+    setManualItens([]);
     setManualCliente("");
     setManualClienteNome("");
     setManualData(selectedAgendaDate);
     setManualHorario("09:00");
     setManualHorarioFim("10:00");
-    setManualValor("");
-    setManualDuracao("60");
     setManualFormaPagamento("pix");
     setManualPago(false);
     setManualConcluido(false);
@@ -670,34 +692,40 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setShowManualRegister(true);
   };
 
-  const handleSelectManualServico = (servicoNome: string) => {
-    setManualServico(servicoNome);
-    const svc = manualServicos.find(s => s.nome === servicoNome);
-    if (svc) {
-      setManualValor(svc.preco.toString());
-      setManualDuracao(svc.duracao_minutos.toString());
-      setManualHorarioFim(calcFim(manualHorario, svc.duracao_minutos));
-    }
-  };
 
 
   const saveManualRegistration = async () => {
-    if (!manualServico || !manualData || !manualHorario || !manualValor) {
-      toast.error("Preencha todos os campos obrigatórios");
+    if (manualItens.length === 0) {
+      toast.error("Adicione pelo menos 1 serviço");
+      return;
+    }
+    if (!manualData || !manualHorario) {
+      toast.error("Preencha data e horário");
+      return;
+    }
+    if (manualItens.some(it => Number(it.valor) <= 0 || Number(it.duracao) <= 0)) {
+      toast.error("Cada serviço precisa ter valor e duração maiores que zero");
       return;
     }
     setManualSaving(true);
     try {
       const userId = manualCliente || null;
-      const duracao = Number(manualDuracao) || 60;
-      const valor = Number(manualValor);
-      
+      const duracao = manualDuracaoTotal || 60;
+      const valor = manualValorTotal;
+
+      // Agrupa duplicados: "Perfuração (×3), Troca de joia"
+      const counts = new Map<string, number>();
+      manualItens.forEach(it => counts.set(it.nome, (counts.get(it.nome) || 0) + 1));
+      const servicoLabel = Array.from(counts.entries())
+        .map(([nome, qtd]) => qtd > 1 ? `${nome} (×${qtd})` : nome)
+        .join(", ");
+
       const clienteNome = manualCliente
         ? (clientes.find(c => c.id === manualCliente)?.nome || "")
         : manualClienteNome.trim();
 
       const { data, error } = await supabase.from("agendamentos").insert({
-        servico: manualServico,
+        servico: servicoLabel,
         data_agendamento: manualData,
         horario: manualHorario,
         valor: valor,
@@ -719,7 +747,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         sendPush({
           role: "admin",
           title: "🔔 Novo Agendamento!",
-          message: `${clienteNome || "Presencial"} — ${manualServico} em ${manualData} às ${manualHorario}`,
+          message: `${clienteNome || "Presencial"} — ${servicoLabel} em ${manualData} às ${manualHorario}`,
           url: "/admin/",
         });
       }
@@ -728,6 +756,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     }
     setManualSaving(false);
   };
+
 
   const openExtendDialog = (id: string) => {
     setExtendingId(id);
@@ -1506,30 +1535,87 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                     </DialogTitle>
                   </DialogHeader>
                   <div className="space-y-3 w-full min-w-0">
-                    {/* ── Serviço com busca ── */}
+                    {/* ── Serviços da comanda (múltiplos) ── */}
                     <div className="relative">
-                      <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Serviço *</label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="font-body text-[10px] text-primary-foreground/30 block">Serviços da comanda *</label>
+                        {manualItens.length > 0 && (
+                          <span className="font-body text-[10px] text-gold/80">{manualItens.length} {manualItens.length === 1 ? "item" : "itens"}</span>
+                        )}
+                      </div>
+
+                      {/* Lista de itens adicionados */}
+                      {manualItens.length > 0 && (
+                        <div className="mb-2 space-y-1.5">
+                          {manualItens.map((it, idx) => (
+                            <div key={it.id} className="rounded-xl border border-gold/20 bg-gold/[0.04] p-2.5">
+                              <div className="flex items-start justify-between gap-2 mb-1.5">
+                                <p className="font-body text-[12px] font-medium text-primary-foreground flex-1 min-w-0 break-words">
+                                  <span className="text-gold/60 mr-1">{idx + 1}.</span>{it.nome}
+                                </p>
+                                <button
+                                  type="button"
+                                  onClick={() => removeManualItem(it.id)}
+                                  className="flex-shrink-0 w-7 h-7 rounded-lg bg-rose/10 hover:bg-rose/20 text-rose flex items-center justify-center transition-colors"
+                                  aria-label="Remover serviço"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                              <div className="grid grid-cols-2 gap-1.5">
+                                <div>
+                                  <label className="font-body text-[9px] text-primary-foreground/40 mb-0.5 block">Valor (R$)</label>
+                                  <input
+                                    type="number"
+                                    inputMode="decimal"
+                                    min={0}
+                                    step="0.01"
+                                    value={it.valor || ""}
+                                    onChange={(e) => updateManualItem(it.id, { valor: Number(e.target.value) || 0 })}
+                                    placeholder="0,00"
+                                    className="w-full px-2 py-1.5 rounded-lg bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[12px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="font-body text-[9px] text-primary-foreground/40 mb-0.5 block">Duração (min)</label>
+                                  <input
+                                    type="number"
+                                    inputMode="numeric"
+                                    min={5}
+                                    step={5}
+                                    value={it.duracao || ""}
+                                    onChange={(e) => updateManualItem(it.id, { duracao: Number(e.target.value) || 0 })}
+                                    className="w-full px-2 py-1.5 rounded-lg bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[12px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+
+                          {/* Resumo */}
+                          <div className="flex items-center justify-between rounded-xl border border-gold/30 bg-gold/10 px-3 py-2">
+                            <span className="font-body text-[11px] text-primary-foreground/70">Total</span>
+                            <div className="text-right">
+                              <p className="font-heading text-[14px] font-semibold text-gold tabular-nums">R$ {manualValorTotal.toFixed(2).replace(".", ",")}</p>
+                              <p className="font-body text-[10px] text-primary-foreground/50">{manualDuracaoTotal} min</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Buscar / adicionar serviço */}
                       <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary-foreground/25 pointer-events-none" />
                         <input
                           type="text"
-                          placeholder={manualServico || "Buscar serviço..."}
+                          placeholder={manualItens.length === 0 ? "Buscar serviço..." : "+ Adicionar outro serviço..."}
                           value={manualServicoSearch}
                           onFocus={() => setManualServicoOpen(true)}
                           onChange={(e) => { setManualServicoSearch(e.target.value); setManualServicoOpen(true); }}
-                          className={`w-full pl-9 pr-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20 placeholder:text-primary-foreground/40 ${
-                            manualServico ? "border-gold/30 text-gold" : "border-primary-foreground/[0.06] text-primary-foreground"
-                          }`}
+                          className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20 placeholder:text-primary-foreground/40"
                         />
-                        {manualServico && (
-                          <button
-                            onClick={() => { setManualServico(""); setManualServicoSearch(""); setManualValor(""); setManualDuracao("60"); }}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-foreground/30 hover:text-rose transition-colors"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        )}
                       </div>
+
                       {manualServicoOpen && (
                         <div className="absolute z-50 mt-1 w-full rounded-xl border border-primary-foreground/[0.08] bg-charcoal shadow-2xl overflow-hidden">
                           <div className="max-h-48 overflow-y-auto">
@@ -1545,13 +1631,11 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                     key={s.id}
                                     onMouseDown={(e) => e.preventDefault()}
                                     onClick={() => {
-                                      handleSelectManualServico(s.nome);
+                                      addManualItem(s.nome);
                                       setManualServicoSearch("");
                                       setManualServicoOpen(false);
                                     }}
-                                    className={`w-full text-left px-3 py-2.5 font-body text-[13px] transition-all hover:bg-gold/10 ${
-                                      manualServico === s.nome ? "bg-gold/10 text-gold" : "text-primary-foreground"
-                                    }`}
+                                    className="w-full text-left px-3 py-2.5 font-body text-[13px] transition-all hover:bg-gold/10 text-primary-foreground"
                                   >
                                     <span className="font-medium">{s.nome}</span>
                                     <span className="ml-2 text-[11px] text-primary-foreground/40">R$ {s.preco.toFixed(2).replace(".", ",")}</span>
@@ -1561,11 +1645,12 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                           </div>
                         </div>
                       )}
-                      {/* Overlay para fechar */}
                       {manualServicoOpen && (
                         <div className="fixed inset-0 z-40" onClick={() => setManualServicoOpen(false)} />
                       )}
                     </div>
+
+
 
                     {/* ── Cliente com busca ── */}
                     <div className="relative">
@@ -1671,7 +1756,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <label className="font-body text-[10px] text-primary-foreground/30 block">Horário do atendimento *</label>
-                        <span className="font-body text-[10px] text-gold/80">{manualDuracao || 0} min</span>
+                        <span className="font-body text-[10px] text-gold/80">{manualDuracaoTotal} min</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <div className="relative">
@@ -1693,47 +1778,10 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                           />
                         </div>
                       </div>
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {[30, 60, 90, 120, 150, 180].map((min) => (
-                          <button
-                            key={min}
-                            type="button"
-                            onClick={() => handleManualDuracaoChange(String(min))}
-                            className={`px-2.5 py-1 rounded-full font-body text-[10px] transition ${
-                              Number(manualDuracao) === min
-                                ? "bg-gold/15 text-gold border border-gold/30"
-                                : "bg-primary-foreground/[0.04] text-primary-foreground/50 border border-primary-foreground/[0.06] hover:text-primary-foreground/80"
-                            }`}
-                          >
-                            {min >= 60 ? `${min / 60}h${min % 60 ? ` ${min % 60}m` : ""}` : `${min}m`}
-                          </button>
-                        ))}
-                      </div>
+                      <p className="mt-1.5 font-body text-[10px] text-primary-foreground/40">Duração é a soma dos serviços adicionados acima.</p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Valor (R$) *</label>
-                        <input
-                          type="number"
-                          value={manualValor}
-                          onChange={(e) => setManualValor(e.target.value)}
-                          placeholder="0.00"
-                          className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
-                        />
-                      </div>
-                      <div>
-                        <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Duração (min)</label>
-                        <input
-                          type="number"
-                          min={5}
-                          step={5}
-                          value={manualDuracao}
-                          onChange={(e) => handleManualDuracaoChange(e.target.value)}
-                          className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
-                        />
-                      </div>
-                    </div>
+
 
 
                     <div>
