@@ -1756,7 +1756,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <label className="font-body text-[10px] text-primary-foreground/30 block">Horário do atendimento *</label>
-                        <span className="font-body text-[10px] text-gold/80">{manualDuracao || 0} min</span>
+                        <span className="font-body text-[10px] text-gold/80">{manualDuracaoTotal} min</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <div className="relative">
@@ -1778,47 +1778,10 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                           />
                         </div>
                       </div>
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {[30, 60, 90, 120, 150, 180].map((min) => (
-                          <button
-                            key={min}
-                            type="button"
-                            onClick={() => handleManualDuracaoChange(String(min))}
-                            className={`px-2.5 py-1 rounded-full font-body text-[10px] transition ${
-                              Number(manualDuracao) === min
-                                ? "bg-gold/15 text-gold border border-gold/30"
-                                : "bg-primary-foreground/[0.04] text-primary-foreground/50 border border-primary-foreground/[0.06] hover:text-primary-foreground/80"
-                            }`}
-                          >
-                            {min >= 60 ? `${min / 60}h${min % 60 ? ` ${min % 60}m` : ""}` : `${min}m`}
-                          </button>
-                        ))}
-                      </div>
+                      <p className="mt-1.5 font-body text-[10px] text-primary-foreground/40">Duração é a soma dos serviços adicionados acima.</p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Valor (R$) *</label>
-                        <input
-                          type="number"
-                          value={manualValor}
-                          onChange={(e) => setManualValor(e.target.value)}
-                          placeholder="0.00"
-                          className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
-                        />
-                      </div>
-                      <div>
-                        <label className="font-body text-[10px] text-primary-foreground/30 mb-1 block">Duração (min)</label>
-                        <input
-                          type="number"
-                          min={5}
-                          step={5}
-                          value={manualDuracao}
-                          onChange={(e) => handleManualDuracaoChange(e.target.value)}
-                          className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
-                        />
-                      </div>
-                    </div>
+
 
 
                     <div>
