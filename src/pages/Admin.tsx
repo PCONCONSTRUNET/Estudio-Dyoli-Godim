@@ -636,29 +636,52 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     return diff;
   };
 
+  const manualDuracaoTotal = manualItens.reduce((s, it) => s + (Number(it.duracao) || 0), 0);
+  const manualValorTotal = manualItens.reduce((s, it) => s + (Number(it.valor) || 0), 0);
+
   const handleManualHorarioChange = (novoInicio: string) => {
     setManualHorario(novoInicio);
-    setManualHorarioFim(calcFim(novoInicio, manualDuracao));
+    setManualHorarioFim(calcFim(novoInicio, manualDuracaoTotal));
   };
   const handleManualHorarioFimChange = (novoFim: string) => {
     setManualHorarioFim(novoFim);
-    setManualDuracao(String(calcDuracao(manualHorario, novoFim)));
+    // Ajusta proporcionalmente: se houver itens, mantém soma; senão apenas atualiza fim
+    if (manualItens.length === 1) {
+      const nova = calcDuracao(manualHorario, novoFim);
+      setManualItens(prev => prev.map((it, i) => i === 0 ? { ...it, duracao: nova } : it));
+    }
   };
-  const handleManualDuracaoChange = (novaDuracao: string) => {
-    setManualDuracao(novaDuracao);
-    setManualHorarioFim(calcFim(manualHorario, novaDuracao));
+
+  // Recalcula horário fim sempre que a duração total mudar
+  useEffect(() => {
+    setManualHorarioFim(calcFim(manualHorario, manualDuracaoTotal));
+  }, [manualDuracaoTotal, manualHorario]);
+
+  const addManualItem = (servicoNome: string) => {
+    const svc = manualServicos.find(s => s.nome === servicoNome);
+    const novo: ManualItem = {
+      id: (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`),
+      nome: servicoNome,
+      valor: svc ? Number(svc.preco) : 0,
+      duracao: svc ? Number(svc.duracao_minutos) : 60,
+    };
+    setManualItens(prev => [...prev, novo]);
+  };
+  const updateManualItem = (id: string, patch: Partial<ManualItem>) => {
+    setManualItens(prev => prev.map(it => it.id === id ? { ...it, ...patch } : it));
+  };
+  const removeManualItem = (id: string) => {
+    setManualItens(prev => prev.filter(it => it.id !== id));
   };
 
   const openManualRegister = () => {
     loadManualServicos();
-    setManualServico("");
+    setManualItens([]);
     setManualCliente("");
     setManualClienteNome("");
     setManualData(selectedAgendaDate);
     setManualHorario("09:00");
     setManualHorarioFim("10:00");
-    setManualValor("");
-    setManualDuracao("60");
     setManualFormaPagamento("pix");
     setManualPago(false);
     setManualConcluido(false);
@@ -669,15 +692,6 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setShowManualRegister(true);
   };
 
-  const handleSelectManualServico = (servicoNome: string) => {
-    setManualServico(servicoNome);
-    const svc = manualServicos.find(s => s.nome === servicoNome);
-    if (svc) {
-      setManualValor(svc.preco.toString());
-      setManualDuracao(svc.duracao_minutos.toString());
-      setManualHorarioFim(calcFim(manualHorario, svc.duracao_minutos));
-    }
-  };
 
 
   const saveManualRegistration = async () => {
