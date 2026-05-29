@@ -1768,22 +1768,22 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                         <span className="font-body text-[10px] text-gold bg-gold/10 px-2 py-0.5 rounded-md font-medium tabular-nums">{manualDuracaoTotal} min</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2.5">
-                        <div className="space-y-1.5">
-                          <span className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/35 px-1 block">Início</span>
+                        <div className="space-y-1.5 min-w-0">
+                          <span className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/35 px-1 block truncate">Início</span>
                           <input
                             type="time"
                             value={manualHorario}
                             onChange={(e) => handleManualHorarioChange(e.target.value)}
-                            className="w-full px-4 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] tabular-nums text-center focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 backdrop-blur-sm transition-all"
+                            className="w-full min-w-0 px-2 sm:px-4 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] tabular-nums text-center focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 backdrop-blur-sm transition-all appearance-none"
                           />
                         </div>
-                        <div className="space-y-1.5">
-                          <span className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/35 px-1 block">Fim</span>
+                        <div className="space-y-1.5 min-w-0">
+                          <span className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/35 px-1 block truncate">Fim</span>
                           <input
                             type="time"
                             value={manualHorarioFim}
                             onChange={(e) => handleManualHorarioFimChange(e.target.value)}
-                            className="w-full px-4 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] tabular-nums text-center focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 backdrop-blur-sm transition-all"
+                            className="w-full min-w-0 px-2 sm:px-4 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] tabular-nums text-center focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 backdrop-blur-sm transition-all appearance-none"
                           />
                         </div>
                       </div>
