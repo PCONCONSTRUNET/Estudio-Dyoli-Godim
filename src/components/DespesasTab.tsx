@@ -440,36 +440,37 @@ const DespesasTab = () => {
 
  {/* Stats grid */}
  <div className="grid grid-cols-3 gap-2">
- <div className="group relative p-3 rounded-2xl bg-red-500/[0.06] border border-red-500/[0.15] hover:border-red-500/25 transition-all overflow-hidden">
- <div className="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-red-500/10 blur-xl group-hover:bg-red-500/20 transition-all" />
- <TrendingDown className="relative w-3.5 h-3.5 text-red-400/80 mb-1.5 group-hover:scale-110 transition-transform" />
- <p className="relative font-heading text-base font-bold text-red-400 tabular-nums leading-none truncate">
- {formatCurrency(totalAtrasado)}
- </p>
- <p className="relative font-body text-[9px] text-primary-foreground/75 uppercase tracking-wider mt-1">
- {countAtrasadas} atrasada{countAtrasadas !== 1 ? "s" : ""}
- </p>
- </div>
- <div className="group relative p-3 rounded-2xl bg-orange-500/[0.05] border border-orange-500/[0.12] hover:border-orange-500/25 transition-all overflow-hidden">
- <div className="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-orange-500/10 blur-xl group-hover:bg-orange-500/20 transition-all" />
- <Wallet className="relative w-3.5 h-3.5 text-orange-400/80 mb-1.5 group-hover:scale-110 transition-transform" />
- <p className="relative font-heading text-base font-bold text-orange-400 tabular-nums leading-none truncate">
- {formatCurrency(totalPendente)}
- </p>
- <p className="relative font-body text-[9px] text-primary-foreground/75 uppercase tracking-wider mt-1">
- Pendente
- </p>
- </div>
- <div className="group relative p-3 rounded-2xl bg-green-500/[0.05] border border-green-500/[0.12] hover:border-green-500/25 transition-all overflow-hidden">
- <div className="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-green-500/10 blur-xl group-hover:bg-green-500/20 transition-all" />
- <TrendingUp className="relative w-3.5 h-3.5 text-green-400/80 mb-1.5 group-hover:scale-110 transition-transform" />
- <p className="relative font-heading text-base font-bold text-green-400 tabular-nums leading-none truncate">
- {formatCurrency(totalPago)}
- </p>
- <p className="relative font-body text-[9px] text-primary-foreground/75 uppercase tracking-wider mt-1">
- Pago
- </p>
- </div>
+                            <div className="group relative p-3 rounded-2xl bg-red-500/[0.06] border border-red-500/[0.15] hover:border-red-500/25 transition-all overflow-hidden">
+                                <div className="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-red-500/10 blur-xl group-hover:bg-red-500/20 transition-all" />
+                                <TrendingDown className="relative w-3.5 h-3.5 text-red-400/80 mb-1.5 group-hover:scale-110 transition-transform" />
+                                <p className="relative font-body text-[15px] sm:text-[17px] font-bold text-red-400 tabular-nums leading-tight truncate tracking-tight">
+                                    {formatCurrency(totalAtrasado)}
+                                </p>
+                                <p className="relative font-body text-[10px] font-medium text-primary-foreground/85 uppercase tracking-wider mt-1">
+                                    {countAtrasadas} atrasada{countAtrasadas !== 1 ? "s" : ""}
+                                </p>
+                            </div>
+                            <div className="group relative p-3 rounded-2xl bg-orange-500/[0.05] border border-orange-500/[0.12] hover:border-orange-500/25 transition-all overflow-hidden">
+                                <div className="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-orange-500/10 blur-xl group-hover:bg-orange-500/20 transition-all" />
+                                <Wallet className="relative w-3.5 h-3.5 text-orange-400/80 mb-1.5 group-hover:scale-110 transition-transform" />
+                                <p className="relative font-body text-[15px] sm:text-[17px] font-bold text-orange-400 tabular-nums leading-tight truncate tracking-tight">
+                                    {formatCurrency(totalPendente)}
+                                </p>
+                                <p className="relative font-body text-[10px] font-medium text-primary-foreground/85 uppercase tracking-wider mt-1">
+                                    Pendente
+                                </p>
+                            </div>
+                            <div className="group relative p-3 rounded-2xl bg-green-500/[0.05] border border-green-500/[0.12] hover:border-green-500/25 transition-all overflow-hidden">
+                                <div className="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-green-500/10 blur-xl group-hover:bg-green-500/20 transition-all" />
+                                <TrendingUp className="relative w-3.5 h-3.5 text-green-400/80 mb-1.5 group-hover:scale-110 transition-transform" />
+                                <p className="relative font-body text-[15px] sm:text-[17px] font-bold text-green-400 tabular-nums leading-tight truncate tracking-tight">
+                                    {formatCurrency(totalPago)}
+                                </p>
+                                <p className="relative font-body text-[10px] font-medium text-primary-foreground/85 uppercase tracking-wider mt-1">
+                                    Pago
+                                </p>
+                            </div>
+
  </div>
  </div>
  </div>
