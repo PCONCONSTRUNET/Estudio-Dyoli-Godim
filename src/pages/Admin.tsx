@@ -1757,7 +1757,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                         type="date"
                         value={manualData}
                         onChange={(e) => setManualData(e.target.value)}
-                        className="w-full px-4 py-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] tabular-nums focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 backdrop-blur-sm transition-all"
+                        style={{ textAlign: "left", justifyContent: "flex-start" }}
+                        className="w-full block px-4 py-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] text-left tabular-nums focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 backdrop-blur-sm transition-all appearance-none"
                       />
                     </div>
 
