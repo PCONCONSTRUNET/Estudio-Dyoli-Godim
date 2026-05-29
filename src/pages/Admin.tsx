@@ -695,22 +695,37 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
 
   const saveManualRegistration = async () => {
-    if (!manualServico || !manualData || !manualHorario || !manualValor) {
-      toast.error("Preencha todos os campos obrigatórios");
+    if (manualItens.length === 0) {
+      toast.error("Adicione pelo menos 1 serviço");
+      return;
+    }
+    if (!manualData || !manualHorario) {
+      toast.error("Preencha data e horário");
+      return;
+    }
+    if (manualItens.some(it => Number(it.valor) <= 0 || Number(it.duracao) <= 0)) {
+      toast.error("Cada serviço precisa ter valor e duração maiores que zero");
       return;
     }
     setManualSaving(true);
     try {
       const userId = manualCliente || null;
-      const duracao = Number(manualDuracao) || 60;
-      const valor = Number(manualValor);
-      
+      const duracao = manualDuracaoTotal || 60;
+      const valor = manualValorTotal;
+
+      // Agrupa duplicados: "Perfuração (×3), Troca de joia"
+      const counts = new Map<string, number>();
+      manualItens.forEach(it => counts.set(it.nome, (counts.get(it.nome) || 0) + 1));
+      const servicoLabel = Array.from(counts.entries())
+        .map(([nome, qtd]) => qtd > 1 ? `${nome} (×${qtd})` : nome)
+        .join(", ");
+
       const clienteNome = manualCliente
         ? (clientes.find(c => c.id === manualCliente)?.nome || "")
         : manualClienteNome.trim();
 
       const { data, error } = await supabase.from("agendamentos").insert({
-        servico: manualServico,
+        servico: servicoLabel,
         data_agendamento: manualData,
         horario: manualHorario,
         valor: valor,
@@ -732,7 +747,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         sendPush({
           role: "admin",
           title: "🔔 Novo Agendamento!",
-          message: `${clienteNome || "Presencial"} — ${manualServico} em ${manualData} às ${manualHorario}`,
+          message: `${clienteNome || "Presencial"} — ${servicoLabel} em ${manualData} às ${manualHorario}`,
           url: "/admin/",
         });
       }
@@ -741,6 +756,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     }
     setManualSaving(false);
   };
+
 
   const openExtendDialog = (id: string) => {
     setExtendingId(id);
