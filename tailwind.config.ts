@@ -75,8 +75,8 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        heading: ["Cormorant Garamond", "serif"],
-        body: ["Inter", "sans-serif"],
+        heading: ["-apple-system", "SF Pro Display", "Inter", "sans-serif"],
+        body: ["-apple-system", "SF Pro Text", "Inter", "sans-serif"],
       },
       keyframes: {
         "accordion-down": {

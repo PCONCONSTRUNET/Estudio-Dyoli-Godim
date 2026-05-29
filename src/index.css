@@ -118,14 +118,16 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Cormorant Garamond', serif;
-    letter-spacing: -0.01em;
+    font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Helvetica Neue', sans-serif;
+    letter-spacing: -0.02em;
+    font-weight: 600;
   }
 }
 
 @layer utilities {
   .font-heading {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Helvetica Neue', sans-serif;
+    letter-spacing: -0.02em;
   }
   .font-body {
     font-family: -apple-system, 'SF Pro Text', 'Inter', 'Helvetica Neue', sans-serif;
