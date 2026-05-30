@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { Search, CheckCircle, X, UserX, ChevronDown, Bell, Clock, AlertTriangle, Eye, Wallet, History } from "lucide-react";
 import BinButton from "@/components/ui/bin-button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { notifyAgendamentoConfirmadoById, notifyLembreteById } from "@/lib/notify-webhook";
@@ -1032,8 +1033,8 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
       </Sheet>
 
       {/* Modal: Registrar pagamento (sinal ou restante) */}
-      <Sheet open={!!pagamentoAg} onOpenChange={(open) => { if (!open) { setPagamentoAg(null); setPagamentoInput(""); } }}>
-        <SheetContent side="bottom" className="bg-charcoal border-primary-foreground/[0.06] p-0 max-h-[90vh]">
+      <Dialog open={!!pagamentoAg} onOpenChange={(open) => { if (!open) { setPagamentoAg(null); setPagamentoInput(""); } }}>
+        <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-md mx-auto max-h-[85vh] overflow-y-auto bg-charcoal border-primary-foreground/[0.06] rounded-2xl p-0 shadow-xl">
           {pagamentoAg && (() => {
             const valorTotal = Number(pagamentoAg.valor);
             const jaPago = Number(pagamentoAg.valor_pago || 0);
@@ -1136,8 +1137,8 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
               </div>
             );
           })()}
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );
