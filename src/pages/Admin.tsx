@@ -765,7 +765,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     }
     setManualSaving(true);
     try {
-      const userId = manualCliente || null;
+      let userId = manualCliente || null;
       const duracao = manualDuracaoTotal || 60;
       const valor = manualValorTotal;
 
@@ -779,6 +779,49 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
       const clienteNome = manualCliente
         ? (clientes.find(c => c.id === manualCliente)?.nome || "")
         : manualClienteNome.trim();
+
+      // Auto-registrar o cliente caso seja inserido apenas o nome
+      if (!userId && clienteNome) {
+        try {
+          const fakeEmail = `manual_${globalThis.crypto?.randomUUID?.() || Date.now()}@estudiodyoligodim.com.br`;
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://vlepenxinekoljxecomr.supabase.co";
+          const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsZXBlbnhpbmVrb2xqeGVjb21yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNjI0NDksImV4cCI6MjA5MDYzODQ0OX0.5U3grLWxVeHl2JnuTRWh4P3lPmiv04YAOFosjDZmjMA";
+
+          const authResponse = await fetch(`${supabaseUrl}/auth/v1/signup`, {
+            method: "POST",
+            headers: {
+              "apikey": supabaseKey,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              email: fakeEmail,
+              password: `Manual@${Date.now()}!XyZ`,
+              data: {
+                nome: clienteNome,
+                whatsapp: ""
+              }
+            })
+          });
+
+          if (authResponse.ok) {
+            const result = await authResponse.json();
+            const newId = result.id || result.user?.id;
+            if (newId) {
+              userId = newId;
+              setClientes(prev => [{
+                id: newId,
+                nome: clienteNome,
+                whatsapp: "",
+                created_at: new Date().toISOString()
+              }, ...prev]);
+            }
+          } else {
+            console.error("Falha ao criar cliente automaticamente:", await authResponse.text());
+          }
+        } catch (authErr) {
+          console.error("Erro na requisição para criar cliente:", authErr);
+        }
+      }
 
       const { data, error } = await supabase.from("agendamentos").insert({
         servico: servicoLabel,
@@ -2210,122 +2253,149 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                   </div>
 
                   <Dialog open={!!selectedClient} onOpenChange={(open) => !open && setSelectedClient(null)}>
-                    <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overflow-x-hidden rounded-2xl border border-gold/20 bg-charcoal p-4 sm:p-5">
-                      <DialogHeader>
-                        <DialogTitle className="font-heading text-lg text-primary-foreground">{selProfile?.nome || "Cliente"}</DialogTitle>
+                    <DialogContent className="w-[calc(100vw-1rem)] max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overflow-x-hidden rounded-[24px] border border-white/[0.08] bg-[#141415] p-6 shadow-2xl custom-scrollbar">
+                      <DialogHeader className="mb-2">
+                        <DialogTitle className="font-heading text-[22px] font-bold text-primary-foreground tracking-wide">
+                          {selProfile?.nome || "Cliente"}
+                        </DialogTitle>
                       </DialogHeader>
                       {selProfile && (
-                        <div className="space-y-4">
-                          <div className="space-y-1 rounded-xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-3">
-                            <p className="font-body text-[12px] text-primary-foreground/50">📱 {formatWhatsapp(selProfile.whatsapp)}</p>
-                            {selProfile.cpf && (
-                              <p className="font-body text-[12px] text-primary-foreground/50">🪪 CPF {selProfile.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}</p>
-                            )}
-                            <p className="font-body text-[12px] text-primary-foreground/50">📅 Cliente desde {new Date(selProfile.created_at).toLocaleDateString("pt-BR")}</p>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="rounded-xl border border-gold/10 bg-gold/5 p-3 text-center">
-                              <p className="font-body text-[18px] font-bold text-gold">R$ {totalGasto.toFixed(2).replace(".", ",")}</p>
-                              <p className="font-body text-[10px] text-gold/60">Total pago</p>
+                        <div className="space-y-6">
+                          <div className="space-y-2 rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4">
+                            <div className="flex items-center gap-3">
+                              <div className="flex items-center justify-center w-6 h-6 rounded-md bg-blue-500/10">
+                                <span className="text-[12px]">📱</span>
+                              </div>
+                              <p className="font-body text-[13px] text-primary-foreground/70">{formatWhatsapp(selProfile.whatsapp)}</p>
                             </div>
-                            <div className="rounded-xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-3 text-center">
-                              <p className="font-body text-[18px] font-bold text-primary-foreground">R$ {totalValor.toFixed(2).replace(".", ",")}</p>
-                              <p className="font-body text-[10px] text-primary-foreground/30">Valor total</p>
+                            {selProfile.cpf && (
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center justify-center w-6 h-6 rounded-md bg-purple-500/10">
+                                  <span className="text-[12px]">🪪</span>
+                                </div>
+                                <p className="font-body text-[13px] text-primary-foreground/70">CPF {selProfile.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}</p>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-3">
+                              <div className="flex items-center justify-center w-6 h-6 rounded-md bg-emerald-500/10">
+                                <span className="text-[12px]">📅</span>
+                              </div>
+                              <p className="font-body text-[13px] text-primary-foreground/70">Cliente desde {new Date(selProfile.created_at).toLocaleDateString("pt-BR")}</p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="rounded-2xl border border-gold/20 bg-gradient-to-b from-gold/10 to-gold/5 p-4 text-center shadow-[0_4px_20px_-4px_rgba(212,175,55,0.15)] relative overflow-hidden group hover:border-gold/30 transition-all">
+                              <div className="absolute inset-0 bg-gold/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                              <p className="font-heading text-[24px] font-bold text-gold relative z-10">R$ {totalGasto.toFixed(2).replace(".", ",")}</p>
+                              <p className="font-body text-[11px] text-gold/70 relative z-10 mt-1 uppercase tracking-wider font-semibold">Total pago</p>
+                            </div>
+                            <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 text-center hover:bg-white/[0.05] transition-all">
+                              <p className="font-heading text-[24px] font-bold text-primary-foreground">R$ {totalValor.toFixed(2).replace(".", ",")}</p>
+                              <p className="font-body text-[11px] text-primary-foreground/40 mt-1 uppercase tracking-wider font-semibold">Valor total</p>
                             </div>
                           </div>
 
                           {saldoDevedor > 0 && (
-                            <div className="rounded-2xl border border-amber-500/40 bg-gradient-to-br from-amber-500/15 via-amber-500/[0.06] to-transparent p-3.5 shadow-[0_0_0_1px_rgba(245,158,11,0.08),0_8px_24px_-8px_rgba(245,158,11,0.35)]">
+                            <div className="rounded-2xl border border-amber-500/40 bg-gradient-to-br from-amber-500/15 via-amber-500/[0.06] to-transparent p-4 shadow-[0_0_0_1px_rgba(245,158,11,0.08),0_8px_24px_-8px_rgba(245,158,11,0.35)]">
                               <div className="flex items-center justify-between gap-3">
                                 <div className="min-w-0">
-                                  <p className="font-body text-[10px] uppercase tracking-wider text-amber-400/80 font-semibold">Saldo devedor</p>
-                                  <p className="font-heading text-[22px] font-bold text-amber-300 leading-tight mt-0.5">
+                                  <p className="font-body text-[11px] uppercase tracking-wider text-amber-400/80 font-bold">Saldo devedor</p>
+                                  <p className="font-heading text-[24px] font-bold text-amber-300 leading-tight mt-0.5">
                                     R$ {saldoDevedor.toFixed(2).replace(".", ",")}
                                   </p>
-                                  <p className="font-body text-[11px] text-amber-200/70 mt-0.5">
+                                  <p className="font-body text-[12px] text-amber-200/70 mt-1">
                                     {pedidosDevendo} {pedidosDevendo === 1 ? "pedido em aberto" : "pedidos em aberto"}
                                   </p>
                                 </div>
-                                <div className="shrink-0 h-11 w-11 rounded-full bg-amber-500/15 border border-amber-500/40 flex items-center justify-center">
-                                  <span className="font-heading text-[18px] text-amber-300">⌛</span>
+                                <div className="shrink-0 h-12 w-12 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shadow-inner">
+                                  <span className="font-heading text-[20px] text-amber-300">⌛</span>
                                 </div>
                               </div>
-                              <p className="font-body text-[11px] text-amber-200/70 mt-2 leading-snug">
-                                💡 Conforme os pagamentos forem registrados na aba <span className="font-semibold text-amber-200">Pedidos</span>, este saldo é descontado automaticamente.
-                              </p>
                             </div>
                           )}
 
                           {saldoDevedor <= 0 && totalValor > 0 && (
-                            <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.06] p-2.5 flex items-center gap-2">
-                              <span className="text-emerald-400 text-[14px]">✓</span>
-                              <p className="font-body text-[11px] text-emerald-300/90">Cliente sem pendências financeiras.</p>
+                            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.04] p-3 flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                                <span className="text-emerald-400 text-[14px]">✓</span>
+                              </div>
+                              <p className="font-body text-[12px] text-emerald-300/90 font-medium">Cliente sem pendências financeiras.</p>
                             </div>
                           )}
 
-                          <div className="grid grid-cols-3 gap-2">
-                            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-2 text-center">
-                              <p className="font-body text-[16px] font-bold text-emerald-400">{confirmedCount}</p>
-                              <p className="font-body text-[9px] text-emerald-400/60">Realizados</p>
+                          <div className="grid grid-cols-3 gap-3">
+                            <div className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-transparent p-3 text-center">
+                              <p className="font-heading text-[20px] font-bold text-emerald-400">{confirmedCount}</p>
+                              <p className="font-body text-[10px] text-emerald-400/70 uppercase tracking-widest mt-0.5 font-semibold">Realizadas</p>
                             </div>
-                            <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-2 text-center">
-                              <p className="font-body text-[16px] font-bold text-red-400">{faltaCount}</p>
-                              <p className="font-body text-[9px] text-red-400/60">Faltas</p>
+                            <div className="rounded-2xl border border-red-500/20 bg-gradient-to-br from-red-500/10 to-transparent p-3 text-center">
+                              <p className="font-heading text-[20px] font-bold text-red-400">{faltaCount}</p>
+                              <p className="font-body text-[10px] text-red-400/70 uppercase tracking-widest mt-0.5 font-semibold">Faltas</p>
                             </div>
-                            <div className="rounded-xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-2 text-center">
-                              <p className="font-body text-[16px] font-bold text-primary-foreground/50">{cancelCount}</p>
-                              <p className="font-body text-[9px] text-primary-foreground/30">Cancelados</p>
+                            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 text-center">
+                              <p className="font-heading text-[20px] font-bold text-primary-foreground/50">{cancelCount}</p>
+                              <p className="font-body text-[10px] text-primary-foreground/30 uppercase tracking-widest mt-0.5 font-semibold">Canceladas</p>
                             </div>
                           </div>
-                          <div>
-                            <p className="mb-2 font-body text-[12px] font-medium text-primary-foreground/50">Histórico de agendamentos</p>
-                            <div className="max-h-48 space-y-1.5 overflow-y-auto pr-1">
-                              {selAgendamentos.length === 0 && <p className="py-4 text-center font-body text-[12px] text-primary-foreground/30">Nenhum agendamento</p>}
+
+                          <div className="space-y-3">
+                            <p className="font-body text-[13px] font-semibold text-primary-foreground/60 uppercase tracking-wider pl-1">Histórico de procedimentos</p>
+                            <div className="max-h-[220px] space-y-2 overflow-y-auto pr-2 custom-scrollbar">
+                              {selAgendamentos.length === 0 && <p className="py-6 text-center font-body text-[13px] text-primary-foreground/30 italic">Nenhum procedimento registrado.</p>}
                               {selAgendamentos
                                 .sort((a, b) => b.data_agendamento.localeCompare(a.data_agendamento))
                                 .map((a) => (
-                                  <div key={a.id} className="flex items-center justify-between gap-3 rounded-xl border border-primary-foreground/[0.04] bg-primary-foreground/[0.02] p-2.5">
-                                    <div className="flex-1 min-w-0">
-                                      <p className="font-body text-[12px] text-primary-foreground truncate">{a.servico}{a.variacao ? ` - ${a.variacao}` : ""}</p>
-                                      <p className="font-body text-[10px] text-primary-foreground/30">{formatDate(a.data_agendamento)} às {a.horario}</p>
+                                  <div key={a.id} className="group flex flex-col gap-2 rounded-2xl border border-white/[0.04] bg-white/[0.02] p-3.5 hover:bg-white/[0.04] hover:border-white/[0.08] transition-all">
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div className="flex-1 min-w-0">
+                                        <p className="font-heading text-[14px] font-semibold text-primary-foreground truncate">{a.servico}{a.variacao ? ` - ${a.variacao}` : ""}</p>
+                                        <p className="font-body text-[11px] text-primary-foreground/40 mt-0.5 flex items-center gap-1.5">
+                                          <span>{formatDate(a.data_agendamento)}</span>
+                                          <span className="w-1 h-1 rounded-full bg-primary-foreground/20"></span>
+                                          <span>{a.horario}</span>
+                                        </p>
+                                      </div>
+                                      <div className="text-right shrink-0">
+                                        <p className="font-body text-[14px] font-bold text-gold">
+                                          R$ {(a.valor_pago || 0).toFixed(2).replace(".", ",")}
+                                        </p>
+                                        <p className="font-body text-[10px] text-primary-foreground/30 line-through">
+                                          R$ {Number(a.valor).toFixed(2).replace(".", ",")}
+                                        </p>
+                                      </div>
                                     </div>
-                                    <div className="ml-2 text-right shrink-0">
-                                      <p className="font-body text-[12px] font-medium text-gold leading-tight">
-                                        R$ {(a.valor_pago || 0).toFixed(2).replace(".", ",")}
-                                        <span className="text-primary-foreground/30 font-normal"> / R$ {Number(a.valor).toFixed(2).replace(".", ",")}</span>
-                                      </p>
-                                      <div className="flex items-center justify-end gap-1 mt-0.5 flex-wrap">
-                                        {a.status !== "cancelado" && a.status !== "falta" && Number(a.valor_pago || 0) < Number(a.valor) && (
-                                          <span className="px-1.5 py-0.5 rounded-full font-body text-[9px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                                            Devendo R$ {(Number(a.valor) - Number(a.valor_pago || 0)).toFixed(2).replace(".", ",")}
-                                          </span>
-                                        )}
-                                        <span
-                                          className={`px-1.5 py-0.5 rounded-full font-body text-[9px] ${
+                                    <div className="flex items-center justify-between mt-1">
+                                      <span
+                                          className={`px-2 py-1 rounded-md font-body text-[10px] font-semibold tracking-wide uppercase ${
                                             a.status === "confirmado" || a.status === "concluido"
                                               ? "bg-emerald-500/10 text-emerald-400"
                                               : a.status === "falta"
                                                 ? "bg-red-500/10 text-red-400"
                                                 : a.status === "cancelado"
-                                                  ? "bg-primary-foreground/[0.05] text-primary-foreground/30"
+                                                  ? "bg-white/[0.05] text-primary-foreground/40"
                                                   : "bg-gold/10 text-gold"
                                           }`}
                                         >
                                           {a.status}
+                                      </span>
+                                      {a.status !== "cancelado" && a.status !== "falta" && Number(a.valor_pago || 0) < Number(a.valor) && (
+                                        <span className="px-2 py-1 rounded-md font-body text-[10px] font-bold uppercase tracking-wide bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                                          Devendo R$ {(Number(a.valor) - Number(a.valor_pago || 0)).toFixed(2).replace(".", ",")}
                                         </span>
-                                      </div>
+                                      )}
                                     </div>
                                   </div>
                                 ))}
                             </div>
                           </div>
 
-                          <div className="border-t border-red-500/15 pt-3">
+                          <div className="pt-2">
                             <button
                               onClick={() => setClienteParaExcluir(selProfile)}
-                              className="w-full flex items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 font-body text-[12px] font-medium text-red-400 hover:bg-red-500/20 transition-all"
+                              className="w-full flex items-center justify-center gap-2 rounded-2xl border border-transparent bg-transparent px-4 py-3.5 font-body text-[13px] font-semibold text-red-400/70 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400 transition-all"
                             >
-                              <Trash2 className="h-3.5 w-3.5" />
+                              <Trash2 className="h-4 w-4" />
                               Excluir cliente permanentemente
                             </button>
                           </div>
