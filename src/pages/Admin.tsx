@@ -2253,46 +2253,47 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                   </div>
 
                   <Dialog open={!!selectedClient} onOpenChange={(open) => !open && setSelectedClient(null)}>
-                    <DialogContent className="w-[calc(100vw-1rem)] max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overflow-x-hidden rounded-[24px] border border-white/[0.08] bg-[#141415] p-6 shadow-2xl custom-scrollbar">
+                    <DialogContent className="w-[calc(100vw-1rem)] max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overflow-x-hidden rounded-[24px] border border-white/[0.12] bg-[#141415]/80 backdrop-blur-3xl p-6 shadow-[0_0_40px_-10px_rgba(0,0,0,0.5)] custom-scrollbar">
                       <DialogHeader className="mb-2">
-                        <DialogTitle className="font-heading text-[22px] font-bold text-primary-foreground tracking-wide">
+                        <DialogTitle className="font-heading text-[22px] font-bold text-primary-foreground tracking-wide drop-shadow-md">
                           {selProfile?.nome || "Cliente"}
                         </DialogTitle>
                       </DialogHeader>
                       {selProfile && (
-                        <div className="space-y-6">
-                          <div className="space-y-2 rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4">
+                        <div className="space-y-6 relative z-10">
+                          <div className="space-y-2 rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-md p-4 shadow-sm">
                             <div className="flex items-center gap-3">
-                              <div className="flex items-center justify-center w-6 h-6 rounded-md bg-blue-500/10">
+                              <div className="flex items-center justify-center w-6 h-6 rounded-md bg-blue-500/15 border border-blue-500/20">
                                 <span className="text-[12px]">📱</span>
                               </div>
-                              <p className="font-body text-[13px] text-primary-foreground/70">{formatWhatsapp(selProfile.whatsapp)}</p>
+                              <p className="font-body text-[13px] text-primary-foreground/80 font-medium">{formatWhatsapp(selProfile.whatsapp)}</p>
                             </div>
                             {selProfile.cpf && (
                               <div className="flex items-center gap-3">
-                                <div className="flex items-center justify-center w-6 h-6 rounded-md bg-purple-500/10">
+                                <div className="flex items-center justify-center w-6 h-6 rounded-md bg-purple-500/15 border border-purple-500/20">
                                   <span className="text-[12px]">🪪</span>
                                 </div>
-                                <p className="font-body text-[13px] text-primary-foreground/70">CPF {selProfile.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}</p>
+                                <p className="font-body text-[13px] text-primary-foreground/80 font-medium">CPF {selProfile.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}</p>
                               </div>
                             )}
                             <div className="flex items-center gap-3">
-                              <div className="flex items-center justify-center w-6 h-6 rounded-md bg-emerald-500/10">
+                              <div className="flex items-center justify-center w-6 h-6 rounded-md bg-emerald-500/15 border border-emerald-500/20">
                                 <span className="text-[12px]">📅</span>
                               </div>
-                              <p className="font-body text-[13px] text-primary-foreground/70">Cliente desde {new Date(selProfile.created_at).toLocaleDateString("pt-BR")}</p>
+                              <p className="font-body text-[13px] text-primary-foreground/80 font-medium">Cliente desde {new Date(selProfile.created_at).toLocaleDateString("pt-BR")}</p>
                             </div>
                           </div>
 
                           <div className="grid grid-cols-2 gap-3">
-                            <div className="rounded-2xl border border-gold/20 bg-gradient-to-b from-gold/10 to-gold/5 p-4 text-center shadow-[0_4px_20px_-4px_rgba(212,175,55,0.15)] relative overflow-hidden group hover:border-gold/30 transition-all">
-                              <div className="absolute inset-0 bg-gold/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                              <p className="font-heading text-[24px] font-bold text-gold relative z-10">R$ {totalGasto.toFixed(2).replace(".", ",")}</p>
-                              <p className="font-body text-[11px] text-gold/70 relative z-10 mt-1 uppercase tracking-wider font-semibold">Total pago</p>
+                            <div className="rounded-2xl border border-emerald-500/25 bg-gradient-to-b from-emerald-500/15 to-emerald-500/5 p-4 text-center shadow-[0_4px_24px_-4px_rgba(16,185,129,0.2)] backdrop-blur-md relative overflow-hidden group hover:border-emerald-500/40 transition-all">
+                              <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                              <p className="font-heading text-[24px] font-bold text-emerald-400 relative z-10 drop-shadow-sm">R$ {totalGasto.toFixed(2).replace(".", ",")}</p>
+                              <p className="font-body text-[11px] text-emerald-400/80 relative z-10 mt-1 uppercase tracking-wider font-bold">Total pago</p>
                             </div>
-                            <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 text-center hover:bg-white/[0.05] transition-all">
-                              <p className="font-heading text-[24px] font-bold text-primary-foreground">R$ {saldoDevedor.toFixed(2).replace(".", ",")}</p>
-                              <p className="font-body text-[11px] text-primary-foreground/40 mt-1 uppercase tracking-wider font-semibold">Valor pendente</p>
+                            <div className="rounded-2xl border border-amber-500/25 bg-gradient-to-b from-amber-500/15 to-amber-500/5 p-4 text-center shadow-[0_4px_24px_-4px_rgba(245,158,11,0.2)] backdrop-blur-md relative overflow-hidden group hover:border-amber-500/40 transition-all">
+                              <div className="absolute inset-0 bg-amber-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                              <p className="font-heading text-[24px] font-bold text-amber-400 relative z-10 drop-shadow-sm">R$ {saldoDevedor.toFixed(2).replace(".", ",")}</p>
+                              <p className="font-body text-[11px] text-amber-400/80 relative z-10 mt-1 uppercase tracking-wider font-bold">Valor pendente</p>
                             </div>
                           </div>
 
