@@ -409,6 +409,62 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [editingClientId, setEditingClientId] = useState<string | null>(null);
   const [editClientName, setEditClientName] = useState("");
 
+  // Edit Agendamento state
+  const [showEditAgendamento, setShowEditAgendamento] = useState(false);
+  const [editingAg, setEditingAg] = useState<Agendamento | null>(null);
+  const [editAgData, setEditAgData] = useState("");
+  const [editAgHorario, setEditAgHorario] = useState("");
+  const [editAgServico, setEditAgServico] = useState("");
+  const [editAgValor, setEditAgValor] = useState(0);
+  const [editAgDuracao, setEditAgDuracao] = useState(60);
+  const [editAgSaving, setEditAgSaving] = useState(false);
+
+  const openEditAgendamento = (ag: Agendamento) => {
+    setEditingAg(ag);
+    setEditAgData(ag.data_agendamento);
+    setEditAgHorario(ag.horario);
+    setEditAgServico(ag.servico);
+    setEditAgValor(ag.valor);
+    setEditAgDuracao(ag.duracao_minutos || 60);
+    setShowEditAgendamento(true);
+    setDetalheAgendamento(null);
+  };
+
+  const handleSaveEditAgendamento = async () => {
+    if (!editingAg) return;
+    if (!editAgData || !editAgHorario || !editAgServico || editAgValor < 0 || editAgDuracao <= 0) {
+      toast.error("Preencha todos os campos corretamente");
+      return;
+    }
+    setEditAgSaving(true);
+    try {
+      const { error } = await supabase.from("agendamentos").update({
+        data_agendamento: editAgData,
+        horario: editAgHorario,
+        servico: editAgServico,
+        valor: editAgValor,
+        duracao_minutos: editAgDuracao
+      } as any).eq("id", editingAg.id);
+
+      if (error) throw error;
+
+      setAgendamentos(prev => prev.map(a => a.id === editingAg.id ? {
+        ...a,
+        data_agendamento: editAgData,
+        horario: editAgHorario,
+        servico: editAgServico,
+        valor: editAgValor,
+        duracao_minutos: editAgDuracao
+      } : a));
+      toast.success("Agendamento atualizado!");
+      setShowEditAgendamento(false);
+    } catch (e: any) {
+      toast.error("Erro ao atualizar agendamento");
+    } finally {
+      setEditAgSaving(false);
+    }
+  };
+
   const handleSaveClientName = async (agId: string) => {
     const name = editClientName.trim();
     const { error } = await supabase.from("agendamentos").update({ cliente_nome: name || null } as any).eq("id", agId);
@@ -1511,6 +1567,15 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                           </div>
                         </div>
 
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => openEditAgendamento(a)}
+                            className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-blue-500/30 bg-blue-500/10 px-4 py-2.5 font-body text-[12px] font-medium text-blue-400 hover:bg-blue-500/20 transition-all"
+                          >
+                            <Edit2 className="h-3.5 w-3.5" /> Editar Agendamento
+                          </button>
+                        </div>
+
                         {cliente && (
                           <button
                             onClick={() => { setDetalheAgendamento(null); setTab("clientes"); setSelectedClient(cliente.id); }}
@@ -1522,6 +1587,88 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                       </div>
                     );
                   })()}
+                </DialogContent>
+              </Dialog>
+
+              {/* Edit Agendamento Dialog */}
+              <Dialog open={showEditAgendamento} onOpenChange={setShowEditAgendamento}>
+                <DialogContent className="w-[calc(100vw-1rem)] max-w-md max-h-[88dvh] overflow-y-auto bg-charcoal/95 backdrop-blur-xl border border-gold/25 rounded-[1.75rem] p-6 shadow-2xl">
+                  <DialogHeader>
+                    <DialogTitle className="font-heading text-[18px] font-semibold text-primary-foreground flex items-center gap-2">
+                      <Edit2 className="w-5 h-5 text-gold" />
+                      Editar Agendamento
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 mt-4">
+                    <div className="space-y-1.5">
+                      <label className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/50">Serviço(s)</label>
+                      <input
+                        type="text"
+                        value={editAgServico}
+                        onChange={(e) => setEditAgServico(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <label className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/50">Data</label>
+                        <input
+                          type="date"
+                          value={editAgData}
+                          onChange={(e) => setEditAgData(e.target.value)}
+                          className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/50">Horário</label>
+                        <input
+                          type="time"
+                          value={editAgHorario}
+                          onChange={(e) => setEditAgHorario(e.target.value)}
+                          className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <label className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/50">Valor Total (R$)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={editAgValor}
+                          onChange={(e) => setEditAgValor(Number(e.target.value))}
+                          className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/50">Duração (min)</label>
+                        <input
+                          type="number"
+                          step="5"
+                          min="5"
+                          value={editAgDuracao}
+                          onChange={(e) => setEditAgDuracao(Number(e.target.value))}
+                          className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 mt-6">
+                    <button
+                      onClick={() => setShowEditAgendamento(false)}
+                      className="flex-1 px-4 py-2.5 rounded-xl border border-primary-foreground/10 bg-primary-foreground/[0.05] text-primary-foreground/60 font-body text-[13px] hover:bg-primary-foreground/10 transition-all"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={handleSaveEditAgendamento}
+                      disabled={editAgSaving}
+                      className="flex-1 px-4 py-2.5 rounded-xl bg-gold text-charcoal font-body font-semibold text-[13px] hover:bg-gold/90 transition-all disabled:opacity-50"
+                    >
+                      {editAgSaving ? "Salvando..." : "Salvar Alterações"}
+                    </button>
+                  </div>
                 </DialogContent>
               </Dialog>
 
