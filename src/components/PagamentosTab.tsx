@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, CreditCard, QrCode, Barcode, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, Filter, AlertCircle, Trash2 } from "lucide-react";
+import { Search, CreditCard, QrCode, Barcode, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, Filter, AlertCircle, Trash2, Wallet } from "lucide-react";
 import pixIcon from "@/assets/pix-icon.png";
 
 interface Agendamento {
@@ -99,7 +99,15 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     let list = [...agendamentos];
 
     if (statusFilter !== "todos") {
-      list = list.filter((a) => a.status === statusFilter);
+      if (statusFilter === "pendente") {
+        list = list.filter((a) => {
+          const valorPago = Number(a.valor_pago || 0);
+          const isPendingValue = valorPago < Number(a.valor) && !["cancelado", "falta"].includes(a.status);
+          return a.status === "pendente" || isPendingValue;
+        });
+      } else {
+        list = list.filter((a) => a.status === statusFilter);
+      }
     }
 
     if (search.trim()) {
@@ -115,7 +123,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     list.sort((a, b) => {
       let cmp = 0;
       switch (sortField) {
-        case "data": cmp = a.data_agendamento.localeCompare(b.data_agendamento); break;
+        case "data": cmp = a.data_agendamento.localeCompare(b.data_agendamento) || a.horario.localeCompare(b.horario); break;
         case "valor": cmp = a.valor - b.valor; break;
         case "cliente": cmp = getClientName(a.user_id, a.cliente_nome).localeCompare(getClientName(b.user_id)); break;
         case "status": cmp = a.status.localeCompare(b.status); break;
@@ -129,22 +137,25 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
   const counts = useMemo(() => ({
     todos: agendamentos.length,
     confirmado: agendamentos.filter((a) => a.status === "confirmado").length,
-    pendente: agendamentos.filter((a) => a.status === "pendente").length,
+    pendente: agendamentos.filter((a) => {
+      const valorPago = Number(a.valor_pago || 0);
+      return a.status === "pendente" || (valorPago < Number(a.valor) && !["cancelado", "falta"].includes(a.status));
+    }).length,
     cancelado: agendamentos.filter((a) => a.status === "cancelado").length,
     concluido: agendamentos.filter((a) => a.status === "concluido").length,
     falta: agendamentos.filter((a) => a.status === "falta").length,
   }), [agendamentos]);
 
+  const validos = useMemo(() => agendamentos.filter(a => !["cancelado", "falta"].includes(a.status)), [agendamentos]);
+
   const totalPago = useMemo(() =>
-    agendamentos.filter((a) => ["confirmado", "concluido"].includes(a.status))
-      .reduce((s, a) => s + (a.valor_pago ?? a.valor), 0),
-    [agendamentos]
+    validos.reduce((s, a) => s + Number(a.valor_pago || 0), 0),
+    [validos]
   );
 
   const totalPendente = useMemo(() =>
-    agendamentos.filter((a) => a.status === "pendente")
-      .reduce((s, a) => s + a.valor, 0),
-    [agendamentos]
+    validos.reduce((s, a) => s + Math.max(0, Number(a.valor) - Number(a.valor_pago || 0)), 0),
+    [validos]
   );
 
   const SortIcon = ({ field }: { field: SortField }) => (
@@ -240,15 +251,17 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
           const cfg = statusConfig[ag.status] || statusConfig.pendente;
           const StatusIcon = cfg.icon;
           const isExpanded = expandedId === ag.id;
-          const isUnpaid =
-            Number(ag.valor_pago || 0) === 0 &&
-            !["cancelado", "falta"].includes(ag.status);
+          const valorPago = Number(ag.valor_pago || 0);
+          const valorTotal = Number(ag.valor);
+          const isUnpaid = valorPago === 0 && !["cancelado", "falta"].includes(ag.status);
+          const isPartial = valorPago > 0 && valorPago < valorTotal && !["cancelado", "falta"].includes(ag.status);
+          const isPendingAmount = isUnpaid || isPartial;
 
           return (
             <div
               key={ag.id}
               className={`rounded-2xl border overflow-hidden transition-all ${
-                isUnpaid
+                isPendingAmount
                   ? "border-amber-500/40 bg-gradient-to-br from-amber-500/[0.08] via-primary-foreground/[0.02] to-amber-500/[0.04] hover:border-amber-500/60 hover:shadow-[0_4px_16px_-8px_rgba(245,158,11,0.4)]"
                   : "border-gold/15 bg-gradient-to-br from-gold/[0.05] via-primary-foreground/[0.02] to-nude/[0.03] hover:border-gold/25 hover:shadow-[0_4px_16px_-8px_hsl(var(--gold)/0.25)]"
               }`}
@@ -272,13 +285,19 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                         Não pago
                       </span>
                     )}
+                    {isPartial && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 border border-amber-500/40 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-300">
+                        <Wallet className="h-2.5 w-2.5" />
+                        Parcial
+                      </span>
+                    )}
                   </div>
                   <p className="font-body text-[11px] text-primary-foreground/75 truncate">
                     {ag.servico}{ag.variacao ? ` · ${ag.variacao}` : ""} · {formatDate(ag.data_agendamento)}
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className={`font-heading text-[15px] font-bold ${isUnpaid ? "text-amber-300" : "text-gold"}`}>
+                  <p className={`font-heading text-[15px] font-bold ${isPendingAmount ? "text-amber-300" : "text-gold"}`}>
                     {formatCurrency(ag.valor)}
                   </p>
                   <div className="flex items-center justify-end gap-1">

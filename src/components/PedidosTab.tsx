@@ -192,8 +192,8 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     }
     list.sort(
       (a, b) =>
-        a.data_agendamento.localeCompare(b.data_agendamento) ||
-        a.horario.localeCompare(b.horario)
+        b.data_agendamento.localeCompare(a.data_agendamento) ||
+        b.horario.localeCompare(a.horario)
     );
     return list;
   }, [agendamentos, statusFilter, pagamentoFilter, searchTerm, getClientName]);
@@ -589,7 +589,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
       <div className="flex items-center gap-2 rounded-lg border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] px-3 py-2">
         <Clock className="h-3.5 w-3.5 text-gold" />
         <p className="font-body text-[11px] text-primary-foreground/85">
-          Lista em ordem de <span className="text-primary-foreground font-medium">data mais próxima</span> para a <span className="text-primary-foreground font-medium">mais distante</span>
+          Lista em ordem de <span className="text-primary-foreground font-medium">data mais recente</span> para a <span className="text-primary-foreground font-medium">mais antiga</span>
         </p>
       </div>
 
