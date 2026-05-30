@@ -2291,8 +2291,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                               <p className="font-body text-[11px] text-gold/70 relative z-10 mt-1 uppercase tracking-wider font-semibold">Total pago</p>
                             </div>
                             <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 text-center hover:bg-white/[0.05] transition-all">
-                              <p className="font-heading text-[24px] font-bold text-primary-foreground">R$ {totalValor.toFixed(2).replace(".", ",")}</p>
-                              <p className="font-body text-[11px] text-primary-foreground/40 mt-1 uppercase tracking-wider font-semibold">Valor total</p>
+                              <p className="font-heading text-[24px] font-bold text-primary-foreground">R$ {saldoDevedor.toFixed(2).replace(".", ",")}</p>
+                              <p className="font-body text-[11px] text-primary-foreground/40 mt-1 uppercase tracking-wider font-semibold">Valor pendente</p>
                             </div>
                           </div>
 
