@@ -1451,21 +1451,21 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                   <button
                                     onClick={() => updatePayment(a.id, "sinal")}
                                     title="Marcar sinal (50%)"
-                                    className={`rounded-lg border px-2.5 py-1.5 font-body text-[11px] font-medium transition-all ${Number(a.valor_pago || 0) > 0 && Number(a.valor_pago || 0) < Number(a.valor) ? "border-gold/40 bg-gold/15 text-gold shadow-[0_0_10px_-2px_hsl(var(--gold)/0.3)]" : "border-primary-foreground/10 bg-primary-foreground/[0.05] text-primary-foreground/60 hover:border-gold/30 hover:bg-gold/10 hover:text-gold"}`}
+                                    className={`rounded-lg border px-2.5 py-1.5 font-body text-[11px] font-medium transition-all ${Number(a.valor_pago || 0) > 0 && Number(a.valor_pago || 0) < Number(a.valor) ? "border-gold/50 bg-gold/20 text-gold shadow-[0_0_12px_-2px_hsl(var(--gold)/0.4)]" : "border-gold/20 bg-gold/[0.08] text-gold/80 hover:border-gold/40 hover:bg-gold/15 hover:text-gold shadow-[0_2px_8px_-4px_hsl(var(--gold)/0.2)]"}`}
                                   >
                                     Sinal
                                   </button>
                                   <button
                                     onClick={() => updatePayment(a.id, "completo")}
                                     title="Marcar pago completo"
-                                    className={`rounded-lg border px-2.5 py-1.5 font-body text-[11px] font-medium transition-all ${Number(a.valor_pago || 0) >= Number(a.valor) ? "border-green-500/40 bg-green-500/15 text-green-400 shadow-[0_0_10px_-2px_rgba(34,197,94,0.3)]" : "border-primary-foreground/10 bg-primary-foreground/[0.05] text-primary-foreground/60 hover:border-green-500/30 hover:bg-green-500/10 hover:text-green-400"}`}
+                                    className={`rounded-lg border px-2.5 py-1.5 font-body text-[11px] font-medium transition-all ${Number(a.valor_pago || 0) >= Number(a.valor) ? "border-green-500/50 bg-green-500/20 text-green-400 shadow-[0_0_12px_-2px_rgba(34,197,94,0.4)]" : "border-green-500/20 bg-green-500/[0.08] text-green-400/80 hover:border-green-500/40 hover:bg-green-500/15 hover:text-green-400 shadow-[0_2px_8px_-4px_rgba(34,197,94,0.2)]"}`}
                                   >
                                     Pago
                                   </button>
                                   <button
                                     onClick={() => openExtendDialog(a.id)}
                                     title="Estender duração"
-                                    className="rounded-lg border border-primary-foreground/10 bg-primary-foreground/[0.05] px-2.5 py-1.5 font-body text-[11px] font-medium text-primary-foreground/60 transition-all hover:border-blue-400/30 hover:bg-blue-500/10 hover:text-blue-400"
+                                    className="rounded-lg border border-blue-400/20 bg-blue-400/[0.08] px-2.5 py-1.5 font-body text-[11px] font-medium text-blue-400/80 transition-all hover:border-blue-400/40 hover:bg-blue-400/15 hover:text-blue-400 shadow-[0_2px_8px_-4px_rgba(96,165,250,0.2)]"
                                   >
                                     <span className="flex items-center gap-1"><Timer className="w-3 h-3" />Estender</span>
                                   </button>
