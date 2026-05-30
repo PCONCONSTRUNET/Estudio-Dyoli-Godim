@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Search, CreditCard, QrCode, Barcode, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, Filter, AlertCircle, Trash2, Wallet } from "lucide-react";
@@ -95,16 +95,103 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     falta: { bg: "bg-orange-500/10 border-orange-500/30", text: "text-orange-400", icon: XCircle, label: "Falta" },
   };
 
+  const [historico, setHistorico] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchHistorico = async () => {
+      const ids = agendamentos.map((a) => a.id);
+      if (ids.length === 0) return;
+      
+      const chunkSize = 200;
+      let allData: any[] = [];
+      for (let i = 0; i < ids.length; i += chunkSize) {
+        const chunk = ids.slice(i, i + chunkSize);
+        const { data } = await supabase.from("pagamento_historico").select("*").in("agendamento_id", chunk);
+        if (data) allData = [...allData, ...data];
+      }
+      setHistorico(allData);
+    };
+    fetchHistorico();
+  }, [agendamentos]);
+
+  const faturas = useMemo(() => {
+    const list: any[] = [];
+    
+    agendamentos.forEach((a) => {
+      if (["cancelado", "falta"].includes(a.status)) {
+         list.push({ ...a, _faturaId: a.id, fatura_tipo: "pendente", valor_fatura: a.valor, data_fatura: a.data_agendamento });
+         return;
+      }
+      
+      const hists = historico.filter((h) => h.agendamento_id === a.id && h.valor_delta > 0);
+      
+      if (hists.length > 0) {
+        let totalPaidInHistory = 0;
+        hists.forEach((h) => {
+          list.push({
+            ...a,
+            _faturaId: `${a.id}-hist-${h.id}`,
+            fatura_tipo: "pagamento",
+            valor_fatura: h.valor_delta,
+            data_fatura: h.created_at.split("T")[0],
+            _is_partial: true,
+            _desc_pagamento: "Fatura Paga",
+          });
+          totalPaidInHistory += h.valor_delta;
+        });
+        
+        const valorPagoAtual = Number(a.valor_pago || 0);
+        const initialPayment = valorPagoAtual - totalPaidInHistory;
+        
+        if (initialPayment > 0) {
+           list.push({
+             ...a,
+             _faturaId: `${a.id}-initial`,
+             fatura_tipo: "pagamento",
+             valor_fatura: initialPayment,
+             data_fatura: a.data_agendamento,
+             _is_partial: true,
+             _desc_pagamento: "Pagamento Inicial",
+           });
+        }
+        
+        const restante = Number(a.valor) - valorPagoAtual;
+        if (restante > 0) {
+           list.push({
+             ...a,
+             _faturaId: `${a.id}-restante`,
+             fatura_tipo: "pendente",
+             valor_fatura: restante,
+             data_fatura: a.data_agendamento,
+             _is_partial: true,
+             _desc_pagamento: "Restante Pendente",
+           });
+        }
+      } else {
+        const valorPago = Number(a.valor_pago || 0);
+        if (valorPago === 0) {
+           list.push({ ...a, _faturaId: a.id, fatura_tipo: "pendente", valor_fatura: a.valor, data_fatura: a.data_agendamento });
+        } else if (valorPago < a.valor) {
+           list.push({
+             ...a, _faturaId: `${a.id}-pago`, fatura_tipo: "pagamento", valor_fatura: valorPago, data_fatura: a.data_agendamento, _is_partial: true, _desc_pagamento: "Fatura Paga"
+           });
+           list.push({
+             ...a, _faturaId: `${a.id}-restante`, fatura_tipo: "pendente", valor_fatura: a.valor - valorPago, data_fatura: a.data_agendamento, _is_partial: true, _desc_pagamento: "Restante Pendente"
+           });
+        } else {
+           list.push({ ...a, _faturaId: a.id, fatura_tipo: "pagamento", valor_fatura: a.valor, data_fatura: a.data_agendamento });
+        }
+      }
+    });
+    return list;
+  }, [agendamentos, historico]);
+
   const filtered = useMemo(() => {
-    let list = [...agendamentos];
+    let list = [...faturas];
 
     if (statusFilter !== "todos") {
       if (statusFilter === "pendente") {
-        list = list.filter((a) => {
-          const valorPago = Number(a.valor_pago || 0);
-          const isPendingValue = valorPago < Number(a.valor) && !["cancelado", "falta"].includes(a.status);
-          return a.status === "pendente" || isPendingValue;
-        });
+        list = list.filter((a) => a.fatura_tipo === "pendente" && !["cancelado", "falta"].includes(a.status));
       } else {
         list = list.filter((a) => a.status === statusFilter);
       }
@@ -123,8 +210,8 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     list.sort((a, b) => {
       let cmp = 0;
       switch (sortField) {
-        case "data": cmp = a.data_agendamento.localeCompare(b.data_agendamento) || a.horario.localeCompare(b.horario); break;
-        case "valor": cmp = a.valor - b.valor; break;
+        case "data": cmp = a.data_fatura.localeCompare(b.data_fatura) || a.horario.localeCompare(b.horario); break;
+        case "valor": cmp = a.valor_fatura - b.valor_fatura; break;
         case "cliente": cmp = getClientName(a.user_id, a.cliente_nome).localeCompare(getClientName(b.user_id)); break;
         case "status": cmp = a.status.localeCompare(b.status); break;
       }
@@ -132,19 +219,16 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     });
 
     return list;
-  }, [agendamentos, statusFilter, search, sortField, sortDir, getClientName]);
+  }, [faturas, statusFilter, search, sortField, sortDir, getClientName]);
 
   const counts = useMemo(() => ({
-    todos: agendamentos.length,
-    confirmado: agendamentos.filter((a) => a.status === "confirmado").length,
-    pendente: agendamentos.filter((a) => {
-      const valorPago = Number(a.valor_pago || 0);
-      return a.status === "pendente" || (valorPago < Number(a.valor) && !["cancelado", "falta"].includes(a.status));
-    }).length,
-    cancelado: agendamentos.filter((a) => a.status === "cancelado").length,
-    concluido: agendamentos.filter((a) => a.status === "concluido").length,
-    falta: agendamentos.filter((a) => a.status === "falta").length,
-  }), [agendamentos]);
+    todos: faturas.length,
+    confirmado: faturas.filter((a) => a.status === "confirmado").length,
+    pendente: faturas.filter((a) => a.fatura_tipo === "pendente" && !["cancelado", "falta"].includes(a.status)).length,
+    cancelado: faturas.filter((a) => a.status === "cancelado").length,
+    concluido: faturas.filter((a) => a.status === "concluido").length,
+    falta: faturas.filter((a) => a.status === "falta").length,
+  }), [faturas]);
 
   const validos = useMemo(() => agendamentos.filter(a => !["cancelado", "falta"].includes(a.status)), [agendamentos]);
 
@@ -248,18 +332,15 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
         )}
 
         {filtered.map((ag) => {
-          const cfg = statusConfig[ag.status] || statusConfig.pendente;
+          const isPendingAmount = ag.fatura_tipo === "pendente" && !["cancelado", "falta"].includes(ag.status);
+          const cfg = isPendingAmount ? statusConfig.pendente : (statusConfig[ag.status] || statusConfig.pendente);
           const StatusIcon = cfg.icon;
-          const isExpanded = expandedId === ag.id;
-          const valorPago = Number(ag.valor_pago || 0);
-          const valorTotal = Number(ag.valor);
-          const isUnpaid = valorPago === 0 && !["cancelado", "falta"].includes(ag.status);
-          const isPartial = valorPago > 0 && valorPago < valorTotal && !["cancelado", "falta"].includes(ag.status);
-          const isPendingAmount = isUnpaid || isPartial;
+          const isExpanded = expandedId === ag._faturaId;
+          const isPartial = !!ag._is_partial;
 
           return (
             <div
-              key={ag.id}
+              key={ag._faturaId}
               className={`rounded-2xl border overflow-hidden transition-all ${
                 isPendingAmount
                   ? "border-amber-500/40 bg-gradient-to-br from-amber-500/[0.08] via-primary-foreground/[0.02] to-amber-500/[0.04] hover:border-amber-500/60 hover:shadow-[0_4px_16px_-8px_rgba(245,158,11,0.4)]"
@@ -268,7 +349,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
             >
               {/* Main row */}
               <button
-                onClick={() => setExpandedId(isExpanded ? null : ag.id)}
+                onClick={() => setExpandedId(isExpanded ? null : ag._faturaId)}
                 className="flex w-full items-center gap-3 p-4 text-left"
               >
                 <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${cfg.bg} border shadow-[0_2px_8px_-4px_hsl(var(--gold)/0.2)]`}>
@@ -279,29 +360,35 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                     <p className="font-body text-[14px] font-medium text-primary-foreground truncate">
                       {getClientName(ag.user_id, ag.cliente_nome)}
                     </p>
-                    {isUnpaid && (
+                    {isPendingAmount && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 border border-amber-500/40 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-300 animate-pulse">
                         <AlertCircle className="h-2.5 w-2.5" />
-                        Não pago
+                        A receber
                       </span>
                     )}
-                    {isPartial && (
+                    {isPartial && !isPendingAmount && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-400">
+                        <Wallet className="h-2.5 w-2.5" />
+                        Fatura Paga
+                      </span>
+                    )}
+                    {isPartial && isPendingAmount && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 border border-amber-500/40 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-300">
                         <Wallet className="h-2.5 w-2.5" />
-                        Parcial
+                        Restante Parcial
                       </span>
                     )}
                   </div>
                   <p className="font-body text-[11px] text-primary-foreground/75 truncate">
-                    {ag.servico}{ag.variacao ? ` · ${ag.variacao}` : ""} · {formatDate(ag.data_agendamento)}
+                    {ag.servico}{ag.variacao ? ` · ${ag.variacao}` : ""} · {formatDate(ag.data_fatura)}
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
                   <p className={`font-heading text-[15px] font-bold ${isPendingAmount ? "text-amber-300" : "text-gold"}`}>
-                    {formatCurrency(ag.valor)}
+                    {formatCurrency(ag.valor_fatura)}
                   </p>
                   <div className="flex items-center justify-end gap-1">
-                    <span className={`font-body text-[10px] font-medium ${cfg.text}`}>{cfg.label}</span>
+                    <span className={`font-body text-[10px] font-medium ${cfg.text}`}>{isPendingAmount ? "Pendente" : "Pago"}</span>
                   </div>
                 </div>
                 <ChevronDown className={`h-4 w-4 shrink-0 text-primary-foreground/95 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
@@ -311,8 +398,8 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
               {isExpanded && (
                 <div className="border-t border-primary-foreground/[0.06] bg-primary-foreground/[0.02] px-4 py-3 space-y-3">
                   <div className="grid grid-cols-2 gap-3">
-                    <Detail label="ID do Pedido" value={ag.id.slice(0, 8) + "..."} />
-                    <Detail label="Data do Agendamento" value={`${formatDate(ag.data_agendamento)} às ${ag.horario}`} />
+                    <Detail label="ID do Pedido (Original)" value={ag.id.slice(0, 8) + "..."} />
+                    <Detail label="Data Base do Agend." value={`${formatDate(ag.data_agendamento)} às ${ag.horario}`} />
                     <Detail label="Método de Pagamento" value={
                       <span className="flex items-center gap-1.5">
                         {paymentIcon(ag.forma_pagamento)}
@@ -320,15 +407,15 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                       </span>
                     } />
                     <Detail label="Duração" value={`${ag.duracao_minutos} min`} />
-                    <Detail label="Valor Cobrado" value={formatCurrency(ag.valor)} />
-                    <Detail label="Valor Pago" value={ag.valor_pago != null ? formatCurrency(ag.valor_pago) : "—"} />
-                    <Detail label="Status" value={
+                    <Detail label="Valor Desta Fatura" value={formatCurrency(ag.valor_fatura)} />
+                    <Detail label="Valor Total Original" value={formatCurrency(ag.valor)} />
+                    <Detail label="Status da Fatura" value={
                       <span className={`inline-flex items-center gap-1 ${cfg.text}`}>
                         <StatusIcon className="h-3 w-3" />
-                        {cfg.label}
+                        {isPendingAmount ? "Pendente" : "Pago"}
                       </span>
                     } />
-                    <Detail label="Criado em" value={formatDateTime(ag.created_at)} />
+                    <Detail label="Status do Serviço" value={ag.status.charAt(0).toUpperCase() + ag.status.slice(1)} />
                   </div>
                   <div className="pt-2 border-t border-primary-foreground/[0.05] flex justify-end">
                     <button
@@ -349,7 +436,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
       </div>
 
       <p className="text-center font-body text-[11px] text-primary-foreground/85 pb-4">
-        Exibindo {filtered.length} de {agendamentos.length} pagamentos
+        Exibindo {filtered.length} faturas de {agendamentos.length} pedidos
       </p>
     </div>
   );
