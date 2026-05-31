@@ -2333,6 +2333,65 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                             </div>
                           </div>
 
+                          {/* Crédito a Haver */}
+                          {(() => {
+                            const creditoSaldo = Number(selProfile.credito_saldo || 0);
+                            const [editingCredito, setEditingCredito] = React.useState(false);
+                            const [tempCredito, setTempCredito] = React.useState(creditoSaldo.toFixed(2));
+                            const [savingCredito, setSavingCredito] = React.useState(false);
+
+                            const saveCredito = async () => {
+                              setSavingCredito(true);
+                              const novoSaldo = Math.max(0, Number(tempCredito) || 0);
+                              const { error } = await supabase.from("profiles" as any).update({ credito_saldo: novoSaldo }).eq("id", selProfile.id);
+                              if (!error) {
+                                setClientes(prev => prev.map(c => c.id === selProfile.id ? { ...c, credito_saldo: novoSaldo } : c));
+                                toast.success("Crédito atualizado!");
+                                setEditingCredito(false);
+                              } else {
+                                toast.error("Erro ao salvar crédito");
+                              }
+                              setSavingCredito(false);
+                            };
+
+                            return (
+                              <div className={`rounded-2xl border p-4 ${creditoSaldo > 0 ? "border-blue-400/40 bg-gradient-to-br from-blue-500/15 via-blue-500/[0.06] to-transparent shadow-[0_0_0_1px_rgba(59,130,246,0.1),0_8px_24px_-8px_rgba(59,130,246,0.3)]" : "border-white/[0.06] bg-white/[0.02]"}`}>
+                                <div className="flex items-center justify-between mb-2">
+                                  <p className={`font-body text-[11px] uppercase tracking-wider font-bold flex items-center gap-1.5 ${creditoSaldo > 0 ? "text-blue-400" : "text-primary-foreground/40"}`}>
+                                    <span>💳</span> Crédito a Haver
+                                  </p>
+                                  {!editingCredito ? (
+                                    <button onClick={() => { setTempCredito(creditoSaldo.toFixed(2)); setEditingCredito(true); }} className="px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.08] text-primary-foreground/50 hover:text-primary-foreground hover:bg-white/[0.08] font-body text-[10px] transition-all">
+                                      Ajustar
+                                    </button>
+                                  ) : (
+                                    <div className="flex gap-1.5">
+                                      <button onClick={saveCredito} disabled={savingCredito} className="px-3 py-1 rounded-lg bg-blue-500/20 border border-blue-400/30 text-blue-300 font-body text-[10px] font-bold hover:bg-blue-500/30 transition-all disabled:opacity-50">
+                                        {savingCredito ? "..." : "Salvar"}
+                                      </button>
+                                      <button onClick={() => setEditingCredito(false)} className="px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.08] text-primary-foreground/50 font-body text-[10px] hover:bg-white/[0.08] transition-all">
+                                        Cancelar
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                                {editingCredito ? (
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-body text-[13px] text-primary-foreground/60">R$</span>
+                                    <input type="number" step="0.01" min="0" value={tempCredito} onChange={e => setTempCredito(e.target.value)} autoFocus className="flex-1 px-3 py-2 rounded-xl bg-white/[0.05] border border-blue-400/30 text-primary-foreground font-heading text-[20px] font-bold focus:outline-none focus:ring-2 focus:ring-blue-400/30 tabular-nums" />
+                                  </div>
+                                ) : (
+                                  <p className={`font-heading text-[28px] font-bold tabular-nums ${creditoSaldo > 0 ? "text-blue-300 drop-shadow-[0_0_12px_rgba(59,130,246,0.4)]" : "text-primary-foreground/20"}`}>
+                                    R$ {creditoSaldo.toFixed(2).replace(".", ",")}
+                                  </p>
+                                )}
+                                {creditoSaldo > 0 && !editingCredito && (
+                                  <p className="font-body text-[10px] text-blue-400/60 mt-1.5">Este saldo será descontado automaticamente no próximo pagamento</p>
+                                )}
+                              </div>
+                            );
+                          })()}
+
                           {saldoDevedor > 0 && (
                             <div className="rounded-2xl border border-amber-500/40 bg-gradient-to-br from-amber-500/15 via-amber-500/[0.06] to-transparent p-4 shadow-[0_0_0_1px_rgba(245,158,11,0.08),0_8px_24px_-8px_rgba(245,158,11,0.35)]">
                               <div className="flex items-center justify-between gap-3">
