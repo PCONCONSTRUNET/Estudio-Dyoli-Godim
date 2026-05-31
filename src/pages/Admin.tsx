@@ -372,6 +372,9 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const [clienteParaExcluir, setClienteParaExcluir] = useState<Profile | null>(null);
   const [excluindoCliente, setExcluindoCliente] = useState(false);
+  const [editingCredito, setEditingCredito] = useState(false);
+  const [tempCredito, setTempCredito] = useState("0");
+  const [savingCredito, setSavingCredito] = useState(false);
   const [selectedAgendaDate, setSelectedAgendaDate] = useState(() => getDateKey(new Date()));
   const [agendaDismissed, setAgendaDismissed] = useState<Set<string>>(() => {
     const saved = localStorage.getItem("agenda_dismissed");
@@ -2336,9 +2339,6 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                           {/* Crédito a Haver */}
                           {(() => {
                             const creditoSaldo = Number(selProfile.credito_saldo || 0);
-                            const [editingCredito, setEditingCredito] = React.useState(false);
-                            const [tempCredito, setTempCredito] = React.useState(creditoSaldo.toFixed(2));
-                            const [savingCredito, setSavingCredito] = React.useState(false);
 
                             const saveCredito = async () => {
                               setSavingCredito(true);
