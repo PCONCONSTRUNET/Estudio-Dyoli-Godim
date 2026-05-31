@@ -45,12 +45,13 @@ import { Switch } from "@/components/ui/switch";
 interface Agendamento {
   id: string; servico: string; variacao: string | null; data_agendamento: string;
   horario: string; valor: number; valor_pago: number | null; status: string;
+  valor_troco?: number | null; valor_gorjeta?: number | null; valor_credito?: number | null;
   created_at: string; user_id: string; duracao_minutos: number; forma_pagamento: string | null;
   cliente_nome: string | null;
   origem?: string | null;
   observacao?: string | null;
 }
-interface Profile { id: string; nome: string; whatsapp: string; cpf?: string | null; created_at: string; }
+interface Profile { id: string; nome: string; whatsapp: string; cpf?: string | null; created_at: string; credito_saldo?: number | null; }
 interface LembreteConfig { id: string; tipo: string; ativo: boolean; mensagem: string; horas_antes: number; }
 
 type Tab = "dashboard" | "agendamentos" | "pedidos" | "clientes" | "horarios" | "servicos" | "servicos_app" | "financeiro" | "caixa" | "dividas" | "pagamentos" | "produtos" | "despesas" | "gateway" | "chatbot" | "anamnese" | "avaliacoes";
