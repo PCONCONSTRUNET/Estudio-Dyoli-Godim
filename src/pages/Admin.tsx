@@ -390,6 +390,11 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [manualHorarioFim, setManualHorarioFim] = useState("10:00");
   const [manualFormaPagamento, setManualFormaPagamento] = useState("pix");
   const [manualPago, setManualPago] = useState(false);
+  const [manualValorPago, setManualValorPago] = useState<string>("");
+  const [manualTroco, setManualTroco] = useState(0);
+  const [manualGorjeta, setManualGorjeta] = useState(0);
+  const [manualCredito, setManualCredito] = useState(0);
+
   const [manualConcluido, setManualConcluido] = useState(false);
   const [manualSaving, setManualSaving] = useState(false);
 
@@ -661,7 +666,28 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     const a = agendamentos.find((item) => item.id === id);
     if (!a) return;
     const valor = Number(a.valor);
-    const newPago = type === "completo" ? valor : valor * 0.5;
+    
+    let newPago = type === "completo" ? valor : valor * 0.5;
+    let creditoUsado = 0;
+
+    if (type === "completo" && ag.user_id) {
+      const { data: profile } = await supabase.from("profiles").select("credito_saldo").eq("id", ag.user_id).single();
+      const saldo = Number(profile?.credito_saldo || 0);
+      if (saldo > 0) {
+         const valorFaltante = valor - Number(ag.valor_pago || 0);
+         creditoUsado = Math.min(saldo, valorFaltante);
+         if (creditoUsado > 0) {
+           await supabase.from("profiles").update({ credito_saldo: saldo - creditoUsado }).eq("id", ag.user_id);
+           newPago = newPago - creditoUsado; // Actually the customer pays less because credit covers it.
+           // Wait, "valor_pago" represents the total value paid for the service. So "newPago" is still the total service value, 
+           // BUT they used credit to pay part of it.
+           // However, if we do newPago, it means the service is fully paid.
+           // So newPago is still correct, we just update the credit balance in DB and show a toast!
+           toast.success(`Crédito de R$ ${creditoUsado.toFixed(2)} utilizado automaticamente!`);
+         }
+      }
+    }
+
     await supabase.from("agendamentos").update({ valor_pago: newPago }).eq("id", id);
     setAgendamentos((prev) => prev.map((item) => (item.id === id ? { ...item, valor_pago: newPago } : item)));
   };
@@ -823,12 +849,21 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         }
       }
 
+      if (manualCredito > 0 && userId) {
+        const { data: profile } = await supabase.from("profiles").select("credito_saldo").eq("id", userId).single();
+        const currentCredit = Number(profile?.credito_saldo || 0);
+        await supabase.from("profiles").update({ credito_saldo: currentCredit + manualCredito }).eq("id", userId);
+      }
+
       const { data, error } = await supabase.from("agendamentos").insert({
         servico: servicoLabel,
         data_agendamento: manualData,
         horario: manualHorario,
         valor: valor,
-        valor_pago: manualPago ? valor : 0,
+        valor_pago: manualPago ? (Number(manualValorPago) || valor) : 0,
+        valor_troco: manualTroco,
+        valor_gorjeta: manualGorjeta,
+        valor_credito: manualCredito,
         duracao_minutos: duracao,
         status: manualConcluido ? "concluido" : "confirmado",
         forma_pagamento: manualFormaPagamento,

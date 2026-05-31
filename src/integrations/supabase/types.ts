@@ -36,6 +36,9 @@ export type Database = {
           user_id: string | null
           valor: number
           valor_pago: number | null
+          valor_troco: number | null
+          valor_gorjeta: number | null
+          valor_credito: number | null
           variacao: string | null
         }
         Insert: {
@@ -59,6 +62,9 @@ export type Database = {
           user_id?: string | null
           valor: number
           valor_pago?: number | null
+          valor_troco?: number | null
+          valor_gorjeta?: number | null
+          valor_credito?: number | null
           variacao?: string | null
         }
         Update: {
@@ -82,6 +88,9 @@ export type Database = {
           user_id?: string | null
           valor?: number
           valor_pago?: number | null
+          valor_troco?: number | null
+          valor_gorjeta?: number | null
+          valor_credito?: number | null
           variacao?: string | null
         }
         Relationships: []
@@ -604,6 +613,7 @@ export type Database = {
       profiles: {
         Row: {
           cpf: string | null
+          credito_saldo: number | null
           created_at: string
           data_nascimento: string | null
           id: string
@@ -613,6 +623,7 @@ export type Database = {
         }
         Insert: {
           cpf?: string | null
+          credito_saldo?: number | null
           created_at?: string
           data_nascimento?: string | null
           id: string
@@ -622,6 +633,7 @@ export type Database = {
         }
         Update: {
           cpf?: string | null
+          credito_saldo?: number | null
           created_at?: string
           data_nascimento?: string | null
           id?: string

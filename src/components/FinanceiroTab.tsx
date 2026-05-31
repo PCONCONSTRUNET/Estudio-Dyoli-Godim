@@ -6,7 +6,9 @@ import AnaliseCancelamentosModal from "@/components/AnaliseCancelamentosModal";
 
 interface Agendamento {
   id: string; servico: string; variacao: string | null; data_agendamento: string;
-  horario: string; valor: number; valor_pago: number | null; status: string;
+  horario: string; valor: number; valor_pago: number | null;
+  valor_troco: number | null; valor_gorjeta: number | null; valor_credito: number | null;
+  status: string;
   created_at: string; user_id: string; cliente_nome: string | null;
 }
 
@@ -132,7 +134,12 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const totalRecebido = filtered.reduce((s, a) => s + Number(a.valor_pago || 0), 0);
   const totalPendente = totalReceita - totalRecebido;
   const qtdAtendimentos = filtered.length;
-  const comissaoValor = totalRecebido * (comissaoPct / 100);
+  
+  const totalGorjetas = filtered.reduce((s, a) => s + Number(a.valor_gorjeta || 0), 0);
+  const totalTrocos = filtered.reduce((s, a) => s + Number(a.valor_troco || 0), 0);
+  const totalCreditos = filtered.reduce((s, a) => s + Number(a.valor_credito || 0), 0);
+  const baseComissao = totalRecebido - totalGorjetas - totalTrocos - totalCreditos;
+  const comissaoValor = Math.max(0, baseComissao) * (comissaoPct / 100) + totalGorjetas;
   const totalDespesas = despesas
     .filter(d => (d.tipo || "estudio") === "estudio" && d.data_vencimento >= periodRange.start && d.data_vencimento <= periodRange.end)
     .reduce((s, d) => s + Number(d.valor), 0);
@@ -692,7 +699,8 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
         </div>
         <p className="relative font-heading text-3xl font-bold text-purple-300 tabular-nums">{formatCurrency(comissaoValor)}</p>
         <p className="relative font-body text-[11px] text-purple-300/60 mt-1.5">
-          {comissaoPct}% sobre {formatCurrency(totalRecebido)} recebido no período
+          {comissaoPct}% sobre {formatCurrency(Math.max(0, totalRecebido - totalGorjetas - totalTrocos - totalCreditos))} base
+          {totalGorjetas > 0 && ` + ${formatCurrency(totalGorjetas)} (Gorjetas)`}
         </p>
 
         {showComissaoConfig && (

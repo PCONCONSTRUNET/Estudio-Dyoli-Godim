@@ -29,6 +29,9 @@ interface Agendamento {
  horario: string;
  valor: number;
  valor_pago: number | null;
+ valor_troco: number | null;
+ valor_gorjeta: number | null;
+ valor_credito: number | null;
  status: string;
  created_at: string;
  user_id: string;
@@ -146,9 +149,13 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  const cicloAgs = agendamentos.filter(
  (a) => a.status !== "cancelado" && a.status !== "falta" &&
  a.data_agendamento >= ciclo.startISO && a.data_agendamento <= ciclo.endISO,
- );
+ );  
  const recebido = cicloAgs.reduce((s, a) => s + Number(a.valor_pago || 0), 0);
  const total = cicloAgs.reduce((s, a) => s + Number(a.valor), 0);
+ const gorjetas = cicloAgs.reduce((s, a) => s + Number(a.valor_gorjeta || 0), 0);
+ const trocos = cicloAgs.reduce((s, a) => s + Number(a.valor_troco || 0), 0);
+ const creditos = cicloAgs.reduce((s, a) => s + Number(a.valor_credito || 0), 0);
+ 
  const desp = despesas
  .filter((d) => (d.tipo || "estudio") === "estudio" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO)
  .reduce((s, d) => s + Number(d.valor), 0);
@@ -157,12 +164,14 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  .reduce((s, d) => s + Number(d.valor), 0);
 
  const lucro = recebido - desp;
- const comissao = recebido * (comissaoPct / 100);
+ const baseComissao = recebido - gorjetas - trocos - creditos;
+ const comissao = Math.max(0, baseComissao) * (comissaoPct / 100) + gorjetas;
+ 
  const today = new Date(); today.setHours(12, 0, 0, 0);
  const totalDays = Math.round((ciclo.endDate.getTime() - ciclo.startDate.getTime()) / 86400000) + 1;
  const elapsedDays = Math.max(0, Math.min(totalDays, Math.round((today.getTime() - ciclo.startDate.getTime()) / 86400000) + 1));
  const progress = cicloOffset === 0 ? Math.round((elapsedDays / totalDays) * 100) : (cicloOffset < 0 ? 100 : 0);
- return { recebido, total, desp, despPessoal, lucro, comissao, totalDays, elapsedDays, progress, qtd: cicloAgs.length, items: cicloAgs };
+ return { recebido, total, gorjetas, trocos, creditos, desp, despPessoal, lucro, comissao, totalDays, elapsedDays, progress, qtd: cicloAgs.length, items: cicloAgs };
  }, [agendamentos, ciclo, despesas, comissaoPct, cicloOffset]);
 
  // Detalhamento da comissão por dia (apenas dias com valor recebido)
@@ -469,7 +478,10 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  <Sparkles className="w-3 h-3" /> Sua comissão · {comissaoPct}%
  </p>
  <p className="font-heading text-2xl font-bold text-purple-300 mt-1">
- {formatCurrency(caixaData.recebido * (comissaoPct / 100))}
+ {formatCurrency(
+  Math.max(0, caixaData.recebido - caixaData.items.reduce((s,a) => s + Number(a.valor_gorjeta||0) + Number(a.valor_troco||0) + Number(a.valor_credito||0), 0)) * (comissaoPct / 100) +
+  caixaData.items.reduce((s,a) => s + Number(a.valor_gorjeta||0), 0)
+ )}
  </p>
  </div>
  <div className="text-right">
@@ -559,7 +571,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  className={`relative px-4 py-2 rounded-full font-body text-[12px] font-semibold whitespace-nowrap border transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
  active
  ? "bg-gradient-to-br from-gold/30 to-gold/10 text-gold border-gold/50 shadow-[0_0_18px_-4px_hsl(40_40%_55%/0.5)]"
- : "bg-primary-foreground/[0.04] text-primary-foreground/55 border-primary-foreground/[0.1] hover:border-gold/25 hover:text-primary-foreground hover:bg-primary-foreground/[0.06]"
+ : "bg-primary-foreground/[0.04] text-primary-foreground/55 border-primary-foreground/[1.0] hover:border-gold/25 hover:text-primary-foreground hover:bg-primary-foreground/[0.06]"
  }`}
  >
  {f.label}
@@ -642,7 +654,8 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  {formatCurrency(cicloStats.comissao)}
  </p>
  <p className="font-body text-[11px] text-primary-foreground/75 mt-2 tabular-nums">
- {formatCurrency(cicloStats.recebido)} × <span className="text-purple-300 font-bold">{comissaoPct}%</span>
+ Base: {formatCurrency(Math.max(0, cicloStats.recebido - cicloStats.gorjetas - cicloStats.trocos - cicloStats.creditos))} × <span className="text-purple-300 font-bold">{comissaoPct}%</span>
+ {cicloStats.gorjetas > 0 && <span className="text-purple-300 font-bold"> + {formatCurrency(cicloStats.gorjetas)} (Gorjetas 100%)</span>}
  </p>
  </div>
 
@@ -655,7 +668,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  <div className="flex items-start gap-2 p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
  <span className="font-heading text-[11px] font-bold text-gold w-5 h-5 rounded-full bg-gold/15 flex items-center justify-center shrink-0 mt-0.5">1</span>
  <p className="font-body text-[12px] text-primary-foreground/100 leading-relaxed">
- A comissão é <span className="text-purple-300 font-semibold">{comissaoPct}%</span> sobre o <span className="text-green-400 font-semibold">valor recebido</span> (apenas pagamentos confirmados, não o previsto).
+ A comissão é <span className="text-purple-300 font-semibold">{comissaoPct}%</span> sobre o <span className="text-green-400 font-semibold">valor base</span> (recebido menos gorjetas, troco e créditos). Gorjetas são somadas integralmente.
  </p>
  </div>
  <div className="flex items-start gap-2 p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
@@ -677,7 +690,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  <div className="grid grid-cols-3 gap-2">
  <div className="p-2.5 rounded-xl bg-green-500/[0.06] border border-green-500/15">
  <p className="font-body text-[8.5px] text-primary-foreground/75 uppercase tracking-wider">Base</p>
- <p className="font-heading text-[13px] font-bold text-green-400 tabular-nums leading-tight mt-0.5">{formatCurrency(cicloStats.recebido)}</p>
+ <p className="font-heading text-[13px] font-bold text-green-400 tabular-nums leading-tight mt-0.5">{formatCurrency(Math.max(0, cicloStats.recebido - cicloStats.gorjetas - cicloStats.trocos - cicloStats.creditos))}</p>
  </div>
  <div className="p-2.5 rounded-xl bg-purple-500/[0.06] border border-purple-500/15 relative">
  <p className="font-body text-[8.5px] text-primary-foreground/75 uppercase tracking-wider">Taxa</p>
@@ -734,7 +747,9 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  ) : (
  <div className="space-y-1.5">
  {comissaoBreakdown.map((d) => {
- const dayComm = d.recebido * (comissaoPct / 100);
+ const dayBase = Math.max(0, d.recebido - cicloStats.items.filter(a => a.data_agendamento === d.date).reduce((s,a)=>s+Number(a.valor_gorjeta||0)+Number(a.valor_troco||0)+Number(a.valor_credito||0),0));
+ const dayGorjetas = cicloStats.items.filter(a => a.data_agendamento === d.date).reduce((s,a)=>s+Number(a.valor_gorjeta||0), 0);
+ const dayComm = dayBase * (comissaoPct / 100) + dayGorjetas;
  return (
  <div key={d.date} className="flex items-center justify-between p-2.5 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.05] hover:border-purple-500/20 transition-all">
  <div className="flex items-center gap-2 min-w-0">
