@@ -222,25 +222,33 @@ const AdminDashboard = ({
       </div>
 
       {/* ── Próximos Clientes (Cards) ── */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-body text-[11px] text-primary-foreground/75 uppercase tracking-widest font-medium">
-            Próximos atendimentos
-          </h3>
+      <div className="relative overflow-hidden rounded-3xl border border-gold/15 bg-gradient-to-br from-gold/[0.05] via-primary-foreground/[0.02] to-transparent p-5 backdrop-blur-md">
+        <div className="pointer-events-none absolute -top-24 -right-20 w-56 h-56 rounded-full bg-gold/10 blur-[60px]" />
+        
+        <div className="relative flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gold/15 border border-gold/25 shadow-[0_0_12px_-3px_hsl(40_60%_60%/0.3)]">
+              <User className="w-4 h-4 text-gold" />
+            </div>
+            <h3 className="font-body text-[11px] text-primary-foreground/90 uppercase tracking-widest font-bold">
+              Próximos atendimentos
+            </h3>
+          </div>
           <button
             onClick={onGoToAgenda}
-            className="font-body text-[11px] text-gold flex items-center gap-1 hover:text-gold/80 transition-colors"
+            className="group font-body text-[10px] font-bold text-gold flex items-center gap-1.5 hover:text-gold/80 hover:bg-gold/15 transition-all px-3 py-1.5 rounded-full bg-gold/10 border border-gold/20 uppercase tracking-wider"
           >
-            Ver agenda <ArrowRight className="w-3 h-3" />
+            Ver agenda <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
           </button>
         </div>
+        
         {upcomingItems.length === 0 ? (
-          <div className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-6 text-center">
-            <Calendar className="w-8 h-8 text-primary-foreground/75 mx-auto mb-2" />
-            <p className="font-body text-[13px] text-primary-foreground/95">Nenhum atendimento pendente hoje</p>
+          <div className="relative rounded-2xl border border-dashed border-primary-foreground/15 bg-primary-foreground/[0.02] p-8 text-center">
+            <Calendar className="w-8 h-8 text-primary-foreground/50 mx-auto mb-3" />
+            <p className="font-body text-[13px] text-primary-foreground/80 font-medium">Nenhum atendimento pendente hoje</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="relative space-y-3">
             {upcomingItems.slice(0, 4).map((a, idx) => {
               const [h, m] = a.horario.split(":").map(Number);
               const endMin = h * 60 + m + (a.duracao_minutos || 60);
@@ -250,40 +258,40 @@ const AdminDashboard = ({
               return (
                 <div
                   key={a.id}
-                  className={`rounded-2xl border p-4 transition-all ${
+                  className={`group relative rounded-2xl border p-4 transition-all duration-300 hover:scale-[1.01] ${
                     isNext
-                      ? "border-gold/20 bg-gold/[0.06] shadow-[0_0_20px_-8px_hsl(40_40%_55%/0.15)]"
-                      : "border-primary-foreground/[0.06] bg-primary-foreground/[0.03]"
+                      ? "border-gold/30 bg-gradient-to-br from-gold/10 to-gold/[0.02] shadow-[0_8px_30px_-8px_hsl(40_60%_60%/0.25)] backdrop-blur-md"
+                      : "border-primary-foreground/[0.08] bg-primary-foreground/[0.02] hover:bg-primary-foreground/[0.04] hover:border-primary-foreground/20 backdrop-blur-sm"
                   }`}
                 >
-                  <div className="flex items-start gap-3">
-                    <div className={`mt-0.5 w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                      isNext ? "bg-gold/15 text-gold" : "bg-primary-foreground/[0.06] text-primary-foreground/95"
+                  <div className="flex items-start gap-4">
+                    <div className={`mt-0.5 w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border ${
+                      isNext ? "bg-gold/15 text-gold border-gold/25" : "bg-primary-foreground/[0.05] text-primary-foreground/80 border-primary-foreground/10"
                     }`}>
                       <User className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="font-body text-[14px] font-medium text-primary-foreground truncate">
+                        <p className={`font-body text-[15px] font-bold truncate ${isNext ? "text-gold" : "text-primary-foreground"}`}>
                           {getClientName(a.user_id)}
                         </p>
                         {isNext && (
-                          <span className="shrink-0 px-2 py-0.5 rounded-full text-[9px] font-body font-bold bg-gold/15 text-gold border border-gold/20 uppercase tracking-wider">
-                            Próximo
+                          <span className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-body font-bold bg-gold text-charcoal uppercase tracking-widest shadow-[0_0_12px_hsl(40_60%_60%/0.4)] animate-pulse">
+                            <Sparkles className="w-2.5 h-2.5" /> Próximo
                           </span>
                         )}
                       </div>
-                      <p className="font-body text-[12px] text-primary-foreground/75 truncate mt-0.5">
+                      <p className="font-body text-[12px] text-primary-foreground/80 truncate mt-1">
                         {a.servico}{a.variacao ? ` — ${a.variacao}` : ""}
                       </p>
-                      <div className="flex items-center gap-3 mt-2">
-                        <div className="flex items-center gap-1.5 text-primary-foreground/85">
-                          <Clock className="w-3 h-3" />
-                          <span className="font-body text-[11px]">
+                      <div className="flex items-center gap-4 mt-3">
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary-foreground/[0.04] border border-primary-foreground/[0.06]">
+                          <Clock className={`w-3.5 h-3.5 ${isNext ? "text-gold/80" : "text-primary-foreground/60"}`} />
+                          <span className={`font-heading text-[12px] font-bold ${isNext ? "text-gold/90" : "text-primary-foreground/85"} tabular-nums`}>
                             {a.horario} — {String(endH).padStart(2, "0")}:{String(endM).padStart(2, "0")}
                           </span>
                         </div>
-                        <span className="font-body text-[11px] text-gold font-medium">
+                        <span className={`font-heading text-[14px] font-bold tabular-nums ${isNext ? "text-gold" : "text-primary-foreground/90"}`}>
                           {formatCurrency(Number(a.valor))}
                         </span>
                       </div>
@@ -297,62 +305,75 @@ const AdminDashboard = ({
       </div>
 
       {/* ── Timeline do Dia ── */}
-      <div>
-        <h3 className="mb-3 font-body text-[11px] text-primary-foreground/75 uppercase tracking-widest font-medium">
-          Timeline de Hoje
-        </h3>
+      <div className="relative overflow-hidden rounded-3xl border border-purple-500/15 bg-gradient-to-br from-purple-500/[0.03] via-primary-foreground/[0.01] to-transparent p-5 backdrop-blur-md mt-5">
+        <div className="pointer-events-none absolute -bottom-24 -left-20 w-64 h-64 rounded-full bg-purple-500/10 blur-[60px]" />
+        
+        <div className="relative flex items-center gap-2.5 mb-6">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-500/15 border border-purple-500/25 shadow-[0_0_12px_-3px_hsl(280_70%_60%/0.3)]">
+            <Clock className="w-4 h-4 text-purple-400" />
+          </div>
+          <h3 className="font-body text-[11px] text-primary-foreground/90 uppercase tracking-widest font-bold">
+            Timeline de Hoje
+          </h3>
+        </div>
+        
         {todayItems.length === 0 ? (
-          <div className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-6 text-center">
-            <p className="font-body text-[13px] text-primary-foreground/95">Sem atendimentos hoje</p>
+          <div className="relative rounded-2xl border border-dashed border-primary-foreground/15 bg-primary-foreground/[0.02] p-8 text-center">
+            <Timer className="w-8 h-8 text-primary-foreground/50 mx-auto mb-3" />
+            <p className="font-body text-[13px] text-primary-foreground/80 font-medium">Sem atendimentos hoje</p>
           </div>
         ) : (
           <div className="relative pl-6">
             {/* Timeline line */}
-            <div className="absolute left-[9px] top-2 bottom-2 w-px bg-primary-foreground/[0.08]" />
-            <div className="space-y-0">
+            <div className="absolute left-[11px] top-4 bottom-4 w-[2px] rounded-full bg-gradient-to-b from-primary-foreground/[0.15] via-primary-foreground/[0.05] to-transparent" />
+            <div className="space-y-1">
               {todayItems.map((a) => {
                 const [h, m] = a.horario.split(":").map(Number);
                 const appointmentMin = h * 60 + m;
                 const isPast = currentMinutes > appointmentMin + (a.duracao_minutos || 60);
                 const isCurrent = currentMinutes >= appointmentMin && currentMinutes < appointmentMin + (a.duracao_minutos || 60);
                 return (
-                  <div key={a.id} className="relative pb-4">
+                  <div key={a.id} className="relative pb-5 group">
                     {/* Dot */}
-                    <div className={`absolute -left-6 top-1.5 w-[10px] h-[10px] rounded-full border-2 ${
+                    <div className={`absolute -left-[29px] top-3 w-3 h-3 rounded-full border-2 transition-all duration-300 group-hover:scale-125 ${
                       isCurrent
-                        ? "bg-gold border-gold shadow-[0_0_8px_2px_hsl(40_40%_55%/0.3)] animate-pulse"
+                        ? "bg-gold border-gold shadow-[0_0_12px_3px_hsl(40_40%_55%/0.4)] animate-pulse"
                         : isPast
-                        ? "bg-green-500/60 border-green-500/40"
-                        : "bg-primary-foreground/10 border-primary-foreground/20"
+                        ? "bg-green-500 border-green-400/50 shadow-[0_0_8px_hsl(142_70%_50%/0.2)]"
+                        : "bg-background border-primary-foreground/30"
                     }`} />
-                    <div className={`rounded-xl p-3 transition-all ${
-                      isCurrent ? "bg-gold/[0.06] border border-gold/15" : "bg-primary-foreground/[0.02] border border-transparent"
+                    <div className={`rounded-2xl p-4 transition-all duration-300 backdrop-blur-md ${
+                      isCurrent 
+                        ? "bg-gradient-to-r from-gold/[0.08] to-gold/[0.02] border border-gold/25 shadow-[0_4px_24px_-6px_hsl(40_60%_60%/0.15)]" 
+                        : "bg-primary-foreground/[0.02] border border-primary-foreground/[0.06] hover:bg-primary-foreground/[0.04] hover:border-primary-foreground/15 hover:shadow-lg"
                     }`}>
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className={`font-body text-[12px] font-semibold shrink-0 ${
-                            isCurrent ? "text-gold" : isPast ? "text-primary-foreground/95" : "text-primary-foreground/95"
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className={`font-heading text-[15px] font-bold shrink-0 tabular-nums ${
+                            isCurrent ? "text-gold" : isPast ? "text-primary-foreground/70" : "text-primary-foreground/90"
                           }`}>
                             {a.horario}
                           </span>
-                          <span className={`font-body text-[12px] truncate ${
-                            isPast ? "text-primary-foreground/85" : "text-primary-foreground/100"
+                          <span className={`font-body text-[14px] font-medium truncate ${
+                            isPast ? "text-primary-foreground/70" : "text-primary-foreground"
                           }`}>
                             {getClientName(a.user_id)}
                           </span>
                           {(a as any).foi_estendido && (
-                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 shrink-0">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 shrink-0">
                               <Timer className="w-2.5 h-2.5 text-amber-400" />
-                              <span className="font-body text-[9px] font-semibold text-amber-400 uppercase tracking-wider">Estendido</span>
+                              <span className="font-body text-[9px] font-bold text-amber-400 uppercase tracking-wider">Estendido</span>
                             </span>
                           )}
                         </div>
-                        {statusBadge(a.status)}
+                        <div className="shrink-0 scale-90 sm:scale-100 origin-right">
+                          {statusBadge(a.status)}
+                        </div>
                       </div>
-                      <p className={`font-body text-[11px] mt-0.5 ${
-                        isPast ? "text-primary-foreground/75" : "text-primary-foreground/95"
+                      <p className={`font-body text-[12px] mt-1.5 ${
+                        isPast ? "text-primary-foreground/60" : "text-primary-foreground/80"
                       }`}>
-                        {a.servico}{a.variacao ? ` · ${a.variacao}` : ""} · {a.duracao_minutos || 60}min
+                        {a.servico}{a.variacao ? ` · ${a.variacao}` : ""} <span className="mx-1.5 opacity-40">•</span> {a.duracao_minutos || 60} min
                       </p>
                     </div>
                   </div>
