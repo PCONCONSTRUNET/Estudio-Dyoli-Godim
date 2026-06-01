@@ -854,10 +854,29 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
       }
 
       if (manualCredito > 0 && userId) {
-        const { data: profile } = await supabase.from("profiles").select("credito_saldo").eq("id", userId).single();
+        // Fetch current balance first
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("credito_saldo")
+          .eq("id", userId)
+          .maybeSingle();
         const currentCredit = Number(profile?.credito_saldo || 0);
-        await supabase.from("profiles").update({ credito_saldo: currentCredit + manualCredito }).eq("id", userId);
-        setClientes(prev => prev.map(c => c.id === userId ? { ...c, credito_saldo: currentCredit + manualCredito } : c));
+        const novoSaldo = currentCredit + manualCredito;
+        // Use RPC with SECURITY DEFINER to bypass RLS
+        const { error: creditErr } = await (supabase as any).rpc("admin_set_credito_saldo", {
+          p_user_id: userId,
+          p_novo_saldo: novoSaldo,
+        });
+        if (creditErr) {
+          console.error("Erro ao salvar crédito do cliente:", creditErr);
+          toast.error("Registro salvo, mas falha ao adicionar crédito: " + creditErr.message);
+        } else {
+          setClientes(prev =>
+            prev.some(c => c.id === userId)
+              ? prev.map(c => c.id === userId ? { ...c, credito_saldo: novoSaldo } : c)
+              : [{ id: userId!, nome: clienteNome, whatsapp: "", created_at: new Date().toISOString(), credito_saldo: novoSaldo }, ...prev]
+          );
+        }
       }
 
       const { data, error } = await supabase.from("agendamentos").insert({
@@ -2438,13 +2457,18 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                             const saveCredito = async () => {
                               setSavingCredito(true);
                               const novoSaldo = Math.max(0, Number(tempCredito) || 0);
-                              const { error } = await supabase.from("profiles" as any).update({ credito_saldo: novoSaldo }).eq("id", selProfile.id);
+                              // Use RPC with SECURITY DEFINER to bypass RLS
+                              const { error } = await (supabase as any).rpc("admin_set_credito_saldo", {
+                                p_user_id: selProfile.id,
+                                p_novo_saldo: novoSaldo,
+                              });
                               if (!error) {
                                 setClientes(prev => prev.map(c => c.id === selProfile.id ? { ...c, credito_saldo: novoSaldo } : c));
                                 toast.success("Crédito atualizado!");
                                 setEditingCredito(false);
                               } else {
-                                toast.error("Erro ao salvar crédito");
+                                console.error("Erro ao salvar crédito:", error);
+                                toast.error("Erro ao salvar crédito: " + error.message);
                               }
                               setSavingCredito(false);
                             };
