@@ -771,6 +771,9 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setManualFormaPagamento("pix");
     setManualPago(false);
     setManualConcluido(false);
+    setManualTroco(0);
+    setManualGorjeta(0);
+    setManualCredito(0);
     setManualServicoSearch("");
     setManualClienteSearch("");
     setManualServicoOpen(false);
@@ -2033,6 +2036,53 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                         <option value="dinheiro" className="bg-charcoal">Dinheiro</option>
                         <option value="transferencia" className="bg-charcoal">Transferência</option>
                       </select>
+                    </div>
+
+                    {/* ── Troco / Gorjeta / Crédito ── */}
+                    <div className="space-y-2.5">
+                      <label className="font-body text-[10px] uppercase tracking-[0.2em] text-primary-foreground/45 font-semibold px-1 block">Extras (opcional)</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="space-y-1.5">
+                          <span className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/35 px-1 block truncate">Troco (R$)</span>
+                          <input
+                            type="number"
+                            inputMode="decimal"
+                            min={0}
+                            step="0.01"
+                            value={manualTroco || ""}
+                            onChange={(e) => setManualTroco(Number(e.target.value) || 0)}
+                            placeholder="0,00"
+                            className="w-full px-3 py-2.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] tabular-nums focus:outline-none focus:border-blue-400/60 focus:ring-1 focus:ring-blue-400/30 transition-all"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <span className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/35 px-1 block truncate">Gorjeta (R$)</span>
+                          <input
+                            type="number"
+                            inputMode="decimal"
+                            min={0}
+                            step="0.01"
+                            value={manualGorjeta || ""}
+                            onChange={(e) => setManualGorjeta(Number(e.target.value) || 0)}
+                            placeholder="0,00"
+                            className="w-full px-3 py-2.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-purple-300 font-body text-[13px] tabular-nums focus:outline-none focus:border-purple-400/60 focus:ring-1 focus:ring-purple-400/30 transition-all"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <span className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/35 px-1 block truncate">Crédito (R$)</span>
+                          <input
+                            type="number"
+                            inputMode="decimal"
+                            min={0}
+                            step="0.01"
+                            value={manualCredito || ""}
+                            onChange={(e) => setManualCredito(Number(e.target.value) || 0)}
+                            placeholder="0,00"
+                            className="w-full px-3 py-2.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-green-400 font-body text-[13px] tabular-nums focus:outline-none focus:border-green-400/60 focus:ring-1 focus:ring-green-400/30 transition-all"
+                          />
+                        </div>
+                      </div>
+                      <p className="px-1 font-body text-[10px] text-primary-foreground/30 italic">Gorjeta é somada 100% à comissão · Troco e crédito são descontados da base</p>
                     </div>
 
                     {/* ── Toggles ── */}
