@@ -670,25 +670,22 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     const a = agendamentos.find((item) => item.id === id);
     if (!a) return;
     const valor = Number(a.valor);
-    
+
     let newPago = type === "completo" ? valor : valor * 0.5;
     let creditoUsado = 0;
 
-    if (type === "completo" && ag.user_id) {
-      const { data: profile } = await supabase.from("profiles").select("credito_saldo").eq("id", ag.user_id).single();
+    if (type === "completo" && a.user_id) {
+      const { data: profile } = await supabase.from("profiles").select("credito_saldo").eq("id", a.user_id).single();
       const saldo = Number(profile?.credito_saldo || 0);
       if (saldo > 0) {
-         const valorFaltante = valor - Number(ag.valor_pago || 0);
-         creditoUsado = Math.min(saldo, valorFaltante);
-         if (creditoUsado > 0) {
-           await supabase.from("profiles").update({ credito_saldo: saldo - creditoUsado }).eq("id", ag.user_id);
-           newPago = newPago - creditoUsado; // Actually the customer pays less because credit covers it.
-           // Wait, "valor_pago" represents the total value paid for the service. So "newPago" is still the total service value, 
-           // BUT they used credit to pay part of it.
-           // However, if we do newPago, it means the service is fully paid.
-           // So newPago is still correct, we just update the credit balance in DB and show a toast!
-           toast.success(`Crédito de R$ ${creditoUsado.toFixed(2)} utilizado automaticamente!`);
-         }
+        const valorFaltante = valor - Number(a.valor_pago || 0);
+        creditoUsado = Math.min(saldo, valorFaltante);
+        if (creditoUsado > 0) {
+          await supabase.from("profiles").update({ credito_saldo: saldo - creditoUsado }).eq("id", a.user_id);
+          // newPago permanece como 'valor' — o serviço está totalmente pago,
+          // o crédito apenas cobriu parte do custo em dinheiro físico.
+          toast.success(`Crédito de R$ ${creditoUsado.toFixed(2)} utilizado automaticamente!`);
+        }
       }
     }
 
