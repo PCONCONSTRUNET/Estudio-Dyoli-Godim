@@ -1874,13 +1874,55 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                           ))}
 
                           {/* Resumo Total */}
-                          <div className="flex items-center justify-between rounded-2xl border border-gold/30 bg-gold/10 backdrop-blur-sm px-4 py-3 shadow-[0_0_24px_-12px_hsl(var(--gold)/0.6)]">
-                            <span className="font-body text-[10px] uppercase tracking-[0.2em] text-primary-foreground/70 font-semibold">Total</span>
-                            <div className="text-right">
-                              <p className="font-heading text-[16px] font-semibold text-gold tabular-nums leading-none">R$ {manualValorTotal.toFixed(2).replace(".", ",")}</p>
-                              <p className="font-body text-[10px] text-primary-foreground/50 mt-1 tabular-nums">{manualDuracaoTotal} min</p>
-                            </div>
-                          </div>
+                          {(() => {
+                            const clienteCredito = manualCliente
+                              ? Number(clientes.find(c => c.id === manualCliente)?.credito_saldo || 0)
+                              : 0;
+                            const descontoCredito = Math.min(clienteCredito, manualValorTotal);
+                            const totalComDesconto = manualValorTotal - descontoCredito;
+                            return (
+                              <>
+                                <div className={`flex items-center justify-between rounded-2xl border px-4 py-3 shadow-[0_0_24px_-12px_hsl(var(--gold)/0.6)] ${
+                                  descontoCredito > 0
+                                    ? "border-gold/20 bg-gold/5"
+                                    : "border-gold/30 bg-gold/10"
+                                }`}>
+                                  <span className="font-body text-[10px] uppercase tracking-[0.2em] text-primary-foreground/70 font-semibold">Total dos serviços</span>
+                                  <div className="text-right">
+                                    <p className={`font-heading text-[16px] font-semibold tabular-nums leading-none ${
+                                      descontoCredito > 0 ? "line-through text-primary-foreground/40" : "text-gold"
+                                    }`}>R$ {manualValorTotal.toFixed(2).replace(".", ",")}</p>
+                                    <p className="font-body text-[10px] text-primary-foreground/50 mt-1 tabular-nums">{manualDuracaoTotal} min</p>
+                                  </div>
+                                </div>
+                                {descontoCredito > 0 && (
+                                  <div className="rounded-2xl border border-blue-400/40 bg-gradient-to-br from-blue-500/15 to-blue-500/[0.04] px-4 py-3 space-y-2 shadow-[0_0_20px_-8px_rgba(59,130,246,0.4)]">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-[14px]">💳</span>
+                                        <span className="font-body text-[11px] font-semibold text-blue-300 uppercase tracking-wider">Desconto — Crédito a Haver</span>
+                                      </div>
+                                      <span className="font-heading text-[14px] font-bold text-blue-300 tabular-nums">- R$ {descontoCredito.toFixed(2).replace(".", ",")}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between pt-1 border-t border-blue-400/20">
+                                      <span className="font-body text-[11px] font-semibold text-primary-foreground/70 uppercase tracking-wider">Total a cobrar</span>
+                                      <span className="font-heading text-[20px] font-bold text-green-300 tabular-nums drop-shadow-[0_0_8px_rgba(134,239,172,0.5)]">R$ {totalComDesconto.toFixed(2).replace(".", ",")}</span>
+                                    </div>
+                                    {clienteCredito > descontoCredito && (
+                                      <p className="font-body text-[10px] text-blue-400/70">
+                                        Saldo restante após desconto: R$ {(clienteCredito - descontoCredito).toFixed(2).replace(".", ",")}
+                                      </p>
+                                    )}
+                                    {clienteCredito <= manualValorTotal && clienteCredito > 0 && (
+                                      <p className="font-body text-[10px] text-amber-400/80">
+                                        ⚠️ Crédito esgotado após este atendimento
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
                       )}
 
@@ -1955,6 +1997,21 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                           </button>
                         )}
                       </div>
+                      {/* Credit badge when client is selected */}
+                      {manualCliente && (() => {
+                        const creditoSaldo = Number(clientes.find(c => c.id === manualCliente)?.credito_saldo || 0);
+                        if (creditoSaldo <= 0) return null;
+                        return (
+                          <div className="flex items-center gap-2 rounded-xl border border-blue-400/30 bg-blue-500/10 px-3 py-2 animate-fade-in">
+                            <span className="text-[14px]">💳</span>
+                            <p className="font-body text-[12px] text-blue-300 flex-1">
+                              Crédito a haver:
+                              <span className="font-heading font-bold ml-1.5 tabular-nums">R$ {creditoSaldo.toFixed(2).replace(".", ",")}</span>
+                            </p>
+                            <span className="font-body text-[10px] text-blue-400/60 italic">será descontado</span>
+                          </div>
+                        );
+                      })()}
                       {manualClienteOpen && (
                         <div className="absolute z-50 mt-1 left-0 right-0 rounded-2xl border border-gold/20 bg-charcoal/95 backdrop-blur-xl shadow-2xl overflow-hidden">
                           <div className="max-h-52 overflow-y-auto">
@@ -1995,7 +2052,14 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                     }`}
                                   >
                                     <span className="font-medium truncate">{c.nome}</span>
-                                    <span className="text-[11px] text-primary-foreground/40 tabular-nums flex-shrink-0">{c.whatsapp}</span>
+                                    <span className="flex items-center gap-2 shrink-0">
+                                      {Number(c.credito_saldo || 0) > 0 && (
+                                        <span className="inline-flex items-center gap-1 rounded-full border border-blue-400/30 bg-blue-500/15 px-1.5 py-0.5 text-[9px] font-bold text-blue-300">
+                                          💳 R$ {Number(c.credito_saldo).toFixed(2).replace(".", ",")}
+                                        </span>
+                                      )}
+                                      <span className="text-[11px] text-primary-foreground/40 tabular-nums">{c.whatsapp}</span>
+                                    </span>
                                   </button>
                                 ))
                             )}
