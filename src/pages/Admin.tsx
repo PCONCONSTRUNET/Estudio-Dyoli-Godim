@@ -398,6 +398,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [manualTroco, setManualTroco] = useState(0);
   const [manualGorjeta, setManualGorjeta] = useState(0);
   const [manualCredito, setManualCredito] = useState(0);
+  // Credit discount: auto-calculated from client's wallet, debited on save
+  const [manualDescontoCredito, setManualDescontoCredito] = useState(0);
 
   const [manualConcluido, setManualConcluido] = useState(false);
   const [manualSaving, setManualSaving] = useState(false);
@@ -771,6 +773,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setManualTroco(0);
     setManualGorjeta(0);
     setManualCredito(0);
+    setManualDescontoCredito(0);
     setManualServicoSearch("");
     setManualClienteSearch("");
     setManualServicoOpen(false);
@@ -853,6 +856,26 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         }
       }
 
+      // --- Debit client credit if auto-discount was applied ---
+      const clienteCredito = manualCliente
+        ? Number(clientes.find(c => c.id === manualCliente)?.credito_saldo || 0)
+        : 0;
+      const descontoAplicado = Math.min(clienteCredito, manualValorTotal);
+
+      if (descontoAplicado > 0 && userId) {
+        const saldoAposDesconto = clienteCredito - descontoAplicado;
+        const { error: debitErr } = await (supabase as any).rpc("admin_set_credito_saldo", {
+          p_user_id: userId,
+          p_novo_saldo: saldoAposDesconto,
+        });
+        if (debitErr) {
+          console.error("Erro ao debitar crédito:", debitErr);
+          toast.error("Atenção: crédito não foi debitado: " + debitErr.message);
+        } else {
+          setClientes(prev => prev.map(c => c.id === userId ? { ...c, credito_saldo: saldoAposDesconto } : c));
+        }
+      }
+
       if (manualCredito > 0 && userId) {
         // Fetch current balance first
         const { data: profile } = await supabase
@@ -888,6 +911,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         valor_troco: manualTroco,
         valor_gorjeta: manualGorjeta,
         valor_credito: manualCredito,
+        valor_desconto_credito: descontoAplicado > 0 ? descontoAplicado : null,
         duracao_minutos: duracao,
         status: manualConcluido ? "concluido" : "confirmado",
         forma_pagamento: manualFormaPagamento,
@@ -1633,8 +1657,17 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                               <p className="font-body text-[13px] font-medium text-red-400">R$ {restante.toFixed(2).replace(".", ",")}</p>
                             </div>
                           )}
-                          {(a.valor_gorjeta || a.valor_troco || a.valor_credito) ? (
+                          {(a.valor_gorjeta || a.valor_troco || a.valor_credito || (a as any).valor_desconto_credito) ? (
                             <div className="border-t border-gold/10 pt-1.5 mt-1.5 space-y-1.5">
+                              {Number((a as any).valor_desconto_credito) > 0 && (
+                                <div className="flex items-center justify-between rounded-lg bg-blue-500/10 border border-blue-400/20 px-2 py-1.5">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-[12px]">💳</span>
+                                    <p className="font-body text-[12px] text-blue-300 font-medium">Desconto crédito a haver</p>
+                                  </div>
+                                  <p className="font-body text-[12px] font-bold text-blue-300">- R$ {Number((a as any).valor_desconto_credito).toFixed(2).replace(".", ",")}</p>
+                                </div>
+                              )}
                               {Number(a.valor_gorjeta) > 0 && (
                                 <div className="flex items-center justify-between">
                                   <p className="font-body text-[12px] text-primary-foreground/60">Gorjeta (extra)</p>
@@ -1651,6 +1684,14 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                 <div className="flex items-center justify-between">
                                   <p className="font-body text-[12px] text-primary-foreground/60">Crédito concedido</p>
                                   <p className="font-body text-[12px] font-medium text-green-400">R$ {Number(a.valor_credito).toFixed(2).replace(".", ",")}</p>
+                                </div>
+                              )}
+                              {Number((a as any).valor_desconto_credito) > 0 && (
+                                <div className="flex items-center justify-between border-t border-blue-400/20 pt-1.5">
+                                  <p className="font-body text-[12px] font-semibold text-primary-foreground/70">Total efetivo cobrado</p>
+                                  <p className="font-heading text-[14px] font-bold text-green-300">
+                                    R$ {Math.max(0, valorTotal - Number((a as any).valor_desconto_credito)).toFixed(2).replace(".", ",")}
+                                  </p>
                                 </div>
                               )}
                             </div>
