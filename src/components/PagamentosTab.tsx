@@ -185,6 +185,17 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
            list.push({ ...a, _faturaId: a.id, fatura_tipo: "pagamento", valor_fatura: a.valor, data_fatura: a.data_agendamento });
         }
       }
+      }
+      
+      if (Number(a.valor_gorjeta) > 0) {
+        list.push({ ...a, _faturaId: `${a.id}-gorjeta`, fatura_tipo: "pagamento", valor_fatura: Number(a.valor_gorjeta), data_fatura: a.data_agendamento, _is_partial: true, _desc_pagamento: "Gorjeta (extra)", is_extra: true });
+      }
+      if (Number(a.valor_troco) > 0) {
+        list.push({ ...a, _faturaId: `${a.id}-troco`, fatura_tipo: "pagamento", valor_fatura: Number(a.valor_troco), data_fatura: a.data_agendamento, _is_partial: true, _desc_pagamento: "Troco pago", is_extra: true });
+      }
+      if (Number(a.valor_credito) > 0) {
+        list.push({ ...a, _faturaId: `${a.id}-credito`, fatura_tipo: "pagamento", valor_fatura: Number(a.valor_credito), data_fatura: a.data_agendamento, _is_partial: true, _desc_pagamento: "Crédito concedido", is_extra: true });
+      }
     });
     return list;
   }, [agendamentos, historico]);
@@ -369,16 +380,14 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                         A receber
                       </span>
                     )}
-                    {isPartial && !isPendingAmount && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-400">
+                    {isPartial && (
+                      <span className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
+                        ag.is_extra ? "bg-purple-500/20 border-purple-500/40 text-purple-300" :
+                        isPendingAmount ? "bg-amber-500/20 border-amber-500/40 text-amber-300" :
+                        "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
+                      }`}>
                         <Wallet className="h-2.5 w-2.5" />
-                        Fatura Paga
-                      </span>
-                    )}
-                    {isPartial && isPendingAmount && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 border border-amber-500/40 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-300">
-                        <Wallet className="h-2.5 w-2.5" />
-                        Restante Parcial
+                        {ag._desc_pagamento || (isPendingAmount ? "Restante Parcial" : "Fatura Paga")}
                       </span>
                     )}
                   </div>
