@@ -857,6 +857,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         const { data: profile } = await supabase.from("profiles").select("credito_saldo").eq("id", userId).single();
         const currentCredit = Number(profile?.credito_saldo || 0);
         await supabase.from("profiles").update({ credito_saldo: currentCredit + manualCredito }).eq("id", userId);
+        setClientes(prev => prev.map(c => c.id === userId ? { ...c, credito_saldo: currentCredit + manualCredito } : c));
       }
 
       const { data, error } = await supabase.from("agendamentos").insert({
@@ -1613,11 +1614,32 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                               <p className="font-body text-[13px] font-medium text-red-400">R$ {restante.toFixed(2).replace(".", ",")}</p>
                             </div>
                           )}
-                          <div className="flex items-center justify-between border-t border-gold/10 pt-1.5">
+                          {(a.valor_gorjeta || a.valor_troco || a.valor_credito) ? (
+                            <div className="border-t border-gold/10 pt-1.5 mt-1.5 space-y-1.5">
+                              {Number(a.valor_gorjeta) > 0 && (
+                                <div className="flex items-center justify-between">
+                                  <p className="font-body text-[12px] text-primary-foreground/60">Gorjeta (extra)</p>
+                                  <p className="font-body text-[12px] font-medium text-purple-300">R$ {Number(a.valor_gorjeta).toFixed(2).replace(".", ",")}</p>
+                                </div>
+                              )}
+                              {Number(a.valor_troco) > 0 && (
+                                <div className="flex items-center justify-between">
+                                  <p className="font-body text-[12px] text-primary-foreground/60">Troco pago</p>
+                                  <p className="font-body text-[12px] font-medium text-blue-400">R$ {Number(a.valor_troco).toFixed(2).replace(".", ",")}</p>
+                                </div>
+                              )}
+                              {Number(a.valor_credito) > 0 && (
+                                <div className="flex items-center justify-between">
+                                  <p className="font-body text-[12px] text-primary-foreground/60">Crédito concedido</p>
+                                  <p className="font-body text-[12px] font-medium text-green-400">R$ {Number(a.valor_credito).toFixed(2).replace(".", ",")}</p>
+                                </div>
+                              )}
+                            </div>
+                          ) : null}
+                          <div className="flex items-center justify-between border-t border-gold/10 pt-1.5 mt-1.5">
                             <p className="font-body text-[12px] text-primary-foreground/60">Forma</p>
                             <p className="font-body text-[12px] font-medium text-primary-foreground">{formatFormaPagamento(a.forma_pagamento)}</p>
                           </div>
-
                         </div>
 
                         {/* Status + origem */}

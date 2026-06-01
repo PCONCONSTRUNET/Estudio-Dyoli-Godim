@@ -27,7 +27,9 @@ interface Agendamento {
   paid_at?: string | null;
   payer_name?: string | null;
   receipt_url?: string | null;
-
+  valor_gorjeta?: number | null;
+  valor_troco?: number | null;
+  valor_credito?: number | null;
 }
 
 interface ClienteProfile {
@@ -687,6 +689,30 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                           {paymentBadge(a)}
                         </div>
                       </div>
+
+                      {(Number(a.valor_gorjeta) > 0 || Number(a.valor_troco) > 0 || Number(a.valor_credito) > 0) && (
+                        <div className="col-span-2 rounded-xl border border-primary-foreground/10 bg-primary-foreground/[0.03] p-3 space-y-2 mt-1">
+                          <p className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/60 mb-1">Extras Financeiros</p>
+                          {Number(a.valor_gorjeta) > 0 && (
+                            <div className="flex items-center justify-between">
+                              <p className="text-primary-foreground/95">Gorjeta</p>
+                              <p className="text-purple-400 font-medium">{formatCurrency(Number(a.valor_gorjeta))}</p>
+                            </div>
+                          )}
+                          {Number(a.valor_troco) > 0 && (
+                            <div className="flex items-center justify-between">
+                              <p className="text-primary-foreground/95">Troco</p>
+                              <p className="text-blue-400 font-medium">{formatCurrency(Number(a.valor_troco))}</p>
+                            </div>
+                          )}
+                          {Number(a.valor_credito) > 0 && (
+                            <div className="flex items-center justify-between">
+                              <p className="text-primary-foreground/95">Crédito</p>
+                              <p className="text-green-400 font-medium">{formatCurrency(Number(a.valor_credito))}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       {isSinalPago(a) && a.status !== "cancelado" && (
                         <div className="col-span-2 rounded-xl border border-amber-500/40 bg-gradient-to-br from-amber-500/15 to-amber-500/[0.04] px-3 py-3 space-y-2">

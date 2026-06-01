@@ -18,6 +18,9 @@ interface Agendamento {
   duracao_minutos: number;
   forma_pagamento: string | null;
   cliente_nome: string | null;
+  valor_gorjeta?: number | null;
+  valor_troco?: number | null;
+  valor_credito?: number | null;
 }
 
 interface Props {
@@ -416,6 +419,15 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                       </span>
                     } />
                     <Detail label="Status do Serviço" value={ag.status.charAt(0).toUpperCase() + ag.status.slice(1)} />
+                    {Number(ag.valor_gorjeta) > 0 && (
+                      <Detail label="Gorjeta" value={<span className="text-purple-400">{formatCurrency(Number(ag.valor_gorjeta))}</span>} />
+                    )}
+                    {Number(ag.valor_troco) > 0 && (
+                      <Detail label="Troco Pago" value={<span className="text-blue-400">{formatCurrency(Number(ag.valor_troco))}</span>} />
+                    )}
+                    {Number(ag.valor_credito) > 0 && (
+                      <Detail label="Crédito Concedido" value={<span className="text-green-400">{formatCurrency(Number(ag.valor_credito))}</span>} />
+                    )}
                   </div>
                   <div className="pt-2 border-t border-primary-foreground/[0.05] flex justify-end">
                     <button
