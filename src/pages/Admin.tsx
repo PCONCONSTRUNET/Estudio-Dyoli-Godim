@@ -2037,49 +2037,75 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
                     {/* ── Troco / Gorjeta / Crédito ── */}
                     <div className="space-y-2.5">
-                      <label className="font-body text-[10px] uppercase tracking-[0.2em] text-primary-foreground/45 font-semibold px-1 block">Extras (opcional)</label>
-                      <div className="grid grid-cols-3 gap-2">
-                        <div className="space-y-1.5">
-                          <span className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/35 px-1 block truncate">Troco (R$)</span>
-                          <input
-                            type="number"
-                            inputMode="decimal"
-                            min={0}
-                            step="0.01"
-                            value={manualTroco || ""}
-                            onChange={(e) => setManualTroco(Number(e.target.value) || 0)}
-                            placeholder="0,00"
-                            className="w-full px-3 py-2.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] tabular-nums focus:outline-none focus:border-blue-400/60 focus:ring-1 focus:ring-blue-400/30 transition-all"
-                          />
+                      <label className="font-body text-[10px] uppercase tracking-[0.2em] text-primary-foreground/60 font-semibold px-1 block flex items-center gap-2">
+                        Valores Extras (Opcional)
+                      </label>
+                      
+                      <div className="rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.03] to-white/[0.01] p-4 space-y-4 relative overflow-hidden">
+                        {/* Decorative background glows */}
+                        <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20">
+                          <div className="absolute top-0 left-1/4 w-1/4 h-full bg-blue-500/20 blur-2xl"></div>
+                          <div className="absolute top-0 left-2/4 w-1/4 h-full bg-purple-500/20 blur-2xl"></div>
+                          <div className="absolute top-0 right-0 w-1/4 h-full bg-green-500/20 blur-2xl"></div>
                         </div>
-                        <div className="space-y-1.5">
-                          <span className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/35 px-1 block truncate">Gorjeta (R$)</span>
-                          <input
-                            type="number"
-                            inputMode="decimal"
-                            min={0}
-                            step="0.01"
-                            value={manualGorjeta || ""}
-                            onChange={(e) => setManualGorjeta(Number(e.target.value) || 0)}
-                            placeholder="0,00"
-                            className="w-full px-3 py-2.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-purple-300 font-body text-[13px] tabular-nums focus:outline-none focus:border-purple-400/60 focus:ring-1 focus:ring-purple-400/30 transition-all"
-                          />
+
+                        <div className="grid grid-cols-3 gap-3 relative z-10">
+                          <div className="space-y-1.5">
+                            <span className="font-body text-[9px] uppercase tracking-wider text-blue-400/90 px-1 block truncate font-semibold">Troco</span>
+                            <div className="relative group">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-blue-400/50 font-medium group-focus-within:text-blue-400 transition-colors">R$</span>
+                              <input
+                                type="number"
+                                inputMode="decimal"
+                                min={0}
+                                step="0.01"
+                                value={manualTroco || ""}
+                                onChange={(e) => setManualTroco(Number(e.target.value) || 0)}
+                                placeholder="0,00"
+                                className="w-full pl-8 pr-2 py-2.5 rounded-xl bg-blue-500/[0.06] border border-blue-500/20 text-blue-400 font-body text-[13px] tabular-nums focus:outline-none focus:border-blue-400/60 focus:ring-1 focus:ring-blue-400/40 transition-all placeholder:text-blue-400/30"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-1.5">
+                            <span className="font-body text-[9px] uppercase tracking-wider text-purple-400/90 px-1 block truncate font-semibold">Gorjeta</span>
+                            <div className="relative group">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-purple-400/50 font-medium group-focus-within:text-purple-400 transition-colors">R$</span>
+                              <input
+                                type="number"
+                                inputMode="decimal"
+                                min={0}
+                                step="0.01"
+                                value={manualGorjeta || ""}
+                                onChange={(e) => setManualGorjeta(Number(e.target.value) || 0)}
+                                placeholder="0,00"
+                                className="w-full pl-8 pr-2 py-2.5 rounded-xl bg-purple-500/[0.06] border border-purple-500/20 text-purple-300 font-body text-[13px] tabular-nums focus:outline-none focus:border-purple-400/60 focus:ring-1 focus:ring-purple-400/40 transition-all placeholder:text-purple-400/30"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-1.5">
+                            <span className="font-body text-[9px] uppercase tracking-wider text-green-400/90 px-1 block truncate font-semibold">Crédito</span>
+                            <div className="relative group">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-green-400/50 font-medium group-focus-within:text-green-400 transition-colors">R$</span>
+                              <input
+                                type="number"
+                                inputMode="decimal"
+                                min={0}
+                                step="0.01"
+                                value={manualCredito || ""}
+                                onChange={(e) => setManualCredito(Number(e.target.value) || 0)}
+                                placeholder="0,00"
+                                className="w-full pl-8 pr-2 py-2.5 rounded-xl bg-green-500/[0.06] border border-green-500/20 text-green-400 font-body text-[13px] tabular-nums focus:outline-none focus:border-green-400/60 focus:ring-1 focus:ring-green-400/40 transition-all placeholder:text-green-400/30"
+                              />
+                            </div>
+                          </div>
                         </div>
-                        <div className="space-y-1.5">
-                          <span className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/35 px-1 block truncate">Crédito (R$)</span>
-                          <input
-                            type="number"
-                            inputMode="decimal"
-                            min={0}
-                            step="0.01"
-                            value={manualCredito || ""}
-                            onChange={(e) => setManualCredito(Number(e.target.value) || 0)}
-                            placeholder="0,00"
-                            className="w-full px-3 py-2.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-green-400 font-body text-[13px] tabular-nums focus:outline-none focus:border-green-400/60 focus:ring-1 focus:ring-green-400/30 transition-all"
-                          />
+                        
+                        <div className="relative z-10 pt-1 border-t border-white/[0.04]">
+                          <p className="px-1 font-body text-[10px] text-primary-foreground/40 italic leading-relaxed">
+                            <span className="text-purple-300/80 font-medium">Gorjeta</span> soma à comissão · <span className="text-blue-400/80 font-medium">Troco</span> e <span className="text-green-400/80 font-medium">crédito</span> descontam da base
+                          </p>
                         </div>
                       </div>
-                      <p className="px-1 font-body text-[10px] text-primary-foreground/30 italic">Gorjeta é somada 100% à comissão · Troco e crédito são descontados da base</p>
                     </div>
 
                     {/* ── Toggles ── */}
