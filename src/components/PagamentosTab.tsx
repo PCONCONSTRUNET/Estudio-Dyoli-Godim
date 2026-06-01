@@ -185,7 +185,6 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
            list.push({ ...a, _faturaId: a.id, fatura_tipo: "pagamento", valor_fatura: a.valor, data_fatura: a.data_agendamento });
         }
       }
-      }
       
       if (Number(a.valor_gorjeta) > 0) {
         list.push({ ...a, _faturaId: `${a.id}-gorjeta`, fatura_tipo: "pagamento", valor_fatura: Number(a.valor_gorjeta), data_fatura: a.data_agendamento, _is_partial: true, _desc_pagamento: "Gorjeta (extra)", is_extra: true });
