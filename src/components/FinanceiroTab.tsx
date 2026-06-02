@@ -130,8 +130,8 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   }, [period, ciclo, customStart, customEnd]);
 
   // Metrics
-  const totalReceita = filtered.reduce((s, a) => s + Number(a.valor), 0);
-  const totalRecebido = filtered.reduce((s, a) => s + Number(a.valor_pago || 0), 0);
+  const totalReceita = filtered.reduce((s, a) => s + Number(a.valor) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0), 0);
+  const totalRecebido = filtered.reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0), 0);
   const totalPendente = totalReceita - totalRecebido;
   const qtdAtendimentos = filtered.length;
   
@@ -155,8 +155,8 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     filtered.forEach(a => {
       const d = a.data_agendamento;
       if (!map[d]) map[d] = { dia: d, receita: 0, recebido: 0 };
-      map[d].receita += Number(a.valor);
-      map[d].recebido += Number(a.valor_pago || 0);
+      map[d].receita += Number(a.valor) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0);
+      map[d].recebido += Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0);
     });
     return Object.values(map).sort((a, b) => a.dia.localeCompare(b.dia)).map(d => ({
       ...d,

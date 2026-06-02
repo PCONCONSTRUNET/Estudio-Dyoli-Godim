@@ -246,7 +246,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
   const validos = useMemo(() => agendamentos.filter(a => !["cancelado", "falta"].includes(a.status)), [agendamentos]);
 
   const totalPago = useMemo(() =>
-    validos.reduce((s, a) => s + Number(a.valor_pago || 0), 0),
+    validos.reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0), 0),
     [validos]
   );
 

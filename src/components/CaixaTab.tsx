@@ -115,8 +115,8 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  // Fechamento do dia
  const caixaData = useMemo(() => {
  const dayAgs = agendamentos.filter((a) => a.data_agendamento === caixaDate && a.status !== "cancelado");
- const total = dayAgs.reduce((s, a) => s + Number(a.valor), 0);
- const recebido = dayAgs.reduce((s, a) => s + Number(a.valor_pago || 0), 0);
+ const total = dayAgs.reduce((s, a) => s + Number(a.valor) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0), 0);
+ const recebido = dayAgs.reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0), 0);
  const faltas = agendamentos.filter((a) => a.data_agendamento === caixaDate && a.status === "falta").length;
  return { items: dayAgs, total, recebido, pendente: total - recebido, qtd: dayAgs.length, faltas };
  }, [agendamentos, caixaDate]);
@@ -150,8 +150,8 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  (a) => a.status !== "cancelado" && a.status !== "falta" &&
  a.data_agendamento >= ciclo.startISO && a.data_agendamento <= ciclo.endISO,
  );  
- const recebido = cicloAgs.reduce((s, a) => s + Number(a.valor_pago || 0), 0);
- const total = cicloAgs.reduce((s, a) => s + Number(a.valor), 0);
+ const recebido = cicloAgs.reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0), 0);
+ const total = cicloAgs.reduce((s, a) => s + Number(a.valor) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0), 0);
  const gorjetas = cicloAgs.reduce((s, a) => s + Number(a.valor_gorjeta || 0), 0);
  const trocos = cicloAgs.reduce((s, a) => s + Number(a.valor_troco || 0), 0);
  const creditos = cicloAgs.reduce((s, a) => s + Number(a.valor_credito || 0), 0);
@@ -178,8 +178,8 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  const comissaoBreakdown = useMemo(() => {
  const byDay: Record<string, { date: string; recebido: number; qtd: number }> = {};
  cicloStats.items.forEach((a) => {
- const pago = Number(a.valor_pago || 0);
- if (pago <= 0) return;
+  const pago = Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0);
+  if (pago <= 0) return;
  if (!byDay[a.data_agendamento]) {
  byDay[a.data_agendamento] = { date: a.data_agendamento, recebido: 0, qtd: 0 };
  }
