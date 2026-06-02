@@ -138,7 +138,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const totalGorjetas = filtered.reduce((s, a) => s + Number(a.valor_gorjeta || 0), 0);
   const totalTrocos = filtered.reduce((s, a) => s + Number(a.valor_troco || 0), 0);
   const totalCreditos = filtered.reduce((s, a) => s + Number(a.valor_credito || 0), 0);
-  const baseComissao = totalRecebido - totalGorjetas - totalTrocos - totalCreditos;
+  const baseComissao = totalRecebido - totalGorjetas - totalTrocos;
   const comissaoValor = Math.max(0, baseComissao) * (comissaoPct / 100) + totalGorjetas;
   const totalDespesas = despesas
     .filter(d => (d.tipo || "estudio") === "estudio" && d.data_vencimento >= periodRange.start && d.data_vencimento <= periodRange.end)
@@ -699,7 +699,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
         </div>
         <p className="relative font-heading text-3xl font-bold text-purple-300 tabular-nums">{formatCurrency(comissaoValor)}</p>
         <p className="relative font-body text-[11px] text-purple-300/60 mt-1.5">
-          {comissaoPct}% sobre {formatCurrency(Math.max(0, totalRecebido - totalGorjetas - totalTrocos - totalCreditos))} base
+          {comissaoPct}% sobre {formatCurrency(Math.max(0, totalRecebido - totalGorjetas - totalTrocos))} base
           {totalGorjetas > 0 && ` + ${formatCurrency(totalGorjetas)} (Gorjetas)`}
         </p>
 

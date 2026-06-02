@@ -164,7 +164,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  .reduce((s, d) => s + Number(d.valor), 0);
 
  const lucro = recebido - desp;
- const baseComissao = recebido - gorjetas - trocos - creditos;
+ const baseComissao = recebido - gorjetas - trocos;
  const comissao = Math.max(0, baseComissao) * (comissaoPct / 100) + gorjetas;
  
  const today = new Date(); today.setHours(12, 0, 0, 0);
@@ -479,7 +479,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  </p>
  <p className="font-heading text-2xl font-bold text-purple-300 mt-1">
  {formatCurrency(
-  Math.max(0, caixaData.recebido - caixaData.items.reduce((s,a) => s + Number(a.valor_gorjeta||0) + Number(a.valor_troco||0) + Number(a.valor_credito||0), 0)) * (comissaoPct / 100) +
+  Math.max(0, caixaData.recebido - caixaData.items.reduce((s,a) => s + Number(a.valor_gorjeta||0) + Number(a.valor_troco||0), 0)) * (comissaoPct / 100) +
   caixaData.items.reduce((s,a) => s + Number(a.valor_gorjeta||0), 0)
  )}
  </p>
@@ -654,7 +654,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  {formatCurrency(cicloStats.comissao)}
  </p>
  <p className="font-body text-[11px] text-primary-foreground/75 mt-2 tabular-nums">
- Base: {formatCurrency(Math.max(0, cicloStats.recebido - cicloStats.gorjetas - cicloStats.trocos - cicloStats.creditos))} × <span className="text-purple-300 font-bold">{comissaoPct}%</span>
+ Base: {formatCurrency(Math.max(0, cicloStats.recebido - cicloStats.gorjetas - cicloStats.trocos))} × <span className="text-purple-300 font-bold">{comissaoPct}%</span>
  {cicloStats.gorjetas > 0 && <span className="text-purple-300 font-bold"> + {formatCurrency(cicloStats.gorjetas)} (Gorjetas 100%)</span>}
  </p>
  </div>
@@ -668,7 +668,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  <div className="flex items-start gap-2 p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
  <span className="font-heading text-[11px] font-bold text-gold w-5 h-5 rounded-full bg-gold/15 flex items-center justify-center shrink-0 mt-0.5">1</span>
  <p className="font-body text-[12px] text-primary-foreground/100 leading-relaxed">
- A comissão é <span className="text-purple-300 font-semibold">{comissaoPct}%</span> sobre o <span className="text-green-400 font-semibold">valor base</span> (recebido menos gorjetas, troco e créditos). Gorjetas são somadas integralmente.
+ A comissão é <span className="text-purple-300 font-semibold">{comissaoPct}%</span> sobre o <span className="text-green-400 font-semibold">valor base</span> (recebido menos gorjetas e troco). Gorjetas são somadas integralmente.
  </p>
  </div>
  <div className="flex items-start gap-2 p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
@@ -690,7 +690,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  <div className="grid grid-cols-3 gap-2">
  <div className="p-2.5 rounded-xl bg-green-500/[0.06] border border-green-500/15">
  <p className="font-body text-[8.5px] text-primary-foreground/75 uppercase tracking-wider">Base</p>
- <p className="font-heading text-[13px] font-bold text-green-400 tabular-nums leading-tight mt-0.5">{formatCurrency(Math.max(0, cicloStats.recebido - cicloStats.gorjetas - cicloStats.trocos - cicloStats.creditos))}</p>
+ <p className="font-heading text-[13px] font-bold text-green-400 tabular-nums leading-tight mt-0.5">{formatCurrency(Math.max(0, cicloStats.recebido - cicloStats.gorjetas - cicloStats.trocos))}</p>
  </div>
  <div className="p-2.5 rounded-xl bg-purple-500/[0.06] border border-purple-500/15 relative">
  <p className="font-body text-[8.5px] text-primary-foreground/75 uppercase tracking-wider">Taxa</p>
@@ -747,7 +747,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  ) : (
  <div className="space-y-1.5">
  {comissaoBreakdown.map((d) => {
- const dayBase = Math.max(0, d.recebido - cicloStats.items.filter(a => a.data_agendamento === d.date).reduce((s,a)=>s+Number(a.valor_gorjeta||0)+Number(a.valor_troco||0)+Number(a.valor_credito||0),0));
+ const dayBase = Math.max(0, d.recebido - cicloStats.items.filter(a => a.data_agendamento === d.date).reduce((s,a)=>s+Number(a.valor_gorjeta||0)+Number(a.valor_troco||0),0));
  const dayGorjetas = cicloStats.items.filter(a => a.data_agendamento === d.date).reduce((s,a)=>s+Number(a.valor_gorjeta||0), 0);
  const dayComm = dayBase * (comissaoPct / 100) + dayGorjetas;
  return (
