@@ -42,7 +42,7 @@ const formatDateTime = (d: string) => {
   return date.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 };
 
-type StatusFilter = "todos" | "confirmado" | "pendente" | "cancelado" | "concluido" | "falta";
+type StatusFilter = "todos" | "confirmado" | "pendente" | "cancelado" | "concluido" | "falta" | "saidas";
 type SortField = "data" | "valor" | "cliente" | "status";
 type SortDir = "asc" | "desc";
 
@@ -58,17 +58,19 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     else { setSortField(field); setSortDir("desc"); }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este pagamento? Essa ação não pode ser desfeita e irá descontar o valor do caixa.")) return;
+  const handleDelete = async (id: string, isSaida?: boolean) => {
+    if (!confirm("Tem certeza que deseja excluir esta transação? Essa ação não pode ser desfeita.")) return;
     
     try {
-      const { error } = await supabase.from("agendamentos").delete().eq("id", id);
+      const table = isSaida ? "despesas" : "agendamentos";
+      const { error } = await supabase.from(table as any).delete().eq("id", id);
       if (error) throw error;
-      toast.success("Pagamento excluído com sucesso.");
+      toast.success("Transação excluída com sucesso.");
       if (onUpdate) onUpdate();
+      else window.location.reload();
     } catch (error: any) {
       console.error(error);
-      toast.error(error.message || "Erro ao excluir pagamento.");
+      toast.error(error.message || "Erro ao excluir transação.");
     }
   };
 
@@ -96,12 +98,18 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     pendente: { bg: "bg-amber-500/10 border-amber-500/30", text: "text-amber-400", icon: Clock, label: "Pendente" },
     cancelado: { bg: "bg-red-500/10 border-red-500/30", text: "text-red-400", icon: XCircle, label: "Cancelado" },
     falta: { bg: "bg-orange-500/10 border-orange-500/30", text: "text-orange-400", icon: XCircle, label: "Falta" },
+    pago: { bg: "bg-rose/10 border-rose/30", text: "text-rose", icon: CheckCircle, label: "Saída" },
+    pendente_saida: { bg: "bg-orange-500/10 border-orange-500/30", text: "text-orange-400", icon: Clock, label: "Saída Pendente" },
   };
 
   const [historico, setHistorico] = useState<any[]>([]);
+  const [despesas, setDespesas] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchHistorico = async () => {
+    const fetchHistoricoEDespesas = async () => {
+      const { data: desp } = await supabase.from("despesas").select("*");
+      if (desp) setDespesas(desp);
+
       const ids = agendamentos.map((a) => a.id);
       if (ids.length === 0) return;
       
@@ -114,7 +122,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
       }
       setHistorico(allData);
     };
-    fetchHistorico();
+    fetchHistoricoEDespesas();
   }, [agendamentos]);
 
   const faturas = useMemo(() => {
@@ -196,8 +204,27 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
         list.push({ ...a, _faturaId: `${a.id}-credito`, fatura_tipo: "pagamento", valor_fatura: Number(a.valor_credito), data_fatura: a.data_agendamento, _is_partial: true, _desc_pagamento: "Crédito concedido", is_extra: true });
       }
     });
+
+    despesas.forEach((d) => {
+      list.push({
+        id: d.id,
+        _faturaId: `despesa-${d.id}`,
+        fatura_tipo: "saida",
+        valor_fatura: d.valor,
+        data_fatura: d.data_pagamento || d.data_vencimento || d.created_at?.split("T")[0],
+        status: d.pago ? "pago" : "pendente_saida",
+        cliente_nome: d.categoria || "Geral",
+        servico: d.descricao || "Saída Registrada",
+        horario: "00:00",
+        forma_pagamento: "dinheiro",
+        _is_saida: true,
+        _desc_pagamento: d.tipo === "pessoal" ? "Retirada Pessoal" : "Despesa Estúdio",
+        user_id: "admin",
+      });
+    });
+
     return list;
-  }, [agendamentos, historico]);
+  }, [agendamentos, historico, despesas]);
 
   const filtered = useMemo(() => {
     let list = [...faturas];
@@ -205,6 +232,8 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     if (statusFilter !== "todos") {
       if (statusFilter === "pendente") {
         list = list.filter((a) => a.fatura_tipo === "pendente" && !["cancelado", "falta"].includes(a.status));
+      } else if (statusFilter === "saidas") {
+        list = list.filter((a) => a._is_saida);
       } else {
         list = list.filter((a) => a.status === statusFilter);
       }
@@ -213,7 +242,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter((a) =>
-        getClientName(a.user_id, a.cliente_nome).toLowerCase().includes(q) ||
+        (a._is_saida ? String(a.cliente_nome) : getClientName(a.user_id, a.cliente_nome)).toLowerCase().includes(q) ||
         a.servico.toLowerCase().includes(q) ||
         a.id.toLowerCase().includes(q) ||
         (a.forma_pagamento || "").toLowerCase().includes(q)
@@ -225,7 +254,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
       switch (sortField) {
         case "data": cmp = a.data_fatura.localeCompare(b.data_fatura) || a.horario.localeCompare(b.horario); break;
         case "valor": cmp = a.valor_fatura - b.valor_fatura; break;
-        case "cliente": cmp = getClientName(a.user_id, a.cliente_nome).localeCompare(getClientName(b.user_id)); break;
+        case "cliente": cmp = (a._is_saida ? String(a.cliente_nome) : getClientName(a.user_id, a.cliente_nome)).localeCompare(b._is_saida ? String(b.cliente_nome) : getClientName(b.user_id)); break;
         case "status": cmp = a.status.localeCompare(b.status); break;
       }
       return sortDir === "asc" ? cmp : -cmp;
@@ -241,6 +270,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     cancelado: faturas.filter((a) => a.status === "cancelado").length,
     concluido: faturas.filter((a) => a.status === "concluido").length,
     falta: faturas.filter((a) => a.status === "falta").length,
+    saidas: faturas.filter((a) => a._is_saida).length,
   }), [faturas]);
 
   const validos = useMemo(() => agendamentos.filter(a => !["cancelado", "falta"].includes(a.status)), [agendamentos]);
@@ -290,14 +320,15 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
       {/* Status filters */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
         <Filter className="h-3.5 w-3.5 shrink-0 text-primary-foreground/95" />
-        {(["todos", "pendente", "confirmado", "concluido", "cancelado", "falta"] as StatusFilter[]).map((s) => {
+        {(["todos", "pendente", "confirmado", "concluido", "cancelado", "falta", "saidas"] as StatusFilter[]).map((s) => {
           const colors: Record<StatusFilter, { active: string; inactive: string }> = {
             todos: { active: "bg-gold/15 text-gold border-gold/40", inactive: "bg-gold/[0.04] text-gold/60 border-gold/20 hover:bg-gold/10 hover:text-gold/80" },
-            pendente: { active: "bg-red-500/15 text-red-400 border-red-500/40", inactive: "bg-red-500/[0.05] text-red-400/70 border-red-500/20 hover:bg-red-500/10 hover:text-red-400" },
+            pendente: { active: "bg-amber-500/15 text-amber-400 border-amber-500/40", inactive: "bg-amber-500/[0.05] text-amber-400/70 border-amber-500/20 hover:bg-amber-500/10 hover:text-amber-400" },
             confirmado: { active: "bg-blue-500/15 text-blue-400 border-blue-500/40", inactive: "bg-blue-500/[0.05] text-blue-400/70 border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400" },
             concluido: { active: "bg-green-500/15 text-green-400 border-green-500/40", inactive: "bg-green-500/[0.05] text-green-400/70 border-green-500/20 hover:bg-green-500/10 hover:text-green-400" },
-            cancelado: { active: "bg-rose/15 text-rose border-rose/40", inactive: "bg-rose/[0.05] text-rose/70 border-rose/20 hover:bg-rose/10 hover:text-rose" },
+            cancelado: { active: "bg-red-500/15 text-red-400 border-red-500/40", inactive: "bg-red-500/[0.05] text-red-400/70 border-red-500/20 hover:bg-red-500/10 hover:text-red-400" },
             falta: { active: "bg-orange-500/15 text-orange-400 border-orange-500/40", inactive: "bg-orange-500/[0.05] text-orange-400/70 border-orange-500/20 hover:bg-orange-500/10 hover:text-orange-400" },
+            saidas: { active: "bg-rose/15 text-rose border-rose/40", inactive: "bg-rose/[0.05] text-rose/70 border-rose/20 hover:bg-rose/10 hover:text-rose" },
           };
           const c = colors[s];
           return (
@@ -355,7 +386,9 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
             <div
               key={ag._faturaId}
               className={`rounded-2xl border overflow-hidden transition-all ${
-                isPendingAmount
+                ag._is_saida
+                  ? "border-rose/20 bg-gradient-to-br from-rose/[0.08] via-primary-foreground/[0.02] to-rose/[0.02] hover:border-rose/40 hover:shadow-[0_4px_16px_-8px_hsl(var(--rose)/0.3)]"
+                  : isPendingAmount
                   ? "border-amber-500/40 bg-gradient-to-br from-amber-500/[0.08] via-primary-foreground/[0.02] to-amber-500/[0.04] hover:border-amber-500/60 hover:shadow-[0_4px_16px_-8px_rgba(245,158,11,0.4)]"
                   : "border-gold/15 bg-gradient-to-br from-gold/[0.05] via-primary-foreground/[0.02] to-nude/[0.03] hover:border-gold/25 hover:shadow-[0_4px_16px_-8px_hsl(var(--gold)/0.25)]"
               }`}
@@ -371,7 +404,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <p className="font-body text-[14px] font-medium text-primary-foreground truncate">
-                      {getClientName(ag.user_id, ag.cliente_nome)}
+                      {ag._is_saida ? ag.cliente_nome : getClientName(ag.user_id, ag.cliente_nome)}
                     </p>
                     {isPendingAmount && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 border border-amber-500/40 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-300 animate-pulse">
@@ -391,12 +424,12 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                     )}
                   </div>
                   <p className="font-body text-[11px] text-primary-foreground/75 truncate">
-                    {ag.servico}{ag.variacao ? ` · ${ag.variacao}` : ""} · {formatDate(ag.data_fatura)}
+                    {ag.servico}{ag.variacao ? ` · ${ag.variacao}` : ""} {ag.horario !== "00:00" ? `· ${formatDate(ag.data_fatura)}` : `· ${formatDate(ag.data_fatura)}`}
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className={`font-heading text-[15px] font-bold ${isPendingAmount ? "text-amber-300" : "text-gold"}`}>
-                    {formatCurrency(ag.valor_fatura)}
+                  <p className={`font-heading text-[15px] font-bold ${ag._is_saida ? "text-rose" : isPendingAmount ? "text-amber-300" : "text-gold"}`}>
+                    {ag._is_saida && "-"} {formatCurrency(ag.valor_fatura)}
                   </p>
                   <div className="flex items-center justify-end gap-1">
                     <span className={`font-body text-[10px] font-medium ${cfg.text}`}>{isPendingAmount ? "Pendente" : "Pago"}</span>
@@ -441,7 +474,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDelete(ag.id);
+                        handleDelete(ag.id, ag._is_saida);
                       }}
                       className="px-3 py-1.5 rounded-lg bg-rose/10 text-rose hover:bg-rose/20 font-body text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors"
                     >

@@ -1,15 +1,16 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
-import { Calendar, Download, FileText, Table2, TrendingUp, Wallet, X, Percent, Settings, ArrowDown, ChevronLeft, ChevronRight, Sparkles, CheckCircle2, Clock, FileSpreadsheet, Brain } from "lucide-react";
+import { Calendar, Download, FileText, Table2, TrendingUp, Wallet, X, Percent, Settings, ArrowDown, ChevronLeft, ChevronRight, Sparkles, CheckCircle2, Clock, FileSpreadsheet, Brain, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import AnaliseCancelamentosModal from "@/components/AnaliseCancelamentosModal";
+import NovaTransacaoModal from "@/components/NovaTransacaoModal";
 
 interface Agendamento {
   id: string; servico: string; variacao: string | null; data_agendamento: string;
   horario: string; valor: number; valor_pago: number | null;
   valor_troco: number | null; valor_gorjeta: number | null; valor_credito: number | null;
   status: string;
-  created_at: string; user_id: string; cliente_nome: string | null;
+  created_at: string; user_id: string; cliente_nome: string | null; observacao?: string | null;
 }
 
 interface Props {
@@ -31,6 +32,7 @@ const COLORS = [
 const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
 
 const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
+  const [showNovaTransacao, setShowNovaTransacao] = useState(false);
   const [period, setPeriod] = useState<FilterPeriod>("mes");
   const [analiseOpen, setAnaliseOpen] = useState(false);
   const [customStart, setCustomStart] = useState("");
@@ -138,7 +140,8 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const totalGorjetas = filtered.reduce((s, a) => s + Number(a.valor_gorjeta || 0), 0);
   const totalTrocos = filtered.reduce((s, a) => s + Number(a.valor_troco || 0), 0);
   const totalCreditos = filtered.reduce((s, a) => s + Number(a.valor_credito || 0), 0);
-  const baseComissao = totalRecebido - totalGorjetas - totalTrocos;
+  const totalSemComissao = filtered.filter(a => a.observacao === "SEM_COMISSAO").reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0), 0);
+  const baseComissao = totalRecebido - totalSemComissao - totalGorjetas - totalTrocos;
   const comissaoValor = Math.max(0, baseComissao) * (comissaoPct / 100) + totalGorjetas;
   const totalDespesas = despesas
     .filter(d => (d.tipo || "estudio") === "estudio" && d.data_vencimento >= periodRange.start && d.data_vencimento <= periodRange.end)
@@ -488,6 +491,10 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
           <TrendingUp className="w-5 h-5 text-gold" /> Financeiro
         </h2>
         <div className="flex gap-1.5">
+          <button onClick={() => setShowNovaTransacao(true)} className="px-3 py-2 rounded-xl bg-gold/20 hover:bg-gold/30 border border-gold/30 text-gold transition-all flex items-center gap-1.5" title="Registrar Nova Transação">
+            <Plus className="w-4 h-4" />
+            <span className="font-body text-[11px] font-semibold uppercase tracking-wider hidden sm:inline">Nova Transação</span>
+          </button>
           <button onClick={exportCSV} className="p-2 rounded-xl hover:bg-green-500/10 text-primary-foreground/95 hover:text-green-500 transition-all" title="Exportar planilha de agendamentos">
             <Table2 className="w-4 h-4" />
           </button>
@@ -699,7 +706,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
         </div>
         <p className="relative font-heading text-3xl font-bold text-purple-300 tabular-nums">{formatCurrency(comissaoValor)}</p>
         <p className="relative font-body text-[11px] text-purple-300/60 mt-1.5">
-          {comissaoPct}% sobre {formatCurrency(Math.max(0, totalRecebido - totalGorjetas - totalTrocos))} base
+          {comissaoPct}% sobre {formatCurrency(Math.max(0, totalRecebido - totalSemComissao - totalGorjetas - totalTrocos))} base
           {totalGorjetas > 0 && ` + ${formatCurrency(totalGorjetas)} (Gorjetas)`}
         </p>
 
@@ -861,7 +868,9 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
         )}
       </div>
 
-      <AnaliseCancelamentosModal open={analiseOpen} onClose={() => setAnaliseOpen(false)} />
+      {/* Modals */}
+      <AnaliseCancelamentosModal open={analiseOpen} onOpenChange={setAnaliseOpen} />
+      <NovaTransacaoModal open={showNovaTransacao} onOpenChange={setShowNovaTransacao} onSuccess={() => window.location.reload()} />
     </div>
   );
 };
