@@ -12,6 +12,9 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import BinButton from "@/components/ui/bin-button";
 import PlusButton from "@/components/ui/plus-button";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 interface Gasto {
@@ -360,25 +363,39 @@ const GastosTab = () => {
       </div>
 
       {/* ── Filtro de Categoria ── */}
-      <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
-        {["Todas", ...CATEGORIAS].map(cat => (
-          <button
-            key={cat}
-            onClick={() => setCatFilter(cat)}
-            className={`shrink-0 rounded-full border px-3 py-1.5 font-body text-[11px] font-medium transition-all whitespace-nowrap ${
-              catFilter === cat
-                ? "bg-primary-foreground/10 text-primary-foreground border-primary-foreground/20"
-                : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06] hover:text-primary-foreground/60"
-            }`}
-            style={catFilter === cat && cat !== "Todas" ? {
-              backgroundColor: `${CATEGORIA_COLORS[cat]}22`,
-              color: CATEGORIA_COLORS[cat],
-              borderColor: `${CATEGORIA_COLORS[cat]}44`,
+      <div className="mb-2">
+        <p className="font-body text-[10px] uppercase tracking-widest text-primary-foreground/30 mb-2 px-0.5">
+          Filtrar por Categoria
+        </p>
+        <Select value={catFilter} onValueChange={setCatFilter}>
+          <SelectTrigger 
+            className="w-full rounded-2xl border-primary-foreground/[0.08] bg-primary-foreground/[0.04] py-5 text-[13px] font-body"
+            style={catFilter !== "Todas" ? {
+              backgroundColor: `${CATEGORIA_COLORS[catFilter]}15`,
+              borderColor: `${CATEGORIA_COLORS[catFilter]}30`,
+              color: CATEGORIA_COLORS[catFilter]
             } : {}}
           >
-            {cat}
-          </button>
-        ))}
+            <SelectValue placeholder="Todas as Categorias" />
+          </SelectTrigger>
+          <SelectContent className="bg-charcoal border-primary-foreground/[0.1]">
+            <SelectItem value="Todas" className="font-body text-[12px] hover:bg-primary-foreground/[0.05]">
+              Todas as Categorias
+            </SelectItem>
+            {CATEGORIAS.map(cat => (
+              <SelectItem 
+                key={cat} 
+                value={cat}
+                className="font-body text-[12px] hover:bg-primary-foreground/[0.05]"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: CATEGORIA_COLORS[cat] }} />
+                  {cat}
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* ── Gráficos ── */}
@@ -678,16 +695,12 @@ const GastosTab = () => {
                     key={cat}
                     type="button"
                     onClick={() => { setCategoria(cat); setCategoriaPersonalizada(""); }}
-                    className={`rounded-xl border px-2 py-2 font-body text-[10px] font-medium transition-all text-center leading-tight ${
-                      categoria === cat
-                        ? "text-white"
-                        : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06] hover:text-primary-foreground/60"
-                    }`}
-                    style={categoria === cat ? {
-                      backgroundColor: `${CATEGORIA_COLORS[cat]}22`,
-                      color: CATEGORIA_COLORS[cat],
-                      borderColor: `${CATEGORIA_COLORS[cat]}50`,
-                    } : {}}
+                    className="rounded-xl border px-2 py-2 font-body text-[10px] font-semibold transition-all text-center leading-tight hover:brightness-125"
+                    style={{
+                      borderColor: categoria === cat ? CATEGORIA_COLORS[cat] : `${CATEGORIA_COLORS[cat]}40`,
+                      backgroundColor: categoria === cat ? `${CATEGORIA_COLORS[cat]}25` : `${CATEGORIA_COLORS[cat]}08`,
+                      color: categoria === cat ? CATEGORIA_COLORS[cat] : `${CATEGORIA_COLORS[cat]}cc`,
+                    }}
                   >
                     {cat}
                   </button>
@@ -697,11 +710,12 @@ const GastosTab = () => {
                 <button
                   type="button"
                   onClick={() => setCategoria("__personalizada__")}
-                  className={`rounded-xl border px-2 py-2 font-body text-[10px] font-medium transition-all text-center leading-tight flex flex-col items-center gap-0.5 ${
-                    categoria === "__personalizada__"
-                      ? "bg-gold/15 text-gold border-gold/40"
-                      : "bg-primary-foreground/[0.03] text-primary-foreground/40 border-primary-foreground/[0.06] hover:text-primary-foreground/60"
-                  }`}
+                  className="rounded-xl border px-2 py-2 font-body text-[10px] font-semibold transition-all text-center leading-tight flex flex-col items-center gap-0.5 hover:brightness-125"
+                  style={{
+                    borderColor: categoria === "__personalizada__" ? "#facc15" : "#facc1540",
+                    backgroundColor: categoria === "__personalizada__" ? "#facc1525" : "#facc1508",
+                    color: categoria === "__personalizada__" ? "#facc15" : "#facc15cc",
+                  }}
                 >
                   <Pencil className="w-3 h-3" />
                   Personalizada
