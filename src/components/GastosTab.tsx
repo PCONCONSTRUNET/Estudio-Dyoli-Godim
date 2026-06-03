@@ -378,20 +378,20 @@ const GastosTab = () => {
           >
             <SelectValue placeholder="Todas as Categorias" />
           </SelectTrigger>
-          <SelectContent className="bg-charcoal border-primary-foreground/[0.1]">
-            <SelectItem value="Todas" className="font-body text-[12px] hover:bg-primary-foreground/[0.05]">
+          <SelectContent className="bg-charcoal text-primary-foreground border-primary-foreground/[0.1]">
+            <SelectItem value="Todas" className="font-body text-[12px] focus:bg-primary-foreground/[0.05] focus:text-primary-foreground">
               Todas as Categorias
             </SelectItem>
             {CATEGORIAS.map(cat => (
               <SelectItem 
                 key={cat} 
                 value={cat}
-                className="font-body text-[12px] hover:bg-primary-foreground/[0.05]"
+                className="font-body text-[12px] focus:bg-primary-foreground/[0.05] focus:text-primary-foreground"
               >
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: CATEGORIA_COLORS[cat] }} />
-                  {cat}
-                </div>
+                <span className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: CATEGORIA_COLORS[cat] }} />
+                  <span className="text-primary-foreground">{cat}</span>
+                </span>
               </SelectItem>
             ))}
           </SelectContent>
