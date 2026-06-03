@@ -247,13 +247,17 @@ export default function NovaTransacaoModal({ open, onOpenChange, onSuccess, init
             <>
               <div className="space-y-1.5">
                 <label className="font-body text-[11px] text-primary-foreground/75 uppercase tracking-wider">Categoria</label>
-                <select
+                <input
+                  type="text"
+                  list="categorias-saida-list"
                   value={categoria}
                   onChange={(e) => setCategoria(e.target.value)}
-                  className="w-full bg-primary-foreground/[0.03] border border-primary-foreground/[0.08] rounded-xl py-2.5 px-3 text-primary-foreground font-body text-[16px] sm:text-[13px] focus:outline-none focus:border-gold/30 appearance-none"
-                >
-                  {CATEGORIAS_SAIDA.map(c => <option key={c} value={c} className="bg-charcoal">{c}</option>)}
-                </select>
+                  placeholder="Selecione ou digite"
+                  className="w-full bg-primary-foreground/[0.03] border border-primary-foreground/[0.08] rounded-xl py-2 pl-3 pr-3 text-primary-foreground font-body text-[16px] sm:text-[13px] focus:outline-none focus:border-gold/30"
+                />
+                <datalist id="categorias-saida-list">
+                  {CATEGORIAS_SAIDA.map(c => <option key={c} value={c}>{c}</option>)}
+                </datalist>
               </div>
             </>
           )}

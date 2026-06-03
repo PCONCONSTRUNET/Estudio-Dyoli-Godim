@@ -688,7 +688,7 @@ const DespesasTab = () => {
  <ChevronDown className={`h-5 w-5 text-primary-foreground/75 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
  </button>
  {open && (
- <div className="border-t border-gold/15 p-2 space-y-2 bg-charcoal/30">
+ <div className="border-t border-gold/15 p-2 space-y-2 bg-charcoal/30 max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-gold/20 scrollbar-track-transparent">
  {grupo.map((p) => renderRow(p, true))}
  </div>
  )}
@@ -738,15 +738,19 @@ const DespesasTab = () => {
  </div>
  <div>
  <label className="font-body text-[11px] text-primary-foreground/75 mb-1 block">Categoria</label>
- <select
+ <input
+ type="text"
+ list="categorias-list"
  value={categoria}
  onChange={(e) => setCategoria(e.target.value)}
- className="w-full rounded-xl bg-charcoal border border-primary-foreground/[0.06] py-2.5 px-3 text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20 [&>option]:bg-charcoal [&>option]:text-primary-foreground"
- >
+ placeholder="Selecione ou digite"
+ className="w-full rounded-xl bg-charcoal border border-primary-foreground/[0.06] py-2.5 px-3 text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20"
+ />
+ <datalist id="categorias-list">
  {CATEGORIAS.map((c) => (
  <option key={c} value={c}>{c}</option>
  ))}
- </select>
+ </datalist>
  </div>
 
  <div>
