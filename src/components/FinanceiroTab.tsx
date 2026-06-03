@@ -25,33 +25,6 @@ const COLORS = [
   "hsl(40 40% 55%)",    // gold
   "hsl(142 71% 45%)",   // green
   "hsl(24 80% 55%)",    // orange
-import { useState, useMemo, useRef, useEffect } from "react";
-import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
-import { Calendar, Download, FileText, Table2, TrendingUp, Wallet, X, Percent, Settings, ArrowDown, ChevronLeft, ChevronRight, Sparkles, CheckCircle2, Clock, FileSpreadsheet, Brain, Plus } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import AnaliseCancelamentosModal from "@/components/AnaliseCancelamentosModal";
-import NovaTransacaoModal from "@/components/NovaTransacaoModal";
-
-interface Agendamento {
-  id: string; servico: string; variacao: string | null; data_agendamento: string;
-  horario: string; valor: number; valor_pago: number | null;
-  valor_troco: number | null; valor_gorjeta: number | null; valor_credito: number | null;
-  status: string;
-  created_at: string; user_id: string; cliente_nome: string | null; observacao?: string | null;
-}
-
-interface Props {
-  agendamentos: Agendamento[];
-  getClientName: (userId: string, clienteNome?: string | null) => string;
-}
-
-type FilterPeriod = "hoje" | "semana" | "mes" | "personalizado";
-
-const COLORS = [
-  "hsl(340 30% 50%)",   // rose
-  "hsl(40 40% 55%)",    // gold
-  "hsl(142 71% 45%)",   // green
-  "hsl(24 80% 55%)",    // orange
   "hsl(262 52% 47%)",   // purple
   "hsl(199 89% 48%)",   // blue
 ];
