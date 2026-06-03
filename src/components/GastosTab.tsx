@@ -587,64 +587,62 @@ const GastosTab = () => {
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {gastosFiltrados.map(g => (
               <div
                 key={g.id}
-                className="group rounded-2xl border border-primary-foreground/[0.07] bg-primary-foreground/[0.02] p-3.5 transition-all hover:border-primary-foreground/[0.12] hover:bg-primary-foreground/[0.04]"
+                className="group flex items-center gap-3.5 px-4 py-3.5 rounded-2xl transition-all"
+                style={{ backgroundColor: "rgba(255,255,255,0.045)" }}
               >
-                <div className="flex items-start gap-3">
-                  {/* Ícone categoria */}
-                  <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
-                    style={{ backgroundColor: `${CATEGORIA_COLORS[g.categoria] ?? "#94a3b8"}18` }}
-                  >
-                    <Tag
-                      className="w-4 h-4"
+                {/* Ícone redondo estilo app bancário */}
+                <div
+                  className="w-11 h-11 rounded-full flex items-center justify-center shrink-0"
+                  style={{
+                    backgroundColor: `${CATEGORIA_COLORS[g.categoria] ?? "#94a3b8"}20`,
+                  }}
+                >
+                  <Tag
+                    className="w-4.5 h-4.5"
+                    style={{ color: CATEGORIA_COLORS[g.categoria] ?? "#94a3b8" }}
+                  />
+                </div>
+
+                {/* Conteúdo central */}
+                <div className="flex-1 min-w-0">
+                  <p className="font-body text-[14px] font-semibold text-white leading-snug truncate">
+                    {g.descricao}
+                  </p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span
+                      className="text-[10px] font-medium font-body"
                       style={{ color: CATEGORIA_COLORS[g.categoria] ?? "#94a3b8" }}
-                    />
+                    >
+                      {g.categoria}
+                    </span>
+                    <span className="text-white/20 text-[10px]">·</span>
+                    <span className="text-[10px] font-body text-white/40">
+                      {formatDate(g.data_gasto)}
+                    </span>
                   </div>
+                  {g.observacao && (
+                    <p className="text-[11px] font-body text-white/40 mt-0.5 truncate">{g.observacao}</p>
+                  )}
+                </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                      <span
-                        className="px-2 py-0.5 rounded-full text-[9px] font-body font-medium border"
-                        style={{
-                          backgroundColor: `${CATEGORIA_COLORS[g.categoria] ?? "#94a3b8"}15`,
-                          color: CATEGORIA_COLORS[g.categoria] ?? "#94a3b8",
-                          borderColor: `${CATEGORIA_COLORS[g.categoria] ?? "#94a3b8"}30`,
-                        }}
-                      >
-                        {g.categoria}
-                      </span>
-                      <span className="font-body text-[10px] text-primary-foreground/60">
-                        {formatDate(g.data_gasto)}
-                      </span>
-                    </div>
-                    <p className="font-body text-[13px] font-medium text-primary-foreground truncate">
-                      {g.descricao}
-                    </p>
-                    {g.observacao && (
-                      <p className="font-body text-[11px] text-primary-foreground/70 mt-0.5 truncate">
-                        {g.observacao}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col items-end gap-2 shrink-0">
-                    <p className="font-heading text-[15px] font-bold text-orange-400">
-                      {formatCurrency(Number(g.valor))}
-                    </p>
-                    <div className="flex items-center gap-1.5">
-                      <button 
-                        onClick={() => handleEdit(g)}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg border border-primary-foreground/[0.08] bg-primary-foreground/[0.04] text-primary-foreground/70 transition-all hover:bg-gold/10 hover:text-gold hover:border-gold/20"
-                        title="Editar"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <BinButton size="sm" onClick={() => handleDelete(g.id)} />
-                    </div>
+                {/* Valor + ações */}
+                <div className="flex flex-col items-end gap-1.5 shrink-0">
+                  <p className="font-heading text-[15px] font-bold text-orange-400 tabular-nums">
+                    − {formatCurrency(Number(g.valor))}
+                  </p>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => handleEdit(g)}
+                      className="flex h-6 w-6 items-center justify-center rounded-full text-white/40 hover:text-white/80 transition-colors"
+                      title="Editar"
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </button>
+                    <BinButton size="sm" onClick={() => handleDelete(g.id)} />
                   </div>
                 </div>
               </div>
