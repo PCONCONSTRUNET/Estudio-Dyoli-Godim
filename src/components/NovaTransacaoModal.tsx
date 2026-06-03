@@ -72,13 +72,12 @@ export default function NovaTransacaoModal({ open, onOpenChange, onSuccess, init
     setSaving(true);
 
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id;
-
-      if (!userId) throw new Error("Usuário não autenticado");
-
       if (tab === "entrada") {
-        // Criar Entrada como um Agendamento "Manual"
+        // Entrada precisa do user_id para associar ao agendamento
+        const { data: userData } = await supabase.auth.getUser();
+        const userId = userData.user?.id;
+        if (!userId) throw new Error("Usuário não autenticado");
+
         const now = new Date();
         const horario = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 
@@ -103,7 +102,7 @@ export default function NovaTransacaoModal({ open, onOpenChange, onSuccess, init
         toast.success("Entrada registrada com sucesso!");
 
       } else {
-        // Criar Saída como uma Despesa
+        // Saída — despesa do estúdio, não precisa de user_id
         const payload = {
           descricao: descricao.trim(),
           valor: valNum,
@@ -116,7 +115,7 @@ export default function NovaTransacaoModal({ open, onOpenChange, onSuccess, init
 
         const { error } = await supabase.from("despesas").insert([payload]);
         if (error) throw error;
-        toast.success("Saída (Gasto) registrada com sucesso!");
+        toast.success("Saída registrada com sucesso!");
       }
 
       onSuccess();
