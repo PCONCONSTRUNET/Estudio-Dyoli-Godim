@@ -1861,7 +1861,9 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                     {/* ── Serviços da comanda ── */}
                     <div className="relative space-y-2.5">
                       <div className="flex items-center justify-between px-1">
-                        <label className="font-body text-[10px] uppercase tracking-[0.2em] text-gold/80 font-semibold">Serviços da comanda *</label>
+                        <label className="font-body text-[10px] uppercase tracking-[0.2em] text-gold/90 font-semibold flex items-center gap-1.5">
+                          Serviços da comanda <span className="text-red-400">*</span>
+                        </label>
                         {manualItens.length > 0 && (
                           <span className="font-body text-[10px] text-gold/70 tabular-nums">{manualItens.length} {manualItens.length === 1 ? "item" : "itens"}</span>
                         )}
@@ -2017,17 +2019,19 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
                     {/* ── Cliente com busca ── */}
                     <div className="relative space-y-2.5">
-                      <label className="font-body text-[10px] uppercase tracking-[0.2em] text-primary-foreground/45 font-semibold px-1 block">Cliente</label>
+                      <label className="font-body text-[10px] uppercase tracking-[0.2em] text-gold/90 font-semibold px-1 block flex items-center gap-1.5">
+                        Cliente <span className="text-red-400">*</span>
+                      </label>
                       <div className="relative group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary-foreground/30 group-focus-within:text-gold pointer-events-none transition-colors" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary-foreground/50 group-focus-within:text-gold pointer-events-none transition-colors" />
                         <input
                           type="text"
                           placeholder={manualCliente ? clientes.find(c => c.id === manualCliente)?.nome || "Cliente selecionado" : "Buscar cliente..."}
                           value={manualClienteSearch}
                           onFocus={() => setManualClienteOpen(true)}
                           onChange={(e) => { setManualClienteSearch(e.target.value); setManualClienteOpen(true); }}
-                          className={`w-full pl-11 pr-10 py-3.5 rounded-2xl bg-white/[0.04] border font-body text-[13px] focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 placeholder:text-primary-foreground/30 backdrop-blur-sm transition-all ${
-                            manualCliente ? "border-gold/40 text-gold" : "border-white/[0.08] text-primary-foreground"
+                          className={`w-full pl-11 pr-10 py-3.5 rounded-2xl border font-body text-[14px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/40 placeholder:text-primary-foreground/50 backdrop-blur-sm transition-all shadow-[0_2px_12px_-4px_rgba(0,0,0,0.5)] ${
+                            manualCliente ? "border-gold/60 text-gold font-medium bg-gold/[0.08]" : "border-gold/40 text-primary-foreground bg-white/[0.08]"
                           }`}
                         />
                         {manualCliente && (
@@ -2114,21 +2118,26 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                     </div>
 
                     {!manualCliente && (
-                      <div className="space-y-2.5">
-                        <label className="font-body text-[10px] uppercase tracking-[0.2em] text-primary-foreground/45 font-semibold px-1 block">Nome do cliente (presencial)</label>
+                      <div className="space-y-2.5 mt-4 p-4 rounded-2xl border border-gold/30 bg-gold/[0.03] shadow-[inset_0_0_20px_rgba(212,175,55,0.05)] relative overflow-hidden">
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gold/50"></div>
+                        <label className="font-body text-[11px] uppercase tracking-[0.2em] text-gold font-bold px-1 block flex items-center gap-1.5 z-10 relative">
+                          Nome do cliente (presencial) <span className="text-red-400">*</span>
+                        </label>
                         <input
                           type="text"
                           placeholder="Ex: Maria Silva"
                           value={manualClienteNome}
                           onChange={(e) => setManualClienteNome(e.target.value)}
-                          className="w-full px-4 py-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 placeholder:text-primary-foreground/25 backdrop-blur-sm transition-all"
+                          className="w-full px-4 py-3.5 rounded-xl bg-white/[0.08] border border-gold/40 text-primary-foreground font-body text-[14px] focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/40 placeholder:text-primary-foreground/50 backdrop-blur-sm transition-all shadow-[0_2px_12px_-4px_rgba(0,0,0,0.5)] z-10 relative"
                         />
                       </div>
                     )}
 
                     {/* ── Data ── */}
                     <div className="space-y-2.5">
-                      <label className="font-body text-[10px] uppercase tracking-[0.2em] text-primary-foreground/45 font-semibold px-1 block">Data *</label>
+                      <label className="font-body text-[10px] uppercase tracking-[0.2em] text-gold/90 font-semibold px-1 block flex items-center gap-1.5">
+                        Data <span className="text-red-400">*</span>
+                      </label>
                       <input
                         type="date"
                         value={manualData}
@@ -2141,7 +2150,9 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                     {/* ── Horário ── */}
                     <div className="space-y-2.5">
                       <div className="flex items-center justify-between px-1">
-                        <label className="font-body text-[10px] uppercase tracking-[0.2em] text-primary-foreground/45 font-semibold block">Horário do atendimento *</label>
+                        <label className="font-body text-[10px] uppercase tracking-[0.2em] text-gold/90 font-semibold block flex items-center gap-1.5">
+                          Horário do atendimento <span className="text-red-400">*</span>
+                        </label>
                         <span className="font-body text-[10px] text-gold bg-gold/10 px-2 py-0.5 rounded-md font-medium tabular-nums">{manualDuracaoTotal} min</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2.5">
