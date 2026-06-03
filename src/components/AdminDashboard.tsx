@@ -47,7 +47,8 @@ const AdminDashboard = ({
   const [brasiliaTime, setBrasiliaTime] = useState(getBrasiliaTime);
 
   useEffect(() => {
-    const interval = setInterval(() => setBrasiliaTime(getBrasiliaTime()), 1000);
+    // 30s é suficiente — o progresso do dia e saudação não precisam de precisão por segundo
+    const interval = setInterval(() => setBrasiliaTime(getBrasiliaTime()), 30000);
     return () => clearInterval(interval);
   }, []);
 

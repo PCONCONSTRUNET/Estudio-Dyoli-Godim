@@ -486,12 +486,23 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   };
 
   const handleNewAgendamento = useCallback((newAg: any) => {
-    setAgendamentos((prev) => [newAg, ...prev]);
-    loadData();
+    // Insere otimisticamente no estado local sem recarregar tudo
+    setAgendamentos((prev) => {
+      if (prev.find(a => a.id === newAg.id)) return prev;
+      return [newAg, ...prev];
+    });
   }, []);
 
   const handleAgendamentoChange = useCallback(() => {
-    loadData();
+    // Recarrega apenas agendamentos (não recarrega profiles — esses mudam raramente)
+    supabase
+      .from("agendamentos")
+      .select("*")
+      .neq("status", "aguardando_pagamento")
+      .order("data_agendamento", { ascending: false })
+      .then(({ data }) => {
+        if (data) setAgendamentos(data as Agendamento[]);
+      });
   }, []);
 
   const {
@@ -520,13 +531,22 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
   const loadData = async () => {
     setLoading(true);
-    const [agRes, clRes] = await Promise.all([
-      supabase.from("agendamentos").select("*").neq("status", "aguardando_pagamento").order("data_agendamento", { ascending: false }),
-      supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-    ]);
-    if (agRes.data) setAgendamentos(agRes.data as Agendamento[]);
-    if (clRes.data) setClientes(clRes.data as Profile[]);
-    setLoading(false);
+    try {
+      const [agRes, clRes] = await Promise.all([
+        supabase.from("agendamentos").select("*").neq("status", "aguardando_pagamento").order("data_agendamento", { ascending: false }),
+        // Profiles: seleciona só as colunas necessárias para reduzir I/O
+        supabase.from("profiles").select("id, nome, whatsapp, cpf, created_at, credito_saldo").order("created_at", { ascending: false }),
+      ]);
+      if (agRes.error) throw agRes.error;
+      if (clRes.error) throw clRes.error;
+      if (agRes.data) setAgendamentos(agRes.data as Agendamento[]);
+      if (clRes.data) setClientes(clRes.data as Profile[]);
+    } catch (e: any) {
+      console.error("Erro ao carregar dados:", e);
+      toast.error("Falha ao carregar dados. O banco de dados pode estar offline ou pausado.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const updateStatus = async (id: string, status: string) => {

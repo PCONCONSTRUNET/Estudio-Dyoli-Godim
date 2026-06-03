@@ -15,7 +15,8 @@ const BOT_BASE_URL = "https://vlepenxinekoljxecomr.supabase.co/functions/v1/bot-
 const BOT_STATUS_URL = `${BOT_BASE_URL}/api/status`;
 const BOT_PAIRING_URL = `${BOT_BASE_URL}/api/pairing-code`;
 const BOT_LOGOUT_URL = `${BOT_BASE_URL}/api/logout`;
-const POLL_INTERVAL_MS = 3000;
+const POLL_INTERVAL_MS = 15000;         // Intervalo padrão (desconectado)
+const POLL_INTERVAL_CONNECTED_MS = 60000; // Intervalo quando já conectado
 
 // Headers padrão para chamadas ao backend do robô.
 const BOT_HEADERS = {} as const;
@@ -67,12 +68,40 @@ const AdminBotWpp = ({ embedded = false }: { embedded?: boolean } = {}) => {
     }
   };
 
+  // Inicia polling adaptativo: curto enquanto aguarda conexão, longo quando já conectado
+  const restartPolling = (isConnectedNow: boolean) => {
+    if (intervalRef.current) window.clearInterval(intervalRef.current);
+    const ms = isConnectedNow ? POLL_INTERVAL_CONNECTED_MS : POLL_INTERVAL_MS;
+    intervalRef.current = window.setInterval(async () => {
+      try {
+        const res = await fetch(BOT_STATUS_URL, { cache: "no-store", headers: BOT_HEADERS });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data: BotStatusResponse = await res.json();
+        setStatus(prev => {
+          // Se mudou de estado, reinicia com intervalo correto
+          const nowConnected = data.status === "CONNECTED";
+          const wasConnected = prev === "CONNECTED";
+          if (nowConnected !== wasConnected) {
+            restartPolling(nowConnected);
+          }
+          return data.status;
+        });
+        if (data.qr) setQr(data.qr);
+        setErrorMsg(null);
+        setLastUpdate(new Date());
+      } catch {
+        setErrorMsg("Não foi possível conectar ao servidor do robô.");
+      }
+    }, ms);
+  };
+
   useEffect(() => {
     fetchStatus();
-    intervalRef.current = window.setInterval(fetchStatus, POLL_INTERVAL_MS);
+    restartPolling(false); // Começa com intervalo padrão
     return () => {
       if (intervalRef.current) window.clearInterval(intervalRef.current);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Converte a string crua do QR (vinda do Baileys) em data URL renderizável.

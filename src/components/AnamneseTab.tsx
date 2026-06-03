@@ -103,18 +103,16 @@ const AnamneseTab = () => {
  });
 
  // Resync ao voltar foco/online (websocket pode dormir em mobile)
+ // Sem polling — o canal Realtime já cuida de INSERT/UPDATE/DELETE.
+ // Só recarrega se a aba ganhar foco depois de longo período ou ao ficar online.
  const resync = () => load();
  const onVisibility = () => { if (document.visibilityState === "visible") load(); };
  window.addEventListener("focus", resync);
  window.addEventListener("online", resync);
  document.addEventListener("visibilitychange", onVisibility);
 
- // safety net leve a cada 10s caso o websocket caia
- const poll = setInterval(load, 10000);
-
  return () => {
  supabase.removeChannel(ch);
- clearInterval(poll);
  window.removeEventListener("focus", resync);
  window.removeEventListener("online", resync);
  document.removeEventListener("visibilitychange", onVisibility);

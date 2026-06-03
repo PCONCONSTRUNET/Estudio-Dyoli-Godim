@@ -24,7 +24,8 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
 
   useEffect(() => {
     let active = true;
-    const load = async () => {
+    const load = async (showLoading = true) => {
+      if (showLoading) setLoading(true);
       const { data } = await supabase
         .from("servicos_app")
         .select("id, nome, preco, duracao_minutos, categoria")
@@ -32,7 +33,7 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
         .order("ordem", { ascending: true });
       if (!active) return;
       setServicos((data as Servico[]) || []);
-      setLoading(false);
+      if (showLoading) setLoading(false);
     };
     load();
 
@@ -41,7 +42,7 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "servicos_app" },
-        () => load()
+        () => load(false) // atualiza silenciosamente sem mostrar spinner
       )
       .subscribe();
 

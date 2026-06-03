@@ -311,15 +311,17 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     const isLocal = !paymentData || paymentData.gateway === "local";
     if (isLocal) return; // local PIX doesn't poll
 
-    const interval = setInterval(async () => {
+    let active = true;
+    const poll = setInterval(async () => {
+      if (!active || document.visibilityState === "hidden") return; // pausa em background
       const { data } = await supabase.from("agendamentos").select("status").eq("id", agendamentoId).maybeSingle();
       if (data?.status === "confirmado") {
-        clearInterval(interval);
+        clearInterval(poll);
         toast.success("Pagamento confirmado! ✅");
         onConfirm({ date: selectedDate, time: selectedTime, price: numericPrice, paidAmount: paymentAmount, durationMinutes: serviceDuration });
       }
-    }, 3000);
-    return () => clearInterval(interval);
+    }, 5000); // 5s é suficiente — o webhook precisa de tempo para atualizar
+    return () => { active = false; clearInterval(poll); };
   }, [step, agendamentoId, paymentData]);
 
   const handleCreatePayment = async () => {
