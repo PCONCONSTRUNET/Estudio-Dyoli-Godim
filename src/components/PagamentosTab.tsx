@@ -107,8 +107,18 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
 
   useEffect(() => {
     const fetchHistoricoEDespesas = async () => {
-      const { data: desp } = await (supabase.from("despesas") as any).select("*").eq("origem", "manual");
-      if (desp) setDespesas(desp);
+      // 1) Gastos registrados manualmente pelo botão "+ Gasto"
+      const { data: manual } = await (supabase.from("despesas") as any).select("*").eq("origem", "manual");
+      // 2) Despesas do módulo marcadas como pagas (excluindo as geradas automaticamente por assinaturas)
+      const { data: pagas } = await (supabase.from("despesas") as any)
+        .select("*")
+        .eq("pago", true)
+        .is("recorrencia_id", null)
+        .neq("origem", "manual");
+      const combined = [...(manual || []), ...(pagas || [])];
+      // Remove duplicatas
+      const unique = combined.filter((d, i, self) => self.findIndex(x => x.id === d.id) === i);
+      setDespesas(unique);
 
       const ids = agendamentos.map((a) => a.id);
       if (ids.length === 0) return;
