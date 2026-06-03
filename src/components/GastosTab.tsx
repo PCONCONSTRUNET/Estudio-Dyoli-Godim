@@ -668,168 +668,130 @@ const GastosTab = () => {
         </div>
       )}
 
-      {/* ── Dialog: Novo Gasto ── */}
+      {/* ── Dialog: Novo/Editar Gasto ── */}
       <Dialog open={showForm} onOpenChange={(open) => { setShowForm(open); if (!open) resetForm(); }}>
-        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md border-primary-foreground/[0.06] overflow-y-auto max-h-[90vh]">
-          <DialogHeader>
-            <DialogTitle className="font-heading text-primary-foreground flex items-center gap-2">
+        <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-sm border-white/[0.08] max-h-[85vh] overflow-y-auto p-0 gap-0">
+          
+          {/* Header compacto */}
+          <div className="flex items-center gap-2.5 px-4 pt-4 pb-3 border-b border-white/[0.06]">
+            <div className="w-8 h-8 rounded-xl bg-orange-500/15 flex items-center justify-center shrink-0">
               <ShoppingCart className="w-4 h-4 text-orange-400" />
-              {editingId ? "Editar Gasto" : "Registrar Gasto"}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4 pt-2">
-            {/* Aviso informativo */}
-            <div className="flex items-start gap-2.5 rounded-xl border border-blue-500/20 bg-blue-500/[0.06] px-3 py-2.5">
-              <AlertCircle className="w-3.5 h-3.5 text-blue-400 mt-0.5 shrink-0" />
-              <p className="font-body text-[11px] text-blue-300/80 leading-relaxed">
-                Gastos são registrados <strong className="text-blue-300">apenas para controle interno</strong>. Não afetam caixa, comissão ou despesas.
-              </p>
             </div>
-
-            {/* Responsável */}
             <div>
-              <label className="font-body text-[11px] text-primary-foreground/80 mb-1 block">
-                De quem é esse gasto? *
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {(["Dona", "Zelia"] as const).map(resp => (
-                  <button
-                    key={resp}
-                    type="button"
-                    onClick={() => setResponsavelForm(resp)}
-                    className={`rounded-xl border px-3 py-2.5 font-body text-[12px] font-semibold transition-all flex items-center justify-center gap-1.5 ${
-                      responsavelForm === resp
-                        ? (resp === "Dona" ? "bg-orange-500/15 text-orange-400 border-orange-500/40" : "bg-blue-500/15 text-blue-400 border-blue-500/40")
-                        : "bg-primary-foreground/[0.03] text-primary-foreground/80 border-primary-foreground/[0.08] hover:text-primary-foreground/70"
-                    }`}
-                  >
-                    {resp === "Dona" ? "👑 Dona" : "👩 Zélia"}
-                  </button>
-                ))}
-              </div>
+              <p className="font-heading text-[15px] font-semibold text-white leading-tight">
+                {editingId ? "Editar Gasto" : "Registrar Gasto"}
+              </p>
+              <p className="font-body text-[10px] text-white/40 leading-none mt-0.5">Não afeta caixa ou comissão</p>
+            </div>
+          </div>
+
+          <div className="space-y-3 px-4 py-3">
+
+            {/* Responsável — toggle compacto */}
+            <div className="flex gap-1.5 p-1 bg-white/[0.04] rounded-xl">
+              {(["Dona", "Zelia"] as const).map(resp => (
+                <button
+                  key={resp}
+                  type="button"
+                  onClick={() => setResponsavelForm(resp)}
+                  className={`flex-1 rounded-lg py-1.5 font-body text-[12px] font-semibold transition-all ${
+                    responsavelForm === resp
+                      ? (resp === "Dona" ? "bg-orange-500 text-white shadow-sm" : "bg-blue-500 text-white shadow-sm")
+                      : "text-white/50 hover:text-white/70"
+                  }`}
+                >
+                  {resp === "Dona" ? "👑 Dona" : "👩 Zélia"}
+                </button>
+              ))}
             </div>
 
             {/* Descrição */}
-            <div>
-              <label className="font-body text-[11px] text-primary-foreground/80 mb-1 block">
-                Descrição *
-              </label>
+            <input
+              value={descricao}
+              onChange={e => setDescricao(e.target.value)}
+              placeholder="Descrição do gasto *"
+              className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] py-2.5 px-3 text-white font-body text-[13px] placeholder:text-white/25 focus:outline-none focus:border-orange-500/40"
+            />
+
+            {/* Valor + Data lado a lado */}
+            <div className="grid grid-cols-2 gap-2">
               <input
-                value={descricao}
-                onChange={e => setDescricao(e.target.value)}
-                placeholder="Ex: Compra de tinta, notebook, curso..."
-                className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.07] py-2.5 px-3 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/25 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500/30"
+                type="number"
+                step="0.01"
+                min="0"
+                value={valor}
+                onChange={e => setValor(e.target.value)}
+                placeholder="Valor (R$) *"
+                className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] py-2.5 px-3 text-white font-body text-[13px] placeholder:text-white/25 focus:outline-none focus:border-orange-500/40"
+              />
+              <input
+                type="date"
+                value={dataGasto}
+                onChange={e => setDataGasto(e.target.value)}
+                className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] py-2.5 px-3 text-white font-body text-[13px] focus:outline-none focus:border-orange-500/40 [&::-webkit-calendar-picker-indicator]:invert-[0.8]"
               />
             </div>
 
-            {/* Valor + Data */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="font-body text-[11px] text-primary-foreground/80 mb-1 block">
-                  Valor (R$) *
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={valor}
-                  onChange={e => setValor(e.target.value)}
-                  placeholder="0,00"
-                  className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.07] py-2.5 px-3 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/25 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500/30"
-                />
-              </div>
-              <div>
-                <label className="font-body text-[11px] text-primary-foreground/80 mb-1 block">
-                  Data *
-                </label>
-                <input
-                  type="date"
-                  value={dataGasto}
-                  onChange={e => setDataGasto(e.target.value)}
-                  className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.07] py-2.5 px-3 text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500/30"
-                />
-              </div>
-            </div>
-
-            {/* Categoria */}
+            {/* Categorias — scroll horizontal compacto */}
             <div>
-              <label className="font-body text-[11px] text-primary-foreground/80 mb-1 block">
-                Categoria
-              </label>
-              <div className="grid grid-cols-3 gap-1.5">
+              <p className="font-body text-[10px] text-white/40 uppercase tracking-widest mb-1.5">Categoria</p>
+              <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
                 {CATEGORIAS.map(cat => (
                   <button
                     key={cat}
                     type="button"
                     onClick={() => { setCategoria(cat); setCategoriaPersonalizada(""); }}
-                    className="rounded-xl border px-2 py-2 font-body text-[10px] font-semibold transition-all text-center leading-tight hover:brightness-125"
+                    className="shrink-0 rounded-full px-3 py-1.5 font-body text-[10px] font-semibold transition-all whitespace-nowrap border"
                     style={{
-                      borderColor: categoria === cat ? CATEGORIA_COLORS[cat] : `${CATEGORIA_COLORS[cat]}40`,
+                      borderColor: categoria === cat ? CATEGORIA_COLORS[cat] : `${CATEGORIA_COLORS[cat]}35`,
                       backgroundColor: categoria === cat ? `${CATEGORIA_COLORS[cat]}25` : `${CATEGORIA_COLORS[cat]}08`,
-                      color: categoria === cat ? CATEGORIA_COLORS[cat] : `${CATEGORIA_COLORS[cat]}cc`,
+                      color: categoria === cat ? CATEGORIA_COLORS[cat] : `${CATEGORIA_COLORS[cat]}bb`,
                     }}
                   >
                     {cat}
                   </button>
                 ))}
-
-                {/* Botão: Personalizada */}
                 <button
                   type="button"
                   onClick={() => setCategoria("__personalizada__")}
-                  className="rounded-xl border px-2 py-2 font-body text-[10px] font-semibold transition-all text-center leading-tight flex flex-col items-center gap-0.5 hover:brightness-125"
+                  className="shrink-0 rounded-full px-3 py-1.5 font-body text-[10px] font-semibold transition-all whitespace-nowrap border flex items-center gap-1"
                   style={{
-                    borderColor: categoria === "__personalizada__" ? "#facc15" : "#facc1540",
+                    borderColor: categoria === "__personalizada__" ? "#facc15" : "#facc1535",
                     backgroundColor: categoria === "__personalizada__" ? "#facc1525" : "#facc1508",
-                    color: categoria === "__personalizada__" ? "#facc15" : "#facc15cc",
+                    color: categoria === "__personalizada__" ? "#facc15" : "#facc15bb",
                   }}
                 >
-                  <Pencil className="w-3 h-3" />
-                  Personalizada
+                  <Pencil className="w-2.5 h-2.5" />
+                  Custom
                 </button>
               </div>
 
-              {/* Campo de texto para categoria personalizada */}
               {categoria === "__personalizada__" && (
-                <div className="mt-2">
-                  <input
-                    autoFocus
-                    value={categoriaPersonalizada}
-                    onChange={e => setCategoriaPersonalizada(e.target.value)}
-                    placeholder="Digite o nome da categoria..."
-                    maxLength={50}
-                    className="w-full rounded-xl bg-gold/[0.06] border border-gold/25 py-2.5 px-3 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/25 focus:outline-none focus:ring-2 focus:ring-gold/25 focus:border-gold/40 transition-all"
-                  />
-                  {categoriaPersonalizada.trim() && (
-                    <p className="font-body text-[10px] text-gold/70 mt-1 px-1">
-                      ✓ Será salvo como: <strong className="text-gold">{categoriaPersonalizada.trim()}</strong>
-                    </p>
-                  )}
-                </div>
+                <input
+                  autoFocus
+                  value={categoriaPersonalizada}
+                  onChange={e => setCategoriaPersonalizada(e.target.value)}
+                  placeholder="Nome da categoria..."
+                  maxLength={50}
+                  className="mt-1.5 w-full rounded-xl bg-gold/[0.06] border border-gold/25 py-2 px-3 text-white font-body text-[12px] placeholder:text-white/25 focus:outline-none focus:border-gold/40"
+                />
               )}
             </div>
 
-            {/* Observação */}
-            <div>
-              <label className="font-body text-[11px] text-primary-foreground/80 mb-1 block">
-                Observação (opcional)
-              </label>
-              <textarea
-                value={observacao}
-                onChange={e => setObservacao(e.target.value)}
-                placeholder="Detalhes adicionais..."
-                rows={2}
-                className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.07] py-2.5 px-3 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/25 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500/30 resize-none"
-              />
-            </div>
+            {/* Observação — 1 linha */}
+            <input
+              value={observacao}
+              onChange={e => setObservacao(e.target.value)}
+              placeholder="Observação (opcional)"
+              className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] py-2.5 px-3 text-white font-body text-[13px] placeholder:text-white/25 focus:outline-none focus:border-orange-500/40"
+            />
 
             {/* Botões */}
-            <div className="flex gap-2 pt-1">
+            <div className="flex gap-2 pt-1 pb-1">
               <button
                 type="button"
                 onClick={() => { setShowForm(false); resetForm(); }}
-                className="flex-1 rounded-xl border border-primary-foreground/[0.08] bg-primary-foreground/[0.04] py-2.5 font-body text-[13px] font-medium text-primary-foreground/80 hover:text-primary-foreground/70 transition-all"
+                className="flex-1 rounded-xl border border-white/[0.08] bg-white/[0.04] py-2.5 font-body text-[13px] font-medium text-white/60 hover:text-white/80 transition-all"
               >
                 Cancelar
               </button>
@@ -837,14 +799,14 @@ const GastosTab = () => {
                 type="button"
                 onClick={handleAdd}
                 disabled={saving}
-                className="flex-1 rounded-xl bg-orange-500 py-2.5 font-body text-[13px] font-semibold text-white shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:bg-orange-400 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+                className="flex-1 rounded-xl bg-orange-500 py-2.5 font-body text-[13px] font-semibold text-white hover:bg-orange-400 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 {saving ? (
                   <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
                 ) : (
                   <Save className="w-4 h-4" />
                 )}
-                {saving ? "Salvando..." : (editingId ? "Salvar Alterações" : "Registrar Gasto")}
+                {saving ? "Salvando..." : (editingId ? "Salvar" : "Registrar")}
               </button>
             </div>
           </div>
