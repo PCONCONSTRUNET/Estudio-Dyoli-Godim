@@ -111,6 +111,7 @@ export default function NovaTransacaoModal({ open, onOpenChange, onSuccess, init
           pago: true,
           data_pagamento: data,
           tipo: "estudio",
+          origem: "manual",
         };
 
         const { error } = await supabase.from("despesas").insert([payload]);

@@ -107,7 +107,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
 
   useEffect(() => {
     const fetchHistoricoEDespesas = async () => {
-      const { data: desp } = await supabase.from("despesas").select("*");
+      const { data: desp } = await (supabase.from("despesas") as any).select("*").eq("origem", "manual");
       if (desp) setDespesas(desp);
 
       const ids = agendamentos.map((a) => a.id);
