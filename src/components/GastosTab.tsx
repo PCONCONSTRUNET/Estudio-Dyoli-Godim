@@ -620,7 +620,7 @@ const GastosTab = () => {
                       {g.categoria}
                     </span>
                     <span className="text-white/20 text-[10px]">·</span>
-                    <span className="text-[10px] font-body text-white/40">
+                    <span className="text-[11px] font-body font-medium text-white/70">
                       {formatDate(g.data_gasto)}
                     </span>
                   </div>
