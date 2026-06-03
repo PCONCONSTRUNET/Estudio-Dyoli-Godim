@@ -89,7 +89,7 @@ const CustomPieTooltip = ({ active, payload }: any) => {
       <p className="font-heading text-[14px] font-bold" style={{ color: d.payload.fill }}>
         {formatCurrency(d.value)}
       </p>
-      <p className="font-body text-[10px] text-primary-foreground/40">{d.payload.pct}%</p>
+      <p className="font-body text-[10px] text-primary-foreground/70">{d.payload.pct}%</p>
     </div>
   );
 };
@@ -328,7 +328,7 @@ const GastosTab = () => {
               <p className="relative font-heading text-[17px] font-bold text-orange-400 tabular-nums leading-tight">
                 {formatCurrency(totalGeral)}
               </p>
-              <p className="relative font-body text-[10px] font-medium text-primary-foreground/50 uppercase tracking-wider mt-1">
+              <p className="relative font-body text-[10px] font-medium text-primary-foreground/80 uppercase tracking-wider mt-1">
                 Total Geral
               </p>
             </div>
@@ -338,7 +338,7 @@ const GastosTab = () => {
               <p className="relative font-heading text-[17px] font-bold text-gold tabular-nums leading-tight">
                 {formatCurrency(totalFiltrado)}
               </p>
-              <p className="relative font-body text-[10px] font-medium text-primary-foreground/50 uppercase tracking-wider mt-1">
+              <p className="relative font-body text-[10px] font-medium text-primary-foreground/80 uppercase tracking-wider mt-1">
                 Período Selecionado
               </p>
             </div>
@@ -355,7 +355,7 @@ const GastosTab = () => {
             className={`flex-1 rounded-xl px-3 py-2.5 font-body text-[13px] font-semibold transition-all flex items-center justify-center gap-1.5 ${
               responsavelFilter === resp
                 ? (resp === "Dona" ? "bg-orange-500 text-white shadow-[0_0_15px_rgba(249,115,22,0.3)]" : "bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]")
-                : "text-primary-foreground/50 hover:text-primary-foreground/80 hover:bg-primary-foreground/[0.04]"
+                : "text-primary-foreground/80 hover:text-primary-foreground/80 hover:bg-primary-foreground/[0.04]"
             }`}
           >
             {resp === "Dona" ? "👑 Gastos da Dona" : "👩 Gastos da Zélia"}
@@ -365,7 +365,7 @@ const GastosTab = () => {
 
       {/* ── Filtro de Período ── */}
       <div className="mb-4">
-        <p className="font-body text-[10px] uppercase tracking-widest text-primary-foreground/30 mb-2 px-0.5">
+        <p className="font-body text-[10px] uppercase tracking-widest text-primary-foreground/60 mb-2 px-0.5">
           Filtrar por Período
         </p>
         <div className="grid grid-cols-4 gap-1 p-1 bg-primary-foreground/[0.04] rounded-2xl border border-primary-foreground/[0.06]">
@@ -378,7 +378,7 @@ const GastosTab = () => {
                  className={`py-2 rounded-xl text-[11px] font-body font-semibold transition-all ${
                    periodoFilter === p
                      ? "bg-gold/15 text-gold border border-gold/40 shadow-sm"
-                     : "text-primary-foreground/50 hover:text-primary-foreground/70"
+                     : "text-primary-foreground/80 hover:text-primary-foreground/70"
                  }`}
                >
                  {label}
@@ -397,7 +397,7 @@ const GastosTab = () => {
                  className="w-full bg-transparent border-none p-0 text-primary-foreground font-body text-[12px] focus:ring-0 [&::-webkit-calendar-picker-indicator]:invert-[0.8]" 
                />
              </div>
-             <span className="text-primary-foreground/30 text-[10px] font-medium uppercase px-2">até</span>
+             <span className="text-primary-foreground/60 text-[10px] font-medium uppercase px-2">até</span>
              <div className="flex-1">
                <input 
                  type="date" 
@@ -412,7 +412,7 @@ const GastosTab = () => {
 
       {/* ── Filtro de Categoria ── */}
       <div className="mb-2">
-        <p className="font-body text-[10px] uppercase tracking-widest text-primary-foreground/30 mb-2 px-0.5">
+        <p className="font-body text-[10px] uppercase tracking-widest text-primary-foreground/60 mb-2 px-0.5">
           Filtrar por Categoria
         </p>
         <Select value={catFilter} onValueChange={setCatFilter}>
@@ -448,7 +448,7 @@ const GastosTab = () => {
 
       {/* ── Gráficos ── */}
       {gastos.length > 0 && (
-        <div className="rounded-3xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.02] overflow-hidden">
+        <div className="rounded-3xl border border-primary-foreground/[0.06] bg-transparent overflow-hidden">
           {/* Toggle gráfico */}
           <div className="flex border-b border-primary-foreground/[0.06]">
             {(["mensal", "categoria"] as const).map(v => (
@@ -458,7 +458,7 @@ const GastosTab = () => {
                 className={`flex-1 py-3 font-body text-[12px] font-medium transition-all ${
                   chartView === v
                     ? "text-gold border-b-2 border-gold bg-gold/[0.04]"
-                    : "text-primary-foreground/40 hover:text-primary-foreground/60"
+                    : "text-primary-foreground/70 hover:text-primary-foreground/60"
                 }`}
               >
                 {v === "mensal" ? "📅 Gastos por Mês" : "🏷️ Por Categoria"}
@@ -470,7 +470,7 @@ const GastosTab = () => {
             {chartView === "mensal" ? (
               dadosMensais.length > 0 ? (
                 <>
-                  <p className="font-body text-[11px] text-primary-foreground/40 mb-3">
+                  <p className="font-body text-[11px] text-primary-foreground/70 mb-3">
                     Últimos {dadosMensais.length} meses
                   </p>
                   <ResponsiveContainer width="100%" height={200}>
@@ -478,12 +478,12 @@ const GastosTab = () => {
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
                       <XAxis
                         dataKey="mes"
-                        tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 11, fontFamily: "var(--font-body)" }}
+                        tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 11, fontFamily: "var(--font-body)" }}
                         axisLine={false}
                         tickLine={false}
                       />
                       <YAxis
-                        tick={{ fill: "rgba(255,255,255,0.25)", fontSize: 10, fontFamily: "var(--font-body)" }}
+                        tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 10, fontFamily: "var(--font-body)" }}
                         axisLine={false}
                         tickLine={false}
                         tickFormatter={v => `R$${v >= 1000 ? (v / 1000).toFixed(1) + "k" : v}`}
@@ -495,13 +495,13 @@ const GastosTab = () => {
                 </>
               ) : (
                 <div className="py-10 text-center">
-                  <p className="font-body text-[13px] text-primary-foreground/30">Nenhum dado para exibir</p>
+                  <p className="font-body text-[13px] text-primary-foreground/60">Nenhum dado para exibir</p>
                 </div>
               )
             ) : (
               dadosCategoria.length > 0 ? (
                 <>
-                  <p className="font-body text-[11px] text-primary-foreground/40 mb-3">
+                  <p className="font-body text-[11px] text-primary-foreground/70 mb-3">
                     Total: {formatCurrency(totalFiltrado)}
                   </p>
                   <ResponsiveContainer width="100%" height={220}>
@@ -542,7 +542,7 @@ const GastosTab = () => {
                         <p className="font-body text-[11px] font-semibold text-primary-foreground/80">
                           {formatCurrency(cat.value)}
                         </p>
-                        <p className="font-body text-[10px] text-primary-foreground/35 w-8 text-right">
+                        <p className="font-body text-[10px] text-primary-foreground/60 w-8 text-right">
                           {cat.pct}%
                         </p>
                       </div>
@@ -551,7 +551,7 @@ const GastosTab = () => {
                 </>
               ) : (
                 <div className="py-10 text-center">
-                  <p className="font-body text-[13px] text-primary-foreground/30">Nenhum dado para exibir</p>
+                  <p className="font-body text-[13px] text-primary-foreground/60">Nenhum dado para exibir</p>
                 </div>
               )
             )}
@@ -561,15 +561,15 @@ const GastosTab = () => {
 
       {/* ── Lista de Gastos ── */}
       <div>
-        <p className="font-body text-[10px] uppercase tracking-widest text-primary-foreground/30 mb-3 px-0.5">
+        <p className="font-body text-[10px] uppercase tracking-widest text-primary-foreground/60 mb-3 px-0.5">
           Registros ({gastosFiltrados.length})
         </p>
 
         {gastosFiltrados.length === 0 ? (
           <div className="py-16 text-center rounded-3xl border border-dashed border-primary-foreground/[0.08]">
-            <PackageOpen className="w-10 h-10 text-primary-foreground/15 mx-auto mb-3" />
-            <p className="font-body text-[13px] text-primary-foreground/30">Nenhum gasto encontrado</p>
-            <p className="font-body text-[11px] text-primary-foreground/20 mt-1">
+            <PackageOpen className="w-10 h-10 text-primary-foreground/70 mx-auto mb-3" />
+            <p className="font-body text-[13px] text-primary-foreground/60">Nenhum gasto encontrado</p>
+            <p className="font-body text-[11px] text-primary-foreground/80 mt-1">
               Toque no + para registrar um gasto
             </p>
           </div>
@@ -604,7 +604,7 @@ const GastosTab = () => {
                       >
                         {g.categoria}
                       </span>
-                      <span className="font-body text-[10px] text-primary-foreground/30">
+                      <span className="font-body text-[10px] text-primary-foreground/60">
                         {formatDate(g.data_gasto)}
                       </span>
                     </div>
@@ -612,7 +612,7 @@ const GastosTab = () => {
                       {g.descricao}
                     </p>
                     {g.observacao && (
-                      <p className="font-body text-[11px] text-primary-foreground/40 mt-0.5 truncate">
+                      <p className="font-body text-[11px] text-primary-foreground/70 mt-0.5 truncate">
                         {g.observacao}
                       </p>
                     )}
@@ -625,7 +625,7 @@ const GastosTab = () => {
                     <div className="flex items-center gap-1.5">
                       <button 
                         onClick={() => handleEdit(g)}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg border border-primary-foreground/[0.08] bg-primary-foreground/[0.04] text-primary-foreground/40 transition-all hover:bg-gold/10 hover:text-gold hover:border-gold/20"
+                        className="flex h-7 w-7 items-center justify-center rounded-lg border border-primary-foreground/[0.08] bg-primary-foreground/[0.04] text-primary-foreground/70 transition-all hover:bg-gold/10 hover:text-gold hover:border-gold/20"
                         title="Editar"
                       >
                         <Pencil className="h-3.5 w-3.5" />
@@ -644,7 +644,7 @@ const GastosTab = () => {
       {gastosFiltrados.length > 0 && (
         <div className="rounded-2xl border border-orange-500/20 bg-gradient-to-r from-orange-500/[0.06] to-transparent p-4 flex items-center justify-between">
           <div>
-            <p className="font-body text-[11px] text-primary-foreground/40 uppercase tracking-wider">
+            <p className="font-body text-[11px] text-primary-foreground/70 uppercase tracking-wider">
               Total no período selecionado
             </p>
             <p className="font-heading text-[20px] font-bold text-orange-400 mt-0.5">
@@ -678,7 +678,7 @@ const GastosTab = () => {
 
             {/* Responsável */}
             <div>
-              <label className="font-body text-[11px] text-primary-foreground/50 mb-1 block">
+              <label className="font-body text-[11px] text-primary-foreground/80 mb-1 block">
                 De quem é esse gasto? *
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -690,7 +690,7 @@ const GastosTab = () => {
                     className={`rounded-xl border px-3 py-2.5 font-body text-[12px] font-semibold transition-all flex items-center justify-center gap-1.5 ${
                       responsavelForm === resp
                         ? (resp === "Dona" ? "bg-orange-500/15 text-orange-400 border-orange-500/40" : "bg-blue-500/15 text-blue-400 border-blue-500/40")
-                        : "bg-primary-foreground/[0.03] text-primary-foreground/50 border-primary-foreground/[0.08] hover:text-primary-foreground/70"
+                        : "bg-primary-foreground/[0.03] text-primary-foreground/80 border-primary-foreground/[0.08] hover:text-primary-foreground/70"
                     }`}
                   >
                     {resp === "Dona" ? "👑 Dona" : "👩 Zélia"}
@@ -701,7 +701,7 @@ const GastosTab = () => {
 
             {/* Descrição */}
             <div>
-              <label className="font-body text-[11px] text-primary-foreground/50 mb-1 block">
+              <label className="font-body text-[11px] text-primary-foreground/80 mb-1 block">
                 Descrição *
               </label>
               <input
@@ -715,7 +715,7 @@ const GastosTab = () => {
             {/* Valor + Data */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="font-body text-[11px] text-primary-foreground/50 mb-1 block">
+                <label className="font-body text-[11px] text-primary-foreground/80 mb-1 block">
                   Valor (R$) *
                 </label>
                 <input
@@ -729,7 +729,7 @@ const GastosTab = () => {
                 />
               </div>
               <div>
-                <label className="font-body text-[11px] text-primary-foreground/50 mb-1 block">
+                <label className="font-body text-[11px] text-primary-foreground/80 mb-1 block">
                   Data *
                 </label>
                 <input
@@ -743,7 +743,7 @@ const GastosTab = () => {
 
             {/* Categoria */}
             <div>
-              <label className="font-body text-[11px] text-primary-foreground/50 mb-1 block">
+              <label className="font-body text-[11px] text-primary-foreground/80 mb-1 block">
                 Categoria
               </label>
               <div className="grid grid-cols-3 gap-1.5">
@@ -801,7 +801,7 @@ const GastosTab = () => {
 
             {/* Observação */}
             <div>
-              <label className="font-body text-[11px] text-primary-foreground/50 mb-1 block">
+              <label className="font-body text-[11px] text-primary-foreground/80 mb-1 block">
                 Observação (opcional)
               </label>
               <textarea
@@ -818,7 +818,7 @@ const GastosTab = () => {
               <button
                 type="button"
                 onClick={() => { setShowForm(false); resetForm(); }}
-                className="flex-1 rounded-xl border border-primary-foreground/[0.08] bg-primary-foreground/[0.04] py-2.5 font-body text-[13px] font-medium text-primary-foreground/50 hover:text-primary-foreground/70 transition-all"
+                className="flex-1 rounded-xl border border-primary-foreground/[0.08] bg-primary-foreground/[0.04] py-2.5 font-body text-[13px] font-medium text-primary-foreground/80 hover:text-primary-foreground/70 transition-all"
               >
                 Cancelar
               </button>
