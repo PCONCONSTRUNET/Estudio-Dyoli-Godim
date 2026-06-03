@@ -109,12 +109,11 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     const fetchHistoricoEDespesas = async () => {
       // 1) Gastos registrados manualmente pelo botão "+ Gasto"
       const { data: manual } = await (supabase.from("despesas") as any).select("*").eq("origem", "manual");
-      // 2) Despesas do módulo marcadas como pagas (origem NULL = criadas pelo módulo, não pelo botão Gasto)
+      // 2) Despesas marcadas como pagas no módulo (origem IS NULL = criadas pelo módulo de Despesas)
       const { data: pagas } = await (supabase.from("despesas") as any)
         .select("*")
         .eq("pago", true)
-        .is("recorrencia_id", null)
-        .or("origem.is.null,origem.neq.manual");
+        .is("origem", null);
       const combined = [...(manual || []), ...(pagas || [])];
       // Remove duplicatas
       const unique = combined.filter((d, i, self) => self.findIndex(x => x.id === d.id) === i);
