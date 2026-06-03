@@ -100,6 +100,7 @@ const GastosTab = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   // Filtros
   const [catFilter, setCatFilter] = useState("Todas");
@@ -202,30 +203,56 @@ const GastosTab = () => {
       toast.error("Preencha descrição, valor e data");
       return;
     }
-    const valorNum = parseFloat(valor.replace(",", "."));
+    const valorNum = typeof valor === "string" ? parseFloat(valor.replace(",", ".")) : Number(valor);
     if (isNaN(valorNum) || valorNum <= 0) {
       toast.error("Valor inválido");
       return;
     }
     setSaving(true);
-    const { error } = await (supabase.from as any)("gastos").insert([{
+    
+    const payload = {
       descricao: descricao.trim(),
       valor: valorNum,
       categoria: categoriaFinal,
       responsavel: responsavelForm,
       data_gasto: dataGasto,
       observacao: observacao.trim() || null,
-    }]);
+    };
+
+    const request = editingId 
+      ? (supabase.from as any)("gastos").update(payload).eq("id", editingId)
+      : (supabase.from as any)("gastos").insert([payload]);
+
+    const { error } = await request;
+
     if (error) {
       console.error("Erro ao salvar gasto:", error);
-      toast.error("Erro ao registrar gasto");
+      toast.error(editingId ? "Erro ao atualizar gasto" : "Erro ao registrar gasto");
     } else {
-      toast.success("Gasto registrado! 💸");
+      toast.success(editingId ? "Gasto atualizado! ✨" : "Gasto registrado! 💸");
       resetForm();
       setShowForm(false);
       loadGastos();
     }
     setSaving(false);
+  };
+
+  const handleEdit = (g: Gasto) => {
+    setEditingId(g.id);
+    setDescricao(g.descricao);
+    setValor(g.valor.toString());
+    setResponsavelForm(g.responsavel);
+    setDataGasto(g.data_gasto);
+    setObservacao(g.observacao || "");
+    
+    if (CATEGORIAS.includes(g.categoria)) {
+      setCategoria(g.categoria);
+      setCategoriaPersonalizada("");
+    } else {
+      setCategoria("__personalizada__");
+      setCategoriaPersonalizada(g.categoria);
+    }
+    setShowForm(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -236,6 +263,7 @@ const GastosTab = () => {
   };
 
   const resetForm = () => {
+    setEditingId(null);
     setDescricao("");
     setValor("");
     setCategoria("Outros");
@@ -574,7 +602,16 @@ const GastosTab = () => {
                     <p className="font-heading text-[15px] font-bold text-orange-400">
                       {formatCurrency(Number(g.valor))}
                     </p>
-                    <BinButton size="sm" onClick={() => handleDelete(g.id)} />
+                    <div className="flex items-center gap-1.5">
+                      <button 
+                        onClick={() => handleEdit(g)}
+                        className="flex h-7 w-7 items-center justify-center rounded-lg border border-primary-foreground/[0.08] bg-primary-foreground/[0.04] text-primary-foreground/40 transition-all hover:bg-gold/10 hover:text-gold hover:border-gold/20"
+                        title="Editar"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <BinButton size="sm" onClick={() => handleDelete(g.id)} />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -606,7 +643,7 @@ const GastosTab = () => {
           <DialogHeader>
             <DialogTitle className="font-heading text-primary-foreground flex items-center gap-2">
               <ShoppingCart className="w-4 h-4 text-orange-400" />
-              Registrar Gasto
+              {editingId ? "Editar Gasto" : "Registrar Gasto"}
             </DialogTitle>
           </DialogHeader>
 
@@ -776,7 +813,7 @@ const GastosTab = () => {
                 ) : (
                   <Save className="w-4 h-4" />
                 )}
-                {saving ? "Salvando..." : "Registrar Gasto"}
+                {saving ? "Salvando..." : (editingId ? "Salvar Alterações" : "Registrar Gasto")}
               </button>
             </div>
           </div>
