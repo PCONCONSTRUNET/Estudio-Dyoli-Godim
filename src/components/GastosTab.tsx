@@ -725,14 +725,12 @@ const GastosTab = () => {
             />
 
             {/* Data */}
-            <div className="relative">
-              <input
-                type="date"
-                value={dataGasto}
-                onChange={e => setDataGasto(e.target.value)}
-                className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] py-2.5 px-3 text-white font-body text-[16px] sm:text-[13px] focus:outline-none focus:border-orange-500/40 [&::-webkit-calendar-picker-indicator]:invert-[0.8]"
-              />
-            </div>
+            <input
+              type="date"
+              value={dataGasto}
+              onChange={e => setDataGasto(e.target.value)}
+              className="w-full max-w-full appearance-none block rounded-xl bg-white/[0.05] border border-white/[0.07] py-2.5 px-3 text-white font-body text-[16px] sm:text-[13px] focus:outline-none focus:border-orange-500/40 [&::-webkit-calendar-picker-indicator]:invert-[0.8]"
+            />
 
             {/* Categorias — scroll horizontal compacto */}
             <div>
