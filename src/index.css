@@ -431,3 +431,26 @@ select option {
 .btn-hero-shine:hover > .btn-overlay { opacity: 0.45; }
 .btn-hero-shine:hover > .btn-shine { opacity: 1; }
 .btn-hero-shine:active { transform: translateY(1px); }
+
+/* ── Recharts: remover fundo cinza do gráfico ────────────────── */
+.recharts-wrapper {
+  background: transparent !important;
+}
+.recharts-surface {
+  background: transparent !important;
+}
+.recharts-wrapper svg {
+  background: transparent !important;
+}
+/* Remove o retângulo de fundo que o Recharts injeta no SVG */
+.recharts-surface > rect:first-child,
+.recharts-plot-background,
+svg.recharts-surface > g > rect[fill] {
+  fill: transparent !important;
+  background: transparent !important;
+}
+/* O cursor cinza ao passar o mouse nas barras */
+.recharts-rectangle.recharts-tooltip-cursor {
+  fill: rgba(255,255,255,0.04) !important;
+}
+
