@@ -670,7 +670,7 @@ const GastosTab = () => {
 
       {/* ── Dialog: Novo/Editar Gasto ── */}
       <Dialog open={showForm} onOpenChange={(open) => { setShowForm(open); if (!open) resetForm(); }}>
-        <DialogContent className="max-w-[calc(100vw-1rem)] sm:max-w-sm border-white/[0.08] max-h-[85vh] overflow-y-auto p-0 gap-0">
+        <DialogContent className="max-w-[calc(100vw-1.5rem)] sm:max-w-sm border-white/[0.08] max-h-[85vh] overflow-y-auto p-0 gap-0">
           
           {/* Header compacto */}
           <div className="flex items-center gap-2.5 px-4 pt-4 pb-3 border-b border-white/[0.06]">
@@ -685,7 +685,7 @@ const GastosTab = () => {
             </div>
           </div>
 
-          <div className="space-y-3 px-4 py-3">
+          <div className="space-y-3 px-4 py-3 min-w-0 w-full overflow-hidden">
 
             {/* Responsável — toggle compacto */}
             <div className="flex gap-1.5 p-1 bg-white/[0.04] rounded-xl">
@@ -710,7 +710,7 @@ const GastosTab = () => {
               value={descricao}
               onChange={e => setDescricao(e.target.value)}
               placeholder="Descrição do gasto *"
-              className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] py-2.5 px-3 text-white font-body text-[13px] placeholder:text-white/25 focus:outline-none focus:border-orange-500/40"
+              className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] py-2.5 px-3 text-white font-body text-[16px] sm:text-[13px] placeholder:text-white/25 focus:outline-none focus:border-orange-500/40"
             />
 
             {/* Valor */}
@@ -721,7 +721,7 @@ const GastosTab = () => {
               value={valor}
               onChange={e => setValor(e.target.value)}
               placeholder="Valor (R$) *"
-              className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] py-2.5 px-3 text-white font-body text-[13px] placeholder:text-white/25 focus:outline-none focus:border-orange-500/40"
+              className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] py-2.5 px-3 text-white font-body text-[16px] sm:text-[13px] placeholder:text-white/25 focus:outline-none focus:border-orange-500/40"
             />
 
             {/* Data */}
@@ -730,14 +730,14 @@ const GastosTab = () => {
                 type="date"
                 value={dataGasto}
                 onChange={e => setDataGasto(e.target.value)}
-                className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] py-2.5 px-3 text-white font-body text-[12px] focus:outline-none focus:border-orange-500/40 [&::-webkit-calendar-picker-indicator]:invert-[0.8]"
+                className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] py-2.5 px-3 text-white font-body text-[16px] sm:text-[13px] focus:outline-none focus:border-orange-500/40 [&::-webkit-calendar-picker-indicator]:invert-[0.8]"
               />
             </div>
 
             {/* Categorias — scroll horizontal compacto */}
             <div>
               <p className="font-body text-[10px] text-white/40 uppercase tracking-widest mb-1.5">Categoria</p>
-              <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+              <div className="flex gap-1.5 overflow-x-auto pb-1 w-full" style={{ scrollbarWidth: "none" }}>
                 {CATEGORIAS.map(cat => (
                   <button
                     key={cat}
@@ -775,7 +775,7 @@ const GastosTab = () => {
                   onChange={e => setCategoriaPersonalizada(e.target.value)}
                   placeholder="Nome da categoria..."
                   maxLength={50}
-                  className="mt-1.5 w-full rounded-xl bg-gold/[0.06] border border-gold/25 py-2 px-3 text-white font-body text-[12px] placeholder:text-white/25 focus:outline-none focus:border-gold/40"
+                  className="mt-1.5 w-full rounded-xl bg-gold/[0.06] border border-gold/25 py-2 px-3 text-white font-body text-[16px] sm:text-[12px] placeholder:text-white/25 focus:outline-none focus:border-gold/40"
                 />
               )}
             </div>
@@ -785,7 +785,7 @@ const GastosTab = () => {
               value={observacao}
               onChange={e => setObservacao(e.target.value)}
               placeholder="Observação (opcional)"
-              className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] py-2.5 px-3 text-white font-body text-[13px] placeholder:text-white/25 focus:outline-none focus:border-orange-500/40"
+              className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] py-2.5 px-3 text-white font-body text-[16px] sm:text-[13px] placeholder:text-white/25 focus:outline-none focus:border-orange-500/40"
             />
 
             {/* Botões */}
