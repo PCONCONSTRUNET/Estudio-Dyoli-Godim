@@ -216,6 +216,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
         status: d.pago ? "pago" : "pendente_saida",
         cliente_nome: d.descricao || "Saída Registrada",
         servico: d.categoria || "Geral",
+        variacao: d.observacao || null,
         horario: d.created_at ? `${String(new Date(d.created_at).getHours()).padStart(2, "0")}:${String(new Date(d.created_at).getMinutes()).padStart(2, "0")}` : "23:59",
         forma_pagamento: "dinheiro",
         _is_saida: true,

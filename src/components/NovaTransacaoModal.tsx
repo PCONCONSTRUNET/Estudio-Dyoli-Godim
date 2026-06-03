@@ -83,7 +83,7 @@ export default function NovaTransacaoModal({ open, onOpenChange, onSuccess, init
 
         const payload = {
           user_id: userId,
-          cliente_nome: "Entrada Avulsa",
+          cliente_nome: "Registro de Pagamento",
           servico: "Entrada Manual",
           variacao: descricao.trim(),
           valor: valNum,
@@ -104,7 +104,8 @@ export default function NovaTransacaoModal({ open, onOpenChange, onSuccess, init
       } else {
         // Saída — despesa do estúdio, não precisa de user_id
         const payload = {
-          descricao: descricao.trim(),
+          descricao: "Registro de Gasto",
+          observacao: descricao.trim(),
           valor: valNum,
           categoria: categoria,
           data_vencimento: data,
