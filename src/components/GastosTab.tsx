@@ -104,7 +104,11 @@ const GastosTab = () => {
 
   // Filtros
   const [catFilter, setCatFilter] = useState("Todas");
-  const [mesFilter, setMesFilter] = useState<string>("todos");
+  const [periodoFilter, setPeriodoFilter] = useState<"total" | "semana" | "mes" | "personalizado">("mes");
+  const [dataInicioFilter, setDataInicioFilter] = useState(() => {
+    const d = new Date(); d.setDate(1); return d.toISOString().split("T")[0];
+  });
+  const [dataFimFilter, setDataFimFilter] = useState(() => new Date().toISOString().split("T")[0]);
   const [responsavelFilter, setResponsavelFilter] = useState<"Dona" | "Zelia">("Dona");
 
   // Form
@@ -141,26 +145,31 @@ const GastosTab = () => {
   };
 
   // ─── Computed ─────────────────────────────────────────────────────────────
-  const mesesDisponiveis = useMemo(() => {
-    const set = new Set<string>();
-    gastos.forEach(g => {
-      const [y, m] = g.data_gasto.split("-");
-      set.add(`${y}-${m}`);
-    });
-    return Array.from(set).sort().reverse();
-  }, [gastos]);
-
   const gastosFiltrados = useMemo(() => {
     return gastos.filter(g => {
       if (g.responsavel !== responsavelFilter) return false;
       if (catFilter !== "Todas" && g.categoria !== catFilter) return false;
-      if (mesFilter !== "todos") {
-        const [y, m] = g.data_gasto.split("-");
-        if (`${y}-${m}` !== mesFilter) return false;
+      
+      const gastoDate = new Date(g.data_gasto + "T00:00:00");
+      const hj = new Date();
+      hj.setHours(23, 59, 59, 999);
+      
+      if (periodoFilter === "semana") {
+        const semanaPassada = new Date(hj);
+        semanaPassada.setDate(hj.getDate() - 7);
+        semanaPassada.setHours(0, 0, 0, 0);
+        if (gastoDate < semanaPassada || gastoDate > hj) return false;
+      } else if (periodoFilter === "mes") {
+        if (gastoDate.getMonth() !== hj.getMonth() || gastoDate.getFullYear() !== hj.getFullYear()) return false;
+      } else if (periodoFilter === "personalizado") {
+        const inicio = new Date(dataInicioFilter + "T00:00:00");
+        const fim = new Date(dataFimFilter + "T23:59:59");
+        if (gastoDate < inicio || gastoDate > fim) return false;
       }
+      
       return true;
     });
-  }, [gastos, catFilter, mesFilter, responsavelFilter]);
+  }, [gastos, catFilter, periodoFilter, responsavelFilter, dataInicioFilter, dataFimFilter]);
 
   const totalGeral = useMemo(() => gastos.filter(g => g.responsavel === responsavelFilter).reduce((s, g) => s + Number(g.valor), 0), [gastos, responsavelFilter]);
   const totalFiltrado = useMemo(() => gastosFiltrados.reduce((s, g) => s + Number(g.valor), 0), [gastosFiltrados]);
@@ -354,40 +363,51 @@ const GastosTab = () => {
         ))}
       </div>
 
-      {/* ── Filtro de Mês ── */}
-      <div>
+      {/* ── Filtro de Período ── */}
+      <div className="mb-4">
         <p className="font-body text-[10px] uppercase tracking-widest text-primary-foreground/30 mb-2 px-0.5">
-          Filtrar por período
+          Filtrar por Período
         </p>
-        <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
-          <button
-            onClick={() => setMesFilter("todos")}
-            className={`shrink-0 rounded-full border px-3 py-1.5 font-body text-[11px] font-medium transition-all ${
-              mesFilter === "todos"
-                ? "bg-gold/15 text-gold border-gold/40"
-                : "bg-primary-foreground/[0.04] text-primary-foreground/50 border-primary-foreground/[0.08] hover:text-primary-foreground/70"
-            }`}
-          >
-            Todos
-          </button>
-          {mesesDisponiveis.map(m => {
-            const [y, mo] = m.split("-");
-            const label = `${MONTHS_PT[Number(mo) - 1]} ${y}`;
-            return (
-              <button
-                key={m}
-                onClick={() => setMesFilter(m)}
-                className={`shrink-0 rounded-full border px-3 py-1.5 font-body text-[11px] font-medium transition-all ${
-                  mesFilter === m
-                    ? "bg-orange-500/15 text-orange-400 border-orange-500/40"
-                    : "bg-primary-foreground/[0.04] text-primary-foreground/50 border-primary-foreground/[0.08] hover:text-primary-foreground/70"
-                }`}
-              >
-                {label}
-              </button>
-            );
+        <div className="grid grid-cols-4 gap-1 p-1 bg-primary-foreground/[0.04] rounded-2xl border border-primary-foreground/[0.06]">
+          {(["total", "semana", "mes", "personalizado"] as const).map((p) => {
+             const label = { total: "Total", semana: "Semana", mes: "Mês", personalizado: "Custom" }[p];
+             return (
+               <button
+                 key={p}
+                 onClick={() => setPeriodoFilter(p)}
+                 className={`py-2 rounded-xl text-[11px] font-body font-semibold transition-all ${
+                   periodoFilter === p
+                     ? "bg-gold/15 text-gold border border-gold/40 shadow-sm"
+                     : "text-primary-foreground/50 hover:text-primary-foreground/70"
+                 }`}
+               >
+                 {label}
+               </button>
+             )
           })}
         </div>
+        
+        {periodoFilter === "personalizado" && (
+          <div className="flex gap-2 mt-2.5 items-center bg-primary-foreground/[0.02] p-2 rounded-xl border border-primary-foreground/[0.05]">
+             <div className="flex-1">
+               <input 
+                 type="date" 
+                 value={dataInicioFilter} 
+                 onChange={e => setDataInicioFilter(e.target.value)} 
+                 className="w-full bg-transparent border-none p-0 text-primary-foreground font-body text-[12px] focus:ring-0 [&::-webkit-calendar-picker-indicator]:invert-[0.8]" 
+               />
+             </div>
+             <span className="text-primary-foreground/30 text-[10px] font-medium uppercase px-2">até</span>
+             <div className="flex-1">
+               <input 
+                 type="date" 
+                 value={dataFimFilter} 
+                 onChange={e => setDataFimFilter(e.target.value)} 
+                 className="w-full bg-transparent border-none p-0 text-primary-foreground font-body text-[12px] focus:ring-0 [&::-webkit-calendar-picker-indicator]:invert-[0.8]" 
+               />
+             </div>
+          </div>
+        )}
       </div>
 
       {/* ── Filtro de Categoria ── */}
