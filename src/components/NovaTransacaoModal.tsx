@@ -49,7 +49,6 @@ export default function NovaTransacaoModal({ open, onOpenChange, onSuccess, init
 
   // Saída specific
   const [categoria, setCategoria] = useState("Materiais/Insumos");
-  const [tipoDespesa, setTipoDespesa] = useState<"estudio" | "pessoal">("estudio");
 
   useEffect(() => {
     if (open) {
@@ -61,7 +60,6 @@ export default function NovaTransacaoModal({ open, onOpenChange, onSuccess, init
       setFormaPagamento("pix");
       setContabilizarComissao(false);
       setCategoria("Materiais/Insumos");
-      setTipoDespesa("estudio");
       setSaving(false);
     }
   }, [open]);
@@ -113,7 +111,7 @@ export default function NovaTransacaoModal({ open, onOpenChange, onSuccess, init
           data_vencimento: data,
           pago: true,
           data_pagamento: data,
-          tipo: tipoDespesa,
+          tipo: "estudio",
         };
 
         const { error } = await supabase.from("despesas").insert([payload]);
@@ -257,32 +255,6 @@ export default function NovaTransacaoModal({ open, onOpenChange, onSuccess, init
                 >
                   {CATEGORIAS_SAIDA.map(c => <option key={c} value={c} className="bg-charcoal">{c}</option>)}
                 </select>
-              </div>
-
-              <div className="space-y-1.5 mt-2">
-                <label className="font-body text-[11px] text-primary-foreground/75 uppercase tracking-wider">Tipo do Gasto</label>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setTipoDespesa("estudio")}
-                    className={`flex-1 py-2 text-[12px] font-body rounded-xl border transition-all ${
-                      tipoDespesa === "estudio"
-                        ? "bg-gold/10 border-gold/30 text-gold font-semibold"
-                        : "bg-primary-foreground/[0.02] border-primary-foreground/[0.06] text-primary-foreground/70"
-                    }`}
-                  >
-                    Estúdio (Desconta do Lucro)
-                  </button>
-                  <button
-                    onClick={() => setTipoDespesa("pessoal")}
-                    className={`flex-1 py-2 text-[12px] font-body rounded-xl border transition-all ${
-                      tipoDespesa === "pessoal"
-                        ? "bg-purple-500/10 border-purple-500/30 text-purple-300 font-semibold"
-                        : "bg-primary-foreground/[0.02] border-primary-foreground/[0.06] text-primary-foreground/70"
-                    }`}
-                  >
-                    Pessoal (Retirada)
-                  </button>
-                </div>
               </div>
             </>
           )}
