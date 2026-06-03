@@ -713,22 +713,24 @@ const GastosTab = () => {
               className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] py-2.5 px-3 text-white font-body text-[13px] placeholder:text-white/25 focus:outline-none focus:border-orange-500/40"
             />
 
-            {/* Valor + Data lado a lado */}
-            <div className="grid grid-cols-2 gap-2">
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={valor}
-                onChange={e => setValor(e.target.value)}
-                placeholder="Valor (R$) *"
-                className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] py-2.5 px-3 text-white font-body text-[13px] placeholder:text-white/25 focus:outline-none focus:border-orange-500/40"
-              />
+            {/* Valor */}
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={valor}
+              onChange={e => setValor(e.target.value)}
+              placeholder="Valor (R$) *"
+              className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] py-2.5 px-3 text-white font-body text-[13px] placeholder:text-white/25 focus:outline-none focus:border-orange-500/40"
+            />
+
+            {/* Data */}
+            <div className="relative">
               <input
                 type="date"
                 value={dataGasto}
                 onChange={e => setDataGasto(e.target.value)}
-                className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] py-2.5 px-3 text-white font-body text-[13px] focus:outline-none focus:border-orange-500/40 [&::-webkit-calendar-picker-indicator]:invert-[0.8]"
+                className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] py-2.5 px-3 text-white font-body text-[12px] focus:outline-none focus:border-orange-500/40 [&::-webkit-calendar-picker-indicator]:invert-[0.8]"
               />
             </div>
 
