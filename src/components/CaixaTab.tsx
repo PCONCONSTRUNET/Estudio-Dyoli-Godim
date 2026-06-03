@@ -46,6 +46,54 @@ interface Props {
  getClientName: (userId: string, clienteNome?: string | null) => string;
 }
 
+import { useState, useMemo, useEffect } from "react";
+import {
+ Calendar,
+ Wallet,
+ Settings,
+ ChevronLeft,
+ ChevronRight,
+ Sparkles,
+ CheckCircle2,
+ Clock,
+ Info,
+ Calculator,
+ TrendingUp,
+ Pencil,
+ Check,
+ X,
+ Plus,
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ptBR } from "date-fns/locale";
+import NovaTransacaoModal from "@/components/NovaTransacaoModal";
+
+interface Agendamento {
+ id: string;
+ servico: string;
+ variacao: string | null;
+ data_agendamento: string;
+ horario: string;
+ valor: number;
+ valor_pago: number | null;
+ valor_troco: number | null;
+ valor_gorjeta: number | null;
+ valor_credito: number | null;
+ status: string;
+ created_at: string;
+ user_id: string;
+ cliente_nome: string | null;
+ observacao?: string | null;
+}
+
+interface Props {
+ agendamentos: Agendamento[];
+ getClientName: (userId: string, clienteNome?: string | null) => string;
+}
+
 type FilterPeriod = "hoje" | "semana" | "mes" | "personalizado";
 
 const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
@@ -53,7 +101,7 @@ const formatDateShort = (d: string) =>
  new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 
 const CaixaTab = ({ agendamentos, getClientName }: Props) => {
- const [showNovaTransacao, setShowNovaTransacao] = useState(false);
+ const [modalConfig, setModalConfig] = useState<{open: boolean, tab: "entrada"|"saida"}>({open: false, tab: "entrada"});
  const [caixaDate, setCaixaDate] = useState(new Date().toISOString().split("T")[0]);
  const [period, setPeriod] = useState<FilterPeriod>("mes");
  const [customStart, setCustomStart] = useState("");
@@ -223,9 +271,18 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  </div>
  </div>
  <div className="flex items-center gap-1">
- <button onClick={() => setShowNovaTransacao(true)} className="w-8 h-8 rounded-xl bg-gold/20 border border-gold/30 hover:bg-gold/30 flex items-center justify-center text-gold transition-all" aria-label="Nova transação">
- <Plus className="w-4 h-4" />
- </button>
+  <button onClick={() => setModalConfig({open: true, tab: "entrada"})} className="hidden sm:flex px-3 py-1.5 rounded-xl bg-green-500/15 border border-green-500/30 hover:bg-green-500/25 text-green-400 font-body text-[10px] font-bold uppercase tracking-wider transition-all items-center gap-1.5" aria-label="Registrar Pagamento">
+    <Plus className="w-3.5 h-3.5" /> Pagamento
+  </button>
+  <button onClick={() => setModalConfig({open: true, tab: "saida"})} className="hidden sm:flex px-3 py-1.5 rounded-xl bg-red-500/15 border border-red-500/30 hover:bg-red-500/25 text-red-400 font-body text-[10px] font-bold uppercase tracking-wider transition-all items-center gap-1.5" aria-label="Registrar Gasto">
+    <Plus className="w-3.5 h-3.5" /> Gasto
+  </button>
+  <button onClick={() => setModalConfig({open: true, tab: "entrada"})} className="sm:hidden w-8 h-8 rounded-xl bg-green-500/15 border border-green-500/30 hover:bg-green-500/25 flex items-center justify-center text-green-400 transition-all" aria-label="Nova Entrada">
+    <Plus className="w-4 h-4" />
+  </button>
+  <button onClick={() => setModalConfig({open: true, tab: "saida"})} className="sm:hidden w-8 h-8 rounded-xl bg-red-500/15 border border-red-500/30 hover:bg-red-500/25 flex items-center justify-center text-red-400 transition-all" aria-label="Nova Saída">
+    <Plus className="w-4 h-4" />
+  </button>
  <button onClick={() => setCicloOffset((o) => o - 1)} className="w-8 h-8 rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06] hover:bg-gold/10 hover:border-gold/20 hover:text-gold flex items-center justify-center text-primary-foreground/85 transition-all" aria-label="Ciclo anterior">
  <ChevronLeft className="w-4 h-4" />
  </button>
@@ -797,7 +854,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  </div>
  </DialogContent>
  </Dialog>
- <NovaTransacaoModal open={showNovaTransacao} onOpenChange={setShowNovaTransacao} onSuccess={() => window.location.reload()} />
+ <NovaTransacaoModal open={modalConfig.open} onOpenChange={(open) => setModalConfig(prev => ({...prev, open}))} initialTab={modalConfig.tab} onSuccess={() => window.location.reload()} />
  </div>
  );
 };

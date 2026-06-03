@@ -9,6 +9,7 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  initialTab?: "entrada" | "saida";
 }
 
 const CATEGORIAS_SAIDA = [
@@ -33,8 +34,8 @@ const FORMAS_PAGAMENTO = [
   { id: "boleto", label: "Boleto" },
 ];
 
-export default function NovaTransacaoModal({ open, onOpenChange, onSuccess }: Props) {
-  const [tab, setTab] = useState<"entrada" | "saida">("entrada");
+export default function NovaTransacaoModal({ open, onOpenChange, onSuccess, initialTab = "entrada" }: Props) {
+  const [tab, setTab] = useState<"entrada" | "saida">(initialTab);
   const [saving, setSaving] = useState(false);
 
   // Common
@@ -53,7 +54,7 @@ export default function NovaTransacaoModal({ open, onOpenChange, onSuccess }: Pr
   useEffect(() => {
     if (open) {
       // Reset form
-      setTab("entrada");
+      setTab(initialTab);
       setData(new Date().toISOString().split("T")[0]);
       setValor("");
       setDescricao("");

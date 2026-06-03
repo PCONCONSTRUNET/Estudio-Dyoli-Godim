@@ -25,6 +25,33 @@ const COLORS = [
   "hsl(40 40% 55%)",    // gold
   "hsl(142 71% 45%)",   // green
   "hsl(24 80% 55%)",    // orange
+import { useState, useMemo, useRef, useEffect } from "react";
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
+import { Calendar, Download, FileText, Table2, TrendingUp, Wallet, X, Percent, Settings, ArrowDown, ChevronLeft, ChevronRight, Sparkles, CheckCircle2, Clock, FileSpreadsheet, Brain, Plus } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import AnaliseCancelamentosModal from "@/components/AnaliseCancelamentosModal";
+import NovaTransacaoModal from "@/components/NovaTransacaoModal";
+
+interface Agendamento {
+  id: string; servico: string; variacao: string | null; data_agendamento: string;
+  horario: string; valor: number; valor_pago: number | null;
+  valor_troco: number | null; valor_gorjeta: number | null; valor_credito: number | null;
+  status: string;
+  created_at: string; user_id: string; cliente_nome: string | null; observacao?: string | null;
+}
+
+interface Props {
+  agendamentos: Agendamento[];
+  getClientName: (userId: string, clienteNome?: string | null) => string;
+}
+
+type FilterPeriod = "hoje" | "semana" | "mes" | "personalizado";
+
+const COLORS = [
+  "hsl(340 30% 50%)",   // rose
+  "hsl(40 40% 55%)",    // gold
+  "hsl(142 71% 45%)",   // green
+  "hsl(24 80% 55%)",    // orange
   "hsl(262 52% 47%)",   // purple
   "hsl(199 89% 48%)",   // blue
 ];
@@ -32,7 +59,7 @@ const COLORS = [
 const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
 
 const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
-  const [showNovaTransacao, setShowNovaTransacao] = useState(false);
+  const [modalConfig, setModalConfig] = useState<{open: boolean, tab: "entrada"|"saida"}>({open: false, tab: "entrada"});
   const [period, setPeriod] = useState<FilterPeriod>("mes");
   const [analiseOpen, setAnaliseOpen] = useState(false);
   const [customStart, setCustomStart] = useState("");
@@ -491,9 +518,19 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
           <TrendingUp className="w-5 h-5 text-gold" /> Financeiro
         </h2>
         <div className="flex gap-1.5">
-          <button onClick={() => setShowNovaTransacao(true)} className="px-3 py-2 rounded-xl bg-gold/20 hover:bg-gold/30 border border-gold/30 text-gold transition-all flex items-center gap-1.5" title="Registrar Nova Transação">
+          <button onClick={() => setModalConfig({open: true, tab: "entrada"})} className="hidden sm:flex px-3 py-1.5 rounded-xl bg-green-500/15 border border-green-500/30 hover:bg-green-500/25 text-green-400 transition-all items-center gap-1.5" title="Registrar Pagamento">
             <Plus className="w-4 h-4" />
-            <span className="font-body text-[11px] font-semibold uppercase tracking-wider hidden sm:inline">Nova Transação</span>
+            <span className="font-body text-[11px] font-semibold uppercase tracking-wider">Pagamento</span>
+          </button>
+          <button onClick={() => setModalConfig({open: true, tab: "saida"})} className="hidden sm:flex px-3 py-1.5 rounded-xl bg-red-500/15 border border-red-500/30 hover:bg-red-500/25 text-red-400 transition-all items-center gap-1.5" title="Registrar Gasto">
+            <Plus className="w-4 h-4" />
+            <span className="font-body text-[11px] font-semibold uppercase tracking-wider">Gasto</span>
+          </button>
+          <button onClick={() => setModalConfig({open: true, tab: "entrada"})} className="sm:hidden w-9 h-9 rounded-xl bg-green-500/15 border border-green-500/30 hover:bg-green-500/25 flex items-center justify-center text-green-400 transition-all" title="Registrar Pagamento">
+            <Plus className="w-4 h-4" />
+          </button>
+          <button onClick={() => setModalConfig({open: true, tab: "saida"})} className="sm:hidden w-9 h-9 rounded-xl bg-red-500/15 border border-red-500/30 hover:bg-red-500/25 flex items-center justify-center text-red-400 transition-all" title="Registrar Gasto">
+            <Plus className="w-4 h-4" />
           </button>
           <button onClick={exportCSV} className="p-2 rounded-xl hover:bg-green-500/10 text-primary-foreground/95 hover:text-green-500 transition-all" title="Exportar planilha de agendamentos">
             <Table2 className="w-4 h-4" />
@@ -870,7 +907,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
 
       {/* Modals */}
       <AnaliseCancelamentosModal open={analiseOpen} onOpenChange={setAnaliseOpen} />
-      <NovaTransacaoModal open={showNovaTransacao} onOpenChange={setShowNovaTransacao} onSuccess={() => window.location.reload()} />
+      <NovaTransacaoModal open={modalConfig.open} onOpenChange={(open) => setModalConfig(prev => ({...prev, open}))} initialTab={modalConfig.tab} onSuccess={() => window.location.reload()} />
     </div>
   );
 };
