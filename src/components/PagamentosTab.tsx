@@ -214,9 +214,9 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
         valor_fatura: d.valor,
         data_fatura: d.data_pagamento || d.data_vencimento || d.created_at?.split("T")[0],
         status: d.pago ? "pago" : "pendente_saida",
-        cliente_nome: d.categoria || "Geral",
-        servico: d.descricao || "Saída Registrada",
-        horario: "00:00",
+        cliente_nome: d.descricao || "Saída Registrada",
+        servico: d.categoria || "Geral",
+        horario: d.created_at ? `${String(new Date(d.created_at).getHours()).padStart(2, "0")}:${String(new Date(d.created_at).getMinutes()).padStart(2, "0")}` : "23:59",
         forma_pagamento: "dinheiro",
         _is_saida: true,
         _desc_pagamento: d.tipo === "pessoal" ? "Retirada Pessoal" : "Despesa Estúdio",
@@ -443,24 +443,24 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
               {isExpanded && (
                 <div className="border-t border-primary-foreground/[0.06] bg-primary-foreground/[0.02] px-4 py-3 space-y-3">
                   <div className="grid grid-cols-2 gap-3">
-                    <Detail label="ID do Pedido (Original)" value={ag.id.slice(0, 8) + "..."} />
-                    <Detail label="Data Base do Agend." value={`${formatDate(ag.data_agendamento)} às ${ag.horario}`} />
+                    <Detail label={ag._is_saida ? "ID da Despesa" : "ID do Pedido (Original)"} value={ag.id.slice(0, 8) + "..."} />
+                    <Detail label={ag._is_saida ? "Data do Gasto" : "Data Base do Agend."} value={`${formatDate(ag.data_agendamento || ag.data_fatura)}${ag.horario !== "00:00" ? ` às ${ag.horario}` : ""}`} />
                     <Detail label="Método de Pagamento" value={
                       <span className="flex items-center gap-1.5">
                         {paymentIcon(ag.forma_pagamento)}
                         {paymentLabel(ag.forma_pagamento)}
                       </span>
                     } />
-                    <Detail label="Duração" value={`${ag.duracao_minutos} min`} />
-                    <Detail label="Valor Desta Fatura" value={formatCurrency(ag.valor_fatura)} />
-                    <Detail label="Valor Total Original" value={formatCurrency(ag.valor)} />
-                    <Detail label="Status da Fatura" value={
+                    {!ag._is_saida && <Detail label="Duração" value={`${ag.duracao_minutos} min`} />}
+                    <Detail label={ag._is_saida ? "Valor da Saída" : "Valor Desta Fatura"} value={formatCurrency(ag.valor_fatura)} />
+                    {!ag._is_saida && <Detail label="Valor Total Original" value={formatCurrency(ag.valor)} />}
+                    <Detail label={ag._is_saida ? "Status" : "Status da Fatura"} value={
                       <span className={`inline-flex items-center gap-1 ${cfg.text}`}>
                         <StatusIcon className="h-3 w-3" />
                         {isPendingAmount ? "Pendente" : "Pago"}
                       </span>
                     } />
-                    <Detail label="Status do Serviço" value={ag.status.charAt(0).toUpperCase() + ag.status.slice(1)} />
+                    {!ag._is_saida && ag.status && <Detail label="Status do Serviço" value={ag.status.charAt(0).toUpperCase() + ag.status.slice(1)} />}
                     {Number(ag.valor_gorjeta) > 0 && (
                       <Detail label="Gorjeta" value={<span className="text-purple-400">{formatCurrency(Number(ag.valor_gorjeta))}</span>} />
                     )}
