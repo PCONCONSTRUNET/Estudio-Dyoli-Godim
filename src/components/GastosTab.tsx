@@ -412,33 +412,41 @@ const GastosTab = () => {
 
       {/* ── Filtro de Categoria ── */}
       <div className="mb-2">
-        <p className="font-body text-[10px] uppercase tracking-widest text-primary-foreground/60 mb-2 px-0.5">
+        <p className="font-body text-[10px] uppercase tracking-widest text-white/60 mb-2 px-0.5">
           Filtrar por Categoria
         </p>
         <Select value={catFilter} onValueChange={setCatFilter}>
           <SelectTrigger 
-            className="w-full rounded-2xl border-primary-foreground/[0.08] bg-primary-foreground/[0.04] py-5 text-[13px] font-body"
+            className="w-full rounded-2xl border border-white/10 bg-white/[0.06] py-5 text-[13px] font-body text-white"
             style={catFilter !== "Todas" ? {
-              backgroundColor: `${CATEGORIA_COLORS[catFilter]}15`,
-              borderColor: `${CATEGORIA_COLORS[catFilter]}30`,
-              color: CATEGORIA_COLORS[catFilter]
-            } : {}}
+              backgroundColor: `${CATEGORIA_COLORS[catFilter]}20`,
+              borderColor: `${CATEGORIA_COLORS[catFilter]}50`,
+              color: CATEGORIA_COLORS[catFilter],
+            } : { color: "rgba(255,255,255,0.85)" }}
           >
             <SelectValue placeholder="Todas as Categorias" />
           </SelectTrigger>
-          <SelectContent className="bg-charcoal text-primary-foreground border-primary-foreground/[0.1]">
-            <SelectItem value="Todas" className="font-body text-[12px] focus:bg-primary-foreground/[0.05] focus:text-primary-foreground">
+          <SelectContent 
+            className="font-body border border-white/10 shadow-2xl"
+            style={{ backgroundColor: "#1a1a1a", color: "#ffffff" }}
+          >
+            <SelectItem 
+              value="Todas" 
+              className="font-body text-[13px] cursor-pointer"
+              style={{ color: "#e5e5e5" }}
+            >
               Todas as Categorias
             </SelectItem>
             {CATEGORIAS.map(cat => (
               <SelectItem 
                 key={cat} 
                 value={cat}
-                className="font-body text-[12px] focus:bg-primary-foreground/[0.05] focus:text-primary-foreground"
+                className="font-body text-[13px] cursor-pointer"
+                style={{ color: "#e5e5e5" }}
               >
-                <span className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: CATEGORIA_COLORS[cat] }} />
-                  <span className="text-primary-foreground">{cat}</span>
+                <span className="flex items-center gap-2.5">
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: CATEGORIA_COLORS[cat] }} />
+                  <span>{cat}</span>
                 </span>
               </SelectItem>
             ))}
