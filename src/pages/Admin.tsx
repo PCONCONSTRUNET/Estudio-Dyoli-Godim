@@ -27,6 +27,7 @@ import FinanceiroTab from "@/components/FinanceiroTab";
 import CaixaTab from "@/components/CaixaTab";
 import DividasTab from "@/components/DividasTab";
 import DespesasTab from "@/components/DespesasTab";
+import GastosTab from "@/components/GastosTab";
 import PedidosTab from "@/components/PedidosTab";
 import BinButton from "@/components/ui/bin-button";
 import GatewayTab from "@/components/GatewayTab";
@@ -54,7 +55,7 @@ interface Agendamento {
 interface Profile { id: string; nome: string; whatsapp: string; cpf?: string | null; created_at: string; credito_saldo?: number | null; }
 interface LembreteConfig { id: string; tipo: string; ativo: boolean; mensagem: string; horas_antes: number; }
 
-type Tab = "dashboard" | "agendamentos" | "pedidos" | "clientes" | "horarios" | "servicos" | "servicos_app" | "financeiro" | "caixa" | "dividas" | "pagamentos" | "produtos" | "despesas" | "gateway" | "chatbot" | "anamnese" | "avaliacoes";
+type Tab = "dashboard" | "agendamentos" | "pedidos" | "clientes" | "horarios" | "servicos" | "servicos_app" | "financeiro" | "caixa" | "dividas" | "pagamentos" | "produtos" | "despesas" | "gastos" | "gateway" | "chatbot" | "anamnese" | "avaliacoes";
 
 const ADMIN_PASSWORD = "dyoliadmin";
 
@@ -595,6 +596,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     { id: "dividas", label: "Dívidas", icon: CreditCard, anim: "tab-icon-bounce", color: "#f43f5e" },
     { id: "pagamentos", label: "Pagamentos", icon: CreditCard, anim: "tab-icon-swipe", color: "#3b82f6" },
     { id: "despesas", label: "Despesas", icon: Receipt, anim: "tab-icon-shake", color: "#ef4444" },
+    { id: "gastos", label: "Gastos", icon: ShoppingBag, anim: "tab-icon-bounce", color: "#f97316" },
     { id: "clientes", label: "Clientes", icon: Users, anim: "tab-icon-wave", color: "#a855f7" },
     { id: "anamnese", label: "Anamnese", icon: FileText, anim: "tab-icon-bounce", color: "#ec4899" },
     { id: "avaliacoes", label: "Avaliações", icon: Star, anim: "tab-icon-bounce", color: "#fbbf24" },
@@ -2797,6 +2799,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
           {tab === "pagamentos" && <PagamentosTab agendamentos={agendamentos} getClientName={getClientName} onUpdate={loadData} />}
           {tab === "pedidos" && <PedidosTab agendamentos={agendamentos} getClientName={getClientName} clientes={clientes} onUpdate={loadData} />}
           {tab === "despesas" && <DespesasTab />}
+          {tab === "gastos" && <GastosTab />}
           {tab === "anamnese" && <AnamneseTab />}
           {tab === "avaliacoes" && <AvaliacoesTab />}
           {tab === "produtos" && <ProdutosTab />}
