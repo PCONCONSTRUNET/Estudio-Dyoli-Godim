@@ -187,7 +187,7 @@ const GastosTab = () => {
       const [, m] = key.split("-");
       return { mes: MONTHS_PT[Number(m) - 1], total };
     });
-  }, [gastos]);
+  }, [gastos, responsavelFilter]);
 
   // Dados para PieChart por categoria
   const dadosCategoria = useMemo(() => {
