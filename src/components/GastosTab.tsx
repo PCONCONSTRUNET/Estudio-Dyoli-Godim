@@ -456,7 +456,12 @@ const GastosTab = () => {
 
       {/* ── Gráficos ── */}
       {gastos.length > 0 && (
-        <div className="rounded-3xl border border-primary-foreground/[0.06] bg-transparent overflow-hidden">
+        <div className="overflow-hidden">
+          <style>{`
+            .recharts-wrapper, .recharts-surface, .recharts-wrapper > svg {
+              background: transparent !important;
+            }
+          `}</style>
           {/* Toggle gráfico */}
           <div className="flex border-b border-primary-foreground/[0.06]">
             {(["mensal", "categoria"] as const).map(v => (
@@ -482,7 +487,7 @@ const GastosTab = () => {
                     Últimos {dadosMensais.length} meses
                   </p>
                   <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={dadosMensais} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                  <BarChart data={dadosMensais} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} style={{ background: "transparent" }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
                       <XAxis
                         dataKey="mes"
@@ -513,7 +518,7 @@ const GastosTab = () => {
                     Total: {formatCurrency(totalFiltrado)}
                   </p>
                   <ResponsiveContainer width="100%" height={220}>
-                    <PieChart>
+                    <PieChart style={{ background: "transparent" }}>
                       <Pie
                         data={dadosCategoria}
                         cx="50%"
