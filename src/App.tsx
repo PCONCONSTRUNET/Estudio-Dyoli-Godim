@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ConfirmProvider } from "@/contexts/ConfirmContext";
 import Admin from "./pages/Admin";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
@@ -26,8 +27,9 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
+    <ConfirmProvider>
+      <TooltipProvider>
+        <Toaster />
       <Sonner />
       <BrowserRouter>
         <Routes>
@@ -51,7 +53,8 @@ const App = () => (
         <PushPromptModal excludePaths={["/admin", "/auth"]} />
         <InstallAppBanner />
       </BrowserRouter>
-    </TooltipProvider>
+      </TooltipProvider>
+    </ConfirmProvider>
   </QueryClientProvider>
 );
 

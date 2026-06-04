@@ -221,12 +221,12 @@ const AnamneseTab = () => {
  {/* Search + filtros */}
  <div className="flex flex-col sm:flex-row gap-2">
  <div className="relative flex-1">
- <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/95" />
+ <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
  <input
  value={search}
  onChange={(e) => setSearch(e.target.value)}
  placeholder="Buscar por nome ou WhatsApp..."
- className="w-full h-11 pl-10 pr-3 rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] text-primary-foreground text-[13px] font-body placeholder:text-primary-foreground/95 focus:border-gold/40 focus:outline-none"
+ className="w-full h-11 pl-10 pr-3 rounded-xl bg-white/[0.05] border border-white/10 text-white text-[13px] font-body placeholder:text-white/50 focus:border-gold/40 focus:outline-none"
  />
  </div>
  <div className="flex gap-1 rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] p-1 overflow-x-auto">

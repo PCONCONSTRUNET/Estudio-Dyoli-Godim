@@ -73,10 +73,8 @@ export default function NovaTransacaoModal({ open, onOpenChange, onSuccess, init
 
     try {
       if (tab === "entrada") {
-        // Entrada precisa do user_id para associar ao agendamento
         const { data: userData } = await supabase.auth.getUser();
-        const userId = userData.user?.id;
-        if (!userId) throw new Error("Usuário não autenticado");
+        const userId = userData.user?.id || null;
 
         const now = new Date();
         const horario = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
@@ -131,19 +129,19 @@ export default function NovaTransacaoModal({ open, onOpenChange, onSuccess, init
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md w-[90vw] p-0 border-primary-foreground/[0.08] overflow-hidden rounded-2xl bg-[#0a0a0a]">
+      <DialogContent className="sm:max-w-[340px] w-[calc(100vw-2rem)] p-0 border-primary-foreground/[0.08] overflow-hidden rounded-2xl bg-[#0a0a0a]">
         <div className="relative overflow-hidden">
           <div className={`pointer-events-none absolute -top-24 -right-12 w-48 h-48 rounded-full blur-3xl ${tab === "entrada" ? "bg-green-500/15" : "bg-red-500/15"}`} />
           
-          <DialogHeader className="relative px-5 pt-5 pb-3 border-b border-primary-foreground/[0.06]">
-            <DialogTitle className="font-heading text-lg font-bold text-primary-foreground">
+          <DialogHeader className="relative px-4 pt-4 pb-2 border-b border-primary-foreground/[0.06]">
+            <DialogTitle className="font-heading text-[16px] font-bold text-primary-foreground">
               Nova Transação
             </DialogTitle>
           </DialogHeader>
         </div>
 
         {/* Tabs */}
-        <div className="px-5 pt-4">
+        <div className="px-4 pt-3">
           <div className="flex p-1 rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06]">
             <button
               onClick={() => setTab("entrada")}
@@ -165,60 +163,60 @@ export default function NovaTransacaoModal({ open, onOpenChange, onSuccess, init
         </div>
 
         {/* Form */}
-        <div className="px-5 py-5 space-y-4 max-h-[60vh] overflow-y-auto scrollbar-thin">
-          <div className="space-y-1.5">
-            <label className="font-body text-[11px] text-primary-foreground/75 uppercase tracking-wider">Valor (R$)</label>
+        <div className="px-4 py-4 space-y-3 max-h-[65vh] overflow-y-auto scrollbar-thin">
+          <div className="space-y-1">
+            <label className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-wider">Valor (R$)</label>
             <div className="relative">
-              <DollarSign className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${tab === "entrada" ? "text-green-400" : "text-red-400"}`} />
+              <DollarSign className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 ${tab === "entrada" ? "text-green-400" : "text-red-400"}`} />
               <input
                 type="number"
                 step="0.01"
                 placeholder="0.00"
                 value={valor}
                 onChange={(e) => setValor(e.target.value)}
-                className="w-full bg-primary-foreground/[0.03] border border-primary-foreground/[0.08] rounded-xl py-2.5 pl-9 pr-3 text-primary-foreground font-heading text-[16px] focus:outline-none focus:border-gold/30"
+                className="w-full bg-primary-foreground/[0.03] border border-primary-foreground/[0.08] rounded-xl py-2 pl-8 pr-3 text-primary-foreground font-heading text-[15px] focus:outline-none focus:border-gold/30"
               />
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="font-body text-[11px] text-primary-foreground/75 uppercase tracking-wider">
+          <div className="space-y-1">
+            <label className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-wider">
               {tab === "entrada" ? "Título / Origem" : "Descrição do Gasto"}
             </label>
             <div className="relative">
-              <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/50" />
+              <FileText className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-primary-foreground/50" />
               <input
                 type="text"
                 placeholder={tab === "entrada" ? "Ex: Venda de Produto" : "Ex: Compra de materiais"}
                 value={descricao}
                 onChange={(e) => setDescricao(e.target.value)}
-                className="w-full bg-primary-foreground/[0.03] border border-primary-foreground/[0.08] rounded-xl py-2 pl-9 pr-3 text-primary-foreground font-body text-[16px] sm:text-[13px] focus:outline-none focus:border-gold/30"
+                className="w-full bg-primary-foreground/[0.03] border border-primary-foreground/[0.08] rounded-xl py-1.5 pl-8 pr-3 text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/30"
               />
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="font-body text-[11px] text-primary-foreground/75 uppercase tracking-wider">Data</label>
+          <div className="space-y-1">
+            <label className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-wider">Data</label>
             <div className="relative">
               <input
                 type="date"
                 value={data}
                 onChange={(e) => setData(e.target.value)}
-                className="w-full appearance-none block max-w-full bg-primary-foreground/[0.03] border border-primary-foreground/[0.08] rounded-xl py-2 px-3 text-primary-foreground font-body text-[16px] sm:text-[13px] focus:outline-none focus:border-gold/30 [&::-webkit-calendar-picker-indicator]:invert-[0.8]"
+                className="w-full appearance-none block max-w-full bg-primary-foreground/[0.03] border border-primary-foreground/[0.08] rounded-xl py-1.5 px-2.5 text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/30 [&::-webkit-calendar-picker-indicator]:invert-[0.8]"
               />
             </div>
           </div>
 
           {tab === "entrada" && (
             <>
-              <div className="space-y-1.5">
-                <label className="font-body text-[11px] text-primary-foreground/75 uppercase tracking-wider">Forma de Pagamento</label>
-                <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-wider">Forma de Pagamento</label>
+                <div className="grid grid-cols-2 gap-1.5">
                   {FORMAS_PAGAMENTO.map(f => (
                     <button
                       key={f.id}
                       onClick={() => setFormaPagamento(f.id)}
-                      className={`py-2 px-2 text-[12px] font-body rounded-xl border transition-all ${
+                      className={`py-1.5 px-2 text-[11px] font-body rounded-xl border transition-all ${
                         formaPagamento === f.id
                           ? "bg-green-500/10 border-green-500/30 text-green-400 font-semibold"
                           : "bg-primary-foreground/[0.02] border-primary-foreground/[0.06] text-primary-foreground/70"
@@ -230,31 +228,31 @@ export default function NovaTransacaoModal({ open, onOpenChange, onSuccess, init
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-purple-500/[0.05] border border-purple-500/15 flex items-center justify-between gap-3 mt-2">
+              <div className="p-2.5 rounded-xl bg-purple-500/[0.05] border border-purple-500/15 flex items-center justify-between gap-3 mt-1">
                 <div>
-                  <p className="font-body text-[13px] font-medium text-purple-200 flex items-center gap-1.5">
+                  <p className="font-body text-[12px] font-medium text-purple-200 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5" /> Contabilizar Comissão
                   </p>
-                  <p className="font-body text-[10px] text-purple-300/60 leading-tight mt-0.5">
-                    Ative se esse valor deve somar na sua comissão do período.
+                  <p className="font-body text-[9px] text-purple-300/60 leading-tight mt-0.5">
+                    Ative se esse valor deve somar na sua comissão.
                   </p>
                 </div>
-                <Switch checked={contabilizarComissao} onCheckedChange={setContabilizarComissao} />
+                <Switch checked={contabilizarComissao} onCheckedChange={setContabilizarComissao} className="scale-75 origin-right" />
               </div>
             </>
           )}
 
           {tab === "saida" && (
             <>
-              <div className="space-y-1.5">
-                <label className="font-body text-[11px] text-primary-foreground/75 uppercase tracking-wider">Categoria</label>
+              <div className="space-y-1">
+                <label className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-wider">Categoria</label>
                 <input
                   type="text"
                   list="categorias-saida-list"
                   value={categoria}
                   onChange={(e) => setCategoria(e.target.value)}
                   placeholder="Selecione ou digite"
-                  className="w-full bg-primary-foreground/[0.03] border border-primary-foreground/[0.08] rounded-xl py-2 pl-3 pr-3 text-primary-foreground font-body text-[16px] sm:text-[13px] focus:outline-none focus:border-gold/30"
+                  className="w-full bg-primary-foreground/[0.03] border border-primary-foreground/[0.08] rounded-xl py-1.5 px-2.5 text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/30"
                 />
                 <datalist id="categorias-saida-list">
                   {CATEGORIAS_SAIDA.map(c => <option key={c} value={c}>{c}</option>)}
@@ -264,22 +262,22 @@ export default function NovaTransacaoModal({ open, onOpenChange, onSuccess, init
           )}
         </div>
 
-        <div className="px-5 py-4 border-t border-primary-foreground/[0.06] bg-primary-foreground/[0.02]">
+        <div className="px-4 py-3 border-t border-primary-foreground/[0.06] bg-primary-foreground/[0.02]">
           <button
             onClick={handleSave}
             disabled={saving}
-            className={`w-full py-3 rounded-xl font-body text-[13px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+            className={`w-full py-2.5 rounded-xl font-body text-[12px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
               saving ? "opacity-50 cursor-not-allowed bg-primary-foreground/10 text-primary-foreground/50" 
                      : tab === "entrada" 
-                        ? "bg-green-500 text-green-950 hover:bg-green-400" 
-                        : "bg-red-500 text-red-950 hover:bg-red-400"
+                        ? "bg-green-500 text-green-950 hover:bg-green-400 shadow-[0_0_10px_rgb(34_197_94_/_0.15)]" 
+                        : "bg-red-500 text-red-950 hover:bg-red-400 shadow-[0_0_10px_rgb(239_68_68_/_0.15)]"
             }`}
           >
             {saving ? (
               "Salvando..."
             ) : (
               <>
-                <Check className="w-4 h-4" /> {tab === "entrada" ? "Registrar Entrada" : "Registrar Saída"}
+                <Check className="w-3.5 h-3.5" /> {tab === "entrada" ? "Registrar Entrada" : "Registrar Saída"}
               </>
             )}
           </button>

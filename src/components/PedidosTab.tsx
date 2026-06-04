@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { notifyAgendamentoConfirmadoById, notifyLembreteById } from "@/lib/notify-webhook";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
+import { useConfirm } from "@/contexts/ConfirmContext";
 
 interface Agendamento {
   id: string;
@@ -94,6 +95,7 @@ const matchesPagamentoFilter = (
 };
 
 const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Props) => {
+  const { confirm } = useConfirm();
   const [devedoresOpen, setDevedoresOpen] = useState(false);
   const [expandedDevedorId, setExpandedDevedorId] = useState<string | null>(null);
   const getClienteWhatsapp = (userId: string): string => clientes.find((c) => c.id === userId)?.whatsapp || "";
@@ -215,10 +217,17 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     }
   };
 
-  const deleteAgendamento = async (id: string) => {
-    await supabase.from("agendamentos").delete().eq("id", id);
-    onUpdate();
-    toast.success("Pedido excluído");
+  const deleteAgendamento = (id: string) => {
+    confirm({
+      title: "Excluir Pedido",
+      description: "Esta ação apagará permanentemente o agendamento.",
+      variant: "destructive",
+      onConfirm: async () => {
+        await supabase.from("agendamentos").delete().eq("id", id);
+        onUpdate();
+        toast.success("Pedido excluído");
+      }
+    });
   };
 
   const statusBadge = (s: string) => {
@@ -338,12 +347,18 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     }
   };
 
-  const registrarPagamentoIntegral = async (a: Agendamento) => {
-    const total = Number(a.valor);
-    await supabase.from("agendamentos").update({ valor_pago: total }).eq("id", a.id);
-    await logPagamento(a, total, "quitar");
-    onUpdate();
-    toast.success("Pagamento registrado como quitado");
+  const registrarPagamentoIntegral = (a: Agendamento) => {
+    confirm({
+      title: "Quitar Pagamento",
+      description: "Deseja marcar este agendamento como totalmente pago?",
+      onConfirm: async () => {
+        const total = Number(a.valor);
+        await supabase.from("agendamentos").update({ valor_pago: total }).eq("id", a.id);
+        await logPagamento(a, total, "quitar");
+        onUpdate();
+        toast.success("Pagamento registrado como quitado");
+      }
+    });
   };
 
   const [pagamentoAg, setPagamentoAg] = useState<Agendamento | null>(null);
@@ -1060,7 +1075,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
 
       {/* Modal: Registrar pagamento (sinal ou restante) */}
       <Dialog open={!!pagamentoAg} onOpenChange={(open) => { if (!open) { setPagamentoAg(null); setPagamentoInput(""); } }}>
-        <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-md mx-auto max-h-[85vh] overflow-y-auto bg-charcoal border-primary-foreground/[0.06] rounded-2xl p-0 shadow-xl">
+        <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-[360px] mx-auto bg-charcoal border-primary-foreground/[0.08] rounded-2xl p-0 sm:p-0 shadow-2xl overflow-hidden">
           {pagamentoAg && (() => {
             const valorTotal = Number(pagamentoAg.valor);
             const jaPago = Number(pagamentoAg.valor_pago || 0);
@@ -1075,48 +1090,53 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
               { label: `Restante (${formatCurrency(restante)})`, valor: restante },
             ];
             return (
-              <div className="p-5 space-y-4 max-w-md mx-auto">
+              <div className="p-4 space-y-3 mx-auto w-full">
+                <DialogHeader>
+                  <DialogTitle className="font-heading text-[16px] font-semibold text-primary-foreground">Registrar Pagamento</DialogTitle>
+                </DialogHeader>
                 <div>
-                  <p className="font-heading text-[18px] font-semibold text-primary-foreground">Registrar pagamento</p>
-                  <p className="font-body text-[12px] text-primary-foreground/85 mt-0.5">
+                  <p className="font-body text-[11px] text-primary-foreground/70 mt-0.5 truncate">
                     {getClientName(pagamentoAg.user_id, pagamentoAg.cliente_nome)} · {pagamentoAg.servico}
                   </p>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 rounded-xl border border-primary-foreground/[0.08] bg-primary-foreground/[0.03] p-3 text-[11px] font-body">
+                <div className="grid grid-cols-3 gap-1.5 rounded-xl border border-primary-foreground/[0.08] bg-primary-foreground/[0.03] p-2 text-[10px] font-body">
                   <div>
-                    <p className="text-primary-foreground/75 text-[9px] uppercase tracking-wider">Total</p>
-                    <p className="text-primary-foreground/90 font-medium">{formatCurrency(valorTotal)}</p>
+                    <p className="text-primary-foreground/60 text-[8px] uppercase tracking-wider mb-0.5">Total</p>
+                    <p className="text-primary-foreground/90 font-semibold">{formatCurrency(valorTotal)}</p>
                   </div>
                   <div>
-                    <p className="text-primary-foreground/75 text-[9px] uppercase tracking-wider">Já pago</p>
+                    <p className="text-green-400/70 text-[8px] uppercase tracking-wider mb-0.5">Já pago</p>
                     <p className="text-green-400 font-semibold">{formatCurrency(jaPago)}</p>
                   </div>
                   <div>
-                    <p className="text-primary-foreground/75 text-[9px] uppercase tracking-wider">A receber</p>
-                    <p className="text-amber-300 font-bold">{formatCurrency(restante)}</p>
+                    <p className="text-amber-300/70 text-[8px] uppercase tracking-wider mb-0.5">A receber</p>
+                    <p className="text-amber-300 font-semibold">{formatCurrency(restante)}</p>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="font-body text-[11px] text-primary-foreground/95 uppercase tracking-wider">Valor recebido agora</label>
-                  <div className="flex items-center gap-2 rounded-xl border border-primary-foreground/[0.1] bg-primary-foreground/[0.04] px-3 py-2.5">
-                    <span className="font-heading text-[16px] text-primary-foreground/85">R$</span>
+                <div className="space-y-1.5 pt-1">
+                  <label className="font-body text-[10px] font-bold text-gold uppercase tracking-[0.05em] flex items-center gap-1.5">
+                    Valor recebido agora
+                  </label>
+                  <div className="relative group">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-heading text-lg text-primary-foreground/50 group-focus-within:text-gold transition-colors">R$</span>
                     <input
                       type="text"
                       inputMode="decimal"
+                      autoFocus
+                      placeholder="0,00"
                       value={pagamentoInput}
                       onChange={(e) => setPagamentoInput(e.target.value.replace(/[^\d,.]/g, ""))}
-                      className="flex-1 bg-transparent border-0 font-heading text-[20px] font-bold text-primary-foreground focus:outline-none"
-                      placeholder="0,00"
+                      className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.08] text-primary-foreground font-heading text-xl font-bold focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-all"
                     />
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-1.5 pt-1">
                     {presets.filter((p) => p.valor > 0).map((p) => (
                       <button
                         key={p.label}
                         onClick={() => setPagamentoInput(p.valor.toFixed(2).replace(".", ","))}
-                        className="rounded-full border border-gold/25 bg-gold/5 px-3 py-1 font-body text-[11px] text-gold/80 hover:bg-gold/15 hover:text-gold transition-all"
+                        className="rounded-full border border-gold/20 bg-gold/[0.04] px-2.5 py-1 font-body text-[10px] text-gold/80 hover:bg-gold/15 hover:text-gold transition-all"
                       >
                         {p.label}
                       </button>
@@ -1124,41 +1144,30 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-primary-foreground/[0.08] bg-primary-foreground/[0.03] p-3 space-y-1 text-[12px] font-body">
-                  <div className="flex justify-between">
-                    <span className="text-primary-foreground/85">Pago após registro</span>
+                <div className="rounded-xl border border-primary-foreground/[0.08] bg-primary-foreground/[0.03] p-2.5 space-y-1 text-[11px] font-body mt-1">
+                  <div className="flex justify-between items-center">
+                    <span className="text-primary-foreground/75">Pago após registro</span>
                     <span className="text-green-400 font-semibold">{formatCurrency(novoTotal)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-primary-foreground/85">Ainda a receber</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-primary-foreground/75">Ainda a receber</span>
                     <span className={`font-bold ${novoRestante === 0 ? "text-green-400" : "text-amber-300"}`}>{formatCurrency(novoRestante)}</span>
                   </div>
-                  <div className="pt-1 mt-1 border-t border-primary-foreground/[0.06] flex items-center gap-1.5">
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
+                  <div className="pt-1.5 mt-1.5 border-t border-primary-foreground/[0.06] flex items-center justify-between">
+                    <span className="text-primary-foreground/60 text-[9px] uppercase tracking-wider">Novo status</span>
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase ${
                       quitaTudo ? "bg-green-500/15 text-green-400 border border-green-500/30" :
                       novoTotal > 0 ? "bg-amber-500/15 text-amber-400 border border-amber-500/30" :
                       "bg-red-500/15 text-red-400 border border-red-500/30"
                     }`}>
                       {quitaTudo ? "Pago" : novoTotal > 0 ? "Quitado parcial" : "Não pago"}
                     </span>
-                    <span className="text-primary-foreground/75 text-[10px]">novo status</span>
                   </div>
                 </div>
 
-                <div className="flex gap-2 pt-1">
-                  <button
-                    onClick={() => { setPagamentoAg(null); setPagamentoInput(""); }}
-                    className="flex-1 rounded-xl border border-primary-foreground/15 bg-primary-foreground/[0.04] px-3 py-2.5 font-body text-[13px] font-medium text-primary-foreground/100 hover:bg-primary-foreground/[0.08] transition-all"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={confirmarRegistroPagamento}
-                    disabled={valorAtual <= 0}
-                    className="flex-2 flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-green-500/40 bg-green-500/15 px-3 py-2.5 font-body text-[13px] font-semibold text-green-300 hover:bg-green-500/25 hover:text-green-200 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    <CheckCircle className="h-4 w-4" /> Confirmar
-                  </button>
+                <div className="pt-2 flex gap-2">
+                  <button onClick={() => { setPagamentoAg(null); setPagamentoInput(""); }} className="flex-1 py-2.5 rounded-xl bg-primary-foreground/[0.04] text-primary-foreground/80 hover:bg-primary-foreground/[0.08] hover:text-primary-foreground font-heading text-[11px] font-bold uppercase tracking-wider transition-all">Cancelar</button>
+                  <button onClick={confirmarRegistroPagamento} disabled={valorAtual <= 0} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gold text-charcoal font-heading text-[11px] font-bold uppercase tracking-wider hover:bg-gold/90 transition-all shadow-[0_0_10px_hsl(var(--gold)/0.2)] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none">Confirmar</button>
                 </div>
               </div>
             );

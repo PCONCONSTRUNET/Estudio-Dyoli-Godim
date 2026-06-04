@@ -46,54 +46,6 @@ interface Props {
  getClientName: (userId: string, clienteNome?: string | null) => string;
 }
 
-import { useState, useMemo, useEffect } from "react";
-import {
- Calendar,
- Wallet,
- Settings,
- ChevronLeft,
- ChevronRight,
- Sparkles,
- CheckCircle2,
- Clock,
- Info,
- Calculator,
- TrendingUp,
- Pencil,
- Check,
- X,
- Plus,
-} from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarPicker } from "@/components/ui/calendar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ptBR } from "date-fns/locale";
-import NovaTransacaoModal from "@/components/NovaTransacaoModal";
-
-interface Agendamento {
- id: string;
- servico: string;
- variacao: string | null;
- data_agendamento: string;
- horario: string;
- valor: number;
- valor_pago: number | null;
- valor_troco: number | null;
- valor_gorjeta: number | null;
- valor_credito: number | null;
- status: string;
- created_at: string;
- user_id: string;
- cliente_nome: string | null;
- observacao?: string | null;
-}
-
-interface Props {
- agendamentos: Agendamento[];
- getClientName: (userId: string, clienteNome?: string | null) => string;
-}
-
 type FilterPeriod = "hoje" | "semana" | "mes" | "personalizado";
 
 const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
@@ -167,10 +119,12 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  // Fechamento do dia
  const caixaData = useMemo(() => {
  const dayAgs = agendamentos.filter((a) => a.data_agendamento === caixaDate && a.status !== "cancelado");
- const total = dayAgs.reduce((s, a) => s + Number(a.valor) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0), 0);
- const recebido = dayAgs.reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0), 0);
+ const total = dayAgs.reduce((s, a) => s + Number(a.valor) + Number(a.valor_gorjeta || 0), 0);
+ const recebido = dayAgs.reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0), 0);
+ const pagoComCredito = dayAgs.reduce((s, a) => s + Number(a.valor_credito || 0), 0);
  const faltas = agendamentos.filter((a) => a.data_agendamento === caixaDate && a.status === "falta").length;
- return { items: dayAgs, total, recebido, pendente: total - recebido, qtd: dayAgs.length, faltas };
+ const qtd = dayAgs.filter((a) => a.servico !== "Adição de Crédito").length;
+ return { items: dayAgs, total, recebido, pagoComCredito, pendente: total - recebido - pagoComCredito, qtd, faltas };
  }, [agendamentos, caixaDate]);
 
  // Lista de pagamentos por período
@@ -202,8 +156,9 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  (a) => a.status !== "cancelado" && a.status !== "falta" &&
  a.data_agendamento >= ciclo.startISO && a.data_agendamento <= ciclo.endISO,
  );  
- const recebido = cicloAgs.reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0), 0);
- const total = cicloAgs.reduce((s, a) => s + Number(a.valor) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0), 0);
+ const recebido = cicloAgs.reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0), 0);
+ const total = cicloAgs.reduce((s, a) => s + Number(a.valor) + Number(a.valor_gorjeta || 0), 0);
+ const pagoComCredito = cicloAgs.reduce((s, a) => s + Number(a.valor_credito || 0), 0);
  const gorjetas = cicloAgs.reduce((s, a) => s + Number(a.valor_gorjeta || 0), 0);
  const trocos = cicloAgs.reduce((s, a) => s + Number(a.valor_troco || 0), 0);
  
@@ -215,22 +170,26 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  .reduce((s, d) => s + Number(d.valor), 0);
 
  const lucro = recebido - desp;
- const recebidoSemComissao = cicloAgs.filter(a => a.observacao === "SEM_COMISSAO").reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0), 0);
- const baseComissao = recebido - recebidoSemComissao - gorjetas - trocos;
- const comissao = Math.max(0, baseComissao) * (comissaoPct / 100) + gorjetas;
+ 
+ const baseComissao = cicloAgs.reduce((s, a) => {
+   if (a.observacao === "SEM_COMISSAO") return s;
+   return s + Number(a.valor_pago || 0);
+ }, 0);
+ const comissao = baseComissao * (comissaoPct / 100) + gorjetas;
  
  const today = new Date(); today.setHours(12, 0, 0, 0);
  const totalDays = Math.round((ciclo.endDate.getTime() - ciclo.startDate.getTime()) / 86400000) + 1;
  const elapsedDays = Math.max(0, Math.min(totalDays, Math.round((today.getTime() - ciclo.startDate.getTime()) / 86400000) + 1));
  const progress = cicloOffset === 0 ? Math.round((elapsedDays / totalDays) * 100) : (cicloOffset < 0 ? 100 : 0);
- return { recebido, total, gorjetas, trocos, desp, despPessoal, lucro, comissao, totalDays, elapsedDays, progress, qtd: cicloAgs.length, items: cicloAgs };
+ const qtd = cicloAgs.filter((a) => a.servico !== "Adição de Crédito").length;
+ return { recebido, total, pagoComCredito, gorjetas, trocos, desp, despPessoal, lucro, comissao, totalDays, elapsedDays, progress, qtd, items: cicloAgs };
  }, [agendamentos, ciclo, despesas, comissaoPct, cicloOffset]);
 
  // Detalhamento da comissão por dia (apenas dias com valor recebido)
  const comissaoBreakdown = useMemo(() => {
  const byDay: Record<string, { date: string; recebido: number; qtd: number }> = {};
  cicloStats.items.forEach((a) => {
-  const pago = Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0);
+  const pago = Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0);
   if (pago <= 0) return;
  if (!byDay[a.data_agendamento]) {
  byDay[a.data_agendamento] = { date: a.data_agendamento, recebido: 0, qtd: 0 };
@@ -543,7 +502,10 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  </p>
  <p className="font-heading text-2xl font-bold text-purple-300 mt-1">
  {formatCurrency(
-  Math.max(0, caixaData.recebido - caixaData.items.filter(a => a.observacao === "SEM_COMISSAO").reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0), 0) - caixaData.items.reduce((s,a) => s + Number(a.valor_gorjeta||0) + Number(a.valor_troco||0), 0)) * (comissaoPct / 100) +
+  caixaData.items.reduce((s, a) => {
+    if (a.observacao === "SEM_COMISSAO") return s;
+    return s + Number(a.valor_pago || 0);
+  }, 0) * (comissaoPct / 100) +
   caixaData.items.reduce((s,a) => s + Number(a.valor_gorjeta||0), 0)
  )}
  </p>
@@ -677,8 +639,8 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  </div>
  <div className="text-right ml-2">
  <p className="font-heading text-[14px] text-gold font-bold tabular-nums">{formatCurrency(Number(a.valor))}</p>
- <p className={`font-body text-[11px] font-medium ${Number(a.valor_pago || 0) >= Number(a.valor) ? "text-green-400" : Number(a.valor_pago || 0) > 0 ? "text-gold" : "text-primary-foreground/75"}`}>
- {Number(a.valor_pago || 0) >= Number(a.valor) ? "Pago" : Number(a.valor_pago || 0) > 0 ? `Sinal: ${formatCurrency(Number(a.valor_pago))}` : "Pendente"}
+ <p className={`font-body text-[11px] font-medium ${(Number(a.valor_pago || 0) + Number(a.valor_credito || 0)) >= Number(a.valor) ? "text-green-400" : Number(a.valor_pago || 0) > 0 ? "text-gold" : "text-primary-foreground/75"}`}>
+ {(Number(a.valor_pago || 0) + Number(a.valor_credito || 0)) >= Number(a.valor) ? "Pago" : Number(a.valor_pago || 0) > 0 ? `Sinal: ${formatCurrency(Number(a.valor_pago))}` : "Pendente"}
  </p>
  </div>
  </div>
@@ -718,8 +680,8 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  {formatCurrency(cicloStats.comissao)}
  </p>
  <p className="font-body text-[11px] text-primary-foreground/75 mt-2 tabular-nums">
- Base: {formatCurrency(Math.max(0, cicloStats.recebido - cicloStats.items.filter(a => a.observacao === "SEM_COMISSAO").reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0), 0) - cicloStats.gorjetas - cicloStats.trocos))} × <span className="text-purple-300 font-bold">{comissaoPct}%</span>
- {cicloStats.gorjetas > 0 && <span className="text-purple-300 font-bold"> + {formatCurrency(cicloStats.gorjetas)} (Gorjetas 100%)</span>}
+ Base: {formatCurrency(baseComissao)} × <span className="text-purple-300 font-bold">{comissaoPct}%</span>
+ {gorjetas > 0 && <span className="text-purple-300 font-bold"> + {formatCurrency(gorjetas)} (Gorjetas 100%)</span>}
  </p>
  </div>
 
@@ -754,7 +716,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  <div className="grid grid-cols-3 gap-2">
  <div className="p-2.5 rounded-xl bg-green-500/[0.06] border border-green-500/15">
  <p className="font-body text-[8.5px] text-primary-foreground/75 uppercase tracking-wider">Base</p>
- <p className="font-heading text-[13px] font-bold text-green-400 tabular-nums leading-tight mt-0.5">{formatCurrency(Math.max(0, cicloStats.recebido - cicloStats.items.filter(a => a.observacao === "SEM_COMISSAO").reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0), 0) - cicloStats.gorjetas - cicloStats.trocos))}</p>
+ <p className="font-heading text-[13px] font-bold text-green-400 tabular-nums leading-tight mt-0.5">{formatCurrency(baseComissao)}</p>
  </div>
  <div className="p-2.5 rounded-xl bg-purple-500/[0.06] border border-purple-500/15 relative">
  <p className="font-body text-[8.5px] text-primary-foreground/75 uppercase tracking-wider">Taxa</p>
@@ -811,8 +773,8 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  ) : (
  <div className="space-y-1.5">
  {comissaoBreakdown.map((d) => {
- const dayBase = Math.max(0, d.recebido - cicloStats.items.filter(a => a.data_agendamento === d.date && a.observacao === "SEM_COMISSAO").reduce((s,a)=>s+Number(a.valor_pago||0)+Number(a.valor_gorjeta||0)+Number(a.valor_troco||0)+Number(a.valor_credito||0),0) - cicloStats.items.filter(a => a.data_agendamento === d.date).reduce((s,a)=>s+Number(a.valor_gorjeta||0)+Number(a.valor_troco||0),0));
- const dayGorjetas = cicloStats.items.filter(a => a.data_agendamento === d.date).reduce((s,a)=>s+Number(a.valor_gorjeta||0), 0);
+ const dayBase = cicloStats.items.filter(a => a.data_agendamento === d.date && a.observacao !== "SEM_COMISSAO").reduce((s,a) => s + Number(a.valor_pago || 0), 0);
+ const dayGorjetas = cicloStats.items.filter(a => a.data_agendamento === d.date).reduce((s,a) => s + Number(a.valor_gorjeta || 0), 0);
  const dayComm = dayBase * (comissaoPct / 100) + dayGorjetas;
  return (
  <div key={d.date} className="flex items-center justify-between p-2.5 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.05] hover:border-purple-500/20 transition-all">

@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Search, CreditCard, QrCode, Barcode, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, Filter, AlertCircle, Trash2, Wallet } from "lucide-react";
 import pixIcon from "@/assets/pix-icon.png";
+import { useConfirm } from "@/contexts/ConfirmContext";
 
 interface Agendamento {
   id: string;
@@ -47,6 +48,7 @@ type SortField = "data" | "valor" | "cliente" | "status";
 type SortDir = "asc" | "desc";
 
 const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
+  const { confirm } = useConfirm();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("todos");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -58,20 +60,25 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     else { setSortField(field); setSortDir("desc"); }
   };
 
-  const handleDelete = async (id: string, isSaida?: boolean) => {
-    if (!confirm("Tem certeza que deseja excluir esta transação? Essa ação não pode ser desfeita.")) return;
-    
-    try {
-      const table = isSaida ? "despesas" : "agendamentos";
-      const { error } = await supabase.from(table as any).delete().eq("id", id);
-      if (error) throw error;
-      toast.success("Transação excluída com sucesso.");
-      if (onUpdate) onUpdate();
-      else window.location.reload();
-    } catch (error: any) {
-      console.error(error);
-      toast.error(error.message || "Erro ao excluir transação.");
-    }
+  const handleDelete = (id: string, isSaida?: boolean) => {
+    confirm({
+      title: "Excluir Transação",
+      description: "Tem certeza que deseja excluir esta transação? Essa ação não pode ser desfeita.",
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          const table = isSaida ? "despesas" : "agendamentos";
+          const { error } = await supabase.from(table as any).delete().eq("id", id);
+          if (error) throw error;
+          toast.success("Transação excluída com sucesso.");
+          if (onUpdate) onUpdate();
+          else window.location.reload();
+        } catch (error: any) {
+          console.error(error);
+          toast.error(error.message || "Erro ao excluir transação.");
+        }
+      }
+    });
   };
 
   const paymentIcon = (method: string | null) => {
@@ -256,7 +263,11 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     list.sort((a, b) => {
       let cmp = 0;
       switch (sortField) {
-        case "data": cmp = a.data_fatura.localeCompare(b.data_fatura) || a.horario.localeCompare(b.horario); break;
+        case "data": 
+          cmp = a.data_fatura.localeCompare(b.data_fatura) || 
+                a.horario.localeCompare(b.horario) || 
+                (a.created_at || "").localeCompare(b.created_at || ""); 
+          break;
         case "valor": cmp = a.valor_fatura - b.valor_fatura; break;
         case "cliente": cmp = (a._is_saida ? String(a.cliente_nome) : getClientName(a.user_id, a.cliente_nome)).localeCompare(b._is_saida ? String(b.cliente_nome) : getClientName(b.user_id)); break;
         case "status": cmp = a.status.localeCompare(b.status); break;
@@ -391,7 +402,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
               key={ag._faturaId}
               className={`rounded-2xl border overflow-hidden transition-all ${
                 ag._is_saida
-                  ? "border-rose/20 bg-gradient-to-br from-rose/[0.08] via-primary-foreground/[0.02] to-rose/[0.02] hover:border-rose/40 hover:shadow-[0_4px_16px_-8px_hsl(var(--rose)/0.3)]"
+                  ? "border-red-500/20 bg-gradient-to-br from-red-500/[0.08] via-primary-foreground/[0.02] to-red-500/[0.02] hover:border-red-500/40 hover:shadow-[0_4px_16px_-8px_rgba(239,68,68,0.3)]"
                   : isPendingAmount
                   ? "border-amber-500/40 bg-gradient-to-br from-amber-500/[0.08] via-primary-foreground/[0.02] to-amber-500/[0.04] hover:border-amber-500/60 hover:shadow-[0_4px_16px_-8px_rgba(245,158,11,0.4)]"
                   : "border-gold/15 bg-gradient-to-br from-gold/[0.05] via-primary-foreground/[0.02] to-nude/[0.03] hover:border-gold/25 hover:shadow-[0_4px_16px_-8px_hsl(var(--gold)/0.25)]"
@@ -432,11 +443,23 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className={`font-heading text-[15px] font-bold ${ag._is_saida ? "text-rose" : isPendingAmount ? "text-amber-300" : "text-gold"}`}>
+                  <p className={`font-heading text-[15px] font-bold ${ag._is_saida ? "text-red-400" : isPendingAmount ? "text-amber-300" : "text-gold"}`}>
                     {ag._is_saida && "-"} {formatCurrency(ag.valor_fatura)}
                   </p>
                   <div className="flex items-center justify-end gap-1">
-                    <span className={`font-body text-[10px] font-medium ${cfg.text}`}>{isPendingAmount ? "Pendente" : "Pago"}</span>
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-body text-[9px] font-bold uppercase tracking-wider border relative ${
+                      isPendingAmount 
+                        ? "bg-amber-500/10 text-amber-400 border-amber-500/30" 
+                        : ag._is_saida 
+                          ? "bg-red-500/10 text-red-400 border-red-500/30" 
+                          : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                    }`}>
+                      <span className={`absolute inset-0 rounded-full animate-pulse border ${
+                        isPendingAmount ? "border-amber-500/50" : ag._is_saida ? "border-red-500/50" : "border-emerald-500/50"
+                      }`} />
+                      <StatusIcon className="h-3 w-3 relative z-10" />
+                      <span className="relative z-10">{isPendingAmount ? "Pendente" : ag._is_saida ? "Retirado" : "Pago"}</span>
+                    </span>
                   </div>
                 </div>
                 <ChevronDown className={`h-4 w-4 shrink-0 text-primary-foreground/95 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
@@ -448,6 +471,9 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                   <div className="grid grid-cols-2 gap-3">
                     <Detail label={ag._is_saida ? "ID da Despesa" : "ID do Pedido (Original)"} value={ag.id.slice(0, 8) + "..."} />
                     <Detail label={ag._is_saida ? "Data do Gasto" : "Data Base do Agend."} value={`${formatDate(ag.data_agendamento || ag.data_fatura)}${ag.horario !== "00:00" ? ` às ${ag.horario}` : ""}`} />
+                    {(ag.variacao || ag.observacao) && (
+                      <Detail label="Detalhes / Origem" value={ag.variacao || ag.observacao} />
+                    )}
                     <Detail label="Método de Pagamento" value={
                       <span className="flex items-center gap-1.5">
                         {paymentIcon(ag.forma_pagamento)}
@@ -458,9 +484,18 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                     <Detail label={ag._is_saida ? "Valor da Saída" : "Valor Desta Fatura"} value={formatCurrency(ag.valor_fatura)} />
                     {!ag._is_saida && <Detail label="Valor Total Original" value={formatCurrency(ag.valor)} />}
                     <Detail label={ag._is_saida ? "Status" : "Status da Fatura"} value={
-                      <span className={`inline-flex items-center gap-1 ${cfg.text}`}>
-                        <StatusIcon className="h-3 w-3" />
-                        {isPendingAmount ? "Pendente" : "Pago"}
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-body text-[9px] font-bold uppercase tracking-wider border relative ${
+                        isPendingAmount 
+                          ? "bg-amber-500/10 text-amber-400 border-amber-500/30" 
+                          : ag._is_saida 
+                            ? "bg-red-500/10 text-red-400 border-red-500/30" 
+                            : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                      }`}>
+                        <span className={`absolute inset-0 rounded-full animate-pulse border ${
+                          isPendingAmount ? "border-amber-500/50" : ag._is_saida ? "border-red-500/50" : "border-emerald-500/50"
+                        }`} />
+                        <StatusIcon className="h-3 w-3 relative z-10" />
+                        <span className="relative z-10">{isPendingAmount ? "Pendente" : ag._is_saida ? "Retirado" : "Pago"}</span>
                       </span>
                     } />
                     {!ag._is_saida && ag.status && <Detail label="Status do Serviço" value={ag.status.charAt(0).toUpperCase() + ag.status.slice(1)} />}
@@ -480,7 +515,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                         e.stopPropagation();
                         handleDelete(ag.id, ag._is_saida);
                       }}
-                      className="px-3 py-1.5 rounded-lg bg-rose/10 text-rose hover:bg-rose/20 font-body text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors"
+                      className="px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 font-body text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors"
                     >
                       <Trash2 className="w-3.5 h-3.5" /> Excluir
                     </button>

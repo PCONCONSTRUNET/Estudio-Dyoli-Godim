@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Save, X, Check, AlertTriangle, Clock, Bell, ChevronRight, ChevronDown, Eye, Receipt, TrendingDown, TrendingUp, Sparkles, CalendarDays, Wallet, Repeat } from "lucide-react";
+import { Save, X, Check, AlertTriangle, Clock, Bell, ChevronRight, ChevronDown, Eye, Receipt, TrendingDown, TrendingUp, Sparkles, CalendarDays, Wallet, Repeat, Search } from "lucide-react";
 import PlusButton from "@/components/ui/plus-button";
 import BinButton from "@/components/ui/bin-button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { useConfirm } from "@/contexts/ConfirmContext";
 
 interface Despesa {
  id: string;
@@ -32,11 +33,14 @@ const formatDate = (d: string) =>
  new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 
 const DespesasTab = () => {
+ const { confirm } = useConfirm();
  const [despesas, setDespesas] = useState<Despesa[]>([]);
  const [loading, setLoading] = useState(true);
  const [showForm, setShowForm] = useState(false);
- const [filter, setFilter] = useState<"todas" | "pendentes" | "pagas" | "atrasadas">("todas");
+ const [filter, setFilter] = useState<"todas" | "pendentes" | "pagas" | "atrasadas">("pendentes");
  const [tipoFilter, setTipoFilter] = useState<"todos" | "estudio" | "pessoal">("todos");
+ const [searchTerm, setSearchTerm] = useState("");
+ const [showValores, setShowValores] = useState(false);
 
  const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => {
  const saved = localStorage.getItem("despesas_dismissed");
@@ -117,15 +121,16 @@ const DespesasTab = () => {
  };
 
  const filtered = useMemo(() => {
- return despesas.filter((d) => {
- if (tipoFilter !== "todos" && (d.tipo || "estudio") !== tipoFilter) return false;
- const s = getStatus(d);
- if (filter === "pendentes") return s === "pendente" || s === "hoje";
- if (filter === "pagas") return s === "pago";
- if (filter === "atrasadas") return s === "atrasado";
- return true;
- });
- }, [despesas, filter, tipoFilter, today]);
+  return despesas.filter((d) => {
+  if (searchTerm && !d.descricao.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+  if (tipoFilter !== "todos" && (d.tipo || "estudio") !== tipoFilter) return false;
+  const s = getStatus(d);
+  if (filter === "pendentes") return s === "pendente" || s === "hoje" || s === "atrasado";
+  if (filter === "pagas") return s === "pago";
+  if (filter === "atrasadas") return s === "atrasado";
+  return true;
+  });
+ }, [despesas, filter, tipoFilter, today, searchTerm]);
 
 
  const alertCount = useMemo(() => {
@@ -421,7 +426,7 @@ const DespesasTab = () => {
  >
  <Eye className="h-3 w-3" /> Lida
  </button>
- <BinButton size="sm" onClick={() => deleteDespesa(n.despesa.id)} />
+ <BinButton size="sm" onClick={() => confirm({ title: "Excluir Despesa", description: "Esta ação apagará permanentemente a despesa.", variant: "destructive", onConfirm: () => deleteDespesa(n.despesa.id) })} />
 
  </div>
  </div>
@@ -440,7 +445,7 @@ const DespesasTab = () => {
 
  {/* Stats grid */}
  <div className="grid grid-cols-3 gap-2">
-                            <div className="group relative p-3 rounded-2xl bg-red-500/[0.06] border border-red-500/[0.15] hover:border-red-500/25 transition-all overflow-hidden">
+                            <div onClick={() => setShowValores(true)} className="group relative p-3 rounded-2xl bg-red-500/[0.06] border border-red-500/[0.15] hover:border-red-500/25 transition-all overflow-hidden cursor-pointer">
                                 <div className="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-red-500/10 blur-xl group-hover:bg-red-500/20 transition-all" />
                                 <TrendingDown className="relative w-3.5 h-3.5 text-red-400/80 mb-1.5 group-hover:scale-110 transition-transform" />
                                 <p className="relative font-body text-[15px] sm:text-[17px] font-bold text-red-400 tabular-nums leading-tight truncate tracking-tight">
@@ -450,7 +455,7 @@ const DespesasTab = () => {
                                     {countAtrasadas} atrasada{countAtrasadas !== 1 ? "s" : ""}
                                 </p>
                             </div>
-                            <div className="group relative p-3 rounded-2xl bg-orange-500/[0.05] border border-orange-500/[0.12] hover:border-orange-500/25 transition-all overflow-hidden">
+                            <div onClick={() => setShowValores(true)} className="group relative p-3 rounded-2xl bg-orange-500/[0.05] border border-orange-500/[0.12] hover:border-orange-500/25 transition-all overflow-hidden cursor-pointer">
                                 <div className="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-orange-500/10 blur-xl group-hover:bg-orange-500/20 transition-all" />
                                 <Wallet className="relative w-3.5 h-3.5 text-orange-400/80 mb-1.5 group-hover:scale-110 transition-transform" />
                                 <p className="relative font-body text-[15px] sm:text-[17px] font-bold text-orange-400 tabular-nums leading-tight truncate tracking-tight">
@@ -460,7 +465,7 @@ const DespesasTab = () => {
                                     Pendente
                                 </p>
                             </div>
-                            <div className="group relative p-3 rounded-2xl bg-green-500/[0.05] border border-green-500/[0.12] hover:border-green-500/25 transition-all overflow-hidden">
+                            <div onClick={() => setShowValores(true)} className="group relative p-3 rounded-2xl bg-green-500/[0.05] border border-green-500/[0.12] hover:border-green-500/25 transition-all overflow-hidden cursor-pointer">
                                 <div className="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-green-500/10 blur-xl group-hover:bg-green-500/20 transition-all" />
                                 <TrendingUp className="relative w-3.5 h-3.5 text-green-400/80 mb-1.5 group-hover:scale-110 transition-transform" />
                                 <p className="relative font-body text-[15px] sm:text-[17px] font-bold text-green-400 tabular-nums leading-tight truncate tracking-tight">
@@ -487,50 +492,49 @@ const DespesasTab = () => {
  </div>
  )}
 
- {/* Filtro por tipo (Estúdio / Pessoal) */}
- <div className="flex gap-2 p-1 rounded-2xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06]">
- {([
- { value: "todos", label: "Todas", icon: "✦", active: "bg-gold/20 text-gold shadow-[0_0_0_1px_hsl(var(--gold)/0.25)]" },
- { value: "estudio", label: "Estúdio", icon: "🏛", active: "bg-blue-500/20 text-blue-300 shadow-[0_0_0_1px_rgb(59_130_246_/_0.25)]" },
- { value: "pessoal", label: "Pessoal", icon: "👤", active: "bg-purple-500/20 text-purple-300 shadow-[0_0_0_1px_rgb(168_85_247_/_0.25)]" },
- ] as const).map((t) => {
- const count = despesas.filter((d) => t.value === "todos" || (d.tipo || "estudio") === t.value).length;
- return (
- <button
- key={t.value}
- onClick={() => setTipoFilter(t.value)}
- className={`flex-1 rounded-xl px-3 py-2 font-body text-[11px] font-semibold transition-all flex items-center justify-center gap-1.5 ${
- tipoFilter === t.value ? t.active : "text-primary-foreground/85 hover:text-primary-foreground/80"
- }`}
- >
- <span className="text-[13px]">{t.icon}</span>
- {t.label}
- <span className="text-[10px] opacity-60 font-normal">({count})</span>
- </button>
- );
- })}
- </div>
+ {/* Search + Filtros Simplificados */}
+ <div className="space-y-3">
+   <div className="relative">
+     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+     <input
+       value={searchTerm}
+       onChange={(e) => setSearchTerm(e.target.value)}
+       placeholder="Buscar despesa..."
+       className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white/[0.05] border border-white/10 text-white font-body text-[13px] placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-gold/20"
+     />
+     {searchTerm && (
+       <button onClick={() => setSearchTerm("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/80">
+         <X className="w-3.5 h-3.5" />
+       </button>
+     )}
+   </div>
+   <div className="flex items-center justify-between gap-3 bg-primary-foreground/[0.02] p-1.5 rounded-2xl border border-primary-foreground/[0.06]">
+   <div className="flex bg-primary-foreground/[0.04] rounded-xl p-1 gap-1 flex-1 sm:flex-none">
+   <button 
+   onClick={() => setFilter("pendentes")} 
+   className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${filter === "pendentes" ? "bg-primary-foreground text-charcoal shadow-sm" : "text-primary-foreground/60 hover:text-primary-foreground"}`}
+   >
+   Pendentes
+   </button>
+   <button 
+   onClick={() => setFilter("pagas")} 
+   className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${filter === "pagas" ? "bg-primary-foreground text-charcoal shadow-sm" : "text-primary-foreground/60 hover:text-primary-foreground"}`}
+   >
+   Pagas
+   </button>
+   </div>
 
- {/* Filters */}
- <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
- {([
- { value: "todas", label: "Todas", active: "bg-gold/15 text-gold border-gold/40 shadow-[0_0_0_1px_hsl(var(--gold)/0.2)]", inactive: "bg-gold/[0.04] text-gold/60 border-gold/20 hover:bg-gold/10 hover:text-gold/80" },
- { value: "atrasadas", label: "Atrasadas", active: "bg-red-500/15 text-red-400 border-red-500/40 shadow-[0_0_0_1px_rgb(239_68_68_/_0.2)]", inactive: "bg-red-500/[0.05] text-red-400/70 border-red-500/20 hover:bg-red-500/10 hover:text-red-400" },
- { value: "pendentes", label: "A vencer", active: "bg-orange-500/15 text-orange-400 border-orange-500/40 shadow-[0_0_0_1px_rgb(249_115_22_/_0.2)]", inactive: "bg-orange-500/[0.05] text-orange-400/70 border-orange-500/20 hover:bg-orange-500/10 hover:text-orange-400" },
- { value: "pagas", label: "Pagas", active: "bg-green-500/15 text-green-400 border-green-500/40 shadow-[0_0_0_1px_rgb(34_197_94_/_0.2)]", inactive: "bg-green-500/[0.05] text-green-400/70 border-green-500/20 hover:bg-green-500/10 hover:text-green-400" },
- ] as const).map((f) => (
- <button
- key={f.value}
- onClick={() => setFilter(f.value)}
- className={`shrink-0 rounded-full border px-3 py-1.5 font-body text-[11px] font-medium transition-all ${
- filter === f.value ? f.active : f.inactive
- }`}
- >
- {f.label}
- </button>
- ))}
+   <select
+   value={tipoFilter}
+   onChange={(e) => setTipoFilter(e.target.value as any)}
+   className="bg-charcoal text-primary-foreground/90 border border-primary-foreground/[0.1] rounded-xl px-2 py-1.5 text-[12px] font-medium outline-none focus:border-gold/50 cursor-pointer"
+   >
+   <option value="todos">Todas as contas</option>
+   <option value="estudio">🏛 Estúdio</option>
+   <option value="pessoal">👤 Pessoal</option>
+   </select>
+   </div>
  </div>
-
 
  {/* Despesas list */}
  {filtered.length === 0 ? (
@@ -538,7 +542,7 @@ const DespesasTab = () => {
  <p className="font-body text-[13px] text-primary-foreground/95">Nenhuma despesa encontrada</p>
  </div>
  ) : (
- <div className="space-y-2">
+ <div className="space-y-2 max-h-[55dvh] overflow-y-auto custom-scrollbar pr-1 pb-24 lg:pb-4">
  {(() => {
  // Agrupa despesas fixas por recorrencia_id, mantém ordem da lista filtrada
  const seen = new Set<string>();
@@ -563,66 +567,51 @@ const DespesasTab = () => {
 
  const renderRow = (d: Despesa, inGroup = false) => {
  const status = getStatus(d);
- const cfg = statusConfig[status];
- const Icon = cfg.icon;
+ const isAtrasado = status === "atrasado";
  return (
- <div key={d.id} className={`rounded-xl border p-3 transition-all ${cfg.bg} ${inGroup ? "ml-2" : ""}`}>
- <div className="flex items-start justify-between gap-2">
+ <div key={d.id} className={`rounded-xl border p-3.5 transition-all bg-charcoal border-primary-foreground/[0.08] ${inGroup ? "ml-3 border-l-2 border-l-gold/50" : ""}`}>
+ <div className="flex items-center justify-between gap-3">
  <div className="flex-1 min-w-0">
- <div className="flex items-center gap-2 mb-1 flex-wrap">
- <span className={`px-2 py-0.5 rounded-full text-[9px] font-body font-medium border flex items-center gap-1 ${cfg.badge}`}>
- <Icon className="h-2.5 w-2.5" />
- {cfg.label}
+ <div className="flex items-center gap-2">
+ <span className="text-lg" title={d.tipo === "pessoal" ? "Despesa Pessoal" : "Despesa do Estúdio"}>
+ {d.tipo === "pessoal" ? "👤" : "🏛"}
  </span>
- <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-medium border bg-primary-foreground/[0.05] text-primary-foreground/75 border-primary-foreground/[0.06]">
- {d.categoria}
- </span>
- {(d.tipo || "estudio") === "pessoal" ? (
- <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-semibold border bg-purple-500/10 text-purple-300 border-purple-500/30 flex items-center gap-1">
- 👤 Pessoal
- </span>
- ) : (
- <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-semibold border bg-blue-500/10 text-blue-300 border-blue-500/30 flex items-center gap-1">
- 🏛 Estúdio
- </span>
- )}
-
- {d.fixa && !inGroup && (
- <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-semibold border bg-gold/10 text-gold border-gold/30 flex items-center gap-1">
- <Repeat className="h-2.5 w-2.5" /> Fixa
- </span>
- )}
- </div>
- <p className="font-body text-[13px] font-medium text-primary-foreground truncate">
+ <p className="font-heading text-[15px] font-bold text-primary-foreground truncate">
  {d.descricao}
  </p>
- <div className="flex items-center gap-3 mt-1">
- <p className={`font-heading text-[15px] font-bold ${cfg.text}`}>
+ </div>
+
+ <div className="flex items-center gap-2 mt-1">
+ <p className={`font-body text-[11px] font-medium ${isAtrasado && !d.pago ? "text-red-400 bg-red-400/10 px-1.5 py-0.5 rounded-md" : "text-primary-foreground/90"}`}>
+ Vence {formatDate(d.data_vencimento)} {isAtrasado && !d.pago ? "(Atrasada)" : ""}
+ </p>
+ <span className="font-body text-[10px] text-primary-foreground/70 bg-primary-foreground/[0.08] px-1.5 py-0.5 rounded-md hidden sm:inline-block">
+ {d.categoria}
+ </span>
+ </div>
+ </div>
+
+ <div className="flex flex-col items-end gap-2 shrink-0">
+ <p className={`font-heading text-[15px] font-bold ${isAtrasado && !d.pago ? "text-red-400" : "text-primary-foreground"}`}>
  {formatCurrency(Number(d.valor))}
  </p>
- <p className="font-body text-[11px] text-primary-foreground/95">
- Vence {formatDate(d.data_vencimento)}
- </p>
- </div>
- {d.observacao && (
- <p className="font-body text-[11px] text-primary-foreground/85 mt-1 truncate">
- {d.observacao}
- </p>
- )}
- </div>
- <div className="flex flex-col gap-2 shrink-0">
+ <div className="flex items-center gap-2">
+ <BinButton size="sm" onClick={() => confirm({ title: "Excluir Despesa", description: "Esta ação apagará permanentemente a despesa.", variant: "destructive", onConfirm: () => deleteDespesa(d.id) })} />
  <button
- onClick={() => togglePago(d)}
- className={`flex h-11 w-11 items-center justify-center rounded-2xl border-2 transition-all shadow-sm ${
+ onClick={() => confirm({ title: d.pago ? "Desmarcar como Pago" : "Marcar como Pago", description: d.pago ? "Deseja marcar esta despesa como não paga?" : "Confirmar o pagamento desta despesa?", onConfirm: () => togglePago(d) })}
+ className={`px-3 py-1.5 rounded-lg font-bold text-[11px] transition-all flex items-center gap-1.5 ${
  d.pago
- ? "bg-green-500/25 text-green-400 border-green-500/40 shadow-green-500/10"
- : "bg-primary-foreground/[0.06] text-primary-foreground/75 border-primary-foreground/[0.1] hover:bg-gold/15 hover:text-gold hover:border-gold/30 hover:shadow-gold/10"
+ ? "bg-green-500/15 text-green-400 border border-green-500/30"
+ : "bg-gold text-charcoal hover:bg-gold/90"
  }`}
- title={d.pago ? "Desmarcar" : "Marcar como pago"}
  >
- <Check className="h-5 w-5" />
+ {d.pago ? (
+ <> <Check className="w-3.5 h-3.5" /> PAGO </>
+ ) : (
+ "PAGAR"
+ )}
  </button>
- <BinButton size="md" onClick={() => deleteDespesa(d.id)} />
+ </div>
  </div>
  </div>
  </div>
@@ -642,53 +631,38 @@ const DespesasTab = () => {
  const proxima = grupo.find((x) => !x.pago);
 
  return (
- <div key={item.recorrenciaId} className="rounded-2xl border border-gold/25 bg-gradient-to-br from-gold/[0.06] via-gold/[0.02] to-transparent overflow-hidden">
+ <div key={item.recorrenciaId} className="rounded-xl border border-primary-foreground/[0.08] bg-charcoal overflow-hidden">
  <button
  onClick={() => toggleGroup(item.recorrenciaId)}
- className="w-full p-3 flex items-center gap-3 text-left hover:bg-gold/[0.04] transition-all"
+ className="w-full p-3.5 flex items-center gap-3 text-left hover:bg-primary-foreground/[0.02] transition-all"
  >
- <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold/15 border border-gold/30 shrink-0">
- <Repeat className="h-4 w-4 text-gold" />
- </div>
  <div className="flex-1 min-w-0">
- <div className="flex items-center gap-2 mb-0.5 flex-wrap">
- <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-semibold border bg-gold/10 text-gold border-gold/30 flex items-center gap-1">
- <Repeat className="h-2.5 w-2.5" /> Fixa · {grupo.length}x
+ <div className="flex items-center gap-2">
+ <span className="text-lg" title={(grupo[0]?.tipo || "estudio") === "pessoal" ? "Despesa Pessoal" : "Despesa do Estúdio"}>
+ {(grupo[0]?.tipo || "estudio") === "pessoal" ? "👤" : "🏛"}
  </span>
- <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-medium border bg-primary-foreground/[0.05] text-primary-foreground/75 border-primary-foreground/[0.06]">
- {grupo[0]?.categoria}
+ <p className="font-heading text-[15px] font-bold text-primary-foreground truncate">
+ {baseNome}
+ </p>
+ <span className="font-body text-[10px] bg-gold/15 text-gold px-1.5 py-0.5 rounded-md font-semibold shrink-0">
+ Fixa ({grupo.length}x)
  </span>
- {(grupo[0]?.tipo || "estudio") === "pessoal" ? (
- <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-semibold border bg-purple-500/10 text-purple-300 border-purple-500/30 flex items-center gap-1">
- 👤 Pessoal
- </span>
- ) : (
- <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-semibold border bg-blue-500/10 text-blue-300 border-blue-500/30 flex items-center gap-1">
- 🏛 Estúdio
- </span>
- )}
+ </div>
 
- <span className="px-2 py-0.5 rounded-full text-[9px] font-body font-medium border bg-green-500/10 text-green-400 border-green-500/20">
- {pagas}/{grupo.length} pagas
- </span>
- </div>
- <p className="font-body text-[13px] font-semibold text-primary-foreground truncate">{baseNome}</p>
- <div className="flex items-center gap-3 mt-1 flex-wrap">
- <p className="font-heading text-[15px] font-bold text-gold">{formatCurrency(total)}</p>
- <p className="font-body text-[11px] text-primary-foreground/75">
- {inicio && formatDate(inicio)} → {fim && formatDate(fim)}
+ {proxima ? (
+ <p className="font-body text-[12px] text-primary-foreground/85 mt-1">
+ Próxima: <span className="font-semibold text-primary-foreground">{formatDate(proxima.data_vencimento)}</span> • <span className="font-bold text-gold">{formatCurrency(Number(proxima.valor))}</span>
  </p>
- </div>
- {proxima && (
- <p className="font-body text-[10px] text-primary-foreground/95 mt-0.5">
- Próxima: {formatDate(proxima.data_vencimento)} · {formatCurrency(Number(proxima.valor))}
+ ) : (
+ <p className="font-body text-[12px] text-green-400 mt-1 font-medium">
+ Todas as parcelas pagas ✨
  </p>
  )}
  </div>
- <ChevronDown className={`h-5 w-5 text-primary-foreground/75 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+ <ChevronDown className={`h-5 w-5 text-primary-foreground/50 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
  </button>
  {open && (
- <div className="border-t border-gold/15 p-2 space-y-2 bg-charcoal/30 max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-gold/20 scrollbar-track-transparent">
+ <div className="border-t border-primary-foreground/[0.06] p-2 space-y-2 bg-primary-foreground/[0.02] max-h-[350px] overflow-y-auto">
  {grupo.map((p) => renderRow(p, true))}
  </div>
  )}
@@ -836,6 +810,44 @@ const DespesasTab = () => {
  >
  {saving ? "Salvando..." : "Adicionar Despesa"}
  </button>
+ </div>
+ </DialogContent>
+ </Dialog>
+
+ {/* Modal de Valores Totais */}
+ <Dialog open={showValores} onOpenChange={setShowValores}>
+ <DialogContent className="max-w-[280px] border-primary-foreground/[0.06] bg-charcoal">
+ <DialogHeader>
+ <DialogTitle className="font-heading text-[16px] text-primary-foreground">Valores Totais</DialogTitle>
+ </DialogHeader>
+ <div className="space-y-4 pt-2">
+ <div className="flex justify-between items-center pb-3 border-b border-primary-foreground/[0.06]">
+ <div>
+ <p className="font-body text-[11px] font-semibold text-red-400 uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
+ <TrendingDown className="w-3.5 h-3.5" /> Atrasado
+ </p>
+ <p className="font-body text-[10px] text-primary-foreground/60">{countAtrasadas} conta(s)</p>
+ </div>
+ <p className="font-heading text-[15px] font-bold text-red-400">{formatCurrency(totalAtrasado)}</p>
+ </div>
+ <div className="flex justify-between items-center pb-3 border-b border-primary-foreground/[0.06]">
+ <div>
+ <p className="font-body text-[11px] font-semibold text-orange-400 uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
+ <Wallet className="w-3.5 h-3.5" /> Pendente
+ </p>
+ <p className="font-body text-[10px] text-primary-foreground/60">{countPendentes} conta(s)</p>
+ </div>
+ <p className="font-heading text-[15px] font-bold text-orange-400">{formatCurrency(totalPendente)}</p>
+ </div>
+ <div className="flex justify-between items-center">
+ <div>
+ <p className="font-body text-[11px] font-semibold text-green-400 uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
+ <TrendingUp className="w-3.5 h-3.5" /> Pago
+ </p>
+ <p className="font-body text-[10px] text-primary-foreground/60">{countPagas} conta(s)</p>
+ </div>
+ <p className="font-heading text-[15px] font-bold text-green-400">{formatCurrency(totalPago)}</p>
+ </div>
  </div>
  </DialogContent>
  </Dialog>

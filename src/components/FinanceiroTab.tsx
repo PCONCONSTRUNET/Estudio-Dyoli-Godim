@@ -132,17 +132,26 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   }, [period, ciclo, customStart, customEnd]);
 
   // Metrics
-  const totalReceita = filtered.reduce((s, a) => s + Number(a.valor) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0), 0);
-  const totalRecebido = filtered.reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0), 0);
-  const totalPendente = totalReceita - totalRecebido;
-  const qtdAtendimentos = filtered.length;
+  const validServices = filtered.filter(a => a.servico !== "Adição de Crédito");
   
+  const totalReceita = validServices.reduce((s, a) => s + Number(a.valor) + Number(a.valor_gorjeta || 0), 0);
+  const totalRecebido = filtered.reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0), 0);
+  
+  const totalPendente = validServices.reduce((s, a) => {
+    const devido = Number(a.valor) + Number(a.valor_gorjeta || 0);
+    const quitado = Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0) + Number(a.valor_credito || 0);
+    return s + Math.max(0, devido - quitado);
+  }, 0);
+  
+  const qtdAtendimentos = validServices.length;
+  
+  const baseComissao = filtered.reduce((s, a) => {
+    if (a.observacao === "SEM_COMISSAO") return s;
+    return s + Number(a.valor_pago || 0);
+  }, 0);
   const totalGorjetas = filtered.reduce((s, a) => s + Number(a.valor_gorjeta || 0), 0);
-  const totalTrocos = filtered.reduce((s, a) => s + Number(a.valor_troco || 0), 0);
-  const totalCreditos = filtered.reduce((s, a) => s + Number(a.valor_credito || 0), 0);
-  const totalSemComissao = filtered.filter(a => a.observacao === "SEM_COMISSAO").reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0), 0);
-  const baseComissao = totalRecebido - totalSemComissao - totalGorjetas - totalTrocos;
-  const comissaoValor = Math.max(0, baseComissao) * (comissaoPct / 100) + totalGorjetas;
+  const comissaoValor = baseComissao * (comissaoPct / 100) + totalGorjetas;
+
   const totalDespesas = despesas
     .filter(d => (d.tipo || "estudio") === "estudio" && d.data_vencimento >= periodRange.start && d.data_vencimento <= periodRange.end)
     .reduce((s, d) => s + Number(d.valor), 0);
@@ -158,8 +167,8 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     filtered.forEach(a => {
       const d = a.data_agendamento;
       if (!map[d]) map[d] = { dia: d, receita: 0, recebido: 0 };
-      map[d].receita += Number(a.valor) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0);
-      map[d].recebido += Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0);
+      map[d].receita += Number(a.valor) + Number(a.valor_gorjeta || 0);
+      map[d].recebido += Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0);
     });
     return Object.values(map).sort((a, b) => a.dia.localeCompare(b.dia)).map(d => ({
       ...d,
@@ -181,7 +190,8 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const paymentStatus = useMemo(() => {
     let pago = 0, sinal = 0, pendente = 0;
     filtered.forEach(a => {
-      const vPago = Number(a.valor_pago || 0);
+      if (a.servico === "Adição de Crédito") return; // não conta no gráfico de status
+      const vPago = Number(a.valor_pago || 0) + Number(a.valor_credito || 0);
       const vTotal = Number(a.valor);
       if (vPago >= vTotal) pago++;
       else if (vPago > 0) sinal++;
@@ -205,11 +215,13 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
 
   // Receita por serviço (DRE - faturamento bruto)
   const receitaPorServico = useMemo(() => {
-    const map: Record<string, { faturado: number; recebido: number; qtd: number }> = {};
+    const map: Record<string, { faturado: number; recebido: number; pagoCredito: number; qtd: number }> = {};
     filtered.forEach(a => {
-      if (!map[a.servico]) map[a.servico] = { faturado: 0, recebido: 0, qtd: 0 };
+      if (a.servico === "Adição de Crédito") return; // Nao mostra no DRE de servicos
+      if (!map[a.servico]) map[a.servico] = { faturado: 0, recebido: 0, pagoCredito: 0, qtd: 0 };
       map[a.servico].faturado += Number(a.valor);
       map[a.servico].recebido += Number(a.valor_pago || 0);
+      map[a.servico].pagoCredito += Number(a.valor_credito || 0);
       map[a.servico].qtd += 1;
     });
     return Object.entries(map).map(([nome, v]) => ({ nome, ...v })).sort((a, b) => b.recebido - a.recebido);
@@ -237,7 +249,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const exportCSV = () => {
     const header = "Data,Horário,Cliente,Serviço,Valor,Pago,Status\n";
     const rows = filtered.map(a =>
-      `${a.data_agendamento},${a.horario},"${getClientName(a.user_id, a.cliente_nome)}","${a.servico}",${Number(a.valor).toFixed(2)},${Number(a.valor_pago || 0).toFixed(2)},${a.status}`
+      `${a.data_agendamento},${a.horario},"${getClientName(a.user_id, a.cliente_nome)}","${a.servico}",${Number(a.valor).toFixed(2)},${(Number(a.valor_pago || 0) + Number(a.valor_credito || 0)).toFixed(2)},${a.status}`
     ).join("\n");
     const blob = new Blob([header + rows], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -279,7 +291,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     </div>
     <table>
       <thead><tr><th>Data</th><th>Horário</th><th>Cliente</th><th>Serviço</th><th>Valor</th><th>Pago</th></tr></thead>
-      <tbody>${filtered.map(a => `<tr><td>${new Date(a.data_agendamento + "T12:00:00").toLocaleDateString("pt-BR")}</td><td>${a.horario}</td><td>${getClientName(a.user_id, a.cliente_nome)}</td><td>${a.servico}</td><td class="gold">${formatCurrency(Number(a.valor))}</td><td class="green">${formatCurrency(Number(a.valor_pago || 0))}</td></tr>`).join("")}</tbody>
+      <tbody>${filtered.map(a => `<tr><td>${new Date(a.data_agendamento + "T12:00:00").toLocaleDateString("pt-BR")}</td><td>${a.horario}</td><td>${getClientName(a.user_id, a.cliente_nome)}</td><td>${a.servico}</td><td class="gold">${formatCurrency(Number(a.valor))}</td><td class="green">${formatCurrency(Number(a.valor_pago || 0) + Number(a.valor_credito || 0))}</td></tr>`).join("")}</tbody>
     </table></body></html>`);
     w.document.close();
     w.print();
@@ -295,7 +307,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     const ticketMedio = qtdAtendimentos > 0 ? totalRecebido / qtdAtendimentos : 0;
 
     const linhasReceita = receitaPorServico.map(s =>
-      `<tr><td>${s.nome}</td><td style="text-align:center">${s.qtd}</td><td style="text-align:right">${formatCurrency(s.faturado)}</td><td style="text-align:right" class="green">${formatCurrency(s.recebido)}</td></tr>`
+      `<tr><td>${s.nome}</td><td style="text-align:center">${s.qtd > 0 ? s.qtd : "-"}</td><td style="text-align:right">${formatCurrency(s.faturado)}</td><td style="text-align:right" class="green">${formatCurrency(s.recebido)}${s.pagoCredito > 0 ? `<br><span style="font-size:9px;color:#888">+${formatCurrency(s.pagoCredito)} créd</span>` : ""}</td></tr>`
     ).join("");
 
     const linhasDespesa = despesasPorCategoria.map(c =>

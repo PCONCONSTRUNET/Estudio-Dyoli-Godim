@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useConfirm } from "@/contexts/ConfirmContext";
 
 interface Divida {
  id: string;
@@ -37,6 +38,7 @@ const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
 const formatDateShort = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 
 const DividasTab = () => {
+ const { confirm } = useConfirm();
  const [dividas, setDividas] = useState<Divida[]>([]);
  const [profiles, setProfiles] = useState<Profile[]>([]);
  const [loading, setLoading] = useState(true);
@@ -195,9 +197,12 @@ const DividasTab = () => {
  }
  };
 
- const handleDeleteDivida = async (id: string) => {
- if (!confirm("Tem certeza que deseja excluir esta dívida? Todo o histórico dela será apagado.")) return;
- 
+ const handleDeleteDivida = (id: string) => {
+ confirm({
+ title: "Excluir Dívida",
+ description: "Tem certeza que deseja excluir esta dívida? Todo o histórico dela será apagado.",
+ variant: "destructive",
+ onConfirm: async () => {
  try {
  const { error } = await supabase.from("dividas").delete().eq("id", id);
  if (error) throw error;
@@ -207,6 +212,8 @@ const DividasTab = () => {
  console.error(error);
  toast.error(error.message || "Erro ao excluir dívida.");
  }
+ }
+ });
  };
 
  const totalDevendo = dividas

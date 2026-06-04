@@ -296,79 +296,66 @@ const GastosTab = () => {
     <div className="space-y-5 animate-fade-in pb-10">
 
       {/* ── Hero ── */}
-      <div className="relative overflow-hidden rounded-3xl border border-orange-500/20 bg-gradient-to-br from-orange-500/[0.08] via-gold/[0.04] to-transparent p-5">
-        <div className="pointer-events-none absolute -top-24 -right-20 w-64 h-64 rounded-full bg-orange-500/15 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 -left-16 w-56 h-56 rounded-full bg-gold/10 blur-3xl" />
-
-        <div className="relative">
-          <div className="flex items-start justify-between gap-3 mb-5">
-            <div>
-              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-orange-500/10 border border-orange-500/20 mb-2">
-                <Sparkles className="w-2.5 h-2.5 text-orange-400 animate-pulse" />
-                <span className="font-body text-[9px] text-orange-400/80 uppercase tracking-[0.2em] font-medium">
-                  Controle de gastos
-                </span>
-              </div>
-              <h2 className="font-heading text-xl font-semibold text-primary-foreground tracking-tight flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5 text-orange-400" />
-                Gastos do Estúdio
-              </h2>
-              <p className="font-body text-[12px] text-primary-foreground/60 mt-0.5">
-                Controle independente · Não afeta caixa ou comissão
-              </p>
-            </div>
-            <PlusButton size={32} title="Novo gasto" onClick={() => setShowForm(true)} />
+      <div className="rounded-[24px] border border-white/10 bg-[#1c1c1e] p-5">
+        <div className="flex items-start justify-between gap-3 mb-1">
+          <div>
+            <h2 className="font-heading text-xl font-semibold text-white tracking-tight flex items-center gap-2">
+              <ShoppingCart className="w-5 h-5 text-orange-400" />
+              Gastos do Estúdio
+            </h2>
+            <p className="font-body text-[12px] text-white/50 mt-1">
+              Controle independente · Não afeta caixa ou comissão
+            </p>
           </div>
+          <PlusButton size={32} title="Novo gasto" onClick={() => setShowForm(true)} />
+        </div>
 
-          {/* Cards de totais */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="group relative p-3.5 rounded-2xl bg-orange-500/[0.07] border border-orange-500/[0.18] overflow-hidden">
-              <div className="absolute -top-3 -right-3 w-14 h-14 rounded-full bg-orange-500/10 blur-xl" />
-              <TrendingDown className="relative w-4 h-4 text-orange-400/80 mb-1.5" />
-              <p className="relative font-heading text-[17px] font-bold text-orange-400 tabular-nums leading-tight">
-                {formatCurrency(totalGeral)}
-              </p>
-              <p className="relative font-body text-[10px] font-medium text-primary-foreground/80 uppercase tracking-wider mt-1">
-                Total Geral
-              </p>
-            </div>
-            <div className="group relative p-3.5 rounded-2xl bg-gold/[0.07] border border-gold/[0.18] overflow-hidden">
-              <div className="absolute -top-3 -right-3 w-14 h-14 rounded-full bg-gold/10 blur-xl" />
-              <Calendar className="relative w-4 h-4 text-gold/80 mb-1.5" />
-              <p className="relative font-heading text-[17px] font-bold text-gold tabular-nums leading-tight">
-                {formatCurrency(totalFiltrado)}
-              </p>
-              <p className="relative font-body text-[10px] font-medium text-primary-foreground/80 uppercase tracking-wider mt-1">
-                Período Selecionado
-              </p>
-            </div>
+        {/* Cards de totais */}
+        <div className="grid grid-cols-2 gap-3 mt-4">
+          <div className="p-3.5 rounded-[16px] bg-[#2c2c2e] border border-white/5">
+            <TrendingDown className="w-4 h-4 text-orange-400 mb-1.5" />
+            <p className="font-heading text-[17px] font-bold text-orange-400 tabular-nums leading-tight">
+              {formatCurrency(totalGeral)}
+            </p>
+            <p className="font-body text-[10px] font-medium text-white/50 uppercase tracking-wider mt-1">
+              Total Geral
+            </p>
+          </div>
+          <div className="p-3.5 rounded-[16px] bg-[#2c2c2e] border border-white/5">
+            <Calendar className="w-4 h-4 text-gold mb-1.5" />
+            <p className="font-heading text-[17px] font-bold text-gold tabular-nums leading-tight">
+              {formatCurrency(totalFiltrado)}
+            </p>
+            <p className="font-body text-[10px] font-medium text-white/50 uppercase tracking-wider mt-1">
+              Período Selecionado
+            </p>
           </div>
         </div>
       </div>
 
       {/* ── Filtro de Responsável (Dona / Zélia) ── */}
-      <div className="flex gap-2 p-1.5 rounded-2xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06]">
+      <div className="flex gap-2 p-1 rounded-[16px] bg-[#1c1c1e] border border-white/10">
         {(["Dona", "Zelia"] as const).map(resp => (
           <button
             key={resp}
             onClick={() => setResponsavelFilter(resp)}
-            className={`flex-1 rounded-xl px-3 py-2.5 font-body text-[13px] font-semibold transition-all flex items-center justify-center gap-1.5 ${
+            className={`flex-1 rounded-xl py-2 font-body text-[13px] font-semibold transition-all flex items-center justify-center gap-1.5 ${
               responsavelFilter === resp
-                ? (resp === "Dona" ? "bg-orange-500 text-white shadow-[0_0_15px_rgba(249,115,22,0.3)]" : "bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]")
-                : "text-primary-foreground/80 hover:text-primary-foreground/80 hover:bg-primary-foreground/[0.04]"
+                ? "bg-[#2c2c2e] text-white shadow-sm border border-white/5"
+                : "text-white/40 hover:text-white/80"
             }`}
           >
-            {resp === "Dona" ? "👑 Gastos da Dona" : "👩 Gastos da Zélia"}
+            {resp === "Dona" ? "Gastos da Dona" : "Gastos da Zélia"}
           </button>
         ))}
       </div>
 
       {/* ── Filtro de Período ── */}
       <div className="mb-4">
-        <p className="font-body text-[10px] uppercase tracking-widest text-primary-foreground/60 mb-2 px-0.5">
+        <p className="font-body text-[10px] uppercase tracking-widest text-white/50 mb-2 px-0.5">
           Filtrar por Período
         </p>
-        <div className="grid grid-cols-4 gap-1 p-1 bg-primary-foreground/[0.04] rounded-2xl border border-primary-foreground/[0.06]">
+        <div className="grid grid-cols-4 gap-1 p-1 bg-[#1c1c1e] rounded-[16px] border border-white/10">
           {(["total", "semana", "mes", "personalizado"] as const).map((p) => {
              const label = { total: "Total", semana: "Semana", mes: "Mês", personalizado: "Custom" }[p];
              return (
@@ -377,8 +364,8 @@ const GastosTab = () => {
                  onClick={() => setPeriodoFilter(p)}
                  className={`py-2 rounded-xl text-[11px] font-body font-semibold transition-all ${
                    periodoFilter === p
-                     ? "bg-gold/15 text-gold border border-gold/40 shadow-sm"
-                     : "text-primary-foreground/80 hover:text-primary-foreground/70"
+                     ? "bg-[#2c2c2e] text-white shadow-sm border border-white/5"
+                     : "text-white/40 hover:text-white/80"
                  }`}
                >
                  {label}
@@ -412,28 +399,24 @@ const GastosTab = () => {
 
       {/* ── Filtro de Categoria ── */}
       <div className="mb-2">
-        <p className="font-body text-[10px] uppercase tracking-widest text-white/60 mb-2 px-0.5">
+        <p className="font-body text-[10px] uppercase tracking-widest text-white/50 mb-2 px-0.5">
           Filtrar por Categoria
         </p>
         <Select value={catFilter} onValueChange={setCatFilter}>
           <SelectTrigger 
-            className="w-full rounded-2xl border border-white/10 bg-white/[0.06] py-5 text-[13px] font-body text-white"
+            className="w-full rounded-[16px] border border-white/10 bg-[#1c1c1e] py-5 text-[13px] font-body text-white"
             style={catFilter !== "Todas" ? {
-              backgroundColor: `${CATEGORIA_COLORS[catFilter]}20`,
-              borderColor: `${CATEGORIA_COLORS[catFilter]}50`,
               color: CATEGORIA_COLORS[catFilter],
             } : { color: "rgba(255,255,255,0.85)" }}
           >
             <SelectValue placeholder="Todas as Categorias" />
           </SelectTrigger>
           <SelectContent 
-            className="font-body border border-white/10 shadow-2xl"
-            style={{ backgroundColor: "#1a1a1a", color: "#ffffff" }}
+            className="font-body border border-white/10 shadow-2xl rounded-[16px] bg-[#1c1c1e] text-white"
           >
             <SelectItem 
               value="Todas" 
               className="font-body text-[13px] cursor-pointer"
-              style={{ color: "#e5e5e5" }}
             >
               Todas as Categorias
             </SelectItem>
@@ -442,7 +425,6 @@ const GastosTab = () => {
                 key={cat} 
                 value={cat}
                 className="font-body text-[13px] cursor-pointer"
-                style={{ color: "#e5e5e5" }}
               >
                 <span className="flex items-center gap-2.5">
                   <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: CATEGORIA_COLORS[cat] }} />
@@ -574,29 +556,24 @@ const GastosTab = () => {
 
       {/* ── Lista de Gastos ── */}
       <div>
-        <p className="font-body text-[10px] uppercase tracking-widest text-primary-foreground/60 mb-3 px-0.5">
+        <p className="font-body text-[10px] uppercase tracking-widest text-white/50 mb-3 px-0.5">
           Registros ({gastosFiltrados.length})
         </p>
 
         {gastosFiltrados.length === 0 ? (
-          <div className="py-16 text-center rounded-3xl border border-dashed border-primary-foreground/[0.08]">
-            <PackageOpen className="w-10 h-10 text-primary-foreground/70 mx-auto mb-3" />
-            <p className="font-body text-[13px] text-primary-foreground/60">Nenhum gasto encontrado</p>
-            <p className="font-body text-[11px] text-primary-foreground/80 mt-1">
-              Toque no + para registrar um gasto
-            </p>
+          <div className="py-10 text-center rounded-[20px] border border-white/5 bg-[#1c1c1e]">
+            <p className="font-body text-[13px] text-white/50">Nenhum gasto encontrado</p>
           </div>
         ) : (
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             {gastosFiltrados.map(g => (
               <div
                 key={g.id}
-                className="group flex items-center gap-3.5 px-4 py-3.5 rounded-2xl transition-all"
-                style={{ backgroundColor: "rgba(255,255,255,0.045)" }}
+                className="group flex items-center gap-3.5 px-4 py-3 rounded-[20px] border border-white/5 bg-[#1c1c1e] hover:bg-[#2c2c2e] hover:border-white/10 transition-all"
               >
                 {/* Ícone redondo estilo app bancário */}
                 <div
-                  className="w-11 h-11 rounded-full flex items-center justify-center shrink-0"
+                  className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
                   style={{
                     backgroundColor: `${CATEGORIA_COLORS[g.categoria] ?? "#94a3b8"}20`,
                   }}
@@ -653,54 +630,51 @@ const GastosTab = () => {
 
       {/* ── Resumo total filtrado ── */}
       {gastosFiltrados.length > 0 && (
-        <div className="rounded-2xl border border-orange-500/20 bg-gradient-to-r from-orange-500/[0.06] to-transparent p-4 flex items-center justify-between">
+        <div className="rounded-[20px] border border-white/5 bg-[#1c1c1e] p-4 mt-4 flex items-center justify-between">
           <div>
-            <p className="font-body text-[11px] text-primary-foreground/70 uppercase tracking-wider">
-              Total no período selecionado
+            <p className="font-body text-[11px] text-white/50 uppercase tracking-wider">
+              Total listado
             </p>
-            <p className="font-heading text-[20px] font-bold text-orange-400 mt-0.5">
+            <p className="font-heading text-[20px] font-bold text-white mt-0.5">
               {formatCurrency(totalFiltrado)}
             </p>
-          </div>
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500/15 border border-orange-500/25">
-            <ShoppingCart className="w-5 h-5 text-orange-400" />
           </div>
         </div>
       )}
 
       {/* ── Dialog: Novo/Editar Gasto ── */}
       <Dialog open={showForm} onOpenChange={(open) => { setShowForm(open); if (!open) resetForm(); }}>
-        <DialogContent className="max-w-[calc(100vw-1.5rem)] sm:max-w-sm border-white/[0.08] max-h-[85vh] overflow-y-auto p-0 gap-0">
+        <DialogContent className="max-w-[calc(100vw-1.5rem)] sm:max-w-sm border-white/5 bg-[#1c1c1e] rounded-[24px] max-h-[85vh] overflow-y-auto p-0 gap-0 custom-scrollbar shadow-2xl">
           
           {/* Header compacto */}
-          <div className="flex items-center gap-2.5 px-4 pt-4 pb-3 border-b border-white/[0.06]">
-            <div className="w-8 h-8 rounded-xl bg-orange-500/15 flex items-center justify-center shrink-0">
+          <div className="flex items-center gap-2.5 px-4 pt-5 pb-3">
+            <div className="w-8 h-8 rounded-[10px] bg-[#2c2c2e] flex items-center justify-center shrink-0 border border-white/5">
               <ShoppingCart className="w-4 h-4 text-orange-400" />
             </div>
             <div>
-              <p className="font-heading text-[15px] font-semibold text-white leading-tight">
+              <p className="font-heading text-[16px] font-semibold text-white leading-tight">
                 {editingId ? "Editar Gasto" : "Registrar Gasto"}
               </p>
               <p className="font-body text-[10px] text-white/40 leading-none mt-0.5">Não afeta caixa ou comissão</p>
             </div>
           </div>
 
-          <div className="space-y-3 px-4 py-3 min-w-0 w-full overflow-hidden">
+          <div className="space-y-3 px-4 pb-5 min-w-0 w-full overflow-hidden">
 
             {/* Responsável — toggle compacto */}
-            <div className="flex gap-1.5 p-1 bg-white/[0.04] rounded-xl">
+            <div className="flex gap-1.5 p-1 bg-[#2c2c2e] rounded-[16px] border border-white/5">
               {(["Dona", "Zelia"] as const).map(resp => (
                 <button
                   key={resp}
                   type="button"
                   onClick={() => setResponsavelForm(resp)}
-                  className={`flex-1 rounded-lg py-1.5 font-body text-[12px] font-semibold transition-all ${
+                  className={`flex-1 rounded-[12px] py-2 font-body text-[12px] font-semibold transition-all ${
                     responsavelForm === resp
-                      ? (resp === "Dona" ? "bg-orange-500 text-white shadow-sm" : "bg-blue-500 text-white shadow-sm")
-                      : "text-white/50 hover:text-white/70"
+                      ? "bg-[#3c3c3e] text-white shadow-sm border border-white/10"
+                      : "text-white/40 hover:text-white/80"
                   }`}
                 >
-                  {resp === "Dona" ? "👑 Dona" : "👩 Zélia"}
+                  {resp === "Dona" ? "Dona" : "Zélia"}
                 </button>
               ))}
             </div>
@@ -710,7 +684,7 @@ const GastosTab = () => {
               value={descricao}
               onChange={e => setDescricao(e.target.value)}
               placeholder="Descrição do gasto *"
-              className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] py-2.5 px-3 text-white font-body text-[16px] sm:text-[13px] placeholder:text-white/25 focus:outline-none focus:border-orange-500/40"
+              className="w-full rounded-[16px] bg-[#2c2c2e] border border-white/5 py-3 px-4 text-white font-body text-[13px] placeholder:text-white/30 focus:outline-none focus:border-white/20"
             />
 
             {/* Valor */}
@@ -721,7 +695,7 @@ const GastosTab = () => {
               value={valor}
               onChange={e => setValor(e.target.value)}
               placeholder="Valor (R$) *"
-              className="w-full rounded-xl bg-white/[0.05] border border-white/[0.07] py-2.5 px-3 text-white font-body text-[16px] sm:text-[13px] placeholder:text-white/25 focus:outline-none focus:border-orange-500/40"
+              className="w-full rounded-[16px] bg-[#2c2c2e] border border-white/5 py-3 px-4 text-white font-body text-[13px] placeholder:text-white/30 focus:outline-none focus:border-white/20"
             />
 
             {/* Data */}
@@ -729,7 +703,7 @@ const GastosTab = () => {
               type="date"
               value={dataGasto}
               onChange={e => setDataGasto(e.target.value)}
-              className="w-full max-w-full appearance-none block rounded-xl bg-white/[0.05] border border-white/[0.07] py-2.5 px-3 text-white font-body text-[16px] sm:text-[13px] focus:outline-none focus:border-orange-500/40 [&::-webkit-calendar-picker-indicator]:invert-[0.8]"
+              className="w-full max-w-full appearance-none block rounded-[16px] bg-[#2c2c2e] border border-white/5 py-3 px-4 text-white font-body text-[13px] focus:outline-none focus:border-white/20 [&::-webkit-calendar-picker-indicator]:invert-[0.8]"
             />
 
             {/* Categorias — scroll horizontal compacto */}
@@ -773,7 +747,7 @@ const GastosTab = () => {
                   onChange={e => setCategoriaPersonalizada(e.target.value)}
                   placeholder="Nome da categoria..."
                   maxLength={50}
-                  className="mt-1.5 w-full rounded-xl bg-gold/[0.06] border border-gold/25 py-2 px-3 text-white font-body text-[16px] sm:text-[12px] placeholder:text-white/25 focus:outline-none focus:border-gold/40"
+                  className="mt-1.5 w-full rounded-[16px] bg-[#2c2c2e] border border-white/5 py-3 px-4 text-white font-body text-[13px] placeholder:text-white/30 focus:outline-none focus:border-white/20"
                 />
               )}
             </div>

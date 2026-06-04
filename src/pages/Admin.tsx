@@ -41,6 +41,8 @@ import AdminDashboard from "@/components/AdminDashboard";
 import { useAdminNotifications } from "@/hooks/use-admin-notifications";
 import { unlockNotificationAudio } from "@/lib/notification-sound";
 import { Switch } from "@/components/ui/switch";
+import { useConfirm } from "@/contexts/ConfirmContext";
+import { AnimatedSearch } from "@/components/AnimatedSearch";
 
 // ─── Types ───
 interface Agendamento {
@@ -65,6 +67,8 @@ const getDateKey = (date: Date) => {
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
+
+const formatCurrency = (val: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
 
 const parseDateKey = (dateKey: string) => {
   const [year, month, day] = dateKey.split("-").map(Number);
@@ -350,6 +354,7 @@ const Admin = () => {
 
 // ─── Admin Panel (Mobile First) ───
 const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
+  const { confirm } = useConfirm();
   const [tab, setTab] = useState<Tab>(() => {
     try {
       const saved = localStorage.getItem("admin_active_tab");
@@ -421,6 +426,11 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [editingClientId, setEditingClientId] = useState<string | null>(null);
   const [editClientName, setEditClientName] = useState("");
 
+  const [editProfileEditing, setEditProfileEditing] = useState(false);
+  const [editProfileNome, setEditProfileNome] = useState("");
+  const [editProfileWhatsapp, setEditProfileWhatsapp] = useState("");
+  const [editProfileSaving, setEditProfileSaving] = useState(false);
+
   // Edit Agendamento state
   const [showEditAgendamento, setShowEditAgendamento] = useState(false);
   const [editingAg, setEditingAg] = useState<Agendamento | null>(null);
@@ -440,6 +450,41 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setEditAgDuracao(ag.duracao_minutos || 60);
     setShowEditAgendamento(true);
     setDetalheAgendamento(null);
+  };
+
+  // Sinal / Partial payment state
+  const [pagamentoAg, setPagamentoAg] = useState<Agendamento | null>(null);
+  const [pagamentoInput, setPagamentoInput] = useState<string>("");
+
+  const abrirRegistroPagamento = (a: Agendamento) => {
+    const valorTotal = Number(a.valor);
+    const sugestaoValor = Math.round(valorTotal * 0.5 * 100) / 100;
+    setPagamentoAg(a);
+    setPagamentoInput(sugestaoValor.toFixed(2).replace(".", ","));
+  };
+
+  const confirmarRegistroPagamento = async () => {
+    if (!pagamentoAg) return;
+    const valorDigitado = Number(pagamentoInput.replace(/\./g, "").replace(",", "."));
+    if (!Number.isFinite(valorDigitado) || valorDigitado <= 0) {
+      toast.error("Informe um valor válido");
+      return;
+    }
+    const a = pagamentoAg;
+    const valorTotal = Number(a.valor);
+    const pagoAnterior = Number(a.valor_pago || 0);
+    const totalAgora = Math.min(valorTotal, pagoAnterior + valorDigitado);
+
+    await supabase.from("agendamentos").update({ valor_pago: totalAgora }).eq("id", a.id);
+    setAgendamentos((prev) => prev.map((item) => (item.id === a.id ? { ...item, valor_pago: totalAgora } : item)));
+    setPagamentoAg(null);
+    setPagamentoInput("");
+    
+    if (totalAgora >= valorTotal) {
+      toast.success("Pagamento quitado integralmente ✅");
+    } else {
+      toast.success(`Sinal/Parcial registrado · ainda falta R$ ${(valorTotal - totalAgora).toFixed(2).replace(".", ",")}`);
+    }
   };
 
   const handleSaveEditAgendamento = async () => {
@@ -484,6 +529,28 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setAgendamentos(prev => prev.map(a => a.id === agId ? { ...a, cliente_nome: name || null } : a));
     setEditingClientId(null);
     toast.success("Nome do cliente atualizado");
+  };
+
+  const handleSaveProfile = async () => {
+    if (!selectedClient) return;
+    setEditProfileSaving(true);
+    const cleanWhatsapp = editProfileWhatsapp.replace(/\D/g, "");
+    
+    const { error } = await (supabase as any).rpc("admin_update_profile", {
+      p_user_id: selectedClient,
+      p_nome: editProfileNome,
+      p_whatsapp: cleanWhatsapp
+    });
+    
+    if (error) {
+      console.error("Erro ao atualizar perfil:", error);
+      toast.error("Erro ao atualizar perfil");
+    } else {
+      setClientes(prev => prev.map(c => c.id === selectedClient ? { ...c, nome: editProfileNome, whatsapp: cleanWhatsapp } : c));
+      toast.success("Perfil atualizado!");
+      setEditProfileEditing(false);
+    }
+    setEditProfileSaving(false);
   };
 
   const handleNewAgendamento = useCallback((newAg: any) => {
@@ -647,6 +714,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   };
 
   const filteredAgendamentos = agendamentos.filter((a) => {
+    if (a.servico === "Adição de Crédito") return false;
     if (statusFilter !== "todos" && a.status !== statusFilter) return false;
     if (searchTerm) {
       const name = getClientName(a.user_id, (a as any).cliente_nome).toLowerCase();
@@ -1016,7 +1084,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     const todayDate = new Date(today + "T12:00:00");
     const notifs: { tipo: "hoje" | "falta" | "pendente" | "proximo"; ag: Agendamento; label: string }[] = [];
     agendamentos.forEach((a) => {
-      if (a.status === "cancelado") return;
+      if (a.status === "cancelado" || a.servico === "Adição de Crédito") return;
       const aDate = new Date(a.data_agendamento + "T12:00:00");
       const diff = Math.round((aDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
       if (a.status === "falta") { notifs.push({ tipo: "falta", ag: a, label: "Cliente faltou" }); return; }
@@ -1106,6 +1174,72 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
       {/* ── Main content area ── */}
       <div className="flex-1 lg:ml-56">
+        {/* Modal: Registrar pagamento parcial / sinal */}
+        <Dialog open={!!pagamentoAg} onOpenChange={(open) => { if (!open) { setPagamentoAg(null); setPagamentoInput(""); } }}>
+          <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-[360px] mx-auto bg-charcoal border-primary-foreground/[0.08] rounded-2xl p-0 sm:p-0 shadow-2xl overflow-hidden">
+            {pagamentoAg && (() => {
+              const valorTotal = Number(pagamentoAg.valor);
+              const jaPago = Number(pagamentoAg.valor_pago || 0);
+              const valorAtual = Number((pagamentoInput || "0").replace(/\./g, "").replace(",", ".")) || 0;
+              const novoTotal = Math.min(valorTotal, jaPago + valorAtual);
+              const novoRestante = Math.max(0, valorTotal - novoTotal);
+              
+              return (
+                <div className="p-4 space-y-3 mx-auto w-full">
+                  <DialogHeader>
+                    <DialogTitle className="font-heading text-[16px] font-semibold text-primary-foreground">Registrar Sinal</DialogTitle>
+                  </DialogHeader>
+                  <div>
+                    <p className="font-body text-[11px] text-primary-foreground/70 mt-0.5 truncate">
+                      {getClientName(pagamentoAg.user_id, pagamentoAg.cliente_nome)} · {pagamentoAg.servico}
+                    </p>
+                  </div>
+
+                  <div className="flex justify-between items-end border-b border-primary-foreground/[0.06] pb-2.5">
+                    <div>
+                      <p className="font-body text-[9px] text-primary-foreground/60 uppercase tracking-wider mb-0.5">Total</p>
+                      <p className="font-heading text-[14px] font-bold text-primary-foreground/90">R$ {valorTotal.toFixed(2).replace(".", ",")}</p>
+                    </div>
+                    {jaPago > 0 && (
+                      <div className="text-right">
+                        <p className="font-body text-[9px] text-green-400/70 uppercase tracking-wider mb-0.5">Já pago</p>
+                        <p className="font-heading text-[14px] font-bold text-green-400">R$ {jaPago.toFixed(2).replace(".", ",")}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5 pt-1">
+                    <label className="font-body text-[10px] font-bold text-gold uppercase tracking-[0.05em] flex items-center gap-1.5">
+                      Valor recebido agora
+                    </label>
+                    <div className="relative group">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-heading text-lg text-primary-foreground/50 group-focus-within:text-gold transition-colors">R$</span>
+                      <input
+                        type="text"
+                        autoFocus
+                        placeholder="0,00"
+                        value={pagamentoInput}
+                        onChange={(e) => setPagamentoInput(e.target.value.replace(/[^0-9.,]/g, ''))}
+                        className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.08] text-primary-foreground font-heading text-xl font-bold focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-2.5 flex justify-between items-center mt-1">
+                    <p className="font-body text-[10px] text-amber-200/80">Restante a pagar:</p>
+                    <p className="font-heading text-[13px] font-bold text-amber-400">R$ {novoRestante.toFixed(2).replace(".", ",")}</p>
+                  </div>
+
+                  <div className="pt-2 flex gap-2">
+                    <button onClick={() => { setPagamentoAg(null); setPagamentoInput(""); }} className="flex-1 py-2.5 rounded-xl bg-primary-foreground/[0.04] text-primary-foreground/80 hover:bg-primary-foreground/[0.08] hover:text-primary-foreground font-heading text-[11px] font-bold uppercase tracking-wider transition-all">Cancelar</button>
+                    <button onClick={confirmarRegistroPagamento} className="flex-1 py-2.5 rounded-xl bg-gold text-charcoal font-heading text-[11px] font-bold uppercase tracking-wider hover:bg-gold/90 transition-all shadow-[0_0_10px_hsl(var(--gold)/0.2)]">Confirmar</button>
+                  </div>
+                </div>
+              );
+            })()}
+          </DialogContent>
+        </Dialog>
+
         {/* Mobile top bar (hidden on desktop) */}
         <div className="sticky top-0 z-20 border-b border-primary-foreground/[0.06] bg-charcoal/90 backdrop-blur-xl lg:hidden">
           <div className="mx-auto flex w-full max-w-md items-center justify-between px-3 py-3 sm:px-4">
@@ -1432,7 +1566,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                       <p className="mt-2 font-body text-[12px] text-primary-foreground/55">Escolha outro dia no calendário ou toque em Hoje para voltar para a agenda atual.</p>
                     </div>
                   ) : (
-                    <div className="space-y-2.5 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
+                    <div className="space-y-2.5 overflow-y-auto max-h-[60dvh] custom-scrollbar pr-1 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
                       {selectedAgendaItems.map((a) => {
                         const valorPago = Number(a.valor_pago || 0);
                         const valorTotal = Number(a.valor);
@@ -1466,137 +1600,115 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                             if (target.closest("button, input, a, select, textarea")) return;
                             setDetalheAgendamento(a);
                           }}
-                          className="group/card relative cursor-pointer overflow-hidden rounded-2xl border border-primary-foreground/10 bg-gradient-to-br from-primary-foreground/[0.07] to-primary-foreground/[0.03] p-4 pl-5 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.4)] transition-all hover:border-gold/25 hover:shadow-[0_8px_28px_-10px_hsl(var(--gold)/0.2)] active:scale-[0.99]"
+                          className="group/card relative cursor-pointer overflow-hidden rounded-xl border border-primary-foreground/10 bg-primary-foreground/[0.02] hover:bg-primary-foreground/[0.04] p-3 pl-4 shadow-sm transition-all"
                         >
                           {/* Status bar lateral */}
-                          <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${barColor}`} aria-label={barLabel} title={`Pagamento: ${barLabel}`} />
+                          <div className={`absolute left-0 top-0 bottom-0 w-1 ${barColor}`} aria-label={barLabel} title={`Pagamento: ${barLabel}`} />
+                          
                           <div className="flex items-start justify-between gap-3">
-                            <div className="flex min-w-0 flex-1 items-start gap-3">
-                              <div className="flex min-w-[60px] flex-col items-center rounded-2xl border border-gold/25 bg-gradient-to-br from-gold/15 to-gold/5 px-2 py-2.5 shadow-[0_2px_10px_-4px_hsl(var(--gold)/0.3)]">
-                                <span className="font-heading text-[18px] font-semibold leading-tight text-gold">{a.horario}</span>
-                                <span className="mt-0.5 font-body text-[9px] uppercase tracking-[0.18em] text-gold/60">horário</span>
-                              </div>
-
-                              <div className="min-w-0 flex-1">
+                            {/* Left Side: Info */}
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2.5 mb-1.5">
+                                <span className="font-heading text-[15px] font-bold text-gold">{a.horario}</span>
+                                <div className="h-3 w-[1px] bg-primary-foreground/20" />
                                 {editingClientId === a.id ? (
-                                  <div className="flex items-center gap-1.5">
+                                  <div className="flex items-center gap-1.5 flex-1 min-w-0">
                                     <input
                                       autoFocus
                                       value={editClientName}
                                       onChange={(e) => setEditClientName(e.target.value)}
                                       onKeyDown={(e) => { if (e.key === "Enter") handleSaveClientName(a.id); if (e.key === "Escape") setEditingClientId(null); }}
-                                      className="w-full rounded-lg bg-primary-foreground/[0.08] border border-gold/30 px-2 py-1 font-body text-[13px] text-primary-foreground focus:outline-none focus:ring-1 focus:ring-gold/40"
-                                      placeholder="Nome do cliente"
+                                      className="w-full rounded-md bg-primary-foreground/[0.08] border border-gold/30 px-1.5 py-0.5 font-body text-[12px] text-primary-foreground focus:outline-none"
                                     />
-                                    <button onClick={() => handleSaveClientName(a.id)} className="rounded-lg p-1 text-green-500/80 hover:text-green-400 hover:bg-green-500/10 transition-all" title="Salvar"><CheckCircle className="h-3.5 w-3.5" /></button>
-                                    <button onClick={() => setEditingClientId(null)} className="rounded-lg p-1 text-primary-foreground/50 hover:text-rose hover:bg-rose/10 transition-all" title="Cancelar"><X className="h-3.5 w-3.5" /></button>
+                                    <button onClick={() => handleSaveClientName(a.id)} className="text-green-400"><CheckCircle className="h-3.5 w-3.5" /></button>
+                                    <button onClick={() => setEditingClientId(null)} className="text-rose"><X className="h-3.5 w-3.5" /></button>
                                   </div>
                                 ) : (
-                                  <div className="flex items-center gap-1.5 group">
-                                    <p className="truncate font-body text-[15px] font-semibold text-primary-foreground">{getClientName(a.user_id, a.cliente_nome)}</p>
+                                  <div className="flex items-center gap-1.5 group flex-1 min-w-0">
+                                    <p className="truncate font-heading text-[15px] font-semibold text-primary-foreground">{getClientName(a.user_id, a.cliente_nome)}</p>
                                     <button
                                       onClick={() => { setEditingClientId(a.id); setEditClientName(a.cliente_nome || getClientName(a.user_id, a.cliente_nome)); }}
-                                      className="shrink-0 rounded-lg p-1 text-primary-foreground/40 opacity-0 group-hover:opacity-100 hover:text-gold hover:bg-gold/10 transition-all"
-                                      title="Editar nome do cliente"
+                                      className="shrink-0 p-1 text-primary-foreground/40 opacity-0 group-hover:opacity-100 hover:text-gold transition-all"
                                     ><Edit2 className="h-3 w-3" /></button>
                                   </div>
                                 )}
-                                <p className="mt-0.5 truncate font-body text-[12px] text-primary-foreground/65">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""} · {a.duracao_minutos || 60}min</p>
-                                {a.observacao && (
-                                  <div className="mt-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 py-1.5">
-                                    <p className="font-body text-[11px] text-amber-300/90 leading-snug">📝 {a.observacao}</p>
-                                  </div>
+                              </div>
+
+                              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                <p className="font-body text-[12px] text-primary-foreground/70 truncate">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""} ({a.duracao_minutos || 60}m)</p>
+                                <span className="font-heading text-[13px] font-bold text-gold/90">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</span>
+                                {Number(a.valor_pago || 0) > 0 && Number(a.valor_pago || 0) < Number(a.valor) && (
+                                  <span className="font-body text-[10px] text-green-400/80">
+                                    (Falta R$ {(Number(a.valor) - Number(a.valor_pago || 0)).toFixed(2).replace(".", ",")})
+                                  </span>
                                 )}
-                                <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                                  {statusBadge(a.status)}
-                                  {pagamentoBadge(a)}
-                                  {a.origem === "whatsapp_bot" && (
-                                    <span
-                                      className="inline-flex items-center gap-1 rounded-full border border-green-500/30 bg-green-500/10 px-2 py-0.5 font-body text-[10px] font-semibold uppercase tracking-wide text-green-400"
-                                      title="Agendamento feito pelo chatbot do WhatsApp"
-                                    >
-                                      <WhatsAppIcon className="h-3 w-3" />
-                                      WhatsApp
-                                    </span>
-                                  )}
-                                  {a.origem === "admin_manual" && (
-                                    <span
-                                      className="inline-flex items-center gap-1 rounded-full border border-gold/30 bg-gold/10 px-2 py-0.5 font-body text-[10px] font-semibold uppercase tracking-wide text-gold"
-                                      title="Cadastro manual feito no admin"
-                                    >
-                                      Presencial
-                                    </span>
-                                  )}
-                                </div>
+                              </div>
+
+                              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                                {statusBadge(a.status)}
+                                {pagamentoBadge(a)}
+                                {a.origem === "whatsapp_bot" && (
+                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-green-500/10 text-green-400 border border-green-500/20"><WhatsAppIcon className="h-2.5 w-2.5" /> WhatsApp</span>
+                                )}
+                                {a.origem === "admin_manual" && (
+                                  <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-gold/10 text-gold border border-gold/20">Presencial</span>
+                                )}
+                                {a.observacao && (
+                                  <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/20" title={a.observacao}>📝 Obs</span>
+                                )}
                               </div>
                             </div>
-                          </div>
 
-                          <div className="mt-3 rounded-xl border border-gold/15 bg-gradient-to-r from-gold/[0.08] to-gold/[0.02] px-3 py-2.5">
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <p className="font-body text-[11px] uppercase tracking-wider text-primary-foreground/55">Valor do atendimento</p>
-                              <p className="font-heading text-[16px] font-semibold text-gold">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</p>
-                            </div>
-                            {Number(a.valor_pago || 0) > 0 && (
-                              <div className="mt-1 flex flex-wrap items-center justify-between gap-2 border-t border-gold/10 pt-1.5">
-                                <p className="font-body text-[11px] text-primary-foreground/55">Já recebido</p>
-                                <p className="font-body text-[12px] font-medium text-green-400">R$ {Number(a.valor_pago || 0).toFixed(2).replace(".", ",")}</p>
+                            {/* Right Side: Actions */}
+                            <div className="flex flex-col justify-between items-end gap-2 shrink-0">
+                              <div className="flex items-center gap-0.5">
+                                {a.status === "confirmado" && (
+                                  <>
+                                    <button onClick={() => confirm({ title: "Concluir Atendimento", description: "Tem certeza que deseja marcar este agendamento como concluído?", onConfirm: () => updateStatus(a.id, "concluido") })} className="p-1.5 text-green-500/60 hover:text-green-400 transition-all" title="Concluir">
+                                      <CheckCircle className="h-4 w-4" />
+                                    </button>
+                                    <button onClick={() => confirm({ title: "Marcar Falta", description: "O cliente não compareceu ao atendimento?", onConfirm: () => updateStatus(a.id, "falta") })} className="p-1.5 text-orange-500/60 hover:text-orange-400 transition-all" title="Marcar falta">
+                                      <UserX className="h-4 w-4" />
+                                    </button>
+                                    <button onClick={() => confirm({ title: "Cancelar Agendamento", description: "Tem certeza que deseja cancelar este agendamento?", variant: "destructive", onConfirm: () => updateStatus(a.id, "cancelado") })} className="p-1.5 text-rose/60 hover:text-rose transition-all" title="Cancelar">
+                                      <X className="h-4 w-4" />
+                                    </button>
+                                  </>
+                                )}
+                                <BinButton size="sm" onClick={() => confirm({ title: "Excluir Agendamento", description: "Esta ação apagará permanentemente o agendamento.", variant: "destructive", onConfirm: () => deleteAgendamento(a.id) })} />
                               </div>
-                            )}
-                            {!isCancelado && Number(a.valor) - Number(a.valor_pago || 0) > 0 && (
-                              <div className="mt-1 flex flex-wrap items-center justify-between gap-2 border-t border-gold/10 pt-1.5">
-                                <p className="font-body text-[11px] text-primary-foreground/55">A receber</p>
-                                <p className="font-body text-[12px] font-medium text-red-400">R$ {(Number(a.valor) - Number(a.valor_pago || 0)).toFixed(2).replace(".", ",")}</p>
-                              </div>
-                            )}
 
-                          </div>
-
-                          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-primary-foreground/10 pt-3">
-                            <div className="flex flex-wrap items-center gap-1.5">
                               {a.status !== "cancelado" && a.status !== "falta" && (
-                                <>
+                                <div className="flex items-center gap-1 mt-1">
+                                  {Number(a.valor_pago || 0) < Number(a.valor) && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        abrirRegistroPagamento(a);
+                                      }}
+                                      title="Registrar sinal"
+                                      className="rounded px-2 py-1 text-[10px] font-semibold bg-primary-foreground/[0.05] hover:bg-gold/15 text-primary-foreground/70 hover:text-gold transition-all"
+                                    >
+                                      Sinal
+                                    </button>
+                                  )}
                                   <button
-                                    onClick={() => updatePayment(a.id, "sinal")}
-                                    title="Marcar sinal (50%)"
-                                    className={`rounded-lg border px-2.5 py-1.5 font-body text-[11px] font-medium transition-all ${Number(a.valor_pago || 0) > 0 && Number(a.valor_pago || 0) < Number(a.valor) ? "border-gold/50 bg-gold/20 text-gold shadow-[0_0_12px_-2px_hsl(var(--gold)/0.4)]" : "border-gold/20 bg-gold/[0.08] text-gold/80 hover:border-gold/40 hover:bg-gold/15 hover:text-gold shadow-[0_2px_8px_-4px_hsl(var(--gold)/0.2)]"}`}
-                                  >
-                                    Sinal
-                                  </button>
-                                  <button
-                                    onClick={() => updatePayment(a.id, "completo")}
+                                    onClick={() => confirm({ title: "Pagamento Completo", description: "Marcar este agendamento como totalmente pago?", onConfirm: () => updatePayment(a.id, "completo") })}
                                     title="Marcar pago completo"
-                                    className={`rounded-lg border px-2.5 py-1.5 font-body text-[11px] font-medium transition-all ${Number(a.valor_pago || 0) >= Number(a.valor) ? "border-green-500/50 bg-green-500/20 text-green-400 shadow-[0_0_12px_-2px_rgba(34,197,94,0.4)]" : "border-green-500/20 bg-green-500/[0.08] text-green-400/80 hover:border-green-500/40 hover:bg-green-500/15 hover:text-green-400 shadow-[0_2px_8px_-4px_rgba(34,197,94,0.2)]"}`}
+                                    className="rounded px-2 py-1 text-[10px] font-semibold bg-primary-foreground/[0.05] hover:bg-green-500/15 text-primary-foreground/70 hover:text-green-400 transition-all"
                                   >
-                                    Pago
+                                    Pagar
                                   </button>
                                   <button
-                                    onClick={() => openExtendDialog(a.id)}
+                                    onClick={() => confirm({ title: "Estender Duração", description: "Deseja estender a duração deste agendamento?", onConfirm: () => openExtendDialog(a.id) })}
                                     title="Estender duração"
-                                    className="rounded-lg border border-blue-400/20 bg-blue-400/[0.08] px-2.5 py-1.5 font-body text-[11px] font-medium text-blue-400/80 transition-all hover:border-blue-400/40 hover:bg-blue-400/15 hover:text-blue-400 shadow-[0_2px_8px_-4px_rgba(96,165,250,0.2)]"
+                                    className="rounded px-1.5 py-1 bg-primary-foreground/[0.05] hover:bg-blue-400/15 text-primary-foreground/70 hover:text-blue-400 transition-all"
                                   >
-                                    <span className="flex items-center gap-1"><Timer className="w-3 h-3" />Estender</span>
+                                    <Timer className="w-3.5 h-3.5" />
                                   </button>
-                                </>
+                                </div>
                               )}
-                            </div>
-
-                            <div className="flex items-center gap-1 self-end">
-                              {a.status === "confirmado" && (
-                                <>
-                                  <button onClick={() => updateStatus(a.id, "concluido")} className="rounded-lg p-1.5 text-green-500/70 transition-all hover:bg-green-500/15 hover:text-green-400" title="Concluir">
-                                    <CheckCircle className="h-4 w-4" />
-                                  </button>
-                                  <button onClick={() => updateStatus(a.id, "falta")} className="rounded-lg p-1.5 text-orange-500/70 transition-all hover:bg-orange-500/15 hover:text-orange-400" title="Marcar falta">
-                                    <UserX className="h-4 w-4" />
-                                  </button>
-                                  <button onClick={() => updateStatus(a.id, "cancelado")} className="rounded-lg p-1.5 text-rose/70 transition-all hover:bg-rose/15 hover:text-rose" title="Cancelar">
-                                    <X className="h-4 w-4" />
-                                  </button>
-                                </>
-                              )}
-                              <BinButton size="sm" onClick={() => deleteAgendamento(a.id)} />
-
                             </div>
                           </div>
                         </article>
@@ -1885,10 +1997,10 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                     {/* ── Serviços da comanda ── */}
                     <div className="relative space-y-2.5">
                       <div className="flex items-center justify-between px-1">
-                        <label className="font-body text-[10px] uppercase tracking-[0.2em] text-gold/90 font-semibold flex items-center gap-1.5">
+                        <label className="font-body text-[11px] uppercase tracking-[0.2em] text-gold font-bold drop-shadow-[0_0_8px_rgba(255,215,0,0.5)] flex items-center gap-1.5">
                           Serviços da comanda
                         </label>
-                        <span className="text-[9px] text-primary-foreground/40 ml-2 normal-case tracking-normal">(ou conceda Crédito abaixo)</span>
+                        <span className="text-[9px] text-green-300 bg-green-500/15 border border-green-500/30 px-2 py-0.5 rounded-md ml-2 normal-case tracking-normal font-medium shadow-[0_0_8px_rgba(34,197,94,0.15)]">(ou conceda Crédito abaixo)</span>
                         {manualItens.length > 0 && (
                           <span className="font-body text-[10px] text-gold/70 tabular-nums">{manualItens.length} {manualItens.length === 1 ? "item" : "itens"}</span>
                         )}
@@ -1997,14 +2109,16 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
                       {/* Buscar / adicionar serviço */}
                       <div className="relative group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary-foreground/30 group-focus-within:text-gold pointer-events-none transition-colors" />
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center justify-center transition-all duration-300 group-focus-within:scale-110 group-focus-within:rotate-3 z-10">
+                          <Search className="h-5 w-5 text-white stroke-[2.5px] drop-shadow-[0_0_4px_rgba(255,255,255,0.4)]" />
+                        </div>
                         <input
                           type="text"
                           placeholder={manualItens.length === 0 ? "Buscar serviço..." : "+ Adicionar outro serviço..."}
                           value={manualServicoSearch}
                           onFocus={() => setManualServicoOpen(true)}
                           onChange={(e) => { setManualServicoSearch(e.target.value); setManualServicoOpen(true); }}
-                          className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 placeholder:text-primary-foreground/30 backdrop-blur-sm transition-all"
+                          className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[14px] focus:outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/30 placeholder:text-primary-foreground/30 backdrop-blur-sm transition-all shadow-[0_4px_20px_-8px_rgba(0,0,0,0.5)] hover:bg-white/[0.06]"
                         />
                       </div>
 
@@ -2044,25 +2158,27 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
                     {/* ── Cliente com busca ── */}
                     <div className="relative space-y-2.5">
-                      <label className="font-body text-[10px] uppercase tracking-[0.2em] text-gold/90 font-semibold px-1 block flex items-center gap-1.5">
+                      <label className="font-body text-[11px] uppercase tracking-[0.2em] text-gold font-bold drop-shadow-[0_0_8px_rgba(255,215,0,0.5)] px-1 block flex items-center gap-1.5">
                         Cliente <span className="text-red-400">*</span>
                       </label>
                       <div className="relative group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary-foreground/50 group-focus-within:text-gold pointer-events-none transition-colors" />
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center justify-center transition-all duration-300 group-focus-within:scale-110 group-focus-within:rotate-3 z-10">
+                          <Search className="h-5 w-5 text-white stroke-[2.5px] drop-shadow-[0_0_4px_rgba(255,255,255,0.4)]" />
+                        </div>
                         <input
                           type="text"
                           placeholder={manualCliente ? clientes.find(c => c.id === manualCliente)?.nome || "Cliente selecionado" : "Buscar cliente..."}
                           value={manualClienteSearch}
                           onFocus={() => setManualClienteOpen(true)}
                           onChange={(e) => { setManualClienteSearch(e.target.value); setManualClienteOpen(true); }}
-                          className={`w-full pl-11 pr-10 py-3.5 rounded-2xl border font-body text-[14px] focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/40 placeholder:text-primary-foreground/50 backdrop-blur-sm transition-all shadow-[0_2px_12px_-4px_rgba(0,0,0,0.5)] ${
+                          className={`w-full pl-12 pr-10 py-3.5 rounded-2xl border font-body text-[14px] focus:outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/30 placeholder:text-primary-foreground/30 backdrop-blur-sm transition-all shadow-[0_4px_20px_-8px_rgba(0,0,0,0.5)] hover:bg-white/[0.06] ${
                             manualCliente ? "border-gold/60 text-gold font-medium bg-gold/[0.08]" : "border-gold/40 text-primary-foreground bg-white/[0.08]"
                           }`}
                         />
                         {manualCliente && (
                           <button
                             onClick={() => { setManualCliente(""); setManualClienteSearch(""); setManualClienteNome(""); }}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg bg-rose/10 hover:bg-rose/20 text-rose flex items-center justify-center transition-colors"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg bg-rose/10 hover:bg-rose/20 text-rose flex items-center justify-center transition-colors z-10"
                           >
                             <X className="h-3.5 w-3.5" />
                           </button>
@@ -2144,7 +2260,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
                     {!manualCliente && (
                       <div className="space-y-2.5 mt-4 p-4 rounded-2xl border border-gold/30 bg-gold/[0.03] shadow-[inset_0_0_20px_rgba(212,175,55,0.05)] relative overflow-hidden">
-                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gold/50"></div>
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-white/40 via-white to-white/40 shadow-[0_0_12px_rgba(255,255,255,0.8)]"></div>
                         <label className="font-body text-[11px] uppercase tracking-[0.2em] text-gold font-bold px-1 block flex items-center gap-1.5 z-10 relative">
                           Nome do cliente (presencial) <span className="text-red-400">*</span>
                         </label>
@@ -2168,7 +2284,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                         value={manualData}
                         onChange={(e) => setManualData(e.target.value)}
                         style={{ textAlign: "left", justifyContent: "flex-start" }}
-                        className="w-full block px-4 py-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] text-left tabular-nums focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 backdrop-blur-sm transition-all appearance-none"
+                        className="w-full block px-4 py-3.5 rounded-2xl bg-white/[0.04] border border-gold/30 text-primary-foreground font-body text-[13px] text-left tabular-nums focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 backdrop-blur-sm transition-all appearance-none shadow-[0_2px_10px_-4px_rgba(212,175,55,0.1)] hover:border-gold/50"
                       />
                     </div>
 
@@ -2187,7 +2303,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                             type="time"
                             value={manualHorario}
                             onChange={(e) => handleManualHorarioChange(e.target.value)}
-                            className="w-full min-w-0 px-2 sm:px-4 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] tabular-nums text-center focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 backdrop-blur-sm transition-all appearance-none"
+                            className="w-full min-w-0 px-2 sm:px-4 py-3 rounded-2xl bg-white/[0.04] border border-gold/30 text-primary-foreground font-body text-[13px] tabular-nums text-center focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 backdrop-blur-sm transition-all appearance-none shadow-[0_2px_10px_-4px_rgba(212,175,55,0.1)] hover:border-gold/50"
                           />
                         </div>
                         <div className="space-y-1.5 min-w-0">
@@ -2196,7 +2312,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                             type="time"
                             value={manualHorarioFim}
                             onChange={(e) => handleManualHorarioFimChange(e.target.value)}
-                            className="w-full min-w-0 px-2 sm:px-4 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] tabular-nums text-center focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 backdrop-blur-sm transition-all appearance-none"
+                            className="w-full min-w-0 px-2 sm:px-4 py-3 rounded-2xl bg-white/[0.04] border border-gold/30 text-primary-foreground font-body text-[13px] tabular-nums text-center focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 backdrop-blur-sm transition-all appearance-none shadow-[0_2px_10px_-4px_rgba(212,175,55,0.1)] hover:border-gold/50"
                           />
                         </div>
                       </div>
@@ -2209,7 +2325,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                       <select
                         value={manualFormaPagamento}
                         onChange={(e) => setManualFormaPagamento(e.target.value)}
-                        className="w-full px-4 py-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 backdrop-blur-sm transition-all appearance-none"
+                        className="w-full px-4 py-3.5 rounded-2xl bg-white/[0.04] border border-gold/30 text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 backdrop-blur-sm transition-all appearance-none shadow-[0_2px_10px_-4px_rgba(212,175,55,0.1)] hover:border-gold/50"
                       >
                         <option value="pix" className="bg-charcoal">PIX</option>
                         <option value="cartao" className="bg-charcoal">Cartão</option>
@@ -2224,7 +2340,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                         Valores Extras (Opcional)
                       </label>
                       
-                      <div className="rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.03] to-white/[0.01] p-4 space-y-4 relative overflow-hidden">
+                      <div className="rounded-2xl border border-gold/30 bg-gradient-to-b from-white/[0.03] to-white/[0.01] p-4 space-y-4 relative overflow-hidden shadow-[0_4px_24px_-8px_rgba(212,175,55,0.15)] hover:border-gold/50 transition-colors">
                         {/* Decorative background glows */}
                         <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20">
                           <div className="absolute top-0 left-1/4 w-1/4 h-full bg-blue-500/20 blur-2xl"></div>
@@ -2295,8 +2411,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                     <div className="space-y-2.5">
                       <div className={`flex items-center justify-between p-4 rounded-2xl border backdrop-blur-sm transition-all ${
                         manualPago
-                          ? "bg-gold/[0.06] border-gold/25 shadow-[0_0_24px_-12px_hsl(var(--gold)/0.5)]"
-                          : "bg-white/[0.03] border-white/[0.08]"
+                          ? "bg-gold/[0.06] border-gold/40 shadow-[0_0_24px_-12px_hsl(var(--gold)/0.6)]"
+                          : "bg-white/[0.03] border-gold/30 hover:border-gold/50 shadow-[0_4px_24px_-8px_rgba(212,175,55,0.1)]"
                       }`}>
                         <div className="min-w-0 pr-3">
                           <p className={`font-body text-[13px] font-medium ${manualPago ? "text-gold" : "text-primary-foreground"}`}>Já foi pago?</p>
@@ -2307,8 +2423,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
                       <div className={`flex items-center justify-between p-4 rounded-2xl border backdrop-blur-sm transition-all ${
                         manualConcluido
-                          ? "bg-green-500/[0.08] border-green-500/30 shadow-[0_0_24px_-12px_rgba(34,197,94,0.5)]"
-                          : "bg-white/[0.03] border-white/[0.08]"
+                          ? "bg-green-500/[0.08] border-green-500/40 shadow-[0_0_24px_-12px_rgba(34,197,94,0.6)]"
+                          : "bg-white/[0.03] border-gold/30 hover:border-gold/50 shadow-[0_4px_24px_-8px_rgba(212,175,55,0.1)]"
                       }`}>
                         <div className="min-w-0 pr-3">
                           <p className={`font-body text-[13px] font-medium flex items-center gap-1.5 ${manualConcluido ? "text-green-400" : "text-primary-foreground"}`}>
@@ -2486,59 +2602,61 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                   </div>
 
                   {/* KPIs */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-3 text-center">
-                      <p className="font-heading text-[20px] font-bold text-primary-foreground">{totalClientes}</p>
-                      <p className="font-body text-[9px] text-primary-foreground/30">Total</p>
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                    <div className="rounded-[20px] border border-white/[0.08] bg-[#1c1c1e] p-3 sm:p-4 text-center">
+                      <p className="font-heading text-[22px] sm:text-[24px] font-semibold text-white">{totalClientes}</p>
+                      <p className="font-body text-[10px] text-white/40 uppercase tracking-wider mt-0.5">Total</p>
                     </div>
-                    <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-center">
-                      <p className="font-heading text-[20px] font-bold text-emerald-400">{clientesAtivos}</p>
-                      <p className="font-body text-[9px] text-emerald-400/60">Ativos</p>
+                    <div className="rounded-[20px] border border-emerald-500/20 bg-[#1c1c1e] p-3 sm:p-4 text-center">
+                      <p className="font-heading text-[22px] sm:text-[24px] font-semibold text-emerald-400">{clientesAtivos}</p>
+                      <p className="font-body text-[10px] text-emerald-400/60 uppercase tracking-wider mt-0.5">Ativos</p>
                     </div>
-                    <div className="rounded-2xl border border-gold/20 bg-gold/5 p-3 text-center">
-                      <p className="font-heading text-[16px] font-bold text-gold">R$ {receitaTotal.toFixed(0)}</p>
-                      <p className="font-body text-[9px] text-gold/60">Receita</p>
+                    <div className="rounded-[20px] border border-white/[0.08] bg-[#1c1c1e] p-3 sm:p-4 text-center">
+                      <p className="font-heading text-[18px] sm:text-[20px] font-semibold text-white">R$ {receitaTotal.toFixed(0)}</p>
+                      <p className="font-body text-[10px] text-white/40 uppercase tracking-wider mt-0.5">Receita</p>
                     </div>
                   </div>
 
                   {/* Search */}
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/20" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
                     <input
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       placeholder="Buscar por nome ou WhatsApp..."
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white/[0.05] border border-white/10 text-white font-body text-[13px] placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-gold/20"
                     />
                     {searchTerm && (
-                      <button onClick={() => setSearchTerm("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-foreground/30 hover:text-primary-foreground/60">
+                      <button onClick={() => setSearchTerm("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/80">
                         <X className="w-3.5 h-3.5" />
                       </button>
                     )}
                   </div>
 
                   {/* Client list */}
-                  <div className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
+                  <div className="overflow-y-auto max-h-[65dvh] custom-scrollbar pr-1 pb-4 space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
                     {filteredClientes.map((c) => {
                       const count = agendamentos.filter((a) => a.user_id === c.id).length;
                       const gasto = agendamentos.filter((a) => a.user_id === c.id).reduce((s, a) => s + (a.valor_pago || 0), 0);
                       const lastVisit = agendamentos.filter((a) => a.user_id === c.id && (a.status === "confirmado" || a.status === "concluido")).sort((a, b) => b.data_agendamento.localeCompare(a.data_agendamento))[0];
                       return (
-                        <div key={c.id} onClick={() => setSelectedClient(c.id)} className="cursor-pointer rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.03] p-4 transition-all active:scale-[0.98] hover:border-gold/30">
+                        <div key={c.id} onClick={() => setSelectedClient(c.id)} className="cursor-pointer rounded-[20px] border border-white/20 bg-[#1c1c1e] p-4 hover:border-white/40 hover:bg-[#252527] active:scale-[0.98] transition-all">
                           <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                              <div className="w-10 h-10 shrink-0 rounded-full bg-gold/10 flex items-center justify-center">
-                                <span className="font-heading text-[14px] font-bold text-gold">{c.nome.charAt(0).toUpperCase()}</span>
+                            <div className="flex items-center gap-4 flex-1 min-w-0">
+                              <div className="w-12 h-12 shrink-0 rounded-full bg-[#2c2c2e] flex items-center justify-center">
+                                <span className="font-heading text-[18px] font-medium text-white">{c.nome.charAt(0).toUpperCase()}</span>
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-body text-[14px] font-medium text-primary-foreground truncate">{c.nome}</p>
-                                <p className="font-body text-[11px] text-primary-foreground/40">{formatWhatsapp(c.whatsapp)}</p>
-                                {lastVisit && <p className="font-body text-[10px] text-primary-foreground/20">Última visita: {formatDate(lastVisit.data_agendamento)}</p>}
+                                <p className="font-body text-[16px] font-medium text-white/90 truncate">{c.nome}</p>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <p className="font-body text-[13px] text-white/40">{formatWhatsapp(c.whatsapp)}</p>
+                                </div>
+                                {lastVisit && <p className="font-body text-[11px] text-white/30 mt-1">Última visita: {formatDate(lastVisit.data_agendamento)}</p>}
                               </div>
                             </div>
                             <div className="text-right shrink-0">
-                              <p className="font-body text-[14px] font-semibold text-gold">R$ {gasto.toFixed(2).replace(".", ",")}</p>
-                              <p className="font-body text-[10px] text-primary-foreground/30">{count} agendamento{count !== 1 ? "s" : ""}</p>
+                              <p className="font-heading text-[16px] font-medium text-white/90">R$ {gasto.toFixed(2).replace(".", ",")}</p>
+                              <p className="font-body text-[11px] text-white/40 mt-1 uppercase tracking-wider">{count} agendamento{count !== 1 ? "s" : ""}</p>
                             </div>
                           </div>
                         </div>
@@ -2547,48 +2665,87 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                     {filteredClientes.length === 0 && <p className="py-6 text-center font-body text-[13px] text-primary-foreground/30 lg:col-span-2">{searchTerm ? "Nenhum cliente encontrado" : "Nenhum cliente cadastrado"}</p>}
                   </div>
 
-                  <Dialog open={!!selectedClient} onOpenChange={(open) => !open && setSelectedClient(null)}>
-                    <DialogContent className="w-[calc(100vw-1rem)] max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overflow-x-hidden rounded-[24px] border border-white/[0.12] bg-[#141415]/80 backdrop-blur-3xl p-6 shadow-[0_0_40px_-10px_rgba(0,0,0,0.5)] custom-scrollbar">
+                  <Dialog open={!!selectedClient} onOpenChange={(open) => {
+                    if (!open) {
+                      setSelectedClient(null);
+                      setEditProfileEditing(false);
+                    }
+                  }}>
+                    <DialogContent className="w-[calc(100vw-1rem)] max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overflow-x-hidden rounded-[24px] border border-white/5 bg-[#1c1c1e] p-5 shadow-2xl custom-scrollbar">
                       <DialogHeader className="mb-2">
-                        <DialogTitle className="font-heading text-[22px] font-bold text-primary-foreground tracking-wide drop-shadow-md">
-                          {selProfile?.nome || "Cliente"}
+                        <DialogTitle className="font-heading text-[20px] font-semibold text-white tracking-wide flex items-center justify-between pr-6">
+                          <span>{editProfileEditing ? "Editar Perfil" : (selProfile?.nome || "Cliente")}</span>
+                          {!editProfileEditing && selProfile && (
+                            <button onClick={() => {
+                              setEditProfileNome(selProfile.nome);
+                              let initialWpp = (selProfile.whatsapp || "").replace(/\D/g, "");
+                              if (initialWpp.length > 2) initialWpp = `(${initialWpp.slice(0, 2)}) ${initialWpp.slice(2)}`;
+                              if (initialWpp.length > 10) initialWpp = `${initialWpp.slice(0, 10)}-${initialWpp.slice(10)}`;
+                              setEditProfileWhatsapp(initialWpp);
+                              setEditProfileEditing(true);
+                            }} className="p-1 text-white/40 hover:text-white transition-colors">
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </DialogTitle>
                       </DialogHeader>
                       {selProfile && (
-                        <div className="space-y-6 relative z-10">
-                          <div className="space-y-2 rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-md p-4 shadow-sm">
-                            <div className="flex items-center gap-3">
-                              <div className="flex items-center justify-center w-6 h-6 rounded-md bg-blue-500/15 border border-blue-500/20">
-                                <span className="text-[12px]">📱</span>
+                        <div className="space-y-3 relative z-10">
+                          {/* Info */}
+                          {editProfileEditing ? (
+                            <div className="space-y-3 rounded-[20px] border border-white/5 bg-[#2c2c2e] p-4">
+                              <div>
+                                <label className="font-body text-[11px] text-white/50 mb-1 block uppercase tracking-wider font-semibold">Nome</label>
+                                <input value={editProfileNome} onChange={e => setEditProfileNome(e.target.value)} className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-body text-[13px] focus:outline-none focus:border-white/30" />
                               </div>
-                              <p className="font-body text-[13px] text-primary-foreground/80 font-medium">{formatWhatsapp(selProfile.whatsapp)}</p>
+                              <div>
+                                <label className="font-body text-[11px] text-white/50 mb-1 block uppercase tracking-wider font-semibold">WhatsApp</label>
+                                <input 
+                                  value={editProfileWhatsapp} 
+                                  onChange={e => {
+                                    let val = e.target.value.replace(/\D/g, "");
+                                    if (val.length > 11) val = val.slice(0, 11);
+                                    if (val.length > 2) val = `(${val.slice(0, 2)}) ${val.slice(2)}`;
+                                    if (val.length > 10) val = `${val.slice(0, 10)}-${val.slice(10)}`;
+                                    setEditProfileWhatsapp(val);
+                                  }} 
+                                  className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-body text-[13px] focus:outline-none focus:border-white/30" 
+                                />
+                              </div>
+                              <div className="flex items-center justify-end gap-2 pt-2">
+                                <button onClick={() => setEditProfileEditing(false)} className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-white/60 font-body text-[12px] hover:bg-white/10 transition-all">Cancelar</button>
+                                <button onClick={handleSaveProfile} disabled={editProfileSaving} className="px-3 py-1.5 rounded-xl bg-blue-500/20 text-blue-300 font-body text-[12px] font-semibold hover:bg-blue-500/30 transition-all disabled:opacity-50">
+                                  {editProfileSaving ? "Salvando..." : "Salvar"}
+                                </button>
+                              </div>
                             </div>
+                          ) : (
+                            <div className="space-y-2 rounded-[20px] border border-white/5 bg-[#2c2c2e] p-3">
+                              <div className="flex items-center gap-3">
+                                <span className="text-[14px]">📱</span>
+                                <p className="font-body text-[13px] text-white/90">{formatWhatsapp(selProfile.whatsapp)}</p>
+                              </div>
                             {selProfile.cpf && (
                               <div className="flex items-center gap-3">
-                                <div className="flex items-center justify-center w-6 h-6 rounded-md bg-purple-500/15 border border-purple-500/20">
-                                  <span className="text-[12px]">🪪</span>
-                                </div>
-                                <p className="font-body text-[13px] text-primary-foreground/80 font-medium">CPF {selProfile.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}</p>
+                                <span className="text-[14px]">🪪</span>
+                                <p className="font-body text-[13px] text-white/90">CPF {selProfile.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}</p>
                               </div>
                             )}
                             <div className="flex items-center gap-3">
-                              <div className="flex items-center justify-center w-6 h-6 rounded-md bg-emerald-500/15 border border-emerald-500/20">
-                                <span className="text-[12px]">📅</span>
-                              </div>
-                              <p className="font-body text-[13px] text-primary-foreground/80 font-medium">Cliente desde {new Date(selProfile.created_at).toLocaleDateString("pt-BR")}</p>
+                              <span className="text-[14px]">📅</span>
+                              <p className="font-body text-[13px] text-white/90">Cliente desde {new Date(selProfile.created_at).toLocaleDateString("pt-BR")}</p>
                             </div>
                           </div>
+                          )}
 
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="rounded-2xl border border-emerald-500/25 bg-gradient-to-b from-emerald-500/15 to-emerald-500/5 p-4 text-center shadow-[0_4px_24px_-4px_rgba(16,185,129,0.2)] backdrop-blur-md relative overflow-hidden group hover:border-emerald-500/40 transition-all">
-                              <div className="absolute inset-0 bg-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                              <p className="font-heading text-[24px] font-bold text-emerald-400 relative z-10 drop-shadow-sm">R$ {totalGasto.toFixed(2).replace(".", ",")}</p>
-                              <p className="font-body text-[11px] text-emerald-400/80 relative z-10 mt-1 uppercase tracking-wider font-bold">Total pago</p>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="rounded-[20px] bg-[#2c2c2e] p-3 text-center">
+                              <p className="font-heading text-[18px] font-semibold text-emerald-400">R$ {totalGasto.toFixed(2).replace(".", ",")}</p>
+                              <p className="font-body text-[10px] text-emerald-400/80 mt-0.5 uppercase tracking-wider">Total pago</p>
                             </div>
-                            <div className="rounded-2xl border border-amber-500/25 bg-gradient-to-b from-amber-500/15 to-amber-500/5 p-4 text-center shadow-[0_4px_24px_-4px_rgba(245,158,11,0.2)] backdrop-blur-md relative overflow-hidden group hover:border-amber-500/40 transition-all">
-                              <div className="absolute inset-0 bg-amber-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                              <p className="font-heading text-[24px] font-bold text-amber-400 relative z-10 drop-shadow-sm">R$ {saldoDevedor.toFixed(2).replace(".", ",")}</p>
-                              <p className="font-body text-[11px] text-amber-400/80 relative z-10 mt-1 uppercase tracking-wider font-bold">Valor pendente</p>
+                            <div className="rounded-[20px] bg-[#2c2c2e] p-3 text-center">
+                              <p className="font-heading text-[18px] font-semibold text-amber-400">R$ {saldoDevedor.toFixed(2).replace(".", ",")}</p>
+                              <p className="font-body text-[10px] text-amber-400/80 mt-0.5 uppercase tracking-wider">Valor pendente</p>
                             </div>
                           </div>
 
@@ -2616,21 +2773,21 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                             };
 
                             return (
-                              <div className={`rounded-2xl border p-4 ${creditoSaldo > 0 ? "border-blue-400/40 bg-gradient-to-br from-blue-500/15 via-blue-500/[0.06] to-transparent shadow-[0_0_0_1px_rgba(59,130,246,0.1),0_8px_24px_-8px_rgba(59,130,246,0.3)]" : "border-white/[0.06] bg-white/[0.02]"}`}>
-                                <div className="flex items-center justify-between mb-2">
-                                  <p className={`font-body text-[11px] uppercase tracking-wider font-bold flex items-center gap-1.5 ${creditoSaldo > 0 ? "text-blue-400" : "text-primary-foreground/40"}`}>
+                              <div className={`rounded-[20px] p-3 border ${creditoSaldo > 0 ? "bg-blue-500/20 border-blue-400/30 text-blue-300" : "bg-white/[0.08] border-white/20 text-white/90"}`}>
+                                <div className="flex items-center justify-between mb-1">
+                                  <p className="font-body text-[11px] uppercase tracking-wider font-semibold flex items-center gap-1.5">
                                     <span>💳</span> Crédito a Haver
                                   </p>
                                   {!editingCredito ? (
-                                    <button onClick={() => { setTempCredito(creditoSaldo.toFixed(2)); setEditingCredito(true); }} className="px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.08] text-primary-foreground/50 hover:text-primary-foreground hover:bg-white/[0.08] font-body text-[10px] transition-all">
+                                    <button onClick={() => { setTempCredito(creditoSaldo.toFixed(2)); setEditingCredito(true); }} className="px-2 py-0.5 rounded-lg bg-white/10 border border-white/20 text-white/90 hover:text-white hover:bg-white/20 font-body text-[10px] transition-all">
                                       Ajustar
                                     </button>
                                   ) : (
                                     <div className="flex gap-1.5">
-                                      <button onClick={saveCredito} disabled={savingCredito} className="px-3 py-1 rounded-lg bg-blue-500/20 border border-blue-400/30 text-blue-300 font-body text-[10px] font-bold hover:bg-blue-500/30 transition-all disabled:opacity-50">
+                                      <button onClick={saveCredito} disabled={savingCredito} className="px-2.5 py-0.5 rounded-lg bg-blue-500/30 text-white font-body text-[10px] font-medium hover:bg-blue-500/50 transition-all disabled:opacity-50">
                                         {savingCredito ? "..." : "Salvar"}
                                       </button>
-                                      <button onClick={() => setEditingCredito(false)} className="px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.08] text-primary-foreground/50 font-body text-[10px] hover:bg-white/[0.08] transition-all">
+                                      <button onClick={() => setEditingCredito(false)} className="px-2.5 py-0.5 rounded-lg bg-white/10 border border-white/20 text-white/90 font-body text-[10px] hover:bg-white/20 transition-all">
                                         Cancelar
                                       </button>
                                     </div>
@@ -2638,35 +2795,29 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                 </div>
                                 {editingCredito ? (
                                   <div className="flex items-center gap-2">
-                                    <span className="font-body text-[13px] text-primary-foreground/60">R$</span>
-                                    <input type="number" step="0.01" min="0" value={tempCredito} onChange={e => setTempCredito(e.target.value)} autoFocus className="flex-1 px-3 py-2 rounded-xl bg-white/[0.05] border border-blue-400/30 text-primary-foreground font-heading text-[20px] font-bold focus:outline-none focus:ring-2 focus:ring-blue-400/30 tabular-nums" />
+                                    <span className="font-body text-[13px] text-white/80">R$</span>
+                                    <input type="number" step="0.01" min="0" value={tempCredito} onChange={e => setTempCredito(e.target.value)} autoFocus className="flex-1 px-2 py-1 rounded-xl bg-white/10 border border-white/30 text-white font-heading text-[16px] focus:outline-none focus:ring-1 focus:ring-white/50 tabular-nums" />
                                   </div>
                                 ) : (
-                                  <p className={`font-heading text-[28px] font-bold tabular-nums ${creditoSaldo > 0 ? "text-blue-300 drop-shadow-[0_0_12px_rgba(59,130,246,0.4)]" : "text-primary-foreground/20"}`}>
+                                  <p className={`font-heading text-[20px] font-semibold tabular-nums ${creditoSaldo > 0 ? "text-blue-300" : "text-white"}`}>
                                     R$ {creditoSaldo.toFixed(2).replace(".", ",")}
                                   </p>
-                                )}
-                                {creditoSaldo > 0 && !editingCredito && (
-                                  <p className="font-body text-[10px] text-blue-400/60 mt-1.5">Este saldo será descontado automaticamente no próximo pagamento</p>
                                 )}
                               </div>
                             );
                           })()}
 
                           {saldoDevedor > 0 && (
-                            <div className="rounded-2xl border border-amber-500/40 bg-gradient-to-br from-amber-500/15 via-amber-500/[0.06] to-transparent p-4 shadow-[0_0_0_1px_rgba(245,158,11,0.08),0_8px_24px_-8px_rgba(245,158,11,0.35)]">
+                            <div className="rounded-[20px] bg-amber-500/10 p-3">
                               <div className="flex items-center justify-between gap-3">
                                 <div className="min-w-0">
-                                  <p className="font-body text-[11px] uppercase tracking-wider text-amber-400/80 font-bold">Saldo devedor</p>
-                                  <p className="font-heading text-[24px] font-bold text-amber-300 leading-tight mt-0.5">
+                                  <p className="font-body text-[10px] uppercase tracking-wider text-amber-400/80 font-semibold">Saldo devedor</p>
+                                  <p className="font-heading text-[20px] font-semibold text-amber-400 leading-tight">
                                     R$ {saldoDevedor.toFixed(2).replace(".", ",")}
                                   </p>
-                                  <p className="font-body text-[12px] text-amber-200/70 mt-1">
+                                  <p className="font-body text-[11px] text-amber-400/60 mt-0.5">
                                     {pedidosDevendo} {pedidosDevendo === 1 ? "pedido em aberto" : "pedidos em aberto"}
                                   </p>
-                                </div>
-                                <div className="shrink-0 h-12 w-12 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center shadow-inner">
-                                  <span className="font-heading text-[20px] text-amber-300">⌛</span>
                                 </div>
                               </div>
                             </div>
@@ -2681,63 +2832,60 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                             </div>
                           )}
 
-                          <div className="grid grid-cols-3 gap-3">
-                            <div className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 to-transparent p-3 text-center">
-                              <p className="font-heading text-[20px] font-bold text-emerald-400">{confirmedCount}</p>
-                              <p className="font-body text-[10px] text-emerald-400/70 uppercase tracking-widest mt-0.5 font-semibold">Realizadas</p>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div className="rounded-[16px] bg-[#2c2c2e] p-2 text-center">
+                              <p className="font-heading text-[16px] font-semibold text-emerald-400">{confirmedCount}</p>
+                              <p className="font-body text-[9px] text-emerald-400/70 uppercase tracking-widest mt-0.5">Realizadas</p>
                             </div>
-                            <div className="rounded-2xl border border-red-500/20 bg-gradient-to-br from-red-500/10 to-transparent p-3 text-center">
-                              <p className="font-heading text-[20px] font-bold text-red-400">{faltaCount}</p>
-                              <p className="font-body text-[10px] text-red-400/70 uppercase tracking-widest mt-0.5 font-semibold">Faltas</p>
+                            <div className="rounded-[16px] bg-[#2c2c2e] p-2 text-center">
+                              <p className="font-heading text-[16px] font-semibold text-red-400">{faltaCount}</p>
+                              <p className="font-body text-[9px] text-red-400/70 uppercase tracking-widest mt-0.5">Faltas</p>
                             </div>
-                            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 text-center">
-                              <p className="font-heading text-[20px] font-bold text-primary-foreground/50">{cancelCount}</p>
-                              <p className="font-body text-[10px] text-primary-foreground/30 uppercase tracking-widest mt-0.5 font-semibold">Canceladas</p>
+                            <div className="rounded-[16px] bg-[#2c2c2e] p-2 text-center">
+                              <p className="font-heading text-[16px] font-semibold text-white/50">{cancelCount}</p>
+                              <p className="font-body text-[9px] text-white/30 uppercase tracking-widest mt-0.5">Canceladas</p>
                             </div>
                           </div>
 
-                          <div className="space-y-3">
-                            <p className="font-body text-[13px] font-semibold text-primary-foreground/60 uppercase tracking-wider pl-1">Histórico de procedimentos</p>
-                            <div className="max-h-[220px] space-y-2 overflow-y-auto pr-2 custom-scrollbar">
-                              {selAgendamentos.length === 0 && <p className="py-6 text-center font-body text-[13px] text-primary-foreground/30 italic">Nenhum procedimento registrado.</p>}
+                          <div className="space-y-2">
+                            <p className="font-body text-[11px] font-medium text-white/50 uppercase tracking-wider pl-1">Histórico</p>
+                            <div className="max-h-[180px] space-y-1.5 overflow-y-auto pr-1 custom-scrollbar">
+                              {selAgendamentos.length === 0 && <p className="py-4 text-center font-body text-[12px] text-white/30 italic">Nenhum procedimento registrado.</p>}
                               {selAgendamentos
                                 .sort((a, b) => b.data_agendamento.localeCompare(a.data_agendamento))
                                 .map((a) => (
-                                  <div key={a.id} className="group flex flex-col gap-2 rounded-2xl border border-white/[0.04] bg-white/[0.02] p-3.5 hover:bg-white/[0.04] hover:border-white/[0.08] transition-all">
-                                    <div className="flex items-start justify-between gap-3">
+                                  <div key={a.id} className="flex flex-col gap-1.5 rounded-[16px] border border-white/20 bg-[#2c2c2e] p-3 transition-colors hover:border-white/40">
+                                    <div className="flex items-start justify-between gap-2">
                                       <div className="flex-1 min-w-0">
-                                        <p className="font-heading text-[14px] font-semibold text-primary-foreground truncate">{a.servico}{a.variacao ? ` - ${a.variacao}` : ""}</p>
-                                        <p className="font-body text-[11px] text-primary-foreground/40 mt-0.5 flex items-center gap-1.5">
+                                        <p className="font-heading text-[13px] font-medium text-white truncate">{a.servico}{a.variacao ? ` - ${a.variacao}` : ""}</p>
+                                        <p className="font-body text-[11px] text-white/40 mt-0.5 flex items-center gap-1.5">
                                           <span>{formatDate(a.data_agendamento)}</span>
-                                          <span className="w-1 h-1 rounded-full bg-primary-foreground/20"></span>
+                                          <span className="w-1 h-1 rounded-full bg-white/20"></span>
                                           <span>{a.horario}</span>
                                         </p>
                                       </div>
                                       <div className="text-right shrink-0">
-                                        <p className="font-body text-[14px] font-bold text-gold">
+                                        <p className="font-body text-[13px] font-semibold text-white/90">
                                           R$ {(a.valor_pago || 0).toFixed(2).replace(".", ",")}
-                                        </p>
-                                        <p className="font-body text-[10px] text-primary-foreground/30 line-through">
-                                          R$ {Number(a.valor).toFixed(2).replace(".", ",")}
                                         </p>
                                       </div>
                                     </div>
-                                    <div className="flex items-center justify-between mt-1">
+                                    <div className="flex items-center justify-between">
                                       <span
-                                          className={`px-2 py-1 rounded-md font-body text-[10px] font-semibold tracking-wide uppercase ${
+                                          className={`font-body text-[10px] font-medium ${
                                             a.status === "confirmado" || a.status === "concluido"
-                                              ? "bg-emerald-500/10 text-emerald-400"
+                                              ? "text-emerald-400"
                                               : a.status === "falta"
-                                                ? "bg-red-500/10 text-red-400"
+                                                ? "text-red-400"
                                                 : a.status === "cancelado"
-                                                  ? "bg-white/[0.05] text-primary-foreground/40"
-                                                  : "bg-gold/10 text-gold"
+                                                  ? "text-white/40"
+                                                  : "text-amber-400"
                                           }`}
                                         >
                                           {a.status}
                                       </span>
                                       {a.status !== "cancelado" && a.status !== "falta" && Number(a.valor_pago || 0) < Number(a.valor) && (
-                                        <span className="px-2 py-1 rounded-md font-body text-[10px] font-bold uppercase tracking-wide bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                                        <span className="font-body text-[10px] text-amber-400/80">
                                           Devendo R$ {(Number(a.valor) - Number(a.valor_pago || 0)).toFixed(2).replace(".", ",")}
                                         </span>
                                       )}
@@ -3810,6 +3958,8 @@ const ServicosTab = ({
       <p className="font-body text-[10px] text-primary-foreground/25 text-center pt-2">
         ✨ Tudo que você criar aqui aparece automaticamente para os clientes no agendamento
       </p>
+
+
     </div>
   );
 };
