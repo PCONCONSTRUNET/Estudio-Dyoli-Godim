@@ -73,6 +73,9 @@ const DividasTab = () => {
  
  if (dividasRes.data) setDividas(dividasRes.data);
  if (profilesRes.data) setProfiles(profilesRes.data);
+
+ // Limpar agendamentos órfãos de dívidas excluídas
+ await cleanupOrphanedDividaPayments(dividasRes.data || []);
  } catch (error) {
  console.error(error);
  toast.error("Erro ao carregar dados.");
@@ -80,6 +83,43 @@ const DividasTab = () => {
  setLoading(false);
  }
  };
+
+ // Remove agendamentos de "Pagamento de Dívida" cujas dívidas de origem já foram excluídas
+ const cleanupOrphanedDividaPayments = async (activeDividas: Divida[]) => {
+ try {
+ // Buscar todos os agendamentos que são pagamentos de dívida
+ const { data: agsPagamentoDivida } = await (supabase as any)
+ .from("agendamentos")
+ .select("id, observacao, servico")
+ .like("servico", "Pagamento de Dívida - %");
+
+ if (!agsPagamentoDivida || agsPagamentoDivida.length === 0) return;
+
+ const activeDividaIds = new Set(activeDividas.map((d: Divida) => d.id));
+
+ const idsOrfaos = agsPagamentoDivida
+ .filter((ag: any) => {
+ // Se tem divida_id na observacao, verifica se ainda existe
+ const match = (ag.observacao || "").match(/^divida_id:([a-f0-9-]+)/);
+ if (match) {
+ return !activeDividaIds.has(match[1]); // órfão se o divida_id não existe mais
+ }
+ // Se NÃO tem divida_id (formato antigo), considera órfão pois
+ // não tem como rastrear a dívida de origem
+ return true;
+ })
+ .map((ag: any) => ag.id);
+
+ if (idsOrfaos.length > 0) {
+ await (supabase as any).from("agendamentos").delete().in("id", idsOrfaos);
+ console.log(`[DividasTab] ${idsOrfaos.length} agendamento(s) órfão(s) de dívidas excluídas removidos.`);
+ }
+ } catch (err) {
+ // Silencioso — não interrompe o fluxo normal
+ console.error("[DividasTab] Erro ao limpar órfãos:", err);
+ }
+ };
+
 
  const filteredDividas = dividas.filter(d => 
  d.cliente_nome.toLowerCase().includes(search.toLowerCase()) ||
