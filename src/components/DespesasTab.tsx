@@ -264,11 +264,17 @@ const DespesasTab = () => {
  toast.success(newPago ? "Marcado como pago ✅" : "Desmarcado");
  };
 
- const deleteDespesa = async (id: string) => {
- await (supabase.from as any)("despesas").delete().eq("id", id);
- setDespesas((prev) => prev.filter((d) => d.id !== id));
- toast.success("Despesa removida");
- };
+  const deleteDespesa = async (id: string) => {
+    await (supabase.from as any)("despesas").delete().eq("id", id);
+    setDespesas((prev) => prev.filter((d) => d.id !== id));
+    toast.success("Despesa removida");
+  };
+
+  const deleteDespesaGroup = async (recorrenciaId: string) => {
+    await (supabase.from as any)("despesas").delete().eq("recorrencia_id", recorrenciaId);
+    setDespesas((prev) => prev.filter((d) => d.recorrencia_id !== recorrenciaId));
+    toast.success("Grupo de despesas removido");
+  };
 
  const resetForm = () => {
  setDescricao("");
@@ -614,7 +620,7 @@ const DespesasTab = () => {
  {formatCurrency(Number(d.valor))}
  </p>
  <div className="flex items-center gap-2">
- <BinButton size="sm" onClick={() => confirm({ title: "Excluir Despesa", description: "Esta ação apagará permanentemente a despesa.", variant: "destructive", onConfirm: () => deleteDespesa(d.id) })} />
+ {!inGroup && <BinButton size="sm" onClick={() => confirm({ title: "Excluir Despesa", description: "Esta ação apagará permanentemente a despesa.", variant: "destructive", onConfirm: () => deleteDespesa(d.id) })} />}
  <button
  onClick={() => confirm({ title: d.pago ? "Desmarcar como Pago" : "Marcar como Pago", description: d.pago ? "Deseja marcar esta despesa como não paga?" : "Confirmar o pagamento desta despesa?", onConfirm: () => togglePago(d) })}
  className={`px-3 py-1.5 rounded-lg font-bold text-[11px] transition-all flex items-center gap-1.5 ${
@@ -650,9 +656,10 @@ const DespesasTab = () => {
 
  return (
  <div key={item.recorrenciaId} className="rounded-xl border border-primary-foreground/[0.08] bg-charcoal overflow-hidden">
+ <div className="w-full flex items-center hover:bg-primary-foreground/[0.02] transition-all">
  <button
  onClick={() => toggleGroup(item.recorrenciaId)}
- className="w-full p-3.5 flex items-center gap-3 text-left hover:bg-primary-foreground/[0.02] transition-all"
+ className="flex-1 p-3.5 flex items-center gap-3 text-left"
  >
  <div className="flex-1 min-w-0">
  <div className="flex items-center gap-2">
@@ -679,6 +686,10 @@ const DespesasTab = () => {
  </div>
  <ChevronDown className={`h-5 w-5 text-primary-foreground/50 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
  </button>
+ <div className="pr-3.5 pl-1 shrink-0">
+ <BinButton size="sm" onClick={() => confirm({ title: "Excluir Despesa Fixa", description: "Esta ação apagará TODAS as parcelas desta despesa fixa permanentemente.", variant: "destructive", onConfirm: () => deleteDespesaGroup(item.recorrenciaId) })} />
+ </div>
+ </div>
  {open && (
  <div className="border-t border-primary-foreground/[0.06] p-2 space-y-2 bg-primary-foreground/[0.02] max-h-[350px] overflow-y-auto">
  {grupo.map((p) => renderRow(p, true))}
