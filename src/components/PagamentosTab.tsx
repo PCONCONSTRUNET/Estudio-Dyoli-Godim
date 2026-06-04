@@ -449,7 +449,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                        <p className="font-heading text-[15px] font-bold text-green-400">
                          {formatCurrency(Math.max(0, ag.valor_fatura - Number(ag.valor_desconto_credito)))}
                        </p>
-                       <p className="font-heading text-[10px] font-medium text-primary-foreground/50 line-through">
+                       <p className="font-heading text-[10px] font-medium text-primary-foreground/75 line-through">
                          {formatCurrency(ag.valor_fatura)}
                        </p>
                      </div>
@@ -497,7 +497,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                      {!ag._is_saida && <Detail label="Valor Total Original" value={
                        Number(ag.valor_desconto_credito) > 0 ? (
                          <div className="flex items-center gap-2 mt-0.5">
-                           <span className="text-primary-foreground/50 text-[12px] line-through">{formatCurrency(ag.valor)}</span>
+                           <span className="text-primary-foreground/75 text-[12px] line-through">{formatCurrency(ag.valor)}</span>
                            <span className="text-green-400 font-bold">{formatCurrency(Math.max(0, ag.valor - Number(ag.valor_desconto_credito)))}</span>
                          </div>
                        ) : formatCurrency(ag.valor)

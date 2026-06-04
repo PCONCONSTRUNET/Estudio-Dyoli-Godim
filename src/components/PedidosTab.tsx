@@ -676,9 +676,9 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                         <p className="font-heading text-[14px] font-bold text-green-400">
                           {formatCurrency(Math.max(0, Number(a.valor) - Number(a.valor_desconto_credito)))}
                         </p>
-                        <p className="font-heading text-[10px] font-medium text-primary-foreground/50 line-through">
-                          {formatCurrency(Number(a.valor))}
-                        </p>
+                         <p className="font-heading text-[10px] font-medium text-primary-foreground/75 line-through">
+                           {formatCurrency(Number(a.valor))}
+                         </p>
                       </div>
                     ) : (
                       <p className="font-heading text-[14px] font-bold text-gold">{formatCurrency(Number(a.valor))}</p>
@@ -699,7 +699,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                         <p className="text-primary-foreground/95">Valor total</p>
                         {Number(a.valor_desconto_credito) > 0 ? (
                           <div className="flex items-center gap-2 mt-0.5">
-                            <p className="text-primary-foreground/50 font-medium text-[10px] line-through">{formatCurrency(Number(a.valor))}</p>
+                             <p className="text-primary-foreground/75 font-medium text-[10px] line-through">{formatCurrency(Number(a.valor))}</p>
                             <p className="text-green-400 font-bold">{formatCurrency(Math.max(0, Number(a.valor) - Number(a.valor_desconto_credito)))}</p>
                           </div>
                         ) : (
