@@ -556,11 +556,22 @@ const DespesasTab = () => {
  if (d.fixa && d.recorrencia_id) {
  if (seen.has(d.recorrencia_id)) return;
  seen.add(d.recorrencia_id);
- // Pega TODAS as parcelas (não só filtradas) para o resumo
+ // Pega apenas as parcelas que correspondem ao filtro atual
  const todas = despesas
  .filter((x) => x.recorrencia_id === d.recorrencia_id)
  .sort((a, b) => a.data_vencimento.localeCompare(b.data_vencimento));
- items.push({ type: "group", recorrenciaId: d.recorrencia_id, despesas: todas });
+ 
+ // Filtra as parcelas do grupo de acordo com o filtro ativo
+ const parcelasDoFiltro = todas.filter((x) => {
+ const s = getStatus(x);
+ if (filter === "pagas") return s === "pago";
+ if (filter === "pendentes") return s === "pendente" || s === "hoje" || s === "atrasado";
+ if (filter === "atrasadas") return s === "atrasado";
+ return true;
+ });
+ 
+ // Exibe o grupo com as parcelas relevantes ao filtro, mas mantém o "todas" para o resumo
+ items.push({ type: "group", recorrenciaId: d.recorrencia_id, despesas: parcelasDoFiltro.length > 0 ? parcelasDoFiltro : todas });
  } else {
  items.push({ type: "single", despesa: d });
  }
