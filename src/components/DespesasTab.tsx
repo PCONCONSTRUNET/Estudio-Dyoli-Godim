@@ -537,8 +537,9 @@ const DespesasTab = () => {
  </div>
 
  {/* Despesas list */}
+ <div className="relative">
  {filtered.length === 0 ? (
- <div className="py-12 text-center">
+ <div className="py-12 text-center rounded-xl border border-dashed border-primary-foreground/[0.08]">
  <p className="font-body text-[13px] text-primary-foreground/95">Nenhuma despesa encontrada</p>
  </div>
  ) : (
@@ -672,6 +673,7 @@ const DespesasTab = () => {
  })()}
  </div>
  )}
+  </div>
 
  {/* Add Dialog */}
  <Dialog open={showForm} onOpenChange={setShowForm}>
