@@ -182,7 +182,9 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
       } else {
         const valorPago = Number(a.valor_pago || 0);
         if (valorPago === 0) {
-           list.push({ ...a, _faturaId: a.id, fatura_tipo: "pendente", valor_fatura: a.valor, data_fatura: a.data_agendamento });
+           if (Number(a.valor) > 0) {
+             list.push({ ...a, _faturaId: a.id, fatura_tipo: "pendente", valor_fatura: a.valor, data_fatura: a.data_agendamento });
+           }
         } else if (valorPago < a.valor) {
            list.push({
              ...a, _faturaId: `${a.id}-pago`, fatura_tipo: "pagamento", valor_fatura: valorPago, data_fatura: a.data_agendamento, _is_partial: true, _desc_pagamento: "Fatura Paga"

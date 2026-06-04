@@ -806,8 +806,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
 
   const saveManualRegistration = async () => {
-    if (manualItens.length === 0) {
-      toast.error("Adicione pelo menos 1 serviço");
+    if (manualItens.length === 0 && Number(manualCredito) <= 0) {
+      toast.error("Adicione pelo menos 1 serviço ou conceda um crédito");
       return;
     }
     if (!manualData || !manualHorario) {
@@ -821,15 +821,17 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setManualSaving(true);
     try {
       let userId = manualCliente || null;
-      const duracao = manualDuracaoTotal || 60;
+      const duracao = manualItens.length === 0 ? 0 : (manualDuracaoTotal || 60);
       const valor = manualValorTotal;
 
       // Agrupa duplicados: "Perfuração (×3), Troca de joia"
       const counts = new Map<string, number>();
       manualItens.forEach(it => counts.set(it.nome, (counts.get(it.nome) || 0) + 1));
-      const servicoLabel = Array.from(counts.entries())
-        .map(([nome, qtd]) => qtd > 1 ? `${nome} (×${qtd})` : nome)
-        .join(", ");
+      const servicoLabel = manualItens.length > 0
+        ? Array.from(counts.entries())
+          .map(([nome, qtd]) => qtd > 1 ? `${nome} (×${qtd})` : nome)
+          .join(", ")
+        : "Adição de Crédito";
 
       const clienteNome = manualCliente
         ? (clientes.find(c => c.id === manualCliente)?.nome || "")
@@ -936,7 +938,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         valor_credito: manualCredito,
         valor_desconto_credito: descontoAplicado > 0 ? descontoAplicado : null,
         duracao_minutos: duracao,
-        status: manualConcluido ? "concluido" : "confirmado",
+        status: manualItens.length === 0 ? "concluido" : (manualConcluido ? "concluido" : "confirmado"),
         forma_pagamento: manualFormaPagamento,
         user_id: userId,
         cliente_nome: clienteNome || null,
@@ -1884,8 +1886,9 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                     <div className="relative space-y-2.5">
                       <div className="flex items-center justify-between px-1">
                         <label className="font-body text-[10px] uppercase tracking-[0.2em] text-gold/90 font-semibold flex items-center gap-1.5">
-                          Serviços da comanda <span className="text-red-400">*</span>
+                          Serviços da comanda
                         </label>
+                        <span className="text-[9px] text-primary-foreground/40 ml-2 normal-case tracking-normal">(ou conceda Crédito abaixo)</span>
                         {manualItens.length > 0 && (
                           <span className="font-body text-[10px] text-gold/70 tabular-nums">{manualItens.length} {manualItens.length === 1 ? "item" : "itens"}</span>
                         )}
