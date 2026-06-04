@@ -132,9 +132,7 @@ const DividasTab = () => {
  console.error(error);
  toast.error(error.message || "Erro ao criar dívida.");
  }
- };
-
- const handleDarBaixa = async () => {
+  const handleDarBaixa = async () => {
  if (!selectedDivida) return;
  
  const valorPagar = parseFloat(valorBaixa.replace(",", "."));
@@ -174,7 +172,7 @@ const DividasTab = () => {
  data_agendamento: now.toISOString().split('T')[0],
  horario: timeStr,
  status: "concluido",
- observacao: `Baixa de dívida no valor de ${formatCurrency(valorPagar)}`
+ observacao: `divida_id:${selectedDivida.id} | Baixa de dívida no valor de ${formatCurrency(valorPagar)}`
  });
 
  if (errorAgendamento) throw errorAgendamento;
@@ -197,16 +195,40 @@ const DividasTab = () => {
  }
  };
 
- const handleDeleteDivida = (id: string) => {
+ const handleDeleteDivida = (id: string, descricao: string) => {
  confirm({
  title: "Excluir Dívida",
- description: "Tem certeza que deseja excluir esta dívida? Todo o histórico dela será apagado.",
+ description: "Tem certeza que deseja excluir esta dívida? O histórico de pagamentos vinculado também será apagado.",
  variant: "destructive",
  onConfirm: async () => {
  try {
+ // 1. Buscar todos os agendamentos vinculados a esta dívida (pelo divida_id na observacao)
+ const { data: agsVinculados } = await supabase
+ .from("agendamentos")
+ .select("id, observacao")
+ .like("observacao", `divida_id:${id}%`);
+
+ // 2. Também buscar pela chave antiga (sem divida_id) para compatibilidade
+ const { data: agsAntigos } = await supabase
+ .from("agendamentos")
+ .select("id")
+ .eq("servico", `Pagamento de Dívida - ${descricao}`)
+ .ilike("observacao", "%Baixa de dívida%");
+
+ const idsParaExcluir = [
+ ...(agsVinculados?.map(a => a.id) || []),
+ ...(agsAntigos?.map(a => a.id) || [])
+ ].filter((v, i, arr) => arr.indexOf(v) === i); // deduplicar
+
+ if (idsParaExcluir.length > 0) {
+ await supabase.from("agendamentos").delete().in("id", idsParaExcluir);
+ }
+
+ // 3. Excluir a dívida em si
  const { error } = await supabase.from("dividas").delete().eq("id", id);
  if (error) throw error;
- toast.success("Dívida excluída com sucesso.");
+
+ toast.success("Dívida e pagamentos vinculados excluídos com sucesso.");
  setDividas(dividas.filter(d => d.id !== id));
  } catch (error: any) {
  console.error(error);
@@ -321,7 +343,7 @@ const DividasTab = () => {
  <button
  onClick={(e) => {
  e.stopPropagation();
- handleDeleteDivida(divida.id);
+ handleDeleteDivida(divida.id, divida.descricao);
  }}
  className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-primary-foreground/85 hover:bg-rose/10 hover:text-rose transition-colors"
  title="Excluir Dívida"
