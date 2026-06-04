@@ -1975,7 +1975,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
               {/* Manual Registration Dialog */}
               <Dialog open={showManualRegister} onOpenChange={setShowManualRegister}>
-                <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-md max-h-[88dvh] overflow-y-auto overflow-x-hidden bg-charcoal/95 backdrop-blur-xl border border-gold/25 rounded-[1.75rem] p-0 shadow-2xl">
+                <DialogContent onOpenAutoFocus={(e) => e.preventDefault()} className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-md max-h-[88dvh] overflow-y-auto overflow-x-hidden bg-charcoal/95 backdrop-blur-xl border border-gold/25 rounded-[1.75rem] p-0 shadow-2xl">
                   {/* Gold halos */}
                   <div aria-hidden className="pointer-events-none absolute -top-20 -left-20 w-44 h-44 bg-gold/15 blur-[80px] rounded-full" />
                   <div aria-hidden className="pointer-events-none absolute -bottom-24 -right-20 w-52 h-52 bg-gold/[0.06] blur-[100px] rounded-full" />
