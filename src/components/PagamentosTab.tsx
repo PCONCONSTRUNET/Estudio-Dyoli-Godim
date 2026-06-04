@@ -443,10 +443,21 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                     {ag.servico}{ag.variacao ? ` · ${ag.variacao}` : ""} {ag.horario !== "00:00" ? `· ${formatDate(ag.data_fatura)}` : `· ${formatDate(ag.data_fatura)}`}
                   </p>
                 </div>
-                <div className="shrink-0 text-right">
-                  <p className={`font-heading text-[15px] font-bold ${ag._is_saida ? "text-red-400" : isPendingAmount ? "text-amber-300" : "text-gold"}`}>
-                    {ag._is_saida && "-"} {formatCurrency(ag.valor_fatura)}
-                  </p>
+                 <div className="shrink-0 text-right">
+                   {Number(ag.valor_desconto_credito) > 0 && !ag._is_saida && !ag.is_extra && ag.valor_fatura === Number(ag.valor) ? (
+                     <div className="flex flex-col items-end">
+                       <p className="font-heading text-[15px] font-bold text-green-400">
+                         {formatCurrency(Math.max(0, ag.valor_fatura - Number(ag.valor_desconto_credito)))}
+                       </p>
+                       <p className="font-heading text-[10px] font-medium text-primary-foreground/50 line-through">
+                         {formatCurrency(ag.valor_fatura)}
+                       </p>
+                     </div>
+                   ) : (
+                     <p className={`font-heading text-[15px] font-bold ${ag._is_saida ? "text-red-400" : isPendingAmount ? "text-amber-300" : "text-gold"}`}>
+                       {ag._is_saida && "-"} {formatCurrency(ag.valor_fatura)}
+                     </p>
+                   )}
                   <div className="flex items-center justify-end gap-1">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-body text-[9px] font-bold uppercase tracking-wider border relative ${
                       isPendingAmount 
@@ -483,7 +494,14 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                     } />
                     {!ag._is_saida && <Detail label="Duração" value={`${ag.duracao_minutos} min`} />}
                     <Detail label={ag._is_saida ? "Valor da Saída" : "Valor Desta Fatura"} value={formatCurrency(ag.valor_fatura)} />
-                    {!ag._is_saida && <Detail label="Valor Total Original" value={formatCurrency(ag.valor)} />}
+                     {!ag._is_saida && <Detail label="Valor Total Original" value={
+                       Number(ag.valor_desconto_credito) > 0 ? (
+                         <div className="flex items-center gap-2 mt-0.5">
+                           <span className="text-primary-foreground/50 text-[12px] line-through">{formatCurrency(ag.valor)}</span>
+                           <span className="text-green-400 font-bold">{formatCurrency(Math.max(0, ag.valor - Number(ag.valor_desconto_credito)))}</span>
+                         </div>
+                       ) : formatCurrency(ag.valor)
+                     } />}
                     <Detail label={ag._is_saida ? "Status" : "Status da Fatura"} value={
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-body text-[9px] font-bold uppercase tracking-wider border relative ${
                         isPendingAmount 
@@ -500,7 +518,10 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                       </span>
                     } />
                     {!ag._is_saida && ag.status && <Detail label="Status do Serviço" value={ag.status.charAt(0).toUpperCase() + ag.status.slice(1)} />}
-                    {Number(ag.valor_gorjeta) > 0 && (
+                     {Number(ag.valor_desconto_credito) > 0 && (
+                       <Detail label="Desc. de Crédito Utilizado" value={<span className="text-amber-400">- {formatCurrency(Number(ag.valor_desconto_credito))}</span>} />
+                     )}
+                     {Number(ag.valor_gorjeta) > 0 && (
                       <Detail label="Gorjeta" value={<span className="text-purple-400">{formatCurrency(Number(ag.valor_gorjeta))}</span>} />
                     )}
                     {Number(ag.valor_troco) > 0 && (

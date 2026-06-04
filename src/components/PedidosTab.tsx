@@ -671,7 +671,18 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                     <p className="font-body text-[11px] text-primary-foreground/75 truncate">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
-                    <p className="font-heading text-[14px] font-bold text-gold">{formatCurrency(Number(a.valor))}</p>
+                    {Number(a.valor_desconto_credito) > 0 ? (
+                      <div className="flex flex-col items-end">
+                        <p className="font-heading text-[14px] font-bold text-green-400">
+                          {formatCurrency(Math.max(0, Number(a.valor) - Number(a.valor_desconto_credito)))}
+                        </p>
+                        <p className="font-heading text-[10px] font-medium text-primary-foreground/50 line-through">
+                          {formatCurrency(Number(a.valor))}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="font-heading text-[14px] font-bold text-gold">{formatCurrency(Number(a.valor))}</p>
+                    )}
                     {statusBadge(a.status)}
                   </div>
                   <ChevronDown className={`h-3.5 w-3.5 text-primary-foreground/95 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
@@ -686,7 +697,14 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                       </div>
                       <div>
                         <p className="text-primary-foreground/95">Valor total</p>
-                        <p className="text-primary-foreground font-medium">{formatCurrency(Number(a.valor))}</p>
+                        {Number(a.valor_desconto_credito) > 0 ? (
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <p className="text-primary-foreground/50 font-medium text-[10px] line-through">{formatCurrency(Number(a.valor))}</p>
+                            <p className="text-green-400 font-bold">{formatCurrency(Math.max(0, Number(a.valor) - Number(a.valor_desconto_credito)))}</p>
+                          </div>
+                        ) : (
+                          <p className="text-primary-foreground font-medium">{formatCurrency(Number(a.valor))}</p>
+                        )}
                       </div>
                       <div>
                         <p className="text-primary-foreground/95">Criado em</p>
@@ -706,9 +724,15 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                         </div>
                       </div>
 
-                      {(Number(a.valor_gorjeta) > 0 || Number(a.valor_troco) > 0 || Number(a.valor_credito) > 0) && (
+                      {(Number(a.valor_gorjeta) > 0 || Number(a.valor_troco) > 0 || Number(a.valor_credito) > 0 || Number(a.valor_desconto_credito) > 0) && (
                         <div className="col-span-2 rounded-xl border border-primary-foreground/10 bg-primary-foreground/[0.03] p-3 space-y-2 mt-1">
                           <p className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/60 mb-1">Extras Financeiros</p>
+                          {Number(a.valor_desconto_credito) > 0 && (
+                            <div className="flex items-center justify-between">
+                              <p className="text-primary-foreground/95">Desconto de Crédito</p>
+                              <p className="text-amber-400 font-medium">- {formatCurrency(Number(a.valor_desconto_credito))}</p>
+                            </div>
+                          )}
                           {Number(a.valor_gorjeta) > 0 && (
                             <div className="flex items-center justify-between">
                               <p className="text-primary-foreground/95">Gorjeta</p>
