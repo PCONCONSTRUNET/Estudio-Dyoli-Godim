@@ -594,9 +594,15 @@ const DespesasTab = () => {
  </div>
 
  <div className="flex items-center gap-2 mt-1">
+ {d.pago && d.data_pagamento ? (
+ <p className="font-body text-[11px] font-medium text-green-400">
+ ✓ Pago em {formatDate(d.data_pagamento)}
+ </p>
+ ) : (
  <p className={`font-body text-[11px] font-medium ${isAtrasado && !d.pago ? "text-red-400 bg-red-400/10 px-1.5 py-0.5 rounded-md" : "text-primary-foreground/90"}`}>
  Vence {formatDate(d.data_vencimento)} {isAtrasado && !d.pago ? "(Atrasada)" : ""}
  </p>
+ )}
  <span className="font-body text-[10px] text-primary-foreground/70 bg-primary-foreground/[0.08] px-1.5 py-0.5 rounded-md hidden sm:inline-block">
  {d.categoria}
  </span>
