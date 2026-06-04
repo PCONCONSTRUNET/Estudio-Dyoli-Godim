@@ -2008,7 +2008,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                       </div>
 
                       {/* Lista de itens adicionados */}
-                      {manualItens.length > 0 && (
+                      {(manualItens.length > 0 || manualCredito > 0) && (
                         <div className="space-y-2">
                           {manualItens.map((it, idx) => (
                             <div key={it.id} className="rounded-2xl border border-gold/20 bg-gold/[0.05] backdrop-blur-sm p-3">
@@ -2062,21 +2062,26 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                               : 0;
                             const descontoCredito = Math.min(clienteCredito, manualValorTotal);
                             const totalComDesconto = manualValorTotal - descontoCredito;
+                            const totalFinal = totalComDesconto + manualCredito;
+                            
                             return (
                               <>
-                                <div className={`flex items-center justify-between rounded-2xl border px-4 py-3 shadow-[0_0_24px_-12px_hsl(var(--gold)/0.6)] ${
-                                  descontoCredito > 0
-                                    ? "border-gold/20 bg-gold/5"
-                                    : "border-gold/30 bg-gold/10"
-                                }`}>
-                                  <span className="font-body text-[10px] uppercase tracking-[0.2em] text-primary-foreground/70 font-semibold">Total dos serviços</span>
-                                  <div className="text-right">
-                                    <p className={`font-heading text-[16px] font-semibold tabular-nums leading-none ${
-                                      descontoCredito > 0 ? "line-through text-primary-foreground/40" : "text-gold"
-                                    }`}>R$ {manualValorTotal.toFixed(2).replace(".", ",")}</p>
-                                    <p className="font-body text-[10px] text-primary-foreground/50 mt-1 tabular-nums">{manualDuracaoTotal} min</p>
+                                {manualItens.length > 0 && (
+                                  <div className={`flex items-center justify-between rounded-2xl border px-4 py-3 shadow-[0_0_24px_-12px_hsl(var(--gold)/0.6)] ${
+                                    descontoCredito > 0 || manualCredito > 0
+                                      ? "border-gold/20 bg-gold/5"
+                                      : "border-gold/30 bg-gold/10"
+                                  }`}>
+                                    <span className="font-body text-[10px] uppercase tracking-[0.2em] text-primary-foreground/70 font-semibold">Total dos serviços</span>
+                                    <div className="text-right">
+                                      <p className={`font-heading text-[16px] font-semibold tabular-nums leading-none ${
+                                        descontoCredito > 0 ? "line-through text-primary-foreground/40" : "text-gold"
+                                      }`}>R$ {manualValorTotal.toFixed(2).replace(".", ",")}</p>
+                                      <p className="font-body text-[10px] text-primary-foreground/50 mt-1 tabular-nums">{manualDuracaoTotal} min</p>
+                                    </div>
                                   </div>
-                                </div>
+                                )}
+                                
                                 {descontoCredito > 0 && (
                                   <div className="rounded-2xl border border-blue-400/40 bg-gradient-to-br from-blue-500/15 to-blue-500/[0.04] px-4 py-3 space-y-2 shadow-[0_0_20px_-8px_rgba(59,130,246,0.4)]">
                                     <div className="flex items-center justify-between">
@@ -2087,8 +2092,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                       <span className="font-heading text-[14px] font-bold text-blue-300 tabular-nums">- R$ {descontoCredito.toFixed(2).replace(".", ",")}</span>
                                     </div>
                                     <div className="flex items-center justify-between pt-1 border-t border-blue-400/20">
-                                      <span className="font-body text-[11px] font-semibold text-primary-foreground/70 uppercase tracking-wider">Total a cobrar</span>
-                                      <span className="font-heading text-[20px] font-bold text-green-300 tabular-nums drop-shadow-[0_0_8px_rgba(134,239,172,0.5)]">R$ {totalComDesconto.toFixed(2).replace(".", ",")}</span>
+                                      <span className="font-body text-[11px] font-semibold text-primary-foreground/70 uppercase tracking-wider">Subtotal serviços</span>
+                                      <span className="font-heading text-[16px] font-bold text-blue-300 tabular-nums">R$ {totalComDesconto.toFixed(2).replace(".", ",")}</span>
                                     </div>
                                     {clienteCredito > descontoCredito && (
                                       <p className="font-body text-[10px] text-blue-400/70">
@@ -2100,6 +2105,29 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                         ⚠️ Crédito esgotado após este atendimento
                                       </p>
                                     )}
+                                  </div>
+                                )}
+
+                                {manualCredito > 0 && (
+                                  <div className="flex items-center justify-between rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 shadow-[0_0_24px_-12px_rgba(16,185,129,0.4)]">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[14px]">💰</span>
+                                      <span className="font-body text-[10px] uppercase tracking-[0.2em] text-emerald-400 font-semibold">Crédito Adicionado</span>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="font-heading text-[16px] font-semibold tabular-nums leading-none text-emerald-400">
+                                        + R$ {manualCredito.toFixed(2).replace(".", ",")}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {(manualItens.length > 0 || manualCredito > 0) && (
+                                  <div className="flex items-center justify-between rounded-2xl border border-green-500/40 bg-green-500/15 px-4 py-4 shadow-[0_0_24px_-8px_rgba(34,197,94,0.3)]">
+                                    <span className="font-body text-[11px] font-bold text-green-400 uppercase tracking-[0.1em]">Total a Receber do Cliente</span>
+                                    <span className="font-heading text-[22px] font-bold text-green-400 tabular-nums drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]">
+                                      R$ {totalFinal.toFixed(2).replace(".", ",")}
+                                    </span>
                                   </div>
                                 )}
                               </>
