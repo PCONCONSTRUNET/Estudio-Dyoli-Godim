@@ -301,12 +301,12 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     [validos]
   );
 
-  const totalDescontosCredito = useMemo(() =>
-    validos.reduce((s, a) => s + Number(a.valor_desconto_credito || 0), 0),
-    [validos]
+  const totalDespesas = useMemo(() =>
+    despesas.reduce((s, d) => s + Number(d.valor), 0),
+    [despesas]
   );
 
-  const totalComDescontos = totalPago - totalDescontosCredito;
+  const saldoLiquido = totalPago - totalDespesas;
 
   const SortIcon = ({ field }: { field: SortField }) => (
     sortField === field
@@ -323,10 +323,10 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
           <p className="font-heading text-lg font-bold text-emerald-400 mt-1">{formatCurrency(totalPago)}</p>
         </div>
         <div className="rounded-2xl border border-sky-500/25 bg-gradient-to-br from-sky-500/[0.12] via-sky-500/[0.05] to-transparent p-4 shadow-[0_4px_16px_-8px_hsl(199_89%_48%/0.3)]">
-          <p className="font-body text-[10px] text-sky-400/70 uppercase tracking-wider">Com Descontos</p>
-          <p className="font-heading text-lg font-bold text-sky-400 mt-1">{formatCurrency(totalComDescontos)}</p>
-          {totalDescontosCredito > 0 && (
-            <p className="font-body text-[9px] text-sky-400/50 mt-0.5">-{formatCurrency(totalDescontosCredito)} crédito</p>
+          <p className="font-body text-[10px] text-sky-400/70 uppercase tracking-wider">Saldo Líquido</p>
+          <p className="font-heading text-lg font-bold text-sky-400 mt-1">{formatCurrency(saldoLiquido)}</p>
+          {totalDespesas > 0 && (
+            <p className="font-body text-[9px] text-rose/70 mt-0.5">-{formatCurrency(totalDespesas)} em despesas</p>
           )}
         </div>
         <div className="rounded-2xl border border-amber-500/25 bg-gradient-to-br from-amber-500/[0.12] via-amber-500/[0.05] to-transparent p-4 shadow-[0_4px_16px_-8px_hsl(38_92%_50%/0.3)]">
