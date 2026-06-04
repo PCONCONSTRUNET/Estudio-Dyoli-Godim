@@ -230,6 +230,8 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
         horario: d.created_at ? `${String(new Date(d.created_at).getHours()).padStart(2, "0")}:${String(new Date(d.created_at).getMinutes()).padStart(2, "0")}` : "23:59",
         forma_pagamento: "dinheiro",
         _is_saida: true,
+        _is_despesa: true,
+        _despesa_tipo: d.tipo,
         _desc_pagamento: d.tipo === "pessoal" ? "Retirada Pessoal" : "Despesa Estúdio",
         user_id: "admin",
       });
@@ -436,6 +438,11 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                     <p className="font-body text-[14px] font-medium text-primary-foreground truncate">
                       {ag._is_saida ? ag.cliente_nome : getClientName(ag.user_id, ag.cliente_nome)}
                     </p>
+                    {ag._is_despesa && (
+                      <span className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${ag._despesa_tipo === "pessoal" ? "bg-purple-500/20 border-purple-500/40 text-purple-300" : "bg-rose/20 border-rose/40 text-rose"}`}>
+                        {ag._despesa_tipo === "pessoal" ? "👤 Aba Despesas" : "🏛 Aba Despesas"}
+                      </span>
+                    )}
                     {isPendingAmount && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 border border-amber-500/40 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-300 animate-pulse">
                         <AlertCircle className="h-2.5 w-2.5" />
