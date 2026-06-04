@@ -728,7 +728,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
         </div>
         <p className="relative font-heading text-3xl font-bold text-purple-300 tabular-nums">{formatCurrency(comissaoValor)}</p>
         <p className="relative font-body text-[11px] text-purple-300/60 mt-1.5">
-          {comissaoPct}% sobre {formatCurrency(Math.max(0, totalRecebido - totalSemComissao - totalGorjetas - totalTrocos))} base
+          {comissaoPct}% sobre {formatCurrency(baseComissao)} base
           {totalGorjetas > 0 && ` + ${formatCurrency(totalGorjetas)} (Gorjetas)`}
         </p>
 
