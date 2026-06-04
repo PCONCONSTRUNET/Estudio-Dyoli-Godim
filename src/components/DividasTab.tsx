@@ -132,7 +132,9 @@ const DividasTab = () => {
  console.error(error);
  toast.error(error.message || "Erro ao criar dívida.");
  }
-  const handleDarBaixa = async () => {
+ };
+
+ const handleDarBaixa = async () => {
  if (!selectedDivida) return;
  
  const valorPagar = parseFloat(valorBaixa.replace(",", "."));
@@ -213,7 +215,7 @@ const DividasTab = () => {
  .from("agendamentos")
  .select("id")
  .eq("servico", `Pagamento de Dívida - ${descricao}`)
- .ilike("observacao", "%Baixa de dívida%");
+ .like("observacao", "%Baixa de d_vida%");
 
  const idsParaExcluir = [
  ...(agsVinculados?.map(a => a.id) || []),
