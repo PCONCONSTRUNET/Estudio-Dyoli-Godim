@@ -119,18 +119,16 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  // Fechamento do dia
  const caixaData = useMemo(() => {
  const dayAgs = agendamentos.filter((a) => a.data_agendamento === caixaDate && a.status !== "cancelado");
- const validAgs = dayAgs.filter(a => a.servico !== "Adição de Crédito");
  
- const total = validAgs.reduce((s, a) => s + Number(a.valor) + Number(a.valor_gorjeta || 0), 0);
+ const total = dayAgs.reduce((s, a) => s + Math.max(0, Number(a.valor) - Number(a.valor_desconto_credito || 0)) + Number(a.valor_gorjeta || 0), 0);
  const recebido = dayAgs.reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0), 0);
  const pagoComCredito = dayAgs.reduce((s, a) => s + Number(a.valor_desconto_credito || 0), 0);
  const faltas = agendamentos.filter((a) => a.data_agendamento === caixaDate && a.status === "falta").length;
- const qtd = validAgs.length;
+ const qtd = dayAgs.filter(a => a.servico !== "Adição de Crédito").length;
  
- const pendente = validAgs.reduce((s, a) => s + Math.max(0, Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0)), 0);
+ const pendente = dayAgs.reduce((s, a) => s + Math.max(0, Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0)), 0);
  
- const pagoDosServicos = validAgs.reduce((s, a) => s + Math.min(Number(a.valor) + Number(a.valor_gorjeta || 0), Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0) + Number(a.valor_gorjeta || 0)), 0);
- const progressPercent = total > 0 ? Math.round((pagoDosServicos / total) * 100) : (recebido > 0 ? 100 : 0);
+ const progressPercent = total > 0 ? Math.round((recebido / total) * 100) : (recebido > 0 ? 100 : 0);
  
  return { items: dayAgs, total, recebido, pagoComCredito, pendente, qtd, faltas, progressPercent };
  }, [agendamentos, caixaDate]);
@@ -165,7 +163,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  a.data_agendamento >= ciclo.startISO && a.data_agendamento <= ciclo.endISO,
  );  
  const recebido = cicloAgs.reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0), 0);
- const total = cicloAgs.filter(a => a.servico !== "Adição de Crédito").reduce((s, a) => s + Number(a.valor) + Number(a.valor_gorjeta || 0), 0);
+ const total = cicloAgs.reduce((s, a) => s + Math.max(0, Number(a.valor) - Number(a.valor_desconto_credito || 0)) + Number(a.valor_gorjeta || 0), 0);
  const pagoComCredito = cicloAgs.reduce((s, a) => s + Number(a.valor_desconto_credito || 0), 0);
  const gorjetas = cicloAgs.reduce((s, a) => s + Number(a.valor_gorjeta || 0), 0);
  const trocos = cicloAgs.reduce((s, a) => s + Number(a.valor_troco || 0), 0);
