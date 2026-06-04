@@ -765,24 +765,25 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
     let newPago = type === "completo" ? valor : valor * 0.5;
     let creditoUsado = 0;
+    let novoDescontoCredito = Number(a.valor_desconto_credito || 0);
 
     if (type === "completo" && a.user_id) {
       const { data: profile } = await supabase.from("profiles").select("credito_saldo").eq("id", a.user_id).single();
       const saldo = Number(profile?.credito_saldo || 0);
       if (saldo > 0) {
-        const valorFaltante = valor - Number(a.valor_pago || 0);
+        const valorFaltante = Math.max(0, valor - Number(a.valor_pago || 0) - novoDescontoCredito);
         creditoUsado = Math.min(saldo, valorFaltante);
         if (creditoUsado > 0) {
           await supabase.from("profiles").update({ credito_saldo: saldo - creditoUsado }).eq("id", a.user_id);
-          // newPago permanece como 'valor' — o serviço está totalmente pago,
-          // o crédito apenas cobriu parte do custo em dinheiro físico.
+          novoDescontoCredito += creditoUsado;
           toast.success(`Crédito de R$ ${creditoUsado.toFixed(2)} utilizado automaticamente!`);
         }
       }
+      newPago = Math.max(0, valor - novoDescontoCredito);
     }
 
-    await supabase.from("agendamentos").update({ valor_pago: newPago }).eq("id", id);
-    setAgendamentos((prev) => prev.map((item) => (item.id === id ? { ...item, valor_pago: newPago } : item)));
+    await supabase.from("agendamentos").update({ valor_pago: newPago, valor_desconto_credito: novoDescontoCredito }).eq("id", id);
+    setAgendamentos((prev) => prev.map((item) => (item.id === id ? { ...item, valor_pago: newPago, valor_desconto_credito: novoDescontoCredito } : item)));
   };
 
   // Load services for manual registration
@@ -1073,7 +1074,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const selectedAgendaItems = filteredAgendamentos
     .filter((item) => item.data_agendamento === selectedAgendaDate)
     .sort((a, b) => a.horario.localeCompare(b.horario));
-  const selectedAgendaTotal = selectedAgendaItems.reduce((sum, item) => sum + Number(item.valor), 0);
+  const selectedAgendaTotal = selectedAgendaItems.reduce((sum, item) => sum + Math.max(0, Number(item.valor) - Number(item.valor_desconto_credito || 0)), 0);
   const selectedAgendaPago = selectedAgendaItems.reduce((sum, item) => sum + Number(item.valor_pago || 0), 0);
   const selectedAgendaLabel = selectedAgendaDate === todayAgendaKey
     ? "Hoje"
@@ -1091,7 +1092,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
       if (a.status === "falta") { notifs.push({ tipo: "falta", ag: a, label: "Cliente faltou" }); return; }
       if (diff === 0 && a.status === "confirmado") notifs.push({ tipo: "hoje", ag: a, label: `Hoje às ${a.horario}` });
       if (diff === 1 && a.status === "confirmado") notifs.push({ tipo: "proximo", ag: a, label: "Amanhã" });
-      if (a.status !== "falta" && Number(a.valor_pago || 0) < Number(a.valor) && diff <= 0) notifs.push({ tipo: "pendente", ag: a, label: `Falta R$ ${(Number(a.valor) - Number(a.valor_pago || 0)).toFixed(2).replace(".", ",")}` });
+      if (a.status !== "falta" && (Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0)) < Number(a.valor) && diff <= 0) notifs.push({ tipo: "pendente", ag: a, label: `Falta R$ ${(Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0)).toFixed(2).replace(".", ",")}` });
     });
     const order = { falta: 0, hoje: 1, pendente: 2, proximo: 3 };
     notifs.sort((x, y) => order[x.tipo] - order[y.tipo]);
@@ -1638,9 +1639,9 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                                 <p className="font-body text-[12px] text-primary-foreground/70 truncate">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""} ({a.duracao_minutos || 60}m)</p>
                                 <span className="font-heading text-[13px] font-bold text-gold/90">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</span>
-                                {Number(a.valor_pago || 0) > 0 && Number(a.valor_pago || 0) < Number(a.valor) && (
-                                  <span className="font-body text-[10px] text-green-400/80">
-                                    (Falta R$ {(Number(a.valor) - Number(a.valor_pago || 0)).toFixed(2).replace(".", ",")})
+                                {(Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0)) < Number(a.valor) && (
+                                  <span className="font-body text-[10px] font-semibold text-orange-400/80">
+                                    (Falta R$ {(Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0)).toFixed(2).replace(".", ",")})
                                   </span>
                                 )}
                               </div>
@@ -1681,7 +1682,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
                               {a.status !== "cancelado" && a.status !== "falta" && (
                                 <div className="flex items-center gap-1 mt-1">
-                                  {Number(a.valor_pago || 0) < Number(a.valor) && (
+                                  {(Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0)) < Number(a.valor) && (
                                     <button
                                       onClick={(e) => {
                                         e.preventDefault();
@@ -1733,7 +1734,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                     const cliente = clientes.find((c) => c.id === a.user_id);
                     const valorPago = Number(a.valor_pago || 0);
                     const valorTotal = Number(a.valor);
-                    const restante = Math.max(0, valorTotal - valorPago);
+                    const valorDescontoCredito = Number(a.valor_desconto_credito || 0);
+                    const restante = Math.max(0, valorTotal - valorPago - valorDescontoCredito);
                     return (
                       <div className="space-y-3">
                         {/* Cliente */}
@@ -2357,7 +2359,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                         className="w-full px-4 py-3.5 rounded-2xl bg-white/[0.04] border border-gold/30 text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 backdrop-blur-sm transition-all appearance-none shadow-[0_2px_10px_-4px_rgba(212,175,55,0.1)] hover:border-gold/50"
                       >
                         <option value="pix" className="bg-charcoal">PIX</option>
-                        <option value="cartao" className="bg-charcoal">Cartão</option>
+                        <option value="cartao" className="bg-cartao">Cartão</option>
                         <option value="dinheiro" className="bg-charcoal">Dinheiro</option>
                         <option value="transferencia" className="bg-charcoal">Transferência</option>
                       </select>
@@ -2586,10 +2588,10 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
               const cancelCount = selAgendamentos.filter((a) => a.status === "cancelado").length;
               // Saldo devedor: soma das diferenças em pedidos não cancelados/faltas
               const saldoDevedor = selAgendamentos
-                .filter((a) => a.status !== "cancelado" && a.status !== "falta")
-                .reduce((s, a) => s + Math.max(0, Number(a.valor) - Number(a.valor_pago || 0)), 0);
+                .filter((a) => a.status !== "cancelado" && a.status !== "falta" && (Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0)) < Number(a.valor))
+                .reduce((sum, a) => sum + (Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0)), 0);
               const pedidosDevendo = selAgendamentos.filter(
-                (a) => a.status !== "cancelado" && a.status !== "falta" && Number(a.valor_pago || 0) < Number(a.valor)
+                (a) => a.status !== "cancelado" && a.status !== "falta" && (Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0)) < Number(a.valor)
               ).length;
 
               const clientSearch = searchTerm.toLowerCase();
@@ -2913,10 +2915,10 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                         >
                                           {a.status}
                                       </span>
-                                      {a.status !== "cancelado" && a.status !== "falta" && Number(a.valor_pago || 0) < Number(a.valor) && (
-                                        <span className="font-body text-[10px] text-amber-400/80">
-                                          Devendo R$ {(Number(a.valor) - Number(a.valor_pago || 0)).toFixed(2).replace(".", ",")}
-                                        </span>
+                                      {a.status !== "cancelado" && a.status !== "falta" && (Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0)) < Number(a.valor) && (
+                                        <p className="font-body text-[10px] text-orange-400 mt-1 uppercase tracking-widest font-bold">
+                                          Devendo R$ {(Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0)).toFixed(2).replace(".", ",")}
+                                        </p>
                                       )}
                                     </div>
                                   </div>

@@ -140,7 +140,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
       }
 
       // Quitado parcial ou não pago — apenas para atendimentos passados/hoje
-      if (a.status !== "falta" && !isPago(a) && diffDays <= 0) {
+      if (a.status !== "falta" && (Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0)) < Number(a.valor) && diffDays <= 0) {
         const restante = Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0);
         if (isSinalPago(a)) {
           notifs.push({ tipo: "sinal", agendamento: a, label: `Quitado parcial · a receber ${formatCurrency(restante)}` });
@@ -368,7 +368,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
   const abrirRegistroPagamento = (a: Agendamento, sugestao?: "sinal" | "restante") => {
     const valorTotal = Number(a.valor);
     const pago = Number(a.valor_pago || 0);
-    const restante = Math.max(0, valorTotal - pago);
+    const restante = Math.max(0, valorTotal - pago - Number(a.valor_desconto_credito || 0));
     let sugestaoValor = restante;
     if (sugestao === "sinal") sugestaoValor = Math.round(valorTotal * 0.5 * 100) / 100;
     setPagamentoAg(a);
@@ -391,7 +391,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     if (totalAgora >= Number(pagamentoAg.valor)) {
       toast.success("Pagamento quitado integralmente ✅");
     } else {
-      toast.success(`Pagamento parcial registrado · ainda falta ${formatCurrency(Number(pagamentoAg.valor) - totalAgora)}`);
+      toast.success(`Pagamento parcial registrado · ainda falta ${formatCurrency(Number(pagamentoAg.valor) - totalAgora - Number(pagamentoAg.valor_desconto_credito || 0))}`);
     }
   };
 
