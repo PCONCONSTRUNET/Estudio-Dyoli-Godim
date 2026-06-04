@@ -1638,7 +1638,14 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
                               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                                 <p className="font-body text-[12px] text-primary-foreground/70 truncate">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""} ({a.duracao_minutos || 60}m)</p>
-                                <span className="font-heading text-[13px] font-bold text-gold/90">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</span>
+                                {Number(a.valor_desconto_credito) > 0 ? (
+                                  <span className="inline-flex items-center gap-1.5">
+                                    <span className="font-heading text-[13px] font-bold text-green-400">R$ {Math.max(0, Number(a.valor) - Number(a.valor_desconto_credito)).toFixed(2).replace(".", ",")}</span>
+                                    <span className="font-heading text-[10px] font-medium text-primary-foreground/75 line-through">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</span>
+                                  </span>
+                                ) : (
+                                  <span className="font-heading text-[13px] font-bold text-gold/90">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</span>
+                                )}
                                 {(Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0)) < Number(a.valor) && (
                                   <span className="font-body text-[10px] font-semibold text-orange-400/80">
                                     (Falta R$ {(Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0)).toFixed(2).replace(".", ",")})
