@@ -22,6 +22,7 @@ interface Agendamento {
   valor_gorjeta?: number | null;
   valor_troco?: number | null;
   valor_credito?: number | null;
+  valor_desconto_credito?: number | null;
 }
 
 interface Props {
@@ -159,7 +160,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
           totalPaidInHistory += h.valor_delta;
         });
         
-        const valorPagoAtual = Number(a.valor_pago || 0);
+        const valorPagoAtual = Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0);
         const initialPayment = valorPagoAtual - totalPaidInHistory;
         
         if (initialPayment > 0) {
@@ -187,7 +188,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
            });
         }
       } else {
-        const valorPago = Number(a.valor_pago || 0);
+        const valorPago = Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0);
         if (valorPago === 0) {
            if (Number(a.valor) > 0) {
              list.push({ ...a, _faturaId: a.id, fatura_tipo: "pendente", valor_fatura: a.valor, data_fatura: a.data_agendamento });
@@ -296,7 +297,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
   );
 
   const totalPendente = useMemo(() =>
-    validos.reduce((s, a) => s + Math.max(0, Number(a.valor) - Number(a.valor_pago || 0)), 0),
+    validos.reduce((s, a) => s + Math.max(0, Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0)), 0),
     [validos]
   );
 

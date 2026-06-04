@@ -66,24 +66,25 @@ const isFormaRecepcao = (forma_pagamento?: string | null): boolean => {
   );
 };
 
-const isPago = (a: { valor: number; valor_pago: number | null }): boolean => {
+const isPago = (a: { valor: number; valor_pago: number | null; valor_desconto_credito?: number | null }): boolean => {
   const valor = Number(a.valor || 0);
-  const pago = Number(a.valor_pago || 0);
+  const pago = Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0);
   return pago >= valor && valor > 0;
 };
 
-const isSinalPago = (a: { valor: number; valor_pago: number | null }): boolean => {
+const isSinalPago = (a: { valor: number; valor_pago: number | null; valor_desconto_credito?: number | null }): boolean => {
   const valor = Number(a.valor || 0);
-  const pago = Number(a.valor_pago || 0);
+  const pago = Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0);
   return pago > 0 && pago < valor;
 };
 
-const isNaoPago = (a: { valor: number; valor_pago: number | null }): boolean => {
-  return Number(a.valor_pago || 0) <= 0;
+const isNaoPago = (a: { valor: number; valor_pago: number | null; valor_desconto_credito?: number | null }): boolean => {
+  const pago = Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0);
+  return pago <= 0;
 };
 
 const matchesPagamentoFilter = (
-  a: { valor: number; valor_pago: number | null; forma_pagamento?: string | null },
+  a: { valor: number; valor_pago: number | null; forma_pagamento?: string | null; valor_desconto_credito?: number | null },
   filter: PagamentoFilter
 ): boolean => {
   if (filter === "todos") return true;
@@ -140,7 +141,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
 
       // Quitado parcial ou não pago — apenas para atendimentos passados/hoje
       if (a.status !== "falta" && !isPago(a) && diffDays <= 0) {
-        const restante = Number(a.valor) - Number(a.valor_pago || 0);
+        const restante = Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0);
         if (isSinalPago(a)) {
           notifs.push({ tipo: "sinal", agendamento: a, label: `Quitado parcial · a receber ${formatCurrency(restante)}` });
         } else {
@@ -422,7 +423,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
   }, [agendamentos]);
 
   const totalAReceber = useMemo(() => {
-    return devedores.reduce((sum, a) => sum + (Number(a.valor) - Number(a.valor_pago || 0)), 0);
+    return devedores.reduce((sum, a) => sum + (Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0)), 0);
   }, [devedores]);
 
   const notifConfig = {
@@ -746,7 +747,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                             </div>
                             <div>
                               <p className="text-primary-foreground/75 text-[10px]">A receber</p>
-                              <p className="text-amber-300 font-bold">{formatCurrency(Number(a.valor) - Number(a.valor_pago || 0))}</p>
+                              <p className="text-amber-300 font-bold">{formatCurrency(Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0))}</p>
                             </div>
                           </div>
                           <p className="font-body text-[11px] text-amber-200/80 leading-snug">
@@ -911,7 +912,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
             ) : devedores.map((a) => {
               const nome = getClientName(a.user_id, a.cliente_nome);
               const whats = getClienteWhatsapp(a.user_id);
-              const restante = Number(a.valor) - Number(a.valor_pago || 0);
+              const restante = Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0);
               const sinal = isSinalPago(a);
               const origemLabel = a.origem === "whatsapp_bot" ? "WhatsApp" : a.origem === "presencial" ? "Presencial" : "App";
               const isExpanded = expandedDevedorId === a.id;

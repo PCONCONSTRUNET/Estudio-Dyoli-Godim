@@ -121,7 +121,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  const dayAgs = agendamentos.filter((a) => a.data_agendamento === caixaDate && a.status !== "cancelado");
  const total = dayAgs.reduce((s, a) => s + Number(a.valor) + Number(a.valor_gorjeta || 0), 0);
  const recebido = dayAgs.reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0), 0);
- const pagoComCredito = dayAgs.reduce((s, a) => s + Number(a.valor_credito || 0), 0);
+ const pagoComCredito = dayAgs.reduce((s, a) => s + Number(a.valor_desconto_credito || 0), 0);
  const faltas = agendamentos.filter((a) => a.data_agendamento === caixaDate && a.status === "falta").length;
  const qtd = dayAgs.filter((a) => a.servico !== "Adição de Crédito").length;
  return { items: dayAgs, total, recebido, pagoComCredito, pendente: total - recebido - pagoComCredito, qtd, faltas };
@@ -158,7 +158,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  );  
  const recebido = cicloAgs.reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0), 0);
  const total = cicloAgs.reduce((s, a) => s + Number(a.valor) + Number(a.valor_gorjeta || 0), 0);
- const pagoComCredito = cicloAgs.reduce((s, a) => s + Number(a.valor_credito || 0), 0);
+ const pagoComCredito = cicloAgs.reduce((s, a) => s + Number(a.valor_desconto_credito || 0), 0);
  const gorjetas = cicloAgs.reduce((s, a) => s + Number(a.valor_gorjeta || 0), 0);
  const trocos = cicloAgs.reduce((s, a) => s + Number(a.valor_troco || 0), 0);
  

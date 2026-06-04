@@ -1001,7 +1001,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         data_agendamento: manualData,
         horario: manualHorario,
         valor: valor,
-        valor_pago: (isApenasCredito || manualPago) ? valor : 0,
+        valor_pago: isApenasCredito ? valor : (manualPago ? Math.max(0, valor - (descontoAplicado > 0 ? descontoAplicado : 0)) : 0),
         valor_troco: manualTroco,
         valor_gorjeta: manualGorjeta,
         valor_credito: isApenasCredito ? 0 : manualCredito,
