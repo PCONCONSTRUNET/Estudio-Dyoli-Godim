@@ -119,12 +119,20 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  // Fechamento do dia
  const caixaData = useMemo(() => {
  const dayAgs = agendamentos.filter((a) => a.data_agendamento === caixaDate && a.status !== "cancelado");
- const total = dayAgs.reduce((s, a) => s + Number(a.valor) + Number(a.valor_gorjeta || 0), 0);
+ const validAgs = dayAgs.filter(a => a.servico !== "Adição de Crédito");
+ 
+ const total = validAgs.reduce((s, a) => s + Number(a.valor) + Number(a.valor_gorjeta || 0), 0);
  const recebido = dayAgs.reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0), 0);
  const pagoComCredito = dayAgs.reduce((s, a) => s + Number(a.valor_desconto_credito || 0), 0);
  const faltas = agendamentos.filter((a) => a.data_agendamento === caixaDate && a.status === "falta").length;
- const qtd = dayAgs.filter((a) => a.servico !== "Adição de Crédito").length;
- return { items: dayAgs, total, recebido, pagoComCredito, pendente: total - recebido - pagoComCredito, qtd, faltas };
+ const qtd = validAgs.length;
+ 
+ const pendente = validAgs.reduce((s, a) => s + Math.max(0, Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0)), 0);
+ 
+ const pagoDosServicos = validAgs.reduce((s, a) => s + Math.min(Number(a.valor) + Number(a.valor_gorjeta || 0), Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0) + Number(a.valor_gorjeta || 0)), 0);
+ const progressPercent = total > 0 ? Math.round((pagoDosServicos / total) * 100) : (recebido > 0 ? 100 : 0);
+ 
+ return { items: dayAgs, total, recebido, pagoComCredito, pendente, qtd, faltas, progressPercent };
  }, [agendamentos, caixaDate]);
 
  // Lista de pagamentos por período
@@ -157,7 +165,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  a.data_agendamento >= ciclo.startISO && a.data_agendamento <= ciclo.endISO,
  );  
  const recebido = cicloAgs.reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0), 0);
- const total = cicloAgs.reduce((s, a) => s + Number(a.valor) + Number(a.valor_gorjeta || 0), 0);
+ const total = cicloAgs.filter(a => a.servico !== "Adição de Crédito").reduce((s, a) => s + Number(a.valor) + Number(a.valor_gorjeta || 0), 0);
  const pagoComCredito = cicloAgs.reduce((s, a) => s + Number(a.valor_desconto_credito || 0), 0);
  const gorjetas = cicloAgs.reduce((s, a) => s + Number(a.valor_gorjeta || 0), 0);
  const trocos = cicloAgs.reduce((s, a) => s + Number(a.valor_troco || 0), 0);
@@ -468,10 +476,10 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  </p>
  <div className="mt-4 max-w-[240px] mx-auto">
  <div className="h-1 rounded-full bg-primary-foreground/[0.06] overflow-hidden">
- <div className="h-full rounded-full bg-gradient-to-r from-gold/80 to-green-500/80 transition-all duration-700" style={{ width: `${caixaData.total > 0 ? Math.min(100, (caixaData.recebido / caixaData.total) * 100) : 0}%` }} />
+ <div className="h-full rounded-full bg-gradient-to-r from-gold/80 to-green-500/80 transition-all duration-700" style={{ width: `${Math.min(100, caixaData.progressPercent)}%` }} />
  </div>
  <p className="font-body text-[9px] text-primary-foreground/95 uppercase tracking-[0.2em] mt-2">
- {caixaData.total > 0 ? Math.round((caixaData.recebido / caixaData.total) * 100) : 0}% do dia recebido
+ {caixaData.progressPercent}% do dia recebido
  </p>
  </div>
  </div>
