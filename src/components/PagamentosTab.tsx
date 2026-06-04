@@ -301,6 +301,13 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     [validos]
   );
 
+  const totalDescontosCredito = useMemo(() =>
+    validos.reduce((s, a) => s + Number(a.valor_desconto_credito || 0), 0),
+    [validos]
+  );
+
+  const totalComDescontos = totalPago - totalDescontosCredito;
+
   const SortIcon = ({ field }: { field: SortField }) => (
     sortField === field
       ? sortDir === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />
@@ -310,14 +317,21 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
   return (
     <div className="space-y-4">
       {/* Summary cards */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <div className="rounded-2xl border border-emerald-500/25 bg-gradient-to-br from-emerald-500/[0.12] via-emerald-500/[0.05] to-transparent p-4 shadow-[0_4px_16px_-8px_hsl(142_76%_45%/0.3)]">
-          <p className="font-body text-[11px] text-emerald-400/70 uppercase tracking-wider">Total Recebido</p>
-          <p className="font-heading text-xl font-bold text-emerald-400 mt-1">{formatCurrency(totalPago)}</p>
+          <p className="font-body text-[10px] text-emerald-400/70 uppercase tracking-wider">Total Recebido</p>
+          <p className="font-heading text-lg font-bold text-emerald-400 mt-1">{formatCurrency(totalPago)}</p>
+        </div>
+        <div className="rounded-2xl border border-sky-500/25 bg-gradient-to-br from-sky-500/[0.12] via-sky-500/[0.05] to-transparent p-4 shadow-[0_4px_16px_-8px_hsl(199_89%_48%/0.3)]">
+          <p className="font-body text-[10px] text-sky-400/70 uppercase tracking-wider">Com Descontos</p>
+          <p className="font-heading text-lg font-bold text-sky-400 mt-1">{formatCurrency(totalComDescontos)}</p>
+          {totalDescontosCredito > 0 && (
+            <p className="font-body text-[9px] text-sky-400/50 mt-0.5">-{formatCurrency(totalDescontosCredito)} crédito</p>
+          )}
         </div>
         <div className="rounded-2xl border border-amber-500/25 bg-gradient-to-br from-amber-500/[0.12] via-amber-500/[0.05] to-transparent p-4 shadow-[0_4px_16px_-8px_hsl(38_92%_50%/0.3)]">
-          <p className="font-body text-[11px] text-amber-400/70 uppercase tracking-wider">Pendente</p>
-          <p className="font-heading text-xl font-bold text-amber-400 mt-1">{formatCurrency(totalPendente)}</p>
+          <p className="font-body text-[10px] text-amber-400/70 uppercase tracking-wider">Pendente</p>
+          <p className="font-heading text-lg font-bold text-amber-400 mt-1">{formatCurrency(totalPendente)}</p>
         </div>
       </div>
 
