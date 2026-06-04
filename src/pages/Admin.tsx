@@ -714,7 +714,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   };
 
   const filteredAgendamentos = agendamentos.filter((a) => {
-    if (a.servico === "Adição de Crédito") return false;
+    if (a.servico === "Adição de Crédito" || a.servico === "Entrada Manual" || (a.servico && a.servico.startsWith("Pagamento de Dívida"))) return false;
     if (statusFilter !== "todos" && a.status !== statusFilter) return false;
     if (searchTerm) {
       const name = getClientName(a.user_id, (a as any).cliente_nome).toLowerCase();
@@ -1086,7 +1086,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     const todayDate = new Date(today + "T12:00:00");
     const notifs: { tipo: "hoje" | "falta" | "pendente" | "proximo"; ag: Agendamento; label: string }[] = [];
     agendamentos.forEach((a) => {
-      if (a.status === "cancelado" || a.servico === "Adição de Crédito") return;
+      if (a.status === "cancelado" || a.servico === "Adição de Crédito" || a.servico === "Entrada Manual" || (a.servico && a.servico.startsWith("Pagamento de Dívida"))) return;
       const aDate = new Date(a.data_agendamento + "T12:00:00");
       const diff = Math.round((aDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
       if (a.status === "falta") { notifs.push({ tipo: "falta", ag: a, label: "Cliente faltou" }); return; }
@@ -1328,7 +1328,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         <div className="mx-auto w-full max-w-md overflow-x-hidden px-3 py-4 pb-24 sm:px-4 lg:max-w-4xl lg:px-8 lg:py-6 lg:pb-6">
           {tab === "dashboard" && (
             <AdminDashboard
-              agendamentos={agendamentos.filter(a => a.servico !== 'Adição de Crédito')}
+              agendamentos={agendamentos.filter(a => !(a.servico === "Adição de Crédito" || a.servico === "Entrada Manual" || (a.servico && a.servico.startsWith("Pagamento de Dívida"))))}
               getClientName={getClientName}
               notificationsEnabled={notificationsEnabled}
               toggleNotifications={toggleNotifications}
@@ -2979,7 +2979,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
           {tab === "caixa" && <CaixaTab agendamentos={agendamentos} getClientName={getClientName} />}
           {tab === "dividas" && <DividasTab />}
           {tab === "pagamentos" && <PagamentosTab agendamentos={agendamentos} getClientName={getClientName} onUpdate={loadData} />}
-          {tab === "pedidos" && <PedidosTab agendamentos={agendamentos.filter(a => a.servico !== 'Adição de Crédito')} getClientName={getClientName} clientes={clientes} onUpdate={loadData} />}
+          {tab === "pedidos" && <PedidosTab agendamentos={agendamentos.filter(a => !(a.servico === "Adição de Crédito" || a.servico === "Entrada Manual" || (a.servico && a.servico.startsWith("Pagamento de Dívida"))))} getClientName={getClientName} clientes={clientes} onUpdate={loadData} />}
           {tab === "despesas" && <DespesasTab />}
           {tab === "gastos" && <GastosTab />}
           {tab === "anamnese" && <AnamneseTab />}
