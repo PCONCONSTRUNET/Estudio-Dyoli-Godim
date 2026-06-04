@@ -182,7 +182,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  const elapsedDays = Math.max(0, Math.min(totalDays, Math.round((today.getTime() - ciclo.startDate.getTime()) / 86400000) + 1));
  const progress = cicloOffset === 0 ? Math.round((elapsedDays / totalDays) * 100) : (cicloOffset < 0 ? 100 : 0);
  const qtd = cicloAgs.filter((a) => a.servico !== "Adição de Crédito").length;
- return { recebido, total, pagoComCredito, gorjetas, trocos, desp, despPessoal, lucro, comissao, totalDays, elapsedDays, progress, qtd, items: cicloAgs };
+ return { recebido, total, pagoComCredito, gorjetas, trocos, desp, despPessoal, lucro, comissao, baseComissao, totalDays, elapsedDays, progress, qtd, items: cicloAgs };
  }, [agendamentos, ciclo, despesas, comissaoPct, cicloOffset]);
 
  // Detalhamento da comissão por dia (apenas dias com valor recebido)
@@ -680,8 +680,8 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  {formatCurrency(cicloStats.comissao)}
  </p>
  <p className="font-body text-[11px] text-primary-foreground/75 mt-2 tabular-nums">
- Base: {formatCurrency(baseComissao)} × <span className="text-purple-300 font-bold">{comissaoPct}%</span>
- {gorjetas > 0 && <span className="text-purple-300 font-bold"> + {formatCurrency(gorjetas)} (Gorjetas 100%)</span>}
+ Base: {formatCurrency(cicloStats.baseComissao)} × <span className="text-purple-300 font-bold">{comissaoPct}%</span>
+ {cicloStats.gorjetas > 0 && <span className="text-purple-300 font-bold"> + {formatCurrency(cicloStats.gorjetas)} (Gorjetas 100%)</span>}
  </p>
  </div>
 
@@ -716,7 +716,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  <div className="grid grid-cols-3 gap-2">
  <div className="p-2.5 rounded-xl bg-green-500/[0.06] border border-green-500/15">
  <p className="font-body text-[8.5px] text-primary-foreground/75 uppercase tracking-wider">Base</p>
- <p className="font-heading text-[13px] font-bold text-green-400 tabular-nums leading-tight mt-0.5">{formatCurrency(baseComissao)}</p>
+ <p className="font-heading text-[13px] font-bold text-green-400 tabular-nums leading-tight mt-0.5">{formatCurrency(cicloStats.baseComissao)}</p>
  </div>
  <div className="p-2.5 rounded-xl bg-purple-500/[0.06] border border-purple-500/15 relative">
  <p className="font-body text-[8.5px] text-primary-foreground/75 uppercase tracking-wider">Taxa</p>
