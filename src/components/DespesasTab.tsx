@@ -76,7 +76,7 @@ const DespesasTab = () => {
  setLoading(false);
  };
 
- const today = new Date().toISOString().split("T")[0];
+ const today = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0];
 
  const getStatus = (d: Despesa): "pago" | "atrasado" | "hoje" | "pendente" => {
  if (d.pago) return "pago";
@@ -246,7 +246,7 @@ const DespesasTab = () => {
  await (supabase.from as any)("despesas")
  .update({
  pago: newPago,
- data_pagamento: newPago ? new Date().toISOString().split("T")[0] : null,
+ data_pagamento: newPago ? new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0] : null,
  })
  .eq("id", d.id);
  setDespesas((prev) =>

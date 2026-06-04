@@ -2471,7 +2471,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement("a");
                         a.href = url;
-                        a.download = `clientes_${new Date().toISOString().split("T")[0]}.csv`;
+                        a.download = `clientes_${new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]}.csv`;
                         a.click();
                         URL.revokeObjectURL(url);
                       }}
@@ -2849,7 +2849,7 @@ const HorariosTab = () => {
   const [loading, setLoading] = useState(true);
 
   // Bloqueio manual
-  const [blockDate, setBlockDate] = useState(new Date().toISOString().split("T")[0]);
+  const [blockDate, setBlockDate] = useState(new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]);
   const [blockedSlots, setBlockedSlots] = useState<{ id: string; data: string; horario: string; motivo: string }[]>([]);
   const [loadingBlocks, setLoadingBlocks] = useState(false);
 

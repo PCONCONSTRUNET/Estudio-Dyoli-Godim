@@ -102,7 +102,7 @@ const formatDateShort = (d: string) =>
 
 const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  const [modalConfig, setModalConfig] = useState<{open: boolean, tab: "entrada"|"saida"}>({open: false, tab: "entrada"});
- const [caixaDate, setCaixaDate] = useState(new Date().toISOString().split("T")[0]);
+ const [caixaDate, setCaixaDate] = useState(new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]);
  const [period, setPeriod] = useState<FilterPeriod>("mes");
  const [customStart, setCustomStart] = useState("");
  const [customEnd, setCustomEnd] = useState("");
@@ -176,12 +176,12 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  // Lista de pagamentos por período
  const periodRange = useMemo(() => {
  const now = new Date();
- const todayISO = now.toISOString().split("T")[0];
+ const todayISO = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split("T")[0];
  if (period === "hoje") return { start: todayISO, end: todayISO };
  if (period === "semana") {
  const wa = new Date(now); wa.setDate(wa.getDate() - 7);
  const wh = new Date(now); wh.setDate(wh.getDate() + 7);
- return { start: wa.toISOString().split("T")[0], end: wh.toISOString().split("T")[0] };
+ return { start: new Date(wa.getTime() - wa.getTimezoneOffset() * 60000).toISOString().split("T")[0], end: new Date(wh.getTime() - wh.getTimezoneOffset() * 60000).toISOString().split("T")[0] };
  }
  if (period === "mes") return { start: ciclo.startISO, end: ciclo.endISO };
  if (period === "personalizado" && customStart && customEnd) return { start: customStart, end: customEnd };
@@ -441,7 +441,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  {/* Navegador de dia */}
  <div className="space-y-2">
  <div className="flex items-center justify-between gap-2 p-1.5 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
- <button onClick={() => { const d = new Date(caixaDate + "T12:00:00"); d.setDate(d.getDate() - 1); setCaixaDate(d.toISOString().split("T")[0]); }} className="w-9 h-9 rounded-xl hover:bg-primary-foreground/[0.05] flex items-center justify-center text-primary-foreground/85 hover:text-primary-foreground transition-all" aria-label="Dia anterior">
+ <button onClick={() => { const d = new Date(caixaDate + "T12:00:00"); d.setDate(d.getDate() - 1); setCaixaDate(new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split("T")[0]); }} className="w-9 h-9 rounded-xl hover:bg-primary-foreground/[0.05] flex items-center justify-center text-primary-foreground/85 hover:text-primary-foreground transition-all" aria-label="Dia anterior">
  <ChevronLeft className="w-4 h-4" />
  </button>
  <Popover>
@@ -479,7 +479,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  />
  </PopoverContent>
  </Popover>
- <button onClick={() => { const d = new Date(caixaDate + "T12:00:00"); d.setDate(d.getDate() + 1); setCaixaDate(d.toISOString().split("T")[0]); }} className="w-9 h-9 rounded-xl hover:bg-primary-foreground/[0.05] flex items-center justify-center text-primary-foreground/85 hover:text-primary-foreground transition-all" aria-label="Próximo dia">
+ <button onClick={() => { const d = new Date(caixaDate + "T12:00:00"); d.setDate(d.getDate() + 1); setCaixaDate(new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split("T")[0]); }} className="w-9 h-9 rounded-xl hover:bg-primary-foreground/[0.05] flex items-center justify-center text-primary-foreground/85 hover:text-primary-foreground transition-all" aria-label="Próximo dia">
  <ChevronRight className="w-4 h-4" />
  </button>
  </div>
@@ -487,7 +487,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  <div className="flex gap-1.5 justify-center">
  {([{ label: "Ontem", offset: -1 }, { label: "Hoje", offset: 0 }, { label: "Amanhã", offset: 1 }]).map(({ label, offset }) => {
  const d = new Date(); d.setDate(d.getDate() + offset);
- const dateStr = d.toISOString().split("T")[0];
+ const dateStr = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split("T")[0];
  const active = caixaDate === dateStr;
  return (
  <button key={label} onClick={() => setCaixaDate(dateStr)} className={`px-3 py-1 rounded-full font-body text-[10px] font-medium border transition-all ${active ? "bg-gold/10 text-gold border-gold/30" : "bg-primary-foreground/[0.02] text-primary-foreground/75 border-primary-foreground/[0.06] hover:border-gold/20 hover:text-primary-foreground/100"}`}>

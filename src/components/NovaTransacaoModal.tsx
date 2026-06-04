@@ -39,7 +39,7 @@ export default function NovaTransacaoModal({ open, onOpenChange, onSuccess, init
   const [saving, setSaving] = useState(false);
 
   // Common
-  const [data, setData] = useState(new Date().toISOString().split("T")[0]);
+  const [data, setData] = useState(new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]);
   const [valor, setValor] = useState("");
   const [descricao, setDescricao] = useState("");
 
@@ -54,7 +54,7 @@ export default function NovaTransacaoModal({ open, onOpenChange, onSuccess, init
     if (open) {
       // Reset form
       setTab(initialTab);
-      setData(new Date().toISOString().split("T")[0]);
+      setData(new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]);
       setValor("");
       setDescricao("");
       setFormaPagamento("pix");

@@ -29,7 +29,7 @@ interface Props {
   onGoToAgenda: () => void;
 }
 
-const getDateKey = (d: Date) => d.toISOString().split("T")[0];
+const getDateKey = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split("T")[0];
 
 const AdminDashboard = ({
   agendamentos,

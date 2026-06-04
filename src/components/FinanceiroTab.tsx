@@ -93,7 +93,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   // Filter agendamentos by period (Mês = ciclo configurado pelo dia de corte)
   const filtered = useMemo(() => {
     const now = new Date();
-    const today = now.toISOString().split("T")[0];
+    const today = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split("T")[0];
     return agendamentos.filter(a => {
       if (a.status === "cancelado" || a.status === "falta") return false;
       const d = a.data_agendamento;
@@ -103,7 +103,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
         weekAgo.setDate(weekAgo.getDate() - 7);
         const weekAhead = new Date(now);
         weekAhead.setDate(weekAhead.getDate() + 7);
-        return d >= weekAgo.toISOString().split("T")[0] && d <= weekAhead.toISOString().split("T")[0];
+        return d >= new Date(weekAgo.getTime() - weekAgo.getTimezoneOffset() * 60000).toISOString().split("T")[0] && d <= new Date(weekAhead.getTime() - weekAhead.getTimezoneOffset() * 60000).toISOString().split("T")[0];
       }
       if (period === "mes") {
         return d >= ciclo.startISO && d <= ciclo.endISO;
@@ -119,12 +119,12 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   // Intervalo ativo do filtro (para também filtrar despesas pelo mesmo período)
   const periodRange = useMemo(() => {
     const now = new Date();
-    const todayISO = now.toISOString().split("T")[0];
+    const todayISO = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split("T")[0];
     if (period === "hoje") return { start: todayISO, end: todayISO };
     if (period === "semana") {
       const wa = new Date(now); wa.setDate(wa.getDate() - 7);
       const wh = new Date(now); wh.setDate(wh.getDate() + 7);
-      return { start: wa.toISOString().split("T")[0], end: wh.toISOString().split("T")[0] };
+      return { start: new Date(wa.getTime() - wa.getTimezoneOffset() * 60000).toISOString().split("T")[0], end: new Date(wh.getTime() - wh.getTimezoneOffset() * 60000).toISOString().split("T")[0] };
     }
     if (period === "mes") return { start: ciclo.startISO, end: ciclo.endISO };
     if (period === "personalizado" && customStart && customEnd) return { start: customStart, end: customEnd };

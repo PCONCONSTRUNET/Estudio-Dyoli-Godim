@@ -146,8 +146,8 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
     const today = new Date();
     const futureDate = new Date(today);
     futureDate.setDate(futureDate.getDate() + 15);
-    const todayStr = today.toISOString().split("T")[0];
-    const futureStr = futureDate.toISOString().split("T")[0];
+    const todayStr = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split("T")[0];
+    const futureStr = new Date(futureDate.getTime() - futureDate.getTimezoneOffset() * 60000).toISOString().split("T")[0];
 
     // Load agendamentos + manual blocks in parallel
     const [agRes, blockRes] = await Promise.all([
@@ -249,7 +249,7 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
       day: days[d.getDay()],
       date: d.getDate().toString(),
       month: months[d.getMonth()],
-      full: d.toISOString().split("T")[0],
+      full: new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split("T")[0],
     };
   };
 

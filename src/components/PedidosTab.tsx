@@ -107,7 +107,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0];
 
   // Notifications: today's appointments, pending payments, no-shows
   const notifications = useMemo(() => {

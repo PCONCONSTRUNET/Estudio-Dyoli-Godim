@@ -106,9 +106,9 @@ const GastosTab = () => {
   const [catFilter, setCatFilter] = useState("Todas");
   const [periodoFilter, setPeriodoFilter] = useState<"total" | "semana" | "mes" | "personalizado">("mes");
   const [dataInicioFilter, setDataInicioFilter] = useState(() => {
-    const d = new Date(); d.setDate(1); return d.toISOString().split("T")[0];
+    const d = new Date(); d.setDate(1); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split("T")[0];
   });
-  const [dataFimFilter, setDataFimFilter] = useState(() => new Date().toISOString().split("T")[0]);
+  const [dataFimFilter, setDataFimFilter] = useState(() => new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]);
   const [responsavelFilter, setResponsavelFilter] = useState<"Dona" | "Zelia">("Dona");
 
   // Form
@@ -117,7 +117,7 @@ const GastosTab = () => {
   const [categoria, setCategoria] = useState("Outros");
   const [categoriaPersonalizada, setCategoriaPersonalizada] = useState("");
   const [responsavelForm, setResponsavelForm] = useState<"Dona" | "Zelia">("Dona");
-  const [dataGasto, setDataGasto] = useState(() => new Date().toISOString().split("T")[0]);
+  const [dataGasto, setDataGasto] = useState(() => new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]);
   const [observacao, setObservacao] = useState("");
 
   // Categoria efetiva (personalizada ou selecionada)
@@ -278,7 +278,7 @@ const GastosTab = () => {
     setCategoria("Outros");
     setCategoriaPersonalizada("");
     setResponsavelForm(responsavelFilter);
-    setDataGasto(new Date().toISOString().split("T")[0]);
+    setDataGasto(new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]);
     setObservacao("");
   };
 
