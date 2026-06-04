@@ -244,30 +244,31 @@ const DividasTab = () => {
  variant: "destructive",
  onConfirm: async () => {
  try {
- // 1. Buscar todos os agendamentos vinculados a esta dívida (pelo divida_id na observacao)
- const { data: agsVinculados } = await supabase
- .from("agendamentos")
- .select("id, observacao")
- .like("observacao", `divida_id:${id}%`);
+ const sb = supabase as any;
 
- // 2. Também buscar pela chave antiga (sem divida_id) para compatibilidade
- const { data: agsAntigos } = await supabase
+ // 1. Buscar agendamentos novos: com divida_id:XXX na observacao
+ const { data: agsNovos } = await sb
  .from("agendamentos")
  .select("id")
- .eq("servico", `Pagamento de Dívida - ${descricao}`)
- .like("observacao", "%Baixa de d_vida%");
+ .like("observacao", `divida_id:${id}%`);
+
+ // 2. Buscar agendamentos antigos: pelo nome do serviço
+ const { data: agsAntigos } = await sb
+ .from("agendamentos")
+ .select("id")
+ .like("servico", `Pagamento de Dívida - ${descricao}%`);
 
  const idsParaExcluir = [
- ...(agsVinculados?.map(a => a.id) || []),
- ...(agsAntigos?.map(a => a.id) || [])
- ].filter((v, i, arr) => arr.indexOf(v) === i); // deduplicar
+ ...(agsNovos?.map((a: any) => a.id) || []),
+ ...(agsAntigos?.map((a: any) => a.id) || [])
+ ].filter((v: string, i: number, arr: string[]) => arr.indexOf(v) === i);
 
  if (idsParaExcluir.length > 0) {
- await supabase.from("agendamentos").delete().in("id", idsParaExcluir);
+ await sb.from("agendamentos").delete().in("id", idsParaExcluir);
  }
 
  // 3. Excluir a dívida em si
- const { error } = await supabase.from("dividas").delete().eq("id", id);
+ const { error } = await sb.from("dividas").delete().eq("id", id);
  if (error) throw error;
 
  toast.success("Dívida e pagamentos vinculados excluídos com sucesso.");
@@ -279,6 +280,7 @@ const DividasTab = () => {
  }
  });
  };
+
 
  const totalDevendo = dividas
  .filter(d => d.status !== 'paga')
