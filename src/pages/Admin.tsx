@@ -890,7 +890,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     try {
       let userId = manualCliente || null;
       const duracao = manualItens.length === 0 ? 0 : (manualDuracaoTotal || 60);
-      const valor = manualValorTotal;
+      const isApenasCredito = manualItens.length === 0 && manualCredito > 0;
+      const valor = isApenasCredito ? manualCredito : manualValorTotal;
 
       // Agrupa duplicados: "Perfuração (×3), Troca de joia"
       const counts = new Map<string, number>();
@@ -1000,10 +1001,10 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         data_agendamento: manualData,
         horario: manualHorario,
         valor: valor,
-        valor_pago: manualPago ? (Number(manualValorPago) || valor) : 0,
+        valor_pago: manualPago ? valor : 0,
         valor_troco: manualTroco,
         valor_gorjeta: manualGorjeta,
-        valor_credito: manualCredito,
+        valor_credito: isApenasCredito ? 0 : manualCredito,
         valor_desconto_credito: descontoAplicado > 0 ? descontoAplicado : null,
         duracao_minutos: duracao,
         status: manualItens.length === 0 ? "concluido" : (manualConcluido ? "concluido" : "confirmado"),
