@@ -1654,8 +1654,16 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                         if (target.closest("button, input, a, select, textarea")) return;
                                         setDetalheAgendamento(a);
                                       }}
-                                      style={{ height: cardHeight, top: topOffset, zIndex: 10 + idx }}
-                                      className={`group/card absolute left-0 right-0 overflow-hidden rounded-xl bg-[#1A1A1A] border border-primary-foreground/10 hover:border-primary-foreground/20 hover:bg-[#1E1E1E] shadow-sm transition-all cursor-pointer ${idx > 0 ? 'ml-4 mt-2 shadow-xl border-l-4' : ''}`}
+                                      style={
+                                        startingAppts.length > 1
+                                          ? { minHeight: cardHeight, zIndex: 10 + idx }
+                                          : { height: cardHeight, top: topOffset, zIndex: 10 + idx }
+                                      }
+                                      className={`group/card overflow-hidden rounded-xl bg-[#1A1A1A] border border-primary-foreground/10 hover:border-primary-foreground/20 hover:bg-[#1E1E1E] shadow-sm transition-all cursor-pointer ${
+                                        startingAppts.length > 1 
+                                          ? 'relative mb-2 w-full shadow-md' 
+                                          : 'absolute left-0 right-0'
+                                      }`}
                                     >
                                       <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${barColor}`} />
                                       
