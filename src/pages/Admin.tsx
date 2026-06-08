@@ -255,7 +255,7 @@ const SwipeableTimelineCard = ({
   const controls = useAnimation();
   const handleDragEnd = (event: any, info: any) => {
     if (info.offset.x < -60) {
-      controls.start({ x: -100 });
+      controls.start({ x: -120 });
     } else {
       controls.start({ x: 0 });
     }
@@ -268,73 +268,86 @@ const SwipeableTimelineCard = ({
           ? { minHeight: cardHeight, zIndex: 10 + idx }
           : { height: cardHeight, top: topOffset, zIndex: 10 + idx }
       }
-      className={`group/card relative ${
-        startingApptsLength > 1 ? "mb-2 w-full shadow-md" : "absolute left-0 right-0"
+      className={`group/card relative overflow-hidden ${
+        startingApptsLength > 1 ? "mb-2 w-full shadow-md rounded-xl" : "absolute left-0 right-0 rounded-xl"
       }`}
     >
-      <div className="absolute inset-y-0 right-0 w-[100px] rounded-xl bg-red-500/90 flex flex-col items-center justify-center overflow-hidden">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (window.confirm("Deseja realmente excluir este agendamento?")) {
-              onDelete(a.id);
-            }
-          }}
-          className="flex h-full w-full items-center justify-center text-white hover:bg-black/20 transition-colors"
-        >
-          <Trash2 className="h-5 w-5" />
-        </button>
-      </div>
-
-      <motion.article
+      <motion.div
         drag="x"
-        dragConstraints={{ left: -100, right: 0 }}
+        dragConstraints={{ left: -120, right: 0 }}
         dragElastic={0.1}
         onDragEnd={handleDragEnd}
         animate={controls}
-        onClick={(e: any) => {
-          const target = e.target as HTMLElement;
-          if (target.closest("button, input, a, select, textarea")) return;
-          onClick(a);
-        }}
-        style={{ minHeight: cardHeight }}
-        className="relative overflow-hidden rounded-xl bg-[#1A1A1A]/50 backdrop-blur-xl border border-white/10 hover:border-white/20 hover:bg-[#1E1E1E]/60 shadow-sm transition-colors cursor-pointer h-full"
+        className="flex w-full h-full relative"
       >
-        <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${barColor}`} />
-        
-        <div className="pl-3.5 pr-2 py-2.5 h-full flex flex-col min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center gap-2 mb-1 min-w-0 flex-1">
-              <span className="font-heading text-[12px] font-bold text-primary-foreground/90">{a.horario} - {endTimeString}</span>
-              <span className="px-1.5 py-0.5 rounded text-[9px] bg-primary-foreground/[0.05] text-primary-foreground/50 border border-primary-foreground/10">{duracao}min</span>
-              {a.origem === "whatsapp_bot" && (
-                <span className="text-green-400" title="Origem: WhatsApp"><WhatsAppIcon className="h-3 w-3" /></span>
+        <article
+          onClick={(e: any) => {
+            const target = e.target as HTMLElement;
+            if (target.closest("button, input, a, select, textarea")) return;
+            onClick(a);
+          }}
+          className="w-full shrink-0 relative overflow-hidden rounded-xl bg-[#1A1A1A]/60 backdrop-blur-md border border-white/10 hover:border-white/20 hover:bg-[#1E1E1E]/70 shadow-sm transition-colors cursor-pointer h-full"
+        >
+          <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${barColor}`} />
+          
+          <div className="pl-3.5 pr-2 py-2.5 h-full flex flex-col min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-2 mb-1 min-w-0 flex-1">
+                <span className="font-heading text-[12px] font-bold text-primary-foreground/90">{a.horario} - {endTimeString}</span>
+                <span className="px-1.5 py-0.5 rounded text-[9px] bg-primary-foreground/[0.05] text-primary-foreground/50 border border-primary-foreground/10">{duracao}min</span>
+                {a.origem === "whatsapp_bot" && (
+                  <span className="text-green-400" title="Origem: WhatsApp"><WhatsAppIcon className="h-3 w-3" /></span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 min-w-0 mt-0.5">
+              <p className="font-heading text-[14px] font-semibold text-primary-foreground truncate flex-1">
+                {clientName}
+              </p>
+            </div>
+
+            <p className="font-body text-[11px] text-primary-foreground/60 truncate mt-1">
+              {a.servico}{a.variacao ? ` · ${a.variacao}` : ""}
+            </p>
+            
+            <div className="flex items-center gap-2 mt-auto pt-2">
+              {Number(a.valor_desconto_credito) > 0 ? (
+                <span className="font-heading text-[12px] font-bold text-green-400">R$ {Math.max(0, Number(a.valor) - Number(a.valor_desconto_credito)).toFixed(2).replace(".", ",")}</span>
+              ) : (
+                <span className="font-heading text-[12px] font-bold text-red-400">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</span>
+              )}
+              {(Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0)) < Number(a.valor) && !isCancelado && (
+                <span className="font-body text-[10px] font-semibold text-orange-400/80">(Falta R$ {(Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0)).toFixed(2).replace(".", ",")})</span>
               )}
             </div>
           </div>
+        </article>
 
-          <div className="flex items-center gap-1.5 min-w-0 mt-0.5">
-            <p className="font-heading text-[14px] font-semibold text-primary-foreground truncate flex-1">
-              {clientName}
-            </p>
-          </div>
-
-          <p className="font-body text-[11px] text-primary-foreground/60 truncate mt-1">
-            {a.servico}{a.variacao ? ` · ${a.variacao}` : ""}
-          </p>
-          
-          <div className="flex items-center gap-2 mt-auto pt-2">
-            {Number(a.valor_desconto_credito) > 0 ? (
-              <span className="font-heading text-[12px] font-bold text-green-400">R$ {Math.max(0, Number(a.valor) - Number(a.valor_desconto_credito)).toFixed(2).replace(".", ",")}</span>
-            ) : (
-              <span className="font-heading text-[12px] font-bold text-red-400">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</span>
-            )}
-            {(Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0)) < Number(a.valor) && !isCancelado && (
-              <span className="font-body text-[10px] font-semibold text-orange-400/80">(Falta R$ {(Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0)).toFixed(2).replace(".", ",")})</span>
-            )}
-          </div>
+        {/* Action Buttons Container */}
+        <div className="absolute left-[100%] top-0 bottom-0 w-[120px] flex">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onClick(a);
+            }}
+            className="flex-1 bg-blue-500/90 hover:bg-blue-600 flex items-center justify-center text-white transition-colors"
+          >
+            <Edit2 className="h-5 w-5" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (window.confirm("Deseja realmente excluir este agendamento?")) {
+                onDelete(a.id);
+              }
+            }}
+            className="flex-1 bg-red-500/90 hover:bg-red-600 flex items-center justify-center text-white transition-colors"
+          >
+            <Trash2 className="h-5 w-5" />
+          </button>
         </div>
-      </motion.article>
+      </motion.div>
     </div>
   );
 };
