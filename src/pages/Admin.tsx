@@ -1602,7 +1602,6 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                     </PopoverContent>
                   </Popover>
                 </div>
-              </div>
 
               <section className="overflow-hidden rounded-[28px] border border-gold/15 bg-gradient-to-br from-primary-foreground/[0.08] to-primary-foreground/[0.04] shadow-[0_8px_32px_-12px_rgba(0,0,0,0.5)]">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gold/10 bg-gradient-to-r from-gold/[0.06] to-transparent px-4 py-4 lg:px-5">
