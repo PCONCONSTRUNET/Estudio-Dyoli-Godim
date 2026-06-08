@@ -1263,8 +1263,6 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
         </DialogContent>
       </Dialog>
 
-    </div>
-
       {/* Modal: Adicionar valor à dívida */}
       <Dialog open={!!addValorAg} onOpenChange={(open) => { if (!open) { setAddValorAg(null); setAddValorInput(""); } }}>
         <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-[360px] mx-auto bg-charcoal border-primary-foreground/[0.08] rounded-2xl p-0 sm:p-0 shadow-2xl overflow-hidden">
