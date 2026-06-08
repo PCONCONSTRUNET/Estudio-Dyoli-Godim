@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, CheckCircle, X, UserX, ChevronDown, Bell, Clock, AlertTriangle, Eye, Wallet, History } from "lucide-react";
+import { Search, CheckCircle, X, UserX, ChevronDown, Bell, Clock, AlertTriangle, Eye, Wallet, History, Plus } from "lucide-react";
 import BinButton from "@/components/ui/bin-button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -364,6 +364,47 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
 
   const [pagamentoAg, setPagamentoAg] = useState<Agendamento | null>(null);
   const [pagamentoInput, setPagamentoInput] = useState<string>("");
+
+  const [addValorAg, setAddValorAg] = useState<Agendamento | null>(null);
+  const [addValorInput, setAddValorInput] = useState<string>("");
+
+  const abrirAddValor = (a: Agendamento) => {
+    setAddValorAg(a);
+    setAddValorInput("");
+  };
+
+  const confirmarAddValor = async () => {
+    if (!addValorAg) return;
+    const valorAdicional = Number(addValorInput.replace(/\./g, "").replace(",", "."));
+    if (!Number.isFinite(valorAdicional) || valorAdicional <= 0) {
+      toast.error("Informe um valor válido");
+      return;
+    }
+    const novoTotal = Number(addValorAg.valor) + valorAdicional;
+    await supabase.from("agendamentos").update({ valor: novoTotal }).eq("id", addValorAg.id);
+    
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      await supabase.from("pagamento_historico").insert({
+        agendamento_id: addValorAg.id,
+        status_anterior: statusFromValor(Number(addValorAg.valor_pago || 0), Number(addValorAg.valor)),
+        status_novo: statusFromValor(Number(addValorAg.valor_pago || 0), novoTotal),
+        valor_anterior: Number(addValorAg.valor_pago || 0),
+        valor_novo: Number(addValorAg.valor_pago || 0),
+        valor_delta: valorAdicional,
+        total: novoTotal,
+        acao: "acrescimo",
+        autor_id: userRes?.user?.id || null,
+        autor_nome: (userRes?.user?.user_metadata as any)?.nome || userRes?.user?.email || "Admin",
+      });
+      if (historicoMap[addValorAg.id]) await loadHistorico(addValorAg.id);
+    } catch (err) {}
+
+    onUpdate();
+    setAddValorAg(null);
+    setAddValorInput("");
+    toast.success(`Dívida aumentada em ${formatCurrency(valorAdicional)}`);
+  };
 
   const abrirRegistroPagamento = (a: Agendamento, sugestao?: "sinal" | "restante") => {
     const valorTotal = Number(a.valor);
@@ -785,8 +826,14 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                               <Wallet className="h-4 w-4" /> Registrar pagamento
                             </button>
                             <button
+                              onClick={(e) => { e.stopPropagation(); abrirAddValor(a); }}
+                              className="flex items-center justify-center gap-1.5 rounded-lg border border-blue-500/40 bg-blue-500/15 px-2 py-2 font-body text-[12px] font-semibold text-blue-300 hover:bg-blue-500/25 hover:text-blue-200 transition-all"
+                            >
+                              <Plus className="h-4 w-4" /> Adicionar valor
+                            </button>
+                            <button
                               onClick={(e) => { e.stopPropagation(); registrarPagamentoIntegral(a); }}
-                              className="flex items-center justify-center gap-1.5 rounded-lg border border-green-500/40 bg-green-500/15 px-2 py-2 font-body text-[12px] font-semibold text-green-300 hover:bg-green-500/25 hover:text-green-200 transition-all"
+                              className="col-span-2 flex items-center justify-center gap-1.5 rounded-lg border border-green-500/40 bg-green-500/15 px-2 py-2 font-body text-[12px] font-semibold text-green-300 hover:bg-green-500/25 hover:text-green-200 transition-all"
                             >
                               <CheckCircle className="h-4 w-4" /> Quitar tudo
                             </button>
@@ -811,8 +858,14 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                               <Wallet className="h-4 w-4" /> Registrar sinal
                             </button>
                             <button
+                              onClick={(e) => { e.stopPropagation(); abrirAddValor(a); }}
+                              className="flex items-center justify-center gap-1.5 rounded-lg border border-blue-500/40 bg-blue-500/15 px-2 py-2 font-body text-[12px] font-semibold text-blue-300 hover:bg-blue-500/25 hover:text-blue-200 transition-all"
+                            >
+                              <Plus className="h-4 w-4" /> Adicionar valor
+                            </button>
+                            <button
                               onClick={(e) => { e.stopPropagation(); registrarPagamentoIntegral(a); }}
-                              className="flex items-center justify-center gap-1.5 rounded-lg border border-green-500/40 bg-green-500/15 px-2 py-2 font-body text-[12px] font-semibold text-green-300 hover:bg-green-500/25 hover:text-green-200 transition-all"
+                              className="col-span-2 flex items-center justify-center gap-1.5 rounded-lg border border-green-500/40 bg-green-500/15 px-2 py-2 font-body text-[12px] font-semibold text-green-300 hover:bg-green-500/25 hover:text-green-200 transition-all"
                             >
                               <CheckCircle className="h-4 w-4" /> Quitar tudo
                             </button>
@@ -1053,8 +1106,14 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                           <Wallet className="h-4 w-4" /> {sinal ? "Registrar pagamento" : "Registrar sinal"}
                         </button>
                         <button
+                          onClick={(e) => { e.stopPropagation(); abrirAddValor(a); }}
+                          className="flex items-center justify-center gap-1.5 rounded-lg border border-blue-500/40 bg-blue-500/15 px-2 py-2 font-body text-[12px] font-semibold text-blue-300 hover:bg-blue-500/25 hover:text-blue-200 transition-all"
+                        >
+                          <Plus className="h-4 w-4" /> Adicionar valor
+                        </button>
+                        <button
                           onClick={(e) => { e.stopPropagation(); registrarPagamentoIntegral(a); }}
-                          className="flex items-center justify-center gap-1.5 rounded-lg border border-green-500/40 bg-green-500/15 px-2 py-2 font-body text-[12px] font-semibold text-green-300 hover:bg-green-500/25 hover:text-green-200 transition-all"
+                          className="col-span-2 flex items-center justify-center gap-1.5 rounded-lg border border-green-500/40 bg-green-500/15 px-2 py-2 font-body text-[12px] font-semibold text-green-300 hover:bg-green-500/25 hover:text-green-200 transition-all"
                         >
                           <CheckCircle className="h-4 w-4" /> Quitar tudo
                         </button>
@@ -1078,7 +1137,11 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                                   <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase ${statusColor(h.status_anterior)}`}>{statusLabel(h.status_anterior)}</span>
                                   <span className="text-primary-foreground/95 text-[10px]">→</span>
                                   <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase ${statusColor(h.status_novo)}`}>{statusLabel(h.status_novo)}</span>
-                                  <span className="ml-auto font-body text-[11px] font-semibold text-green-400">+{formatCurrency(h.valor_delta)}</span>
+                                  {h.acao === "acrescimo" ? (
+                                    <span className="ml-auto font-body text-[11px] font-semibold text-amber-400">Dívida +{formatCurrency(h.valor_delta)}</span>
+                                  ) : (
+                                    <span className="ml-auto font-body text-[11px] font-semibold text-green-400">+{formatCurrency(h.valor_delta)}</span>
+                                  )}
                                 </div>
                                 <div className="flex items-center justify-between gap-2 mt-1 font-body text-[10px] text-primary-foreground/85">
                                   <span>por <span className="text-primary-foreground/80">{h.autor_nome}</span></span>
@@ -1200,6 +1263,65 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
         </DialogContent>
       </Dialog>
 
+    </div>
+
+      {/* Modal: Adicionar valor à dívida */}
+      <Dialog open={!!addValorAg} onOpenChange={(open) => { if (!open) { setAddValorAg(null); setAddValorInput(""); } }}>
+        <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-[360px] mx-auto bg-charcoal border-primary-foreground/[0.08] rounded-2xl p-0 sm:p-0 shadow-2xl overflow-hidden">
+          {addValorAg && (() => {
+            const valorTotalAtual = Number(addValorAg.valor);
+            const valorAdicional = Number((addValorInput || "0").replace(/\./g, "").replace(",", ".")) || 0;
+            const novoTotal = valorTotalAtual + valorAdicional;
+            
+            return (
+              <div className="p-4 space-y-3 mx-auto w-full">
+                <DialogHeader>
+                  <DialogTitle className="font-heading text-[16px] font-semibold text-primary-foreground">Adicionar Valor à Dívida</DialogTitle>
+                </DialogHeader>
+                <div>
+                  <p className="font-body text-[11px] text-primary-foreground/70 mt-0.5 truncate">
+                    {getClientName(addValorAg.user_id, addValorAg.cliente_nome)} · {addValorAg.servico}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-1.5 rounded-xl border border-primary-foreground/[0.08] bg-primary-foreground/[0.03] p-2 text-[10px] font-body">
+                  <div>
+                    <p className="text-primary-foreground/60 text-[8px] uppercase tracking-wider mb-0.5">Dívida atual</p>
+                    <p className="text-primary-foreground/90 font-semibold">{formatCurrency(valorTotalAtual)}</p>
+                  </div>
+                  <div>
+                    <p className="text-amber-300/70 text-[8px] uppercase tracking-wider mb-0.5">Nova dívida total</p>
+                    <p className="text-amber-300 font-semibold">{formatCurrency(novoTotal)}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 pt-1">
+                  <label className="font-body text-[10px] font-bold text-gold uppercase tracking-[0.05em] flex items-center gap-1.5">
+                    Valor adicional
+                  </label>
+                  <div className="relative group">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-heading text-lg text-primary-foreground/50 group-focus-within:text-gold transition-colors">R$</span>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      autoFocus
+                      placeholder="0,00"
+                      value={addValorInput}
+                      onChange={(e) => setAddValorInput(e.target.value.replace(/[^\d,.]/g, ""))}
+                      className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.08] text-primary-foreground font-heading text-xl font-bold focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2 flex gap-2">
+                  <button onClick={() => { setAddValorAg(null); setAddValorInput(""); }} className="flex-1 py-2.5 rounded-xl bg-primary-foreground/[0.04] text-primary-foreground/80 hover:bg-primary-foreground/[0.08] hover:text-primary-foreground font-heading text-[11px] font-bold uppercase tracking-wider transition-all">Cancelar</button>
+                  <button onClick={confirmarAddValor} disabled={valorAdicional <= 0} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gold text-charcoal font-heading text-[11px] font-bold uppercase tracking-wider hover:bg-gold/90 transition-all shadow-[0_0_10px_hsl(var(--gold)/0.2)] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none">Confirmar</button>
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

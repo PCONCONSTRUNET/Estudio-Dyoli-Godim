@@ -850,14 +850,14 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setManualItens(prev => prev.filter(it => it.id !== id));
   };
 
-  const openManualRegister = () => {
+  const openManualRegister = (initialTime?: string) => {
     loadManualServicos();
     setManualItens([]);
     setManualCliente("");
     setManualClienteNome("");
     setManualData(selectedAgendaDate);
-    setManualHorario("09:00");
-    setManualHorarioFim("10:00");
+    setManualHorario(initialTime || "09:00");
+    setManualHorarioFim(initialTime ? calcFim(initialTime, 60) : "10:00");
     setManualFormaPagamento("pix");
     setManualPago(false);
     setManualConcluido(false);
@@ -1561,170 +1561,149 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                   </div>
                 </div>
 
-                <div className="p-3 lg:p-4">
-                  {selectedAgendaItems.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-primary-foreground/15 bg-primary-foreground/[0.03] px-4 py-10 text-center">
-                      <p className="font-heading text-[20px] font-semibold text-primary-foreground">Nenhum pedido nessa data</p>
-                      <p className="mt-2 font-body text-[12px] text-primary-foreground/55">Escolha outro dia no calendário ou toque em Hoje para voltar para a agenda atual.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2.5 overflow-y-auto max-h-[60dvh] custom-scrollbar pr-1 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
-                      {selectedAgendaItems.map((a) => {
-                        const valorPago = Number(a.valor_pago || 0);
-                        const valorTotal = Number(a.valor);
-                        const isCancelado = a.status === "cancelado" || a.status === "falta";
-                        const isPagoIntegral = !isCancelado && valorPago >= valorTotal && valorTotal > 0;
-                        const isPagoParcial = !isCancelado && valorPago > 0 && valorPago < valorTotal;
-                        const isNaoPago = !isCancelado && valorPago === 0;
+                <div className="p-3 lg:p-4 bg-charcoal/30">
+                  {(() => {
+                    const START_HOUR = 7;
+                    const END_HOUR = 21;
+                    const INTERVAL_MINS = 30;
+                    
+                    const timeSlots: number[] = [];
+                    for (let i = START_HOUR * 60; i < END_HOUR * 60; i += INTERVAL_MINS) {
+                      timeSlots.push(i);
+                    }
 
-                        const barColor = isCancelado
-                          ? "bg-primary-foreground/15"
-                          : isPagoIntegral
-                          ? "bg-gradient-to-b from-green-400 to-green-600 shadow-[0_0_12px_-2px_rgba(34,197,94,0.6)]"
-                          : isPagoParcial
-                          ? "bg-gradient-to-b from-gold to-nude shadow-[0_0_12px_-2px_hsl(var(--gold)/0.6)]"
-                          : "bg-gradient-to-b from-red-400 to-red-600 shadow-[0_0_12px_-2px_rgba(239,68,68,0.5)]";
+                    const sortedItems = [...selectedAgendaItems].sort((a, b) => timeToMinutes(a.horario) - timeToMinutes(b.horario));
 
-                        const barLabel = isCancelado
-                          ? a.status === "falta" ? "Não veio" : "Cancelado"
-                          : isPagoIntegral
-                          ? "Pago"
-                          : isPagoParcial
-                          ? "Sinal pago"
-                          : "Não pago";
-
-
-                        return (
-                        <article
-                          key={a.id}
-                          onClick={(e) => {
-                            const target = e.target as HTMLElement;
-                            if (target.closest("button, input, a, select, textarea")) return;
-                            setDetalheAgendamento(a);
-                          }}
-                          className="group/card relative cursor-pointer overflow-hidden rounded-xl border border-primary-foreground/10 bg-primary-foreground/[0.02] hover:bg-primary-foreground/[0.04] p-3 pl-4 shadow-sm transition-all"
-                        >
-                          {/* Status bar lateral */}
-                          <div className={`absolute left-0 top-0 bottom-0 w-1 ${barColor}`} aria-label={barLabel} title={`Pagamento: ${barLabel}`} />
+                    return (
+                      <div className="space-y-0.5 mt-2 max-w-2xl mx-auto">
+                        {timeSlots.map((slotMins) => {
+                          const timeString = minutesToTime(slotMins);
                           
-                          <div className="flex items-start justify-between gap-3">
-                            {/* Left Side: Info */}
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2.5 mb-1.5">
-                                <span className="font-heading text-[15px] font-bold text-gold">{a.horario}</span>
-                                <div className="h-3 w-[1px] bg-primary-foreground/20" />
-                                {editingClientId === a.id ? (
-                                  <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                                    <input
-                                      autoFocus
-                                      value={editClientName}
-                                      onChange={(e) => setEditClientName(e.target.value)}
-                                      onKeyDown={(e) => { if (e.key === "Enter") handleSaveClientName(a.id); if (e.key === "Escape") setEditingClientId(null); }}
-                                      className="w-full rounded-md bg-primary-foreground/[0.08] border border-gold/30 px-1.5 py-0.5 font-body text-[12px] text-primary-foreground focus:outline-none"
-                                    />
-                                    <button onClick={() => handleSaveClientName(a.id)} className="text-green-400"><CheckCircle className="h-3.5 w-3.5" /></button>
-                                    <button onClick={() => setEditingClientId(null)} className="text-rose"><X className="h-3.5 w-3.5" /></button>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center gap-1.5 group flex-1 min-w-0">
-                                    <p className="truncate font-heading text-[15px] font-semibold text-primary-foreground">{getClientName(a.user_id, a.cliente_nome)}</p>
-                                    <button
-                                      onClick={() => { setEditingClientId(a.id); setEditClientName(a.cliente_nome || getClientName(a.user_id, a.cliente_nome)); }}
-                                      className="shrink-0 p-1 text-primary-foreground/40 opacity-0 group-hover:opacity-100 hover:text-gold transition-all"
-                                    ><Edit2 className="h-3 w-3" /></button>
-                                  </div>
-                                )}
-                              </div>
+                          const startingAppts = sortedItems.filter(a => {
+                            const start = timeToMinutes(a.horario);
+                            return start >= slotMins && start < slotMins + INTERVAL_MINS;
+                          });
 
-                              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                <p className="font-body text-[12px] text-primary-foreground/70 truncate">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""} ({a.duracao_minutos || 60}m)</p>
-                                {Number(a.valor_desconto_credito) > 0 ? (
-                                  <span className="inline-flex items-center gap-1.5">
-                                    <span className="font-heading text-[13px] font-bold text-green-400">R$ {Math.max(0, Number(a.valor) - Number(a.valor_desconto_credito)).toFixed(2).replace(".", ",")}</span>
-                                    <span className="font-heading text-[10px] font-medium text-primary-foreground/75 line-through">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</span>
-                                  </span>
-                                ) : (
-                                  <span className="font-heading text-[13px] font-bold text-gold/90">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</span>
-                                )}
-                                {(Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0)) < Number(a.valor) && (
-                                  <span className="font-body text-[10px] font-semibold text-orange-400/80">
-                                    (Falta R$ {(Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0)).toFixed(2).replace(".", ",")})
-                                  </span>
-                                )}
-                              </div>
+                          const isCovered = sortedItems.some(a => {
+                             const start = timeToMinutes(a.horario);
+                             const end = start + (a.duracao_minutos || 60);
+                             return start < slotMins && end > slotMins;
+                          });
 
-                              <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                                {statusBadge(a.status)}
-                                {pagamentoBadge(a)}
-                                {a.origem === "whatsapp_bot" && (
-                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-green-500/10 text-green-400 border border-green-500/20"><WhatsAppIcon className="h-2.5 w-2.5" /> WhatsApp</span>
-                                )}
-                                {a.origem === "admin_manual" && (
-                                  <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-gold/10 text-gold border border-gold/20">Presencial</span>
-                                )}
-                                {a.observacao && (
-                                  <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/20" title={a.observacao}>📝 Obs</span>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Right Side: Actions */}
-                            <div className="flex flex-col justify-between items-end gap-2 shrink-0">
-                              <div className="flex items-center gap-0.5">
-                                {a.status === "confirmado" && (
-                                  <>
-                                    <button onClick={() => confirm({ title: "Concluir Atendimento", description: "Tem certeza que deseja marcar este agendamento como concluído?", onConfirm: () => updateStatus(a.id, "concluido") })} className="p-1.5 text-green-500/60 hover:text-green-400 transition-all" title="Concluir">
-                                      <CheckCircle className="h-4 w-4" />
-                                    </button>
-                                    <button onClick={() => confirm({ title: "Marcar Falta", description: "O cliente não compareceu ao atendimento?", onConfirm: () => updateStatus(a.id, "falta") })} className="p-1.5 text-orange-500/60 hover:text-orange-400 transition-all" title="Marcar falta">
-                                      <UserX className="h-4 w-4" />
-                                    </button>
-                                    <button onClick={() => confirm({ title: "Cancelar Agendamento", description: "Tem certeza que deseja cancelar este agendamento?", variant: "destructive", onConfirm: () => updateStatus(a.id, "cancelado") })} className="p-1.5 text-rose/60 hover:text-rose transition-all" title="Cancelar">
-                                      <X className="h-4 w-4" />
-                                    </button>
-                                  </>
-                                )}
-                                <BinButton size="sm" onClick={() => confirm({ title: "Excluir Agendamento", description: "Esta ação apagará permanentemente o agendamento.", variant: "destructive", onConfirm: () => deleteAgendamento(a.id) })} />
-                              </div>
-
-                              {a.status !== "cancelado" && a.status !== "falta" && (
-                                <div className="flex items-center gap-1 mt-1">
-                                  {(Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0)) < Number(a.valor) && (
-                                    <button
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        abrirRegistroPagamento(a);
-                                      }}
-                                      title="Registrar sinal"
-                                      className="rounded px-2 py-1 text-[10px] font-semibold bg-primary-foreground/[0.05] hover:bg-gold/15 text-primary-foreground/70 hover:text-gold transition-all"
-                                    >
-                                      Sinal
-                                    </button>
-                                  )}
-                                  <button
-                                    onClick={() => confirm({ title: "Pagamento Completo", description: "Marcar este agendamento como totalmente pago?", onConfirm: () => updatePayment(a.id, "completo") })}
-                                    title="Marcar pago completo"
-                                    className="rounded px-2 py-1 text-[10px] font-semibold bg-primary-foreground/[0.05] hover:bg-green-500/15 text-primary-foreground/70 hover:text-green-400 transition-all"
-                                  >
-                                    Pagar
-                                  </button>
-                                  <button
-                                    onClick={() => confirm({ title: "Estender Duração", description: "Deseja estender a duração deste agendamento?", onConfirm: () => openExtendDialog(a.id) })}
-                                    title="Estender duração"
-                                    className="rounded px-1.5 py-1 bg-primary-foreground/[0.05] hover:bg-blue-400/15 text-primary-foreground/70 hover:text-blue-400 transition-all"
-                                  >
-                                    <Timer className="w-3.5 h-3.5" />
+                          if (startingAppts.length === 0 && !isCovered) {
+                            return (
+                              <div key={`empty-${slotMins}`} className="flex group min-h-[50px] transition-all">
+                                <div className="w-14 shrink-0 flex justify-end pr-3 pt-1 border-r border-primary-foreground/10 mr-3 relative">
+                                  <span className="font-body text-[11px] font-medium text-primary-foreground/40 group-hover:text-gold transition-colors">{timeString}</span>
+                                  <div className="absolute right-[-4px] top-2.5 w-2 h-2 rounded-full bg-primary-foreground/10" />
+                                </div>
+                                <div className="flex-1 pb-1">
+                                  <button onClick={() => openManualRegister(timeString)} className="w-full h-full min-h-[46px] rounded-xl border border-dashed border-primary-foreground/15 bg-primary-foreground/[0.01] flex items-center px-4 text-primary-foreground/30 hover:bg-gold/[0.03] hover:text-gold/80 hover:border-gold/30 transition-all group-hover:border-primary-foreground/30">
+                                    <Plus className="w-3.5 h-3.5 mr-2" />
+                                    <span className="font-body text-[12px] font-medium">Agendar</span>
                                   </button>
                                 </div>
-                              )}
+                              </div>
+                            );
+                          }
+
+                          if (startingAppts.length === 0 && isCovered) {
+                            return (
+                              <div key={`covered-${slotMins}`} className="flex group min-h-[50px]">
+                                <div className="w-14 shrink-0 flex justify-end pr-3 pt-1 border-r border-primary-foreground/10 mr-3 relative">
+                                  <span className="font-body text-[11px] font-medium text-primary-foreground/40">{timeString}</span>
+                                  <div className="absolute right-[-4px] top-2.5 w-2 h-2 rounded-full bg-primary-foreground/10" />
+                                </div>
+                                <div className="flex-1"></div>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div key={`slot-${slotMins}`} className="flex group relative">
+                              <div className="w-14 shrink-0 flex justify-end pr-3 pt-1 border-r border-primary-foreground/10 mr-3 relative">
+                                <span className="font-body text-[11px] font-medium text-primary-foreground/40">{timeString}</span>
+                                <div className="absolute right-[-4px] top-2.5 w-2 h-2 rounded-full bg-gold shadow-[0_0_8px_hsl(var(--gold)/0.6)]" />
+                              </div>
+                              <div className="flex-1 relative pb-1 min-h-[50px]">
+                                {startingAppts.map((a, idx) => {
+                                  const startMins = timeToMinutes(a.horario);
+                                  const duracao = a.duracao_minutos || 60;
+                                  const slotsSpan = duracao / INTERVAL_MINS;
+                                  const cardHeight = Math.max(50, (slotsSpan * 50) + ((slotsSpan - 1) * 2));
+                                  const offsetMins = startMins - slotMins;
+                                  const topOffset = (offsetMins / INTERVAL_MINS) * 52;
+                                  const endTimeString = calcFim(a.horario, duracao);
+                                  
+                                  const valorPago = Number(a.valor_pago || 0);
+                                  const valorTotal = Number(a.valor);
+                                  const isCancelado = a.status === "cancelado" || a.status === "falta";
+                                  const isPagoIntegral = !isCancelado && valorPago >= valorTotal && valorTotal > 0;
+                                  const isPagoParcial = !isCancelado && valorPago > 0 && valorPago < valorTotal;
+                                  
+                                  const barColor = isCancelado
+                                    ? "bg-primary-foreground/15"
+                                    : isPagoIntegral
+                                    ? "bg-green-500"
+                                    : isPagoParcial
+                                    ? "bg-gold"
+                                    : "bg-red-500";
+
+                                  return (
+                                    <article
+                                      key={a.id}
+                                      onClick={(e) => {
+                                        const target = e.target as HTMLElement;
+                                        if (target.closest("button, input, a, select, textarea")) return;
+                                        setDetalheAgendamento(a);
+                                      }}
+                                      style={{ height: cardHeight, top: topOffset, zIndex: 10 + idx }}
+                                      className={`group/card absolute left-0 right-0 overflow-hidden rounded-xl bg-[#1A1A1A] border border-primary-foreground/10 hover:border-primary-foreground/20 hover:bg-[#1E1E1E] shadow-sm transition-all cursor-pointer ${idx > 0 ? 'ml-4 mt-2 shadow-xl border-l-4' : ''}`}
+                                    >
+                                      <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${barColor}`} />
+                                      
+                                      <div className="pl-3.5 pr-2 py-2.5 h-full flex flex-col min-w-0">
+                                        <div className="flex items-start justify-between gap-2">
+                                          <div className="flex items-center gap-2 mb-1 min-w-0 flex-1">
+                                            <span className="font-heading text-[12px] font-bold text-primary-foreground/90">{a.horario} - {endTimeString}</span>
+                                            <span className="px-1.5 py-0.5 rounded text-[9px] bg-primary-foreground/[0.05] text-primary-foreground/50 border border-primary-foreground/10">{duracao}min</span>
+                                            {a.origem === "whatsapp_bot" && (
+                                              <span className="text-green-400" title="Origem: WhatsApp"><WhatsAppIcon className="h-3 w-3" /></span>
+                                            )}
+                                          </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-1.5 min-w-0 mt-0.5">
+                                          <p className="font-heading text-[14px] font-semibold text-primary-foreground truncate flex-1">
+                                            {getClientName(a.user_id, a.cliente_nome)}
+                                          </p>
+                                        </div>
+
+                                        <p className="font-body text-[11px] text-primary-foreground/60 truncate mt-1">
+                                          {a.servico}{a.variacao ? ` · ${a.variacao}` : ""}
+                                        </p>
+                                        
+                                        <div className="flex items-center gap-2 mt-auto pt-2">
+                                          {Number(a.valor_desconto_credito) > 0 ? (
+                                            <span className="font-heading text-[12px] font-bold text-green-400">R$ {Math.max(0, Number(a.valor) - Number(a.valor_desconto_credito)).toFixed(2).replace(".", ",")}</span>
+                                          ) : (
+                                            <span className="font-heading text-[12px] font-bold text-red-400">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</span>
+                                          )}
+                                          {(Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0)) < Number(a.valor) && !isCancelado && (
+                                            <span className="font-body text-[10px] font-semibold text-orange-400/80">(Falta R$ {(Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0)).toFixed(2).replace(".", ",")})</span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </article>
+                                  );
+                                })}
+                              </div>
                             </div>
-                          </div>
-                        </article>
-                        );
-                      })}
-                    </div>
-                  )}
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
               </section>
 
