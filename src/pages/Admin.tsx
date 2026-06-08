@@ -263,14 +263,12 @@ const SwipeableTimelineCard = ({
 
   return (
     <div
-      style={
-        startingApptsLength > 1
-          ? { minHeight: cardHeight, zIndex: 10 + idx }
-          : { height: cardHeight, top: topOffset, zIndex: 10 + idx }
-      }
-      className={`group/card relative overflow-hidden ${
-        startingApptsLength > 1 ? "mb-2 w-full shadow-md rounded-xl" : "absolute left-0 right-0 rounded-xl"
-      }`}
+      style={{ 
+        minHeight: Math.max(cardHeight, 88), 
+        marginTop: topOffset,
+        zIndex: 10 + idx 
+      }}
+      className="group/card relative overflow-hidden mb-2 w-full shadow-md rounded-xl"
     >
       <motion.div
         drag="x"
@@ -1723,15 +1721,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                           }
 
                           if (startingAppts.length === 0 && isCovered) {
-                            return (
-                              <div key={`covered-${slotMins}`} className="flex group min-h-[50px]">
-                                <div className="w-14 shrink-0 flex justify-end pr-3 pt-1 border-r border-primary-foreground/10 mr-3 relative">
-                                  <span className="font-body text-[11px] font-medium text-primary-foreground/40">{timeString}</span>
-                                  <div className="absolute right-[-4px] top-2.5 w-2 h-2 rounded-full bg-primary-foreground/10" />
-                                </div>
-                                <div className="flex-1"></div>
-                              </div>
-                            );
+                            return null;
                           }
 
                           return (
