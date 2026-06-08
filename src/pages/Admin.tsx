@@ -1635,19 +1635,15 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                   const topOffset = (offsetMins / INTERVAL_MINS) * 52;
                                   const endTimeString = calcFim(a.horario, duracao);
                                   
-                                  const valorPago = Number(a.valor_pago || 0);
-                                  const valorTotal = Number(a.valor);
-                                  const isCancelado = a.status === "cancelado" || a.status === "falta";
-                                  const isPagoIntegral = !isCancelado && valorPago >= valorTotal && valorTotal > 0;
-                                  const isPagoParcial = !isCancelado && valorPago > 0 && valorPago < valorTotal;
-                                  
-                                  const barColor = isCancelado
-                                    ? "bg-primary-foreground/15"
-                                    : isPagoIntegral
+                                  const barColor = a.status === "confirmado"
+                                    ? "bg-blue-500"
+                                    : a.status === "concluido"
                                     ? "bg-green-500"
-                                    : isPagoParcial
-                                    ? "bg-gold"
-                                    : "bg-red-500";
+                                    : a.status === "cancelado"
+                                    ? "bg-rose"
+                                    : a.status === "falta"
+                                    ? "bg-orange-500"
+                                    : "bg-primary-foreground/15";
 
                                   return (
                                     <article
