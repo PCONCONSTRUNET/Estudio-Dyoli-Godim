@@ -1561,57 +1561,26 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                 </div>
               )}
 
-              <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
-                <div className="space-y-2">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary-foreground/25" />
-                    <input
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Buscar cliente ou serviço..."
-                      className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] py-2.5 pl-10 pr-4 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-gold/20"
-                    />
-                  </div>
+              <div className="flex gap-2 w-full mb-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setSelectedAgendaDate(todayAgendaKey)}
+                  className="h-11 flex-1 rounded-2xl bg-primary-foreground/[0.06] px-4 text-primary-foreground hover:bg-primary-foreground/[0.1] whitespace-nowrap"
+                >
+                  Hoje
+                </Button>
 
-                  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}>
-                    {[
-                      { value: "todos", label: "Todos", active: "bg-gold/15 text-gold border-gold/40 shadow-[0_0_0_1px_hsl(var(--gold)/0.2)]", inactive: "bg-gold/[0.04] text-gold/60 border-gold/20 hover:bg-gold/10 hover:text-gold/80" },
-                      { value: "confirmado", label: "Confirmados", active: "bg-blue-500/15 text-blue-400 border-blue-500/40 shadow-[0_0_0_1px_rgb(59_130_246_/_0.2)]", inactive: "bg-blue-500/[0.05] text-blue-400/70 border-blue-500/20 hover:bg-blue-500/10 hover:text-blue-400" },
-                      { value: "concluido", label: "Concluídos", active: "bg-green-500/15 text-green-400 border-green-500/40 shadow-[0_0_0_1px_rgb(34_197_94_/_0.2)]", inactive: "bg-green-500/[0.05] text-green-400/70 border-green-500/20 hover:bg-green-500/10 hover:text-green-400" },
-                      { value: "cancelado", label: "Cancelados", active: "bg-rose/15 text-rose border-rose/40 shadow-[0_0_0_1px_hsl(var(--rose)/0.2)]", inactive: "bg-rose/[0.05] text-rose/70 border-rose/20 hover:bg-rose/10 hover:text-rose" },
-                      { value: "falta", label: "Faltas", active: "bg-orange-500/15 text-orange-400 border-orange-500/40 shadow-[0_0_0_1px_rgb(249_115_22_/_0.2)]", inactive: "bg-orange-500/[0.05] text-orange-400/70 border-orange-500/20 hover:bg-orange-500/10 hover:text-orange-400" },
-                    ].map((f) => (
-                      <button
-                        key={f.value}
-                        onClick={() => setStatusFilter(f.value)}
-                        className={`px-3 py-1.5 rounded-full font-body text-[11px] font-medium whitespace-nowrap border transition-all ${statusFilter === f.value ? f.active : f.inactive}`}
-                      >
-                        {f.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex gap-2 lg:flex-col lg:items-stretch">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => setSelectedAgendaDate(todayAgendaKey)}
-                    className="h-11 flex-1 rounded-2xl bg-primary-foreground/[0.06] px-4 text-primary-foreground hover:bg-primary-foreground/[0.1] lg:flex-none"
-                  >
-                    Hoje
-                  </Button>
-
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        className="h-11 flex-1 rounded-2xl bg-gold/10 px-4 text-gold hover:bg-gold/20 lg:min-w-[220px]"
-                      >
-                        <Calendar className="h-4 w-4" />
-                        {selectedAgendaDateObj.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
-                      </Button>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="h-11 flex-[2] rounded-2xl bg-gold/10 px-4 text-gold hover:bg-gold/20 justify-center"
+                    >
+                      <Calendar className="h-4 w-4 mr-2" />
+                      {selectedAgendaDateObj.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+                    </Button>
                     </PopoverTrigger>
                     <PopoverContent align="end" className="w-auto rounded-3xl border border-primary-foreground/[0.06] bg-background p-0">
                       <div className="border-b border-primary-foreground/[0.06] px-4 py-3">
