@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { motion, useAnimation } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyAgendamentoConfirmadoById, notifyLembreteById } from "@/lib/notify-webhook";
@@ -236,6 +237,107 @@ const LembretesHub = () => {
 
 // ─── Password Gate ───
 const ADMIN_AUTH_KEY = "dyoli_admin_authenticated";
+
+const SwipeableTimelineCard = ({
+  a,
+  idx,
+  cardHeight,
+  topOffset,
+  isCancelado,
+  barColor,
+  duracao,
+  endTimeString,
+  startingApptsLength,
+  clientName,
+  onClick,
+  onDelete,
+}: any) => {
+  const controls = useAnimation();
+  const handleDragEnd = (event: any, info: any) => {
+    if (info.offset.x < -60) {
+      controls.start({ x: -100 });
+    } else {
+      controls.start({ x: 0 });
+    }
+  };
+
+  return (
+    <div
+      style={
+        startingApptsLength > 1
+          ? { minHeight: cardHeight, zIndex: 10 + idx }
+          : { height: cardHeight, top: topOffset, zIndex: 10 + idx }
+      }
+      className={`group/card relative ${
+        startingApptsLength > 1 ? "mb-2 w-full shadow-md" : "absolute left-0 right-0"
+      }`}
+    >
+      <div className="absolute inset-y-0 right-0 w-[100px] rounded-xl bg-red-500/90 flex flex-col items-center justify-center overflow-hidden">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (window.confirm("Deseja realmente excluir este agendamento?")) {
+              onDelete(a.id);
+            }
+          }}
+          className="flex h-full w-full items-center justify-center text-white hover:bg-black/20 transition-colors"
+        >
+          <Trash2 className="h-5 w-5" />
+        </button>
+      </div>
+
+      <motion.article
+        drag="x"
+        dragConstraints={{ left: -100, right: 0 }}
+        dragElastic={0.1}
+        onDragEnd={handleDragEnd}
+        animate={controls}
+        onClick={(e: any) => {
+          const target = e.target as HTMLElement;
+          if (target.closest("button, input, a, select, textarea")) return;
+          onClick(a);
+        }}
+        style={{ minHeight: cardHeight }}
+        className="relative overflow-hidden rounded-xl bg-[#1A1A1A]/50 backdrop-blur-xl border border-white/10 hover:border-white/20 hover:bg-[#1E1E1E]/60 shadow-sm transition-colors cursor-pointer h-full"
+      >
+        <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${barColor}`} />
+        
+        <div className="pl-3.5 pr-2 py-2.5 h-full flex flex-col min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2 mb-1 min-w-0 flex-1">
+              <span className="font-heading text-[12px] font-bold text-primary-foreground/90">{a.horario} - {endTimeString}</span>
+              <span className="px-1.5 py-0.5 rounded text-[9px] bg-primary-foreground/[0.05] text-primary-foreground/50 border border-primary-foreground/10">{duracao}min</span>
+              {a.origem === "whatsapp_bot" && (
+                <span className="text-green-400" title="Origem: WhatsApp"><WhatsAppIcon className="h-3 w-3" /></span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 min-w-0 mt-0.5">
+            <p className="font-heading text-[14px] font-semibold text-primary-foreground truncate flex-1">
+              {clientName}
+            </p>
+          </div>
+
+          <p className="font-body text-[11px] text-primary-foreground/60 truncate mt-1">
+            {a.servico}{a.variacao ? ` · ${a.variacao}` : ""}
+          </p>
+          
+          <div className="flex items-center gap-2 mt-auto pt-2">
+            {Number(a.valor_desconto_credito) > 0 ? (
+              <span className="font-heading text-[12px] font-bold text-green-400">R$ {Math.max(0, Number(a.valor) - Number(a.valor_desconto_credito)).toFixed(2).replace(".", ",")}</span>
+            ) : (
+              <span className="font-heading text-[12px] font-bold text-red-400">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</span>
+            )}
+            {(Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0)) < Number(a.valor) && !isCancelado && (
+              <span className="font-body text-[10px] font-semibold text-orange-400/80">(Falta R$ {(Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0)).toFixed(2).replace(".", ",")})</span>
+            )}
+          </div>
+        </div>
+      </motion.article>
+    </div>
+  );
+};
 
 const Admin = () => {
   const [authenticated, setAuthenticated] = useState(() => {
@@ -1647,59 +1749,21 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                     : "bg-primary-foreground/15";
 
                                   return (
-                                    <article
+                                    <SwipeableTimelineCard
                                       key={a.id}
-                                      onClick={(e) => {
-                                        const target = e.target as HTMLElement;
-                                        if (target.closest("button, input, a, select, textarea")) return;
-                                        setDetalheAgendamento(a);
-                                      }}
-                                      style={
-                                        startingAppts.length > 1
-                                          ? { minHeight: cardHeight, zIndex: 10 + idx }
-                                          : { height: cardHeight, top: topOffset, zIndex: 10 + idx }
-                                      }
-                                      className={`group/card overflow-hidden rounded-xl bg-[#1A1A1A] border border-primary-foreground/10 hover:border-primary-foreground/20 hover:bg-[#1E1E1E] shadow-sm transition-all cursor-pointer ${
-                                        startingAppts.length > 1 
-                                          ? 'relative mb-2 w-full shadow-md' 
-                                          : 'absolute left-0 right-0'
-                                      }`}
-                                    >
-                                      <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${barColor}`} />
-                                      
-                                      <div className="pl-3.5 pr-2 py-2.5 h-full flex flex-col min-w-0">
-                                        <div className="flex items-start justify-between gap-2">
-                                          <div className="flex items-center gap-2 mb-1 min-w-0 flex-1">
-                                            <span className="font-heading text-[12px] font-bold text-primary-foreground/90">{a.horario} - {endTimeString}</span>
-                                            <span className="px-1.5 py-0.5 rounded text-[9px] bg-primary-foreground/[0.05] text-primary-foreground/50 border border-primary-foreground/10">{duracao}min</span>
-                                            {a.origem === "whatsapp_bot" && (
-                                              <span className="text-green-400" title="Origem: WhatsApp"><WhatsAppIcon className="h-3 w-3" /></span>
-                                            )}
-                                          </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-1.5 min-w-0 mt-0.5">
-                                          <p className="font-heading text-[14px] font-semibold text-primary-foreground truncate flex-1">
-                                            {getClientName(a.user_id, a.cliente_nome)}
-                                          </p>
-                                        </div>
-
-                                        <p className="font-body text-[11px] text-primary-foreground/60 truncate mt-1">
-                                          {a.servico}{a.variacao ? ` · ${a.variacao}` : ""}
-                                        </p>
-                                        
-                                        <div className="flex items-center gap-2 mt-auto pt-2">
-                                          {Number(a.valor_desconto_credito) > 0 ? (
-                                            <span className="font-heading text-[12px] font-bold text-green-400">R$ {Math.max(0, Number(a.valor) - Number(a.valor_desconto_credito)).toFixed(2).replace(".", ",")}</span>
-                                          ) : (
-                                            <span className="font-heading text-[12px] font-bold text-red-400">R$ {Number(a.valor).toFixed(2).replace(".", ",")}</span>
-                                          )}
-                                          {(Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0)) < Number(a.valor) && !isCancelado && (
-                                            <span className="font-body text-[10px] font-semibold text-orange-400/80">(Falta R$ {(Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0)).toFixed(2).replace(".", ",")})</span>
-                                          )}
-                                        </div>
-                                      </div>
-                                    </article>
+                                      a={a}
+                                      idx={idx}
+                                      cardHeight={cardHeight}
+                                      topOffset={topOffset}
+                                      isCancelado={isCancelado}
+                                      barColor={barColor}
+                                      duracao={duracao}
+                                      endTimeString={endTimeString}
+                                      startingApptsLength={startingAppts.length}
+                                      clientName={getClientName(a.user_id, a.cliente_nome)}
+                                      onClick={(appt: any) => setDetalheAgendamento(appt)}
+                                      onDelete={deleteAgendamento}
+                                    />
                                   );
                                 })}
                               </div>
