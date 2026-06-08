@@ -1635,6 +1635,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                   const topOffset = (offsetMins / INTERVAL_MINS) * 52;
                                   const endTimeString = calcFim(a.horario, duracao);
                                   
+                                  const isCancelado = a.status === "cancelado" || a.status === "falta";
                                   const barColor = a.status === "confirmado"
                                     ? "bg-blue-500"
                                     : a.status === "concluido"
