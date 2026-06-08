@@ -1265,19 +1265,19 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
 
       {/* Modal: Adicionar valor à dívida */}
       <Dialog open={!!addValorAg} onOpenChange={(open) => { if (!open) { setAddValorAg(null); setAddValorInput(""); } }}>
-        <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-[360px] mx-auto bg-charcoal border-primary-foreground/[0.08] rounded-2xl p-0 sm:p-0 shadow-2xl overflow-hidden">
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)] sm:max-w-[360px] mx-auto bg-charcoal border-primary-foreground/[0.08] rounded-2xl p-0 sm:p-0 shadow-2xl overflow-hidden">
           {addValorAg && (() => {
             const valorTotalAtual = Number(addValorAg.valor);
             const valorAdicional = Number((addValorInput || "0").replace(/\./g, "").replace(",", ".")) || 0;
             const novoTotal = valorTotalAtual + valorAdicional;
             
             return (
-              <div className="p-4 space-y-3 mx-auto w-full">
+              <div className="p-4 space-y-3 mx-auto w-full min-w-0">
                 <DialogHeader>
                   <DialogTitle className="font-heading text-[16px] font-semibold text-primary-foreground">Adicionar Valor à Dívida</DialogTitle>
                 </DialogHeader>
-                <div>
-                  <p className="font-body text-[11px] text-primary-foreground/70 mt-0.5 truncate">
+                <div className="min-w-0 w-full overflow-hidden">
+                  <p className="font-body text-[11px] text-primary-foreground/70 mt-0.5 truncate w-full">
                     {getClientName(addValorAg.user_id, addValorAg.cliente_nome)} · {addValorAg.servico}
                   </p>
                 </div>
