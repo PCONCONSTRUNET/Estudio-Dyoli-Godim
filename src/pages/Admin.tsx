@@ -268,7 +268,7 @@ const SwipeableTimelineCard = ({
         marginTop: topOffset,
         zIndex: 10 + idx 
       }}
-      className="group/card relative overflow-hidden mb-2 w-full shadow-md rounded-xl"
+      className="group/card flex flex-col relative overflow-hidden mb-2 w-full shadow-md rounded-xl"
     >
       <motion.div
         drag="x"
@@ -276,7 +276,7 @@ const SwipeableTimelineCard = ({
         dragElastic={0.1}
         onDragEnd={handleDragEnd}
         animate={controls}
-        className="flex w-full h-full relative"
+        className="flex-1 flex w-full relative"
       >
         <article
           onClick={(e: any) => {
@@ -284,7 +284,8 @@ const SwipeableTimelineCard = ({
             if (target.closest("button, input, a, select, textarea")) return;
             onClick(a);
           }}
-          className="w-full shrink-0 relative overflow-hidden rounded-xl bg-[#1A1A1A]/60 backdrop-blur-md border border-white/10 hover:border-white/20 hover:bg-[#1E1E1E]/70 shadow-sm transition-colors cursor-pointer h-full"
+          style={{ minHeight: Math.max(cardHeight, 88) }}
+          className="w-full shrink-0 flex-1 relative overflow-hidden rounded-xl bg-[#1A1A1A]/60 backdrop-blur-md border border-white/10 hover:border-white/20 hover:bg-[#1E1E1E]/70 shadow-sm transition-colors cursor-pointer"
         >
           <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${barColor}`} />
           
