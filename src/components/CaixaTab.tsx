@@ -717,7 +717,10 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  <DialogTitle className="font-heading text-[16px] font-bold text-primary-foreground tracking-tight">
  Cálculo da Comissão
  </DialogTitle>
- <p classNam  <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-3">
+ </div>
+ </div>
+ </DialogHeader>
+  <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-3">
     {/* Resumo principal */}
     <div className="rounded-xl bg-gradient-to-br from-purple-500/[0.10] to-purple-500/[0.02] border border-purple-500/20 p-3 flex items-center justify-between">
       <div>
