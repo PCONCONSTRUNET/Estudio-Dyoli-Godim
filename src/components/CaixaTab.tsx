@@ -717,77 +717,60 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  <DialogTitle className="font-heading text-[16px] font-bold text-primary-foreground tracking-tight">
  Cálculo da Comissão
  </DialogTitle>
- <p className="font-body text-[10px] text-purple-300/70 uppercase tracking-[0.2em] mt-0.5">
- {fmtShort(ciclo.startDate)} → {fmtShort(ciclo.endDate)}
- </p>
- </div>
- </div>
- </DialogHeader>
-  <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-4">
- {/* Resumo principal */}
- <div className="rounded-2xl bg-gradient-to-br from-purple-500/[0.10] to-purple-500/[0.02] border border-purple-500/20 p-4 text-center flex flex-col gap-3">
-    <div>
-      <p className="font-body text-[10px] text-purple-300/70 uppercase tracking-[0.25em] mb-1">Comissão Gerada</p>
-      <p className="font-heading text-3xl font-bold text-purple-200 tabular-nums tracking-tight drop-shadow-[0_0_18px_hsl(280_70%_60%/0.4)]">
-        {formatCurrency(cicloStats.comissaoGerada)}
-      </p>
-      <p className="font-body text-[11px] text-primary-foreground/75 mt-1 tabular-nums">
-        Base: {formatCurrency(cicloStats.baseComissao)} × <span className="text-purple-300 font-bold">{comissaoPct}%</span>
-        {cicloStats.gorjetas > 0 && <span className="text-purple-300 font-bold"> + {formatCurrency(cicloStats.gorjetas)} (Gorjetas)</span>}
-      </p>
-    </div>
-    
-    <div className="pt-3 border-t border-purple-500/20">
-      <p className="font-body text-[10px] text-purple-300/70 uppercase tracking-[0.25em] mb-1">Saldo a Retirar</p>
-      <p className="font-heading text-2xl font-bold text-white tabular-nums drop-shadow-[0_0_12px_hsl(280_70%_60%/0.8)]">
-        {formatCurrency(cicloStats.comissao)}
-      </p>
-    </div>
-  </div>
-
-  {/* Retiradas */}
-  <div className="space-y-4 pt-2">
-    <button 
-      onClick={() => setShowRetiradaModal(true)}
-      className="w-full flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-purple-500/25 to-purple-500/15 border border-purple-500/40 hover:border-purple-400/60 hover:from-purple-500/30 hover:to-purple-500/20 shadow-[0_0_20px_hsl(280_70%_60%/0.15)] transition-all group"
-    >
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-purple-500/40 flex items-center justify-center border border-purple-400/30">
-          <ArrowDown className="w-5 h-5 text-white drop-shadow-md" />
-        </div>
-        <div className="text-left">
-          <p className="font-body text-[14px] font-bold text-white tracking-wide drop-shadow-sm">Nova Retirada</p>
-          <p className="font-body text-[11px] text-purple-200">Registrar saque da comissão</p>
-        </div>
+ <p classNam  <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-3">
+    {/* Resumo principal */}
+    <div className="rounded-xl bg-gradient-to-br from-purple-500/[0.10] to-purple-500/[0.02] border border-purple-500/20 p-3 flex items-center justify-between">
+      <div>
+        <p className="font-body text-[9px] text-purple-300/70 uppercase tracking-[0.2em] mb-0.5">Comissão Gerada</p>
+        <p className="font-heading text-xl font-bold text-purple-200 tabular-nums leading-none">
+          {formatCurrency(cicloStats.comissaoGerada)}
+        </p>
       </div>
-      <Plus className="w-6 h-6 text-white group-hover:scale-110 transition-transform drop-shadow-[0_0_8px_hsl(280_70%_60%/0.8)]" />
-    </button>
+      <div className="text-right border-l border-purple-500/20 pl-4">
+        <p className="font-body text-[9px] text-purple-300/70 uppercase tracking-[0.2em] mb-0.5">Saldo a Retirar</p>
+        <p className="font-heading text-xl font-bold text-white tabular-nums leading-none drop-shadow-[0_0_12px_hsl(280_70%_60%/0.8)]">
+          {formatCurrency(cicloStats.comissao)}
+        </p>
+      </div>
+    </div>
 
+    {/* Retiradas */}
     <div className="space-y-2">
-      <p className="font-body text-[11px] text-primary-foreground/90 uppercase tracking-wider px-1 font-semibold">Histórico de retiradas do ciclo</p>
+      <div className="flex items-center justify-between mb-1">
+        <p className="font-body text-[10px] text-primary-foreground/90 uppercase tracking-wider px-1 font-semibold">Retiradas do ciclo</p>
+        <button 
+          onClick={() => setShowRetiradaModal(true)}
+          className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 transition-all group"
+        >
+          <span className="font-body text-[9px] font-bold text-purple-200 uppercase tracking-wider">Nova Retirada</span>
+          <Plus className="w-3 h-3 text-purple-200 group-hover:scale-110 transition-transform" />
+        </button>
+      </div>
+      
       {despesas.filter(d => d.tipo === "pessoal" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO).length > 0 ? (
-        despesas.filter(d => d.tipo === "pessoal" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO).map((d, i) => (
-          <div key={i} className="flex items-center justify-between p-3.5 rounded-xl bg-primary-foreground/[0.06] border border-primary-foreground/[0.1] shadow-sm hover:bg-primary-foreground/[0.08] transition-colors">
-            <div>
-              <p className="font-body text-[13px] font-semibold text-primary-foreground/95">{d.observacao || "Retirada pessoal"}</p>
-              <p className="font-body text-[10px] text-primary-foreground/60 mt-0.5">{formatDateShort(d.data_vencimento)}</p>
+        <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar">
+          {despesas.filter(d => d.tipo === "pessoal" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO).map((d, i) => (
+            <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] shadow-sm hover:bg-primary-foreground/[0.06] transition-colors">
+              <div>
+                <p className="font-body text-[11px] font-semibold text-primary-foreground/95 leading-none">{d.observacao || "Retirada pessoal"}</p>
+                <p className="font-body text-[9px] text-primary-foreground/60 mt-1">{formatDateShort(d.data_vencimento)}</p>
+              </div>
+              <p className="font-heading text-[13px] font-bold text-green-400 drop-shadow-sm leading-none">{formatCurrency(Number(d.valor))}</p>
             </div>
-            <p className="font-heading text-[15px] font-bold text-green-400 drop-shadow-sm">{formatCurrency(Number(d.valor))}</p>
-          </div>
-        ))
+          ))}
+        </div>
       ) : (
-        <p className="text-center font-body text-[12px] text-primary-foreground/50 py-5 border border-dashed border-primary-foreground/20 rounded-xl bg-primary-foreground/[0.02]">Nenhuma retirada registrada</p>
+        <p className="text-center font-body text-[10px] text-primary-foreground/50 py-3 border border-dashed border-primary-foreground/20 rounded-lg bg-primary-foreground/[0.02]">Nenhuma retirada</p>
       )}
     </div>
-  </div>
 
  {/* Métricas do cálculo */}
- <div className="grid grid-cols-3 gap-2">
- <div className="p-2.5 rounded-xl bg-green-500/[0.06] border border-green-500/15">
+ <div className="grid grid-cols-3 gap-1.5">
+ <div className="p-2 rounded-xl bg-green-500/[0.06] border border-green-500/15">
  <p className="font-body text-[8.5px] text-primary-foreground/75 uppercase tracking-wider">Base</p>
  <p className="font-heading text-[13px] font-bold text-green-400 tabular-nums leading-tight mt-0.5">{formatCurrency(cicloStats.baseComissao)}</p>
  </div>
- <div className="p-2.5 rounded-xl bg-purple-500/[0.06] border border-purple-500/15 relative">
+ <div className="p-2 rounded-xl bg-purple-500/[0.06] border border-purple-500/15 relative">
  <p className="font-body text-[8.5px] text-primary-foreground/75 uppercase tracking-wider">Taxa</p>
  {editingComissao ? (
  <div className="flex items-center gap-1 mt-0.5">
@@ -821,7 +804,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  </button>
  )}
  </div>
- <div className="p-2.5 rounded-xl bg-gold/[0.06] border border-gold/15">
+ <div className="p-2 rounded-xl bg-gold/[0.06] border border-gold/15">
  <p className="font-body text-[8.5px] text-primary-foreground/75 uppercase tracking-wider">Dias</p>
  <p className="font-heading text-[13px] font-bold text-gold tabular-nums leading-tight mt-0.5">{comissaoBreakdown.length}</p>
  </div>
@@ -840,7 +823,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  <p className="font-body text-[12px] text-primary-foreground/95">Nenhum pagamento recebido neste ciclo ainda.</p>
  </div>
  ) : (
- <div className="space-y-1.5">
+ <div className="space-y-1.5 max-h-[260px] overflow-y-auto pr-1 custom-scrollbar">
  {comissaoBreakdown.map((d) => {
  const dayBase = cicloStats.items.filter(a => a.data_agendamento === d.date && a.observacao !== "SEM_COMISSAO").reduce((s,a) => s + Number(a.valor_pago || 0), 0);
  const dayGorjetas = cicloStats.items.filter(a => a.data_agendamento === d.date).reduce((s,a) => s + Number(a.valor_gorjeta || 0), 0);
@@ -872,16 +855,6 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  </div>
  )}
  </div>
- </div>
-
- {/* Total final */}
- <div className="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-purple-500/15 to-purple-500/5 border border-purple-500/30">
- <span className="font-body text-[11px] text-purple-200/80 uppercase tracking-widest font-bold flex items-center gap-1.5">
- <Sparkles className="w-3.5 h-3.5 text-purple-300" /> Total
- </span>
- <span className="font-heading text-[18px] font-bold text-purple-200 tabular-nums">
- {formatCurrency(cicloStats.comissao)}
- </span>
  </div>
  </div>
  </DialogContent>
