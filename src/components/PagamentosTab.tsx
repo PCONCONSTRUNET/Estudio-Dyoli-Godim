@@ -55,6 +55,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [sortField, setSortField] = useState<SortField>("data");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [dateFilter, setDateFilter] = useState<string>("");
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) setSortDir(sortDir === "asc" ? "desc" : "asc");
@@ -240,8 +241,16 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     return list;
   }, [agendamentos, historico, despesas]);
 
-  const filtered = useMemo(() => {
+  const dateFilteredFaturas = useMemo(() => {
     let list = [...faturas];
+    if (dateFilter) {
+      list = list.filter(a => a.data_fatura === dateFilter);
+    }
+    return list;
+  }, [faturas, dateFilter]);
+
+  const filtered = useMemo(() => {
+    let list = [...dateFilteredFaturas];
 
     if (statusFilter !== "todos") {
       if (statusFilter === "pendente") {
@@ -279,36 +288,44 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     });
 
     return list;
-  }, [faturas, statusFilter, search, sortField, sortDir, getClientName]);
+  }, [dateFilteredFaturas, statusFilter, search, sortField, sortDir, getClientName]);
 
   const counts = useMemo(() => ({
-    todos: faturas.length,
-    confirmado: faturas.filter((a) => a.status === "confirmado").length,
-    pendente: faturas.filter((a) => a.fatura_tipo === "pendente" && !["cancelado", "falta"].includes(a.status)).length,
-    cancelado: faturas.filter((a) => a.status === "cancelado").length,
-    concluido: faturas.filter((a) => a.status === "concluido").length,
-    falta: faturas.filter((a) => a.status === "falta").length,
-    saidas: faturas.filter((a) => a._is_saida).length,
-  }), [faturas]);
+    todos: dateFilteredFaturas.length,
+    confirmado: dateFilteredFaturas.filter((a) => a.status === "confirmado").length,
+    pendente: dateFilteredFaturas.filter((a) => a.fatura_tipo === "pendente" && !["cancelado", "falta"].includes(a.status)).length,
+    cancelado: dateFilteredFaturas.filter((a) => a.status === "cancelado").length,
+    concluido: dateFilteredFaturas.filter((a) => a.status === "concluido").length,
+    falta: dateFilteredFaturas.filter((a) => a.status === "falta").length,
+    saidas: dateFilteredFaturas.filter((a) => a._is_saida).length,
+  }), [dateFilteredFaturas]);
 
-  const validos = useMemo(() => agendamentos.filter(a => !["cancelado", "falta"].includes(a.status)), [agendamentos]);
+  const { totalPago, totalPendente, totalDespesas, saldoLiquido } = useMemo(() => {
+    let pago = 0;
+    let pendente = 0;
+    let desp = 0;
 
-  const totalPago = useMemo(() =>
-    validos.reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0) + Number(a.valor_troco || 0) + Number(a.valor_credito || 0), 0),
-    [validos]
-  );
+    dateFilteredFaturas.forEach(a => {
+      if (a._is_saida) {
+        if (a._despesa_tipo !== "pessoal") {
+           desp += Number(a.valor_fatura);
+        }
+      } else {
+        if (a.fatura_tipo === "pagamento") {
+           pago += Number(a.valor_fatura);
+        } else if (a.fatura_tipo === "pendente" && !["cancelado", "falta"].includes(a.status)) {
+           pendente += Number(a.valor_fatura);
+        }
+      }
+    });
 
-  const totalPendente = useMemo(() =>
-    validos.reduce((s, a) => s + Math.max(0, Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0)), 0),
-    [validos]
-  );
-
-  const totalDespesas = useMemo(() =>
-    despesas.reduce((s, d) => s + (d.tipo === "pessoal" ? 0 : Number(d.valor)), 0),
-    [despesas]
-  );
-
-  const saldoLiquido = totalPago - totalDespesas;
+    return { 
+      totalPago: pago, 
+      totalPendente: pendente, 
+      totalDespesas: desp, 
+      saldoLiquido: pago - desp 
+    };
+  }, [dateFilteredFaturas]);
 
   const SortIcon = ({ field }: { field: SortField }) => (
     sortField === field
@@ -337,16 +354,37 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary-foreground/95" />
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar por cliente, serviço, ID..."
-          className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] pl-10 pr-4 py-3 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/85 focus:outline-none focus:ring-2 focus:ring-gold/20"
-        />
+      {/* Search & Date Filter */}
+      <div className="flex flex-col sm:flex-row items-center gap-3">
+        <div className="relative flex-1 w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary-foreground/95" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por cliente, serviço, ID..."
+            className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] pl-10 pr-4 py-3 text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/85 focus:outline-none focus:ring-2 focus:ring-gold/20"
+          />
+        </div>
+        <div className="w-full sm:w-auto flex items-center gap-2">
+          <div className="relative flex-1 sm:w-40">
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="w-full rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] px-4 py-3 text-primary-foreground font-body text-[13px] focus:outline-none focus:ring-2 focus:ring-gold/20 [color-scheme:dark]"
+            />
+          </div>
+          {dateFilter && (
+            <button
+              onClick={() => setDateFilter("")}
+              className="p-3 rounded-xl bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] hover:bg-primary-foreground/[0.1] transition-colors shrink-0"
+              title="Limpar data"
+            >
+              <XCircle className="h-4 w-4 text-primary-foreground/80" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Status filters */}
