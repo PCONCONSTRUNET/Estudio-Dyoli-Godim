@@ -763,7 +763,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
               <p className="font-body text-[13px] font-semibold text-primary-foreground/95">{d.observacao || "Retirada pessoal"}</p>
               <p className="font-body text-[10px] text-primary-foreground/60 mt-0.5">{formatDateShort(d.data_vencimento)}</p>
             </div>
-            <p className="font-heading text-[15px] font-bold text-rose-400 drop-shadow-sm">-{formatCurrency(Number(d.valor))}</p>
+            <p className="font-heading text-[15px] font-bold text-green-400 drop-shadow-sm">{formatCurrency(Number(d.valor))}</p>
           </div>
         ))
       ) : (
@@ -890,14 +890,14 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
         <div className="space-y-2">
           <label className="font-body text-[11px] font-bold text-primary-foreground/90 uppercase tracking-widest ml-0.5 drop-shadow-sm">Valor do Saque (R$)</label>
           <div className="relative">
-            <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-purple-400" />
+            <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-green-400" />
             <input
               type="number"
               step="0.01"
               placeholder="0.00"
               value={retiradaValor}
               onChange={(e) => setRetiradaValor(e.target.value)}
-              className="w-full bg-primary-foreground/[0.05] border border-primary-foreground/[0.15] rounded-2xl py-3 pl-10 pr-4 text-white font-heading text-[20px] font-bold focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400/50 transition-all placeholder:text-primary-foreground/20 shadow-inner"
+              className="w-full bg-primary-foreground/[0.05] border border-primary-foreground/[0.15] rounded-2xl py-3 pl-10 pr-4 text-green-400 font-heading text-[20px] font-bold focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400/50 transition-all placeholder:text-primary-foreground/20 shadow-inner"
             />
           </div>
           <p className="font-body text-[11px] text-primary-foreground/70 text-right mt-1 font-medium">
