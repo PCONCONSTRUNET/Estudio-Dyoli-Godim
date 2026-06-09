@@ -974,6 +974,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setManualHorarioFim(initialTime ? calcFim(initialTime, 60) : "10:00");
     setManualFormaPagamento("pix");
     setManualPago(false);
+    setManualValorPago("");
     setManualConcluido(false);
     setManualTroco(0);
     setManualGorjeta(0);
@@ -1116,7 +1117,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         data_agendamento: manualData,
         horario: manualHorario,
         valor: valor,
-        valor_pago: isApenasCredito ? valor : (manualPago ? Math.max(0, valor - (descontoAplicado > 0 ? descontoAplicado : 0)) : 0),
+        valor_pago: isApenasCredito ? valor : (manualPago ? (manualValorPago ? Number(manualValorPago.replace(/\./g, "").replace(",", ".")) : Math.max(0, valor - (descontoAplicado > 0 ? descontoAplicado : 0))) : 0),
         valor_troco: manualTroco,
         valor_gorjeta: manualGorjeta,
         valor_credito: isApenasCredito ? 0 : manualCredito,
@@ -2467,16 +2468,38 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
                     {/* ── Toggles ── */}
                     <div className="space-y-2.5">
-                      <div className={`flex items-center justify-between p-4 rounded-2xl border backdrop-blur-sm transition-all ${
+                      <div className={`flex flex-col p-4 rounded-2xl border backdrop-blur-sm transition-all ${
                         manualPago
                           ? "bg-gold/[0.06] border-gold/40 shadow-[0_0_24px_-12px_hsl(var(--gold)/0.6)]"
                           : "bg-white/[0.03] border-gold/30 hover:border-gold/50 shadow-[0_4px_24px_-8px_rgba(212,175,55,0.1)]"
                       }`}>
-                        <div className="min-w-0 pr-3">
-                          <p className={`font-body text-[13px] font-medium ${manualPago ? "text-gold" : "text-primary-foreground"}`}>Já foi pago?</p>
-                          <p className="font-body text-[10px] text-primary-foreground/40 mt-0.5">Marcar como pagamento recebido</p>
+                        <div className="flex items-center justify-between">
+                          <div className="min-w-0 pr-3">
+                            <p className={`font-body text-[13px] font-medium ${manualPago ? "text-gold" : "text-primary-foreground"}`}>Já foi pago?</p>
+                            <p className="font-body text-[10px] text-primary-foreground/40 mt-0.5">Marcar como pagamento recebido</p>
+                          </div>
+                          <Switch checked={manualPago} onCheckedChange={setManualPago} />
                         </div>
-                        <Switch checked={manualPago} onCheckedChange={setManualPago} />
+                        {manualPago && (
+                          <div className="mt-4 pt-3 border-t border-gold/20 space-y-1.5 animate-fade-in">
+                            <label className="font-body text-[10px] text-primary-foreground/60 uppercase tracking-wider block font-medium">
+                              Valor pago parcial (opcional)
+                            </label>
+                            <div className="relative group">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-primary-foreground/50 font-medium">R$</span>
+                              <input
+                                type="number"
+                                inputMode="decimal"
+                                min={0}
+                                step="0.01"
+                                value={manualValorPago}
+                                onChange={(e) => setManualValorPago(e.target.value)}
+                                placeholder="Deixe em branco p/ valor total"
+                                className="w-full pl-8 pr-2 py-2.5 rounded-xl bg-white/[0.03] border border-gold/20 text-gold font-body text-[13px] tabular-nums focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 transition-all placeholder:text-primary-foreground/20"
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       <div className={`flex items-center justify-between p-4 rounded-2xl border backdrop-blur-sm transition-all ${
