@@ -740,34 +740,34 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
   <div className="space-y-4 pt-2">
     <button 
       onClick={() => setShowRetiradaModal(true)}
-      className="w-full flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 to-purple-500/5 border border-purple-500/20 hover:border-purple-500/40 transition-all group"
+      className="w-full flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-purple-500/25 to-purple-500/15 border border-purple-500/40 hover:border-purple-400/60 hover:from-purple-500/30 hover:to-purple-500/20 shadow-[0_0_20px_hsl(280_70%_60%/0.15)] transition-all group"
     >
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
-          <ArrowDown className="w-5 h-5 text-purple-300" />
+        <div className="w-10 h-10 rounded-full bg-purple-500/40 flex items-center justify-center border border-purple-400/30">
+          <ArrowDown className="w-5 h-5 text-white drop-shadow-md" />
         </div>
         <div className="text-left">
-          <p className="font-body text-[12px] font-bold text-purple-200">Nova Retirada</p>
-          <p className="font-body text-[10px] text-purple-300/60">Registrar saque do saldo de comissão</p>
+          <p className="font-body text-[14px] font-bold text-white tracking-wide drop-shadow-sm">Nova Retirada</p>
+          <p className="font-body text-[11px] text-purple-200">Registrar saque da comissão</p>
         </div>
       </div>
-      <Plus className="w-5 h-5 text-purple-300 group-hover:scale-110 transition-transform" />
+      <Plus className="w-6 h-6 text-white group-hover:scale-110 transition-transform drop-shadow-[0_0_8px_hsl(280_70%_60%/0.8)]" />
     </button>
 
     <div className="space-y-2">
-      <p className="font-body text-[10px] text-primary-foreground/60 uppercase tracking-wider px-1">Histórico de retiradas do ciclo</p>
+      <p className="font-body text-[11px] text-primary-foreground/90 uppercase tracking-wider px-1 font-semibold">Histórico de retiradas do ciclo</p>
       {despesas.filter(d => d.tipo === "pessoal" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO).length > 0 ? (
         despesas.filter(d => d.tipo === "pessoal" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO).map((d, i) => (
-          <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+          <div key={i} className="flex items-center justify-between p-3.5 rounded-xl bg-primary-foreground/[0.06] border border-primary-foreground/[0.1] shadow-sm hover:bg-primary-foreground/[0.08] transition-colors">
             <div>
-              <p className="font-body text-[12px] font-medium text-primary-foreground">{d.observacao || "Retirada pessoal"}</p>
-              <p className="font-body text-[9px] text-primary-foreground/50">{formatDateShort(d.data_vencimento)}</p>
+              <p className="font-body text-[13px] font-semibold text-primary-foreground/95">{d.observacao || "Retirada pessoal"}</p>
+              <p className="font-body text-[10px] text-primary-foreground/60 mt-0.5">{formatDateShort(d.data_vencimento)}</p>
             </div>
-            <p className="font-heading text-[13px] font-bold text-rose-400">-{formatCurrency(Number(d.valor))}</p>
+            <p className="font-heading text-[15px] font-bold text-rose-400 drop-shadow-sm">-{formatCurrency(Number(d.valor))}</p>
           </div>
         ))
       ) : (
-        <p className="text-center font-body text-[11px] text-primary-foreground/40 py-4 border border-dashed border-primary-foreground/10 rounded-xl">Nenhuma retirada registrada</p>
+        <p className="text-center font-body text-[12px] text-primary-foreground/50 py-5 border border-dashed border-primary-foreground/20 rounded-xl bg-primary-foreground/[0.02]">Nenhuma retirada registrada</p>
       )}
     </div>
   </div>
@@ -879,53 +879,53 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  </Dialog>
 
   <Dialog open={showRetiradaModal} onOpenChange={setShowRetiradaModal}>
-    <DialogContent className="max-w-[320px] w-[calc(100vw-2rem)] rounded-3xl bg-[#0a0a0a] border-primary-foreground/[0.08] p-0 overflow-hidden">
-      <DialogHeader className="relative px-5 pt-5 pb-3 border-b border-primary-foreground/[0.06] bg-primary-foreground/[0.02]">
-        <div className="pointer-events-none absolute -top-16 -right-12 w-48 h-48 rounded-full bg-purple-500/10 blur-3xl" />
-        <DialogTitle className="font-heading text-[16px] font-bold text-primary-foreground flex items-center gap-2 relative z-10">
-          <Wallet className="w-4 h-4 text-purple-300" /> Nova Retirada
+    <DialogContent className="max-w-[340px] w-[calc(100vw-2rem)] rounded-3xl bg-[#121212] border-primary-foreground/[0.15] p-0 overflow-hidden shadow-[0_0_50px_-12px_hsl(280_70%_60%/0.3)]">
+      <DialogHeader className="relative px-6 pt-6 pb-4 border-b border-primary-foreground/[0.08] bg-primary-foreground/[0.03]">
+        <div className="pointer-events-none absolute -top-16 -right-12 w-48 h-48 rounded-full bg-purple-500/20 blur-3xl" />
+        <DialogTitle className="font-heading text-[18px] font-bold text-white flex items-center gap-2.5 relative z-10 tracking-tight drop-shadow-sm">
+          <Wallet className="w-5 h-5 text-purple-400 drop-shadow-md" /> Nova Retirada
         </DialogTitle>
       </DialogHeader>
-      <div className="px-5 py-5 space-y-4 relative z-10">
-        <div className="space-y-1.5">
-          <label className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-wider">Valor (R$)</label>
+      <div className="px-6 py-6 space-y-5 relative z-10 bg-gradient-to-b from-transparent to-[#0a0a0a]/50">
+        <div className="space-y-2">
+          <label className="font-body text-[11px] font-bold text-primary-foreground/90 uppercase tracking-widest ml-0.5 drop-shadow-sm">Valor do Saque (R$)</label>
           <div className="relative">
-            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
+            <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-purple-400" />
             <input
               type="number"
               step="0.01"
               placeholder="0.00"
               value={retiradaValor}
               onChange={(e) => setRetiradaValor(e.target.value)}
-              className="w-full bg-primary-foreground/[0.03] border border-primary-foreground/[0.08] rounded-xl py-2 pl-9 pr-3 text-primary-foreground font-heading text-[16px] focus:outline-none focus:border-purple-500/40"
+              className="w-full bg-primary-foreground/[0.05] border border-primary-foreground/[0.15] rounded-2xl py-3 pl-10 pr-4 text-white font-heading text-[20px] font-bold focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400/50 transition-all placeholder:text-primary-foreground/20 shadow-inner"
             />
           </div>
-          <p className="font-body text-[9px] text-primary-foreground/60 text-right">
-            Max: {formatCurrency(cicloStats.comissao)}
+          <p className="font-body text-[11px] text-primary-foreground/70 text-right mt-1 font-medium">
+            Disponível: <span className="text-purple-300 font-bold drop-shadow-sm">{formatCurrency(cicloStats.comissao)}</span>
           </p>
         </div>
-        <div className="space-y-1.5">
-          <label className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-wider">Justificativa (Opcional)</label>
+        <div className="space-y-2">
+          <label className="font-body text-[11px] font-bold text-primary-foreground/90 uppercase tracking-widest ml-0.5 drop-shadow-sm">Justificativa <span className="text-primary-foreground/40 font-normal normal-case text-[10px]">(Opcional)</span></label>
           <div className="relative">
-            <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/50" />
+            <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-primary-foreground/40" />
             <input
               type="text"
-              placeholder="Ex: Retirada da semana"
+              placeholder="Ex: Saque da semana"
               value={retiradaJustificativa}
               onChange={(e) => setRetiradaJustificativa(e.target.value)}
-              className="w-full bg-primary-foreground/[0.03] border border-primary-foreground/[0.08] rounded-xl py-2 pl-9 pr-3 text-primary-foreground font-body text-[13px] focus:outline-none focus:border-purple-500/40"
+              className="w-full bg-primary-foreground/[0.05] border border-primary-foreground/[0.15] rounded-2xl py-3 pl-10 pr-4 text-white font-body text-[14px] focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400/50 transition-all placeholder:text-primary-foreground/20 shadow-inner"
             />
           </div>
         </div>
-        <div className="pt-2">
+        <div className="pt-3">
           <button
             onClick={handleRetirarComissao}
             disabled={salvandoRetirada}
-            className={`w-full py-3 rounded-xl font-body text-[12px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
-              salvandoRetirada ? "opacity-50 cursor-not-allowed bg-purple-500/20 text-purple-300" : "bg-purple-500 text-white hover:bg-purple-400 shadow-[0_0_16px_hsl(280_70%_60%/0.3)] hover:shadow-[0_0_24px_hsl(280_70%_60%/0.4)]"
+            className={`w-full py-3.5 rounded-2xl font-body text-[13px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+              salvandoRetirada ? "opacity-50 cursor-not-allowed bg-purple-500/30 text-purple-200" : "bg-purple-500 text-white hover:bg-purple-400 shadow-[0_0_20px_hsl(280_70%_60%/0.4)] hover:shadow-[0_0_30px_hsl(280_70%_60%/0.6)] hover:-translate-y-0.5"
             }`}
           >
-            {salvandoRetirada ? "Salvando..." : <><Check className="w-4 h-4" /> Confirmar Retirada</>}
+            {salvandoRetirada ? "Salvando..." : <><Check className="w-4.5 h-4.5 drop-shadow-md" /> Confirmar Retirada</>}
           </button>
         </div>
       </div>
