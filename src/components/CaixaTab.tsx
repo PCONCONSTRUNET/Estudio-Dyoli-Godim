@@ -222,23 +222,23 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  .filter((d) => d.tipo === "pessoal" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO)
  .reduce((s, d) => s + Number(d.valor), 0);
 
- const lucro = recebido - desp;
- 
  const baseComissao = cicloAgs.reduce((s, a) => {
-   if (a.observacao === "SEM_COMISSAO") return s;
-   return s + Number(a.valor_pago || 0);
- }, 0);
- const comissao = (baseComissao * (comissaoPct / 100) + gorjetas) - despPessoal;
- 
- const today = new Date(); today.setHours(12, 0, 0, 0);
- const totalDays = Math.round((ciclo.endDate.getTime() - ciclo.startDate.getTime()) / 86400000) + 1;
- const elapsedDays = Math.max(0, Math.min(totalDays, Math.round((today.getTime() - ciclo.startDate.getTime()) / 86400000) + 1));
- const progress = cicloOffset === 0 ? Math.round((elapsedDays / totalDays) * 100) : (cicloOffset < 0 ? 100 : 0);
- const qtd = cicloAgs.filter((a) => a.servico !== "Adição de Crédito").length;
- return { recebido, total, pagoComCredito, gorjetas, trocos, desp, despPessoal, lucro, comissao, baseComissao, totalDays, elapsedDays, progress, qtd, items: cicloAgs };
+    if (a.observacao === "SEM_COMISSAO") return s;
+    return s + Number(a.valor_pago || 0);
+  }, 0);
+  const comissaoGerada = (baseComissao * (comissaoPct / 100)) + gorjetas;
+  
+  const lucro = recebido - desp - comissaoGerada;
+  const comissao = comissaoGerada - despPessoal;
+  
+  const today = new Date(); today.setHours(12, 0, 0, 0);
+  const totalDays = Math.round((ciclo.endDate.getTime() - ciclo.startDate.getTime()) / 86400000) + 1;
+  const elapsedDays = Math.max(0, Math.min(totalDays, Math.round((today.getTime() - ciclo.startDate.getTime()) / 86400000) + 1));
+  const progress = cicloOffset === 0 ? Math.round((elapsedDays / totalDays) * 100) : (cicloOffset < 0 ? 100 : 0);
+  const qtd = cicloAgs.filter((a) => a.servico !== "Adição de Crédito").length;
+  return { recebido, total, pagoComCredito, gorjetas, trocos, desp, despPessoal, lucro, comissao, comissaoGerada, baseComissao, totalDays, elapsedDays, progress, qtd, items: cicloAgs };
  }, [agendamentos, ciclo, despesas, comissaoPct, cicloOffset]);
 
- // Detalhamento da comissão por dia (apenas dias com valor recebido)
  const comissaoBreakdown = useMemo(() => {
  const byDay: Record<string, { date: string; recebido: number; qtd: number }> = {};
  cicloStats.items.forEach((a) => {
@@ -332,7 +332,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  Comissão {comissaoPct}%
  </span>
  <span className="font-heading text-[12px] font-bold text-purple-200 tabular-nums">
- {formatCurrency(cicloStats.comissao)}
+ {formatCurrency(cicloStats.comissaoGerada)}
  </span>
  <Info className="w-3 h-3 text-purple-300/60 group-hover:text-purple-200 transition-colors" />
  </button>
@@ -725,15 +725,24 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  </DialogHeader>
   <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-4">
  {/* Resumo principal */}
- <div className="rounded-2xl bg-gradient-to-br from-purple-500/[0.10] to-purple-500/[0.02] border border-purple-500/20 p-4 text-center">
- <p className="font-body text-[10px] text-purple-300/70 uppercase tracking-[0.25em] mb-1">Comissão do ciclo</p>
- <p className="font-heading text-3xl font-bold text-purple-200 tabular-nums tracking-tight drop-shadow-[0_0_18px_hsl(280_70%_60%/0.4)]">
- {formatCurrency(cicloStats.comissao)}
- </p>
- <p className="font-body text-[11px] text-primary-foreground/75 mt-2 tabular-nums">
- Base: {formatCurrency(cicloStats.baseComissao)} × <span className="text-purple-300 font-bold">{comissaoPct}%</span>
- {cicloStats.gorjetas > 0 && <span className="text-purple-300 font-bold"> + {formatCurrency(cicloStats.gorjetas)} (Gorjetas 100%)</span>}
- </p>
+ <div className="rounded-2xl bg-gradient-to-br from-purple-500/[0.10] to-purple-500/[0.02] border border-purple-500/20 p-4 text-center flex flex-col gap-3">
+    <div>
+      <p className="font-body text-[10px] text-purple-300/70 uppercase tracking-[0.25em] mb-1">Comissão Gerada</p>
+      <p className="font-heading text-3xl font-bold text-purple-200 tabular-nums tracking-tight drop-shadow-[0_0_18px_hsl(280_70%_60%/0.4)]">
+        {formatCurrency(cicloStats.comissaoGerada)}
+      </p>
+      <p className="font-body text-[11px] text-primary-foreground/75 mt-1 tabular-nums">
+        Base: {formatCurrency(cicloStats.baseComissao)} × <span className="text-purple-300 font-bold">{comissaoPct}%</span>
+        {cicloStats.gorjetas > 0 && <span className="text-purple-300 font-bold"> + {formatCurrency(cicloStats.gorjetas)} (Gorjetas)</span>}
+      </p>
+    </div>
+    
+    <div className="pt-3 border-t border-purple-500/20">
+      <p className="font-body text-[10px] text-purple-300/70 uppercase tracking-[0.25em] mb-1">Saldo a Retirar</p>
+      <p className="font-heading text-2xl font-bold text-white tabular-nums drop-shadow-[0_0_12px_hsl(280_70%_60%/0.8)]">
+        {formatCurrency(cicloStats.comissao)}
+      </p>
+    </div>
   </div>
 
   {/* Retiradas */}

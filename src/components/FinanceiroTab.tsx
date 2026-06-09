@@ -158,7 +158,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const totalDespesasPessoais = despesas
     .filter(d => d.tipo === "pessoal" && d.data_vencimento >= periodRange.start && d.data_vencimento <= periodRange.end)
     .reduce((s, d) => s + Number(d.valor), 0);
-  const lucroLiquido = totalRecebido - totalDespesas;
+  const lucroLiquido = totalRecebido - totalDespesas - comissaoValor;
 
 
   // Chart: receita por dia
@@ -388,10 +388,9 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     <table>
       <tbody>
         <tr><td>(+) Receita Recebida no Período</td><td style="text-align:right" class="green">${formatCurrency(totalRecebido)}</td></tr>
-        <tr><td>(–) Despesas do Período</td><td style="text-align:right" class="red">- ${formatCurrency(totalDespesas)}</td></tr>
-        <tr><td>(–) Comissão Profissional (${comissaoPct}% sobre recebido)</td><td style="text-align:right" style="color:#7c3aed">- ${formatCurrency(comissaoValor)}</td></tr>
-        <tr class="subtotal"><td>(=) Resultado Operacional</td><td style="text-align:right">${formatCurrency(totalRecebido - totalDespesas - comissaoValor)}</td></tr>
-        <tr class="total"><td>(=) Resultado Líquido (sem comissão)</td><td style="text-align:right" style="color:${lucroLiquido >= 0 ? '#16a34a' : '#dc2626'}">${formatCurrency(lucroLiquido)}</td></tr>
+        <tr><td>(–) Despesas do Estúdio</td><td style="text-align:right" class="red">- ${formatCurrency(totalDespesas)}</td></tr>
+        <tr><td>(–) Comissão Profissional (${comissaoPct}%)</td><td style="text-align:right" style="color:#7c3aed">- ${formatCurrency(comissaoValor)}</td></tr>
+        <tr class="total"><td>(=) Lucro Líquido do Estúdio</td><td style="text-align:right" style="color:${lucroLiquido >= 0 ? '#16a34a' : '#dc2626'}">${formatCurrency(lucroLiquido)}</td></tr>
       </tbody>
     </table>
 
@@ -457,8 +456,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     lines.push(`(+) Receita Recebida;${fmtNum(totalRecebido)}`);
     lines.push(`(-) Despesas do Estúdio;${fmtNum(totalDespesas)}`);
     lines.push(`(-) Comissão (${comissaoPct}%);${fmtNum(comissaoValor)}`);
-    lines.push(`(=) Resultado Operacional;${fmtNum(totalRecebido - totalDespesas - comissaoValor)}`);
-    lines.push(`(=) Resultado Líquido;${fmtNum(lucroLiquido)}`);
+    lines.push(`(=) Lucro Líquido do Estúdio;${fmtNum(lucroLiquido)}`);
     lines.push("");
     lines.push("DETALHE DESPESAS DO ESTÚDIO");
     lines.push("Vencimento;Categoria;Descrição;Status;Valor");
@@ -677,7 +675,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
       <div className="grid grid-cols-2 gap-3">
         <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-gold/[0.06] via-primary-foreground/[0.02] to-transparent border border-gold/15">
           <div className="pointer-events-none absolute -top-10 -right-10 w-24 h-24 rounded-full bg-gold/10 blur-2xl" />
-          <p className="relative font-body text-[11px] font-medium text-primary-foreground/95 uppercase tracking-[0.2em]">Receita</p>
+          <p className="relative font-body text-[11px] font-medium text-primary-foreground/95 uppercase tracking-[0.2em]">Receita Bruta</p>
           <p className="relative font-heading text-2xl font-bold text-gold mt-1.5 tabular-nums">{formatCurrency(totalReceita)}</p>
         </div>
         <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-green-500/[0.07] via-primary-foreground/[0.02] to-transparent border border-green-500/15">
@@ -690,24 +688,30 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
           <p className="relative font-body text-[11px] font-medium text-primary-foreground/95 uppercase tracking-[0.2em]">Pendente</p>
           <p className="relative font-heading text-2xl font-bold text-rose mt-1.5 tabular-nums">{formatCurrency(totalPendente)}</p>
         </div>
-        <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-red-500/[0.07] via-primary-foreground/[0.02] to-transparent border border-red-500/15">
-          <div className="pointer-events-none absolute -top-10 -right-10 w-24 h-24 rounded-full bg-red-500/10 blur-2xl" />
-          <p className="relative font-body text-[11px] font-medium text-primary-foreground/95 uppercase tracking-[0.2em] flex items-center gap-1"><ArrowDown className="w-3 h-3" /> Despesas</p>
-          <p className="relative font-heading text-xl font-bold text-red-400 mt-1.5 tabular-nums leading-tight">- {formatCurrency(totalDespesas)}</p>
-          <p className="relative font-body text-[10px] text-primary-foreground/75 mt-1">Estúdio</p>
-          {totalDespesasPessoais > 0 && (
-            <p className="relative font-body text-[10px] text-purple-400/70 mt-0.5">Pessoal: {formatCurrency(totalDespesasPessoais)}</p>
-          )}
-        </div>
         <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-primary-foreground/[0.06] via-primary-foreground/[0.02] to-transparent border border-primary-foreground/15">
           <div className="pointer-events-none absolute -top-10 -right-10 w-24 h-24 rounded-full bg-primary-foreground/[0.08] blur-2xl" />
           <p className="relative font-body text-[11px] font-medium text-primary-foreground/95 uppercase tracking-[0.2em]">Atendimentos</p>
           <p className="relative font-heading text-2xl font-bold text-primary-foreground mt-1.5 tabular-nums">{qtdAtendimentos}</p>
         </div>
-        <div className={`relative overflow-hidden p-4 rounded-2xl border ${lucroLiquido >= 0 ? "bg-gradient-to-br from-green-500/[0.1] via-green-500/[0.03] to-transparent border-green-500/25" : "bg-gradient-to-br from-red-500/[0.1] via-red-500/[0.03] to-transparent border-red-500/25"}`}>
-          <div className={`pointer-events-none absolute -top-10 -right-10 w-28 h-28 rounded-full blur-2xl ${lucroLiquido >= 0 ? "bg-green-500/15" : "bg-red-500/15"}`} />
-          <p className="relative font-body text-[11px] font-medium text-primary-foreground/95 uppercase tracking-[0.2em]">Lucro Líquido</p>
-          <p className={`relative font-heading text-2xl font-bold mt-1.5 tabular-nums ${lucroLiquido >= 0 ? "text-green-400" : "text-red-400"}`}>{formatCurrency(lucroLiquido)}</p>
+        
+        <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-red-500/[0.07] via-primary-foreground/[0.02] to-transparent border border-red-500/15">
+          <div className="pointer-events-none absolute -top-10 -right-10 w-24 h-24 rounded-full bg-red-500/10 blur-2xl" />
+          <p className="relative font-body text-[11px] font-medium text-primary-foreground/95 uppercase tracking-[0.2em] flex items-center gap-1"><ArrowDown className="w-3 h-3" /> Despesas Estúdio</p>
+          <p className="relative font-heading text-xl font-bold text-red-400 mt-1.5 tabular-nums leading-tight">- {formatCurrency(totalDespesas)}</p>
+        </div>
+        <div className="relative overflow-hidden p-4 rounded-2xl bg-gradient-to-br from-purple-500/[0.07] via-primary-foreground/[0.02] to-transparent border border-purple-500/15">
+          <div className="pointer-events-none absolute -top-10 -right-10 w-24 h-24 rounded-full bg-purple-500/10 blur-2xl" />
+          <p className="relative font-body text-[11px] font-medium text-primary-foreground/95 uppercase tracking-[0.2em] flex items-center gap-1"><ArrowDown className="w-3 h-3 text-purple-400" /> Sua Comissão</p>
+          <p className="relative font-heading text-xl font-bold text-purple-400 mt-1.5 tabular-nums leading-tight">- {formatCurrency(comissaoValor)}</p>
+          <p className="relative font-body text-[10px] text-purple-400/70 mt-1">Taxa: {comissaoPct}%</p>
+        </div>
+        
+        <div className={`col-span-2 relative overflow-hidden p-5 rounded-2xl border ${lucroLiquido >= 0 ? "bg-gradient-to-br from-green-500/[0.1] via-green-500/[0.03] to-transparent border-green-500/25" : "bg-gradient-to-br from-red-500/[0.1] via-red-500/[0.03] to-transparent border-red-500/25"}`}>
+          <div className={`pointer-events-none absolute -top-10 -right-10 w-32 h-32 rounded-full blur-3xl ${lucroLiquido >= 0 ? "bg-green-500/20" : "bg-red-500/20"}`} />
+          <p className="relative font-body text-[12px] font-medium text-primary-foreground/95 uppercase tracking-[0.2em]">Lucro Líquido do Estúdio</p>
+          <p className={`relative font-heading text-4xl font-bold mt-2 tabular-nums tracking-tight ${lucroLiquido >= 0 ? "text-green-400 drop-shadow-[0_0_14px_hsl(142_70%_55%/0.4)]" : "text-red-400 drop-shadow-[0_0_14px_hsl(0_70%_55%/0.4)]"}`}>
+            {formatCurrency(lucroLiquido)}
+          </p>
         </div>
       </div>
 
