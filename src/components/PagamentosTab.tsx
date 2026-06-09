@@ -304,7 +304,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
   );
 
   const totalDespesas = useMemo(() =>
-    despesas.reduce((s, d) => s + Number(d.valor), 0),
+    despesas.reduce((s, d) => s + (d.tipo === "pessoal" ? 0 : Number(d.valor)), 0),
     [despesas]
   );
 
@@ -440,7 +440,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                     </p>
                     {ag._is_despesa && (
                       <span className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${ag._despesa_tipo === "pessoal" ? "bg-purple-500/20 border-purple-500/40 text-purple-300" : "bg-rose/20 border-rose/40 text-rose"}`}>
-                        {ag._despesa_tipo === "pessoal" ? "👤 Aba Despesas" : "🏛 Aba Despesas"}
+                        {ag._despesa_tipo === "pessoal" ? "👤 Retirada (Comissão)" : "🏛 Aba Despesas"}
                       </span>
                     )}
                     {isPendingAmount && (

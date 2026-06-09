@@ -103,7 +103,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
      
      const payload = {
        descricao: "Retirada de Comissão",
-       observacao: retiradaJustificativa.trim() || "Retirada de comissão do ciclo",
+       observacao: retiradaJustificativa.trim() || null,
        valor: valNum,
        categoria: "Pessoal/Pró-labore",
        data_vencimento: localDate,
