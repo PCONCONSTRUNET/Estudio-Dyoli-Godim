@@ -87,7 +87,6 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  const [tempCorte, setTempCorte] = useState(diaCorte.toString());
  const [cicloOffset, setCicloOffset] = useState(0);
  const [showComissaoDetail, setShowComissaoDetail] = useState(false);
- const [comissaoTab, setComissaoTab] = useState<"detalhes" | "retirada">("detalhes");
  const [showRetiradaModal, setShowRetiradaModal] = useState(false);
  const [retiradaValor, setRetiradaValor] = useState("");
  const [retiradaJustificativa, setRetiradaJustificativa] = useState("");
@@ -724,26 +723,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  </div>
  </div>
  </DialogHeader>
-  
-  <div className="flex p-1 mx-5 mt-4 rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06]">
-    <button
-      onClick={() => setComissaoTab("detalhes")}
-      className={`flex-1 py-1.5 rounded-lg font-body text-[11px] font-semibold transition-all ${
-        comissaoTab === "detalhes" ? "bg-purple-500/15 text-purple-300 border border-purple-500/30 shadow-[0_0_10px_hsl(280_70%_60%/0.2)]" : "text-primary-foreground/60 hover:text-primary-foreground"
-      }`}
-    >
-      Detalhes
-    </button>
-    <button
-      onClick={() => setComissaoTab("retirada")}
-      className={`flex-1 py-1.5 rounded-lg font-body text-[11px] font-semibold transition-all ${
-        comissaoTab === "retirada" ? "bg-purple-500/15 text-purple-300 border border-purple-500/30 shadow-[0_0_10px_hsl(280_70%_60%/0.2)]" : "text-primary-foreground/60 hover:text-primary-foreground"
-      }`}
-    >
-      Retiradas
-    </button>
-  </div>
-  </div>
+ </div>
 
   <div className="overflow-y-auto px-5 py-4 space-y-4">
  {/* Resumo principal */}
@@ -758,34 +738,41 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  </p>
   </div>
 
-  {comissaoTab === "detalhes" && (
-    <>
-  {/* Regras */}
- <div>
- <p className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-[0.2em] font-medium mb-2 flex items-center gap-1.5">
- <Info className="w-3 h-3 text-gold/70" /> Como é calculado
- </p>
- <div className="space-y-2">
- <div className="flex items-start gap-2 p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
- <span className="font-heading text-[11px] font-bold text-gold w-5 h-5 rounded-full bg-gold/15 flex items-center justify-center shrink-0 mt-0.5">1</span>
- <p className="font-body text-[12px] text-primary-foreground/100 leading-relaxed">
- A comissão é <span className="text-purple-300 font-semibold">{comissaoPct}%</span> sobre o <span className="text-green-400 font-semibold">valor base</span> (recebido menos gorjetas e troco). Gorjetas são somadas integralmente.
- </p>
- </div>
- <div className="flex items-start gap-2 p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
- <span className="font-heading text-[11px] font-bold text-gold w-5 h-5 rounded-full bg-gold/15 flex items-center justify-center shrink-0 mt-0.5">2</span>
- <p className="font-body text-[12px] text-primary-foreground/100 leading-relaxed">
- O ciclo vai do <span className="text-gold font-semibold">dia {diaCorte}</span> até um dia antes do próximo corte. Cancelamentos e faltas <span className="text-red-400 font-semibold">não entram</span>.
- </p>
- </div>
- <div className="flex items-start gap-2 p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
- <span className="font-heading text-[11px] font-bold text-gold w-5 h-5 rounded-full bg-gold/15 flex items-center justify-center shrink-0 mt-0.5">3</span>
- <p className="font-body text-[12px] text-primary-foreground/100 leading-relaxed">
- Sinais e pagamentos parciais contam pelo valor efetivamente pago. Despesas <span className="text-primary-foreground/80 font-semibold">não afetam</span> a comissão (apenas o lucro).
- </p>
- </div>
- </div>
- </div>
+  {/* Retiradas */}
+  <div className="space-y-4 pt-2">
+    <button 
+      onClick={() => setShowRetiradaModal(true)}
+      className="w-full flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 to-purple-500/5 border border-purple-500/20 hover:border-purple-500/40 transition-all group"
+    >
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+          <ArrowDown className="w-5 h-5 text-purple-300" />
+        </div>
+        <div className="text-left">
+          <p className="font-body text-[12px] font-bold text-purple-200">Nova Retirada</p>
+          <p className="font-body text-[10px] text-purple-300/60">Registrar saque do saldo de comissão</p>
+        </div>
+      </div>
+      <Plus className="w-5 h-5 text-purple-300 group-hover:scale-110 transition-transform" />
+    </button>
+
+    <div className="space-y-2">
+      <p className="font-body text-[10px] text-primary-foreground/60 uppercase tracking-wider px-1">Histórico de retiradas do ciclo</p>
+      {despesas.filter(d => d.tipo === "pessoal" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO).length > 0 ? (
+        despesas.filter(d => d.tipo === "pessoal" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO).map((d, i) => (
+          <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+            <div>
+              <p className="font-body text-[12px] font-medium text-primary-foreground">{d.observacao || "Retirada pessoal"}</p>
+              <p className="font-body text-[9px] text-primary-foreground/50">{formatDateShort(d.data_vencimento)}</p>
+            </div>
+            <p className="font-heading text-[13px] font-bold text-rose-400">-{formatCurrency(Number(d.valor))}</p>
+          </div>
+        ))
+      ) : (
+        <p className="text-center font-body text-[11px] text-primary-foreground/40 py-4 border border-dashed border-primary-foreground/10 rounded-xl">Nenhuma retirada registrada</p>
+      )}
+    </div>
+  </div>
 
  {/* Métricas do cálculo */}
  <div className="grid grid-cols-3 gap-2">
@@ -878,43 +865,6 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  </div>
  )}
  </div>
-  </>
-  )}
-  
-  {comissaoTab === "retirada" && (
-    <div className="space-y-4 pt-2">
-      <button 
-        onClick={() => setShowRetiradaModal(true)}
-        className="w-full flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 to-purple-500/5 border border-purple-500/20 hover:border-purple-500/40 transition-all group"
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
-            <ArrowDown className="w-5 h-5 text-purple-300" />
-          </div>
-          <div className="text-left">
-            <p className="font-body text-[12px] font-bold text-purple-200">Nova Retirada</p>
-            <p className="font-body text-[10px] text-purple-300/60">Registrar saque do saldo</p>
-          </div>
-        </div>
-        <Plus className="w-5 h-5 text-purple-300 group-hover:scale-110 transition-transform" />
-      </button>
-
-      <div className="space-y-2">
-        <p className="font-body text-[10px] text-primary-foreground/60 uppercase tracking-wider px-1">Histórico de retiradas</p>
-        {despesas.filter(d => d.tipo === "pessoal").length > 0 ? (
-          despesas.filter(d => d.tipo === "pessoal").map((d, i) => (
-            <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
-              <div>
-                <p className="font-body text-[12px] font-medium text-primary-foreground">Retirada pessoal</p>
-                <p className="font-body text-[9px] text-primary-foreground/50">{d.data_vencimento}</p>
-              </div>
-              <p className="font-heading text-[13px] font-bold text-rose-400">-{formatCurrency(d.valor)}</p>
-            </div>
-          ))
-        ) : (
-          <p className="text-center font-body text-[11px] text-primary-foreground/40 py-4">Nenhuma retirada registrada</p>
-        )}
-      </div>
     </div>
   )}
 
