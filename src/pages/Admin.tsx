@@ -253,6 +253,8 @@ const SwipeableTimelineCard = ({
   onDelete,
 }: any) => {
   const controls = useAnimation();
+  const { confirm } = useConfirm();
+
   const handleDragEnd = (event: any, info: any) => {
     if (info.offset.x < -60) {
       controls.start({ x: -120 });
@@ -337,9 +339,16 @@ const SwipeableTimelineCard = ({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              if (window.confirm("Deseja realmente excluir este agendamento?")) {
-                onDelete(a.id);
-              }
+              confirm({
+                title: "Excluir Agendamento?",
+                description: "Deseja realmente excluir este agendamento?",
+                confirmText: "Sim, Excluir",
+                cancelText: "Cancelar",
+                variant: "destructive",
+                onConfirm: () => {
+                  onDelete(a.id);
+                }
+              });
             }}
             className="flex-1 bg-red-500/90 hover:bg-red-600 flex items-center justify-center text-white transition-colors"
           >
