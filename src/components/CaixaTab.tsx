@@ -15,7 +15,12 @@ import {
  Check,
  X,
  Plus,
+ ArrowUp,
+ ArrowDown,
+ DollarSign,
+ FileText
 } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
@@ -82,6 +87,49 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  const [tempCorte, setTempCorte] = useState(diaCorte.toString());
  const [cicloOffset, setCicloOffset] = useState(0);
  const [showComissaoDetail, setShowComissaoDetail] = useState(false);
+ const [comissaoTab, setComissaoTab] = useState<"detalhes" | "retirada">("detalhes");
+ const [showRetiradaModal, setShowRetiradaModal] = useState(false);
+ const [retiradaValor, setRetiradaValor] = useState("");
+ const [retiradaJustificativa, setRetiradaJustificativa] = useState("");
+ const [salvandoRetirada, setSalvandoRetirada] = useState(false);
+
+ const handleRetirarComissao = async () => {
+   const valNum = parseFloat(retiradaValor.replace(",", "."));
+   if (isNaN(valNum) || valNum <= 0) return toast.error("Informe um valor válido para retirada");
+   
+   setSalvandoRetirada(true);
+   try {
+     const now = new Date();
+     const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split("T")[0];
+     
+     const payload = {
+       descricao: "Retirada de Comissão",
+       observacao: retiradaJustificativa.trim() || "Retirada de comissão do ciclo",
+       valor: valNum,
+       categoria: "Pessoal/Pró-labore",
+       data_vencimento: localDate,
+       pago: true,
+       data_pagamento: localDate,
+       tipo: "pessoal",
+     };
+
+     const { error } = await supabase.from("despesas").insert([payload]);
+     if (error) throw error;
+     
+     toast.success("Retirada registrada com sucesso!");
+     setShowRetiradaModal(false);
+     setRetiradaValor("");
+     setRetiradaJustificativa("");
+     // Force reload of despesas to update UI
+     (supabase.from as any)("despesas").select("valor,pago,data_vencimento,tipo").then(({ data }: any) => {
+       if (data) setDespesas(data);
+     });
+   } catch (err: any) {
+     toast.error("Erro ao registrar retirada: " + err.message);
+   } finally {
+     setSalvandoRetirada(false);
+   }
+ };
 
  const ciclo = useMemo(() => {
  const today = new Date();
@@ -181,7 +229,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
    if (a.observacao === "SEM_COMISSAO") return s;
    return s + Number(a.valor_pago || 0);
  }, 0);
- const comissao = baseComissao * (comissaoPct / 100) + gorjetas;
+ const comissao = (baseComissao * (comissaoPct / 100) + gorjetas) - despPessoal;
  
  const today = new Date(); today.setHours(12, 0, 0, 0);
  const totalDays = Math.round((ciclo.endDate.getTime() - ciclo.startDate.getTime()) / 86400000) + 1;
@@ -676,9 +724,28 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  </div>
  </div>
  </DialogHeader>
- </div>
+  
+  <div className="flex p-1 mx-5 mt-4 rounded-xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.06]">
+    <button
+      onClick={() => setComissaoTab("detalhes")}
+      className={`flex-1 py-1.5 rounded-lg font-body text-[11px] font-semibold transition-all ${
+        comissaoTab === "detalhes" ? "bg-purple-500/15 text-purple-300 border border-purple-500/30 shadow-[0_0_10px_hsl(280_70%_60%/0.2)]" : "text-primary-foreground/60 hover:text-primary-foreground"
+      }`}
+    >
+      Detalhes
+    </button>
+    <button
+      onClick={() => setComissaoTab("retirada")}
+      className={`flex-1 py-1.5 rounded-lg font-body text-[11px] font-semibold transition-all ${
+        comissaoTab === "retirada" ? "bg-purple-500/15 text-purple-300 border border-purple-500/30 shadow-[0_0_10px_hsl(280_70%_60%/0.2)]" : "text-primary-foreground/60 hover:text-primary-foreground"
+      }`}
+    >
+      Retiradas
+    </button>
+  </div>
+  </div>
 
- <div className="overflow-y-auto px-5 py-4 space-y-4">
+  <div className="overflow-y-auto px-5 py-4 space-y-4">
  {/* Resumo principal */}
  <div className="rounded-2xl bg-gradient-to-br from-purple-500/[0.10] to-purple-500/[0.02] border border-purple-500/20 p-4 text-center">
  <p className="font-body text-[10px] text-purple-300/70 uppercase tracking-[0.25em] mb-1">Comissão do ciclo</p>
@@ -689,9 +756,11 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  Base: {formatCurrency(cicloStats.baseComissao)} × <span className="text-purple-300 font-bold">{comissaoPct}%</span>
  {cicloStats.gorjetas > 0 && <span className="text-purple-300 font-bold"> + {formatCurrency(cicloStats.gorjetas)} (Gorjetas 100%)</span>}
  </p>
- </div>
+  </div>
 
- {/* Regras */}
+  {comissaoTab === "detalhes" && (
+    <>
+  {/* Regras */}
  <div>
  <p className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-[0.2em] font-medium mb-2 flex items-center gap-1.5">
  <Info className="w-3 h-3 text-gold/70" /> Como é calculado
@@ -809,6 +878,45 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  </div>
  )}
  </div>
+  </>
+  )}
+  
+  {comissaoTab === "retirada" && (
+    <div className="space-y-4 pt-2">
+      <button 
+        onClick={() => setShowRetiradaModal(true)}
+        className="w-full flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 to-purple-500/5 border border-purple-500/20 hover:border-purple-500/40 transition-all group"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+            <ArrowDown className="w-5 h-5 text-purple-300" />
+          </div>
+          <div className="text-left">
+            <p className="font-body text-[12px] font-bold text-purple-200">Nova Retirada</p>
+            <p className="font-body text-[10px] text-purple-300/60">Registrar saque do saldo</p>
+          </div>
+        </div>
+        <Plus className="w-5 h-5 text-purple-300 group-hover:scale-110 transition-transform" />
+      </button>
+
+      <div className="space-y-2">
+        <p className="font-body text-[10px] text-primary-foreground/60 uppercase tracking-wider px-1">Histórico de retiradas</p>
+        {despesas.filter(d => d.tipo === "pessoal").length > 0 ? (
+          despesas.filter(d => d.tipo === "pessoal").map((d, i) => (
+            <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+              <div>
+                <p className="font-body text-[12px] font-medium text-primary-foreground">Retirada pessoal</p>
+                <p className="font-body text-[9px] text-primary-foreground/50">{d.data_vencimento}</p>
+              </div>
+              <p className="font-heading text-[13px] font-bold text-rose-400">-{formatCurrency(d.valor)}</p>
+            </div>
+          ))
+        ) : (
+          <p className="text-center font-body text-[11px] text-primary-foreground/40 py-4">Nenhuma retirada registrada</p>
+        )}
+      </div>
+    </div>
+  )}
 
  {/* Total final */}
  <div className="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-purple-500/15 to-purple-500/5 border border-purple-500/30">
@@ -822,6 +930,60 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  </div>
  </DialogContent>
  </Dialog>
+
+  <Dialog open={showRetiradaModal} onOpenChange={setShowRetiradaModal}>
+    <DialogContent className="max-w-[320px] w-[calc(100vw-2rem)] rounded-3xl bg-[#0a0a0a] border-primary-foreground/[0.08] p-0 overflow-hidden">
+      <DialogHeader className="relative px-5 pt-5 pb-3 border-b border-primary-foreground/[0.06] bg-primary-foreground/[0.02]">
+        <div className="pointer-events-none absolute -top-16 -right-12 w-48 h-48 rounded-full bg-purple-500/10 blur-3xl" />
+        <DialogTitle className="font-heading text-[16px] font-bold text-primary-foreground flex items-center gap-2 relative z-10">
+          <Wallet className="w-4 h-4 text-purple-300" /> Nova Retirada
+        </DialogTitle>
+      </DialogHeader>
+      <div className="px-5 py-5 space-y-4 relative z-10">
+        <div className="space-y-1.5">
+          <label className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-wider">Valor (R$)</label>
+          <div className="relative">
+            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
+            <input
+              type="number"
+              step="0.01"
+              placeholder="0.00"
+              value={retiradaValor}
+              onChange={(e) => setRetiradaValor(e.target.value)}
+              className="w-full bg-primary-foreground/[0.03] border border-primary-foreground/[0.08] rounded-xl py-2 pl-9 pr-3 text-primary-foreground font-heading text-[16px] focus:outline-none focus:border-purple-500/40"
+            />
+          </div>
+          <p className="font-body text-[9px] text-primary-foreground/60 text-right">
+            Max: {formatCurrency(cicloStats.comissao)}
+          </p>
+        </div>
+        <div className="space-y-1.5">
+          <label className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-wider">Justificativa (Opcional)</label>
+          <div className="relative">
+            <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/50" />
+            <input
+              type="text"
+              placeholder="Ex: Retirada da semana"
+              value={retiradaJustificativa}
+              onChange={(e) => setRetiradaJustificativa(e.target.value)}
+              className="w-full bg-primary-foreground/[0.03] border border-primary-foreground/[0.08] rounded-xl py-2 pl-9 pr-3 text-primary-foreground font-body text-[13px] focus:outline-none focus:border-purple-500/40"
+            />
+          </div>
+        </div>
+        <div className="pt-2">
+          <button
+            onClick={handleRetirarComissao}
+            disabled={salvandoRetirada}
+            className={`w-full py-3 rounded-xl font-body text-[12px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+              salvandoRetirada ? "opacity-50 cursor-not-allowed bg-purple-500/20 text-purple-300" : "bg-purple-500 text-white hover:bg-purple-400 shadow-[0_0_16px_hsl(280_70%_60%/0.3)] hover:shadow-[0_0_24px_hsl(280_70%_60%/0.4)]"
+            }`}
+          >
+            {salvandoRetirada ? "Salvando..." : <><Check className="w-4 h-4" /> Confirmar Retirada</>}
+          </button>
+        </div>
+      </div>
+    </DialogContent>
+  </Dialog>
  <NovaTransacaoModal open={modalConfig.open} onOpenChange={(open) => setModalConfig(prev => ({...prev, open}))} initialTab={modalConfig.tab} onSuccess={() => window.location.reload()} />
  </div>
  );
