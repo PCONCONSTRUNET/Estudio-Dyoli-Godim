@@ -723,7 +723,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  </div>
  </div>
  </DialogHeader>
-  <div className="overflow-y-auto px-5 py-4 space-y-4">
+  <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-4">
  {/* Resumo principal */}
  <div className="rounded-2xl bg-gradient-to-br from-purple-500/[0.10] to-purple-500/[0.02] border border-purple-500/20 p-4 text-center">
  <p className="font-body text-[10px] text-purple-300/70 uppercase tracking-[0.25em] mb-1">Comissão do ciclo</p>
