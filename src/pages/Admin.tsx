@@ -101,8 +101,8 @@ const LembretesHub = () => {
   };
 
   useEffect(() => {
-    supabase.from("configuracoes_lembretes").select("*").order("created_at").then(({ data }) => {
-      if (data) setConfigs(data.map(d => ({ id: d.id, tipo: d.tipo, ativo: d.ativo, mensagem: d.mensagem, horas_antes: d.horas_antes })));
+    (supabase as any).from("configuracoes_lembretes").select("*").order("created_at").then(({ data }: any) => {
+      if (data) setConfigs(data.map((d: any) => ({ id: d.id, tipo: d.tipo, ativo: d.ativo, mensagem: d.mensagem, horas_antes: d.horas_antes })));
       setLoading(false);
     });
   }, []);
@@ -110,7 +110,7 @@ const LembretesHub = () => {
   const toggleAtivo = async (id: string) => {
     const c = configs.find(c => c.id === id);
     if (!c) return;
-    await supabase.from("configuracoes_lembretes").update({ ativo: !c.ativo, updated_at: new Date().toISOString() }).eq("id", id);
+    await (supabase as any).from("configuracoes_lembretes").update({ ativo: !c.ativo, updated_at: new Date().toISOString() }).eq("id", id);
     setConfigs(prev => prev.map(c => c.id === id ? { ...c, ativo: !c.ativo } : c));
   };
 
@@ -123,7 +123,7 @@ const LembretesHub = () => {
   const saveEdit = async () => {
     if (!editingId) return;
     setSaving(true);
-    await supabase.from("configuracoes_lembretes").update({
+    await (supabase as any).from("configuracoes_lembretes").update({
       mensagem: editMsg, horas_antes: Number(editHoras), updated_at: new Date().toISOString(),
     }).eq("id", editingId);
     setConfigs(prev => prev.map(c => c.id === editingId ? { ...c, mensagem: editMsg, horas_antes: Number(editHoras) } : c));
@@ -589,7 +589,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     const pagoAnterior = Number(a.valor_pago || 0);
     const totalAgora = Math.min(valorTotal, pagoAnterior + valorDigitado);
 
-    await supabase.from("agendamentos").update({ valor_pago: totalAgora }).eq("id", a.id);
+    await (supabase as any).from("agendamentos").update({ valor_pago: totalAgora }).eq("id", a.id);
     setAgendamentos((prev) => prev.map((item) => (item.id === a.id ? { ...item, valor_pago: totalAgora } : item)));
     setPagamentoAg(null);
     setPagamentoInput("");
@@ -2481,22 +2481,29 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                           <Switch checked={manualPago} onCheckedChange={setManualPago} />
                         </div>
                         {manualPago && (
-                          <div className="mt-4 pt-3 border-t border-gold/20 space-y-1.5 animate-fade-in">
-                            <label className="font-body text-[10px] text-primary-foreground/60 uppercase tracking-wider block font-medium">
-                              Valor pago parcial (opcional)
-                            </label>
-                            <div className="relative group">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-primary-foreground/50 font-medium">R$</span>
-                              <input
-                                type="number"
-                                inputMode="decimal"
-                                min={0}
-                                step="0.01"
-                                value={manualValorPago}
-                                onChange={(e) => setManualValorPago(e.target.value)}
-                                placeholder="Deixe em branco p/ valor total"
-                                className="w-full pl-8 pr-2 py-2.5 rounded-xl bg-white/[0.03] border border-gold/20 text-gold font-body text-[13px] tabular-nums focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 transition-all placeholder:text-primary-foreground/20"
-                              />
+                          <div className="mt-4 pt-4 border-t border-gold/20 animate-fade-in">
+                            <div className="rounded-xl border border-gold/30 bg-gold/[0.04] p-3 space-y-2.5 shadow-[inset_0_0_12px_rgba(212,175,55,0.05)]">
+                              <div className="flex items-center justify-between">
+                                <label className="font-body text-[10px] text-gold/80 uppercase tracking-wider font-bold">
+                                  Valor pago parcial (opcional)
+                                </label>
+                                <span className="font-body text-[10px] font-bold text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-md">
+                                  Total: R$ {Math.max(0, manualValorTotal - (manualCliente ? Math.min(Number(clientes.find(c => c.id === manualCliente)?.credito_saldo || 0), manualValorTotal) : 0) + manualCredito).toFixed(2).replace(".", ",")}
+                                </span>
+                              </div>
+                              <div className="relative group">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] text-gold/60 font-medium">R$</span>
+                                <input
+                                  type="number"
+                                  inputMode="decimal"
+                                  min={0}
+                                  step="0.01"
+                                  value={manualValorPago}
+                                  onChange={(e) => setManualValorPago(e.target.value)}
+                                  placeholder="Deixe em branco p/ valor total"
+                                  className="w-full pl-9 pr-3 py-2.5 rounded-lg bg-black/20 border border-gold/30 text-gold font-body text-[14px] tabular-nums focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/50 transition-all placeholder:text-primary-foreground/30 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]"
+                                />
+                              </div>
                             </div>
                           </div>
                         )}
