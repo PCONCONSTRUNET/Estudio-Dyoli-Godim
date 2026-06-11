@@ -117,7 +117,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
   useEffect(() => {
     const fetchHistoricoEDespesas = async () => {
       // Buscar apenas despesas que foram pagas (gastos do caixa + despesas baixadas)
-      const { data: pagas } = await (supabase.from("despesas") as any).select("*").eq("pago", true);
+      const { data: pagas } = await (supabase.from("despesas") as any).select("*").eq("pago", true).neq("tipo", "pessoal");
       setDespesas(pagas || []);
 
       const ids = agendamentos.map((a) => a.id);
@@ -233,7 +233,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
         _is_saida: true,
         _is_despesa: true,
         _despesa_tipo: d.tipo,
-        _desc_pagamento: d.tipo === "pessoal" ? "Retirada Pessoal" : "Despesa Estúdio",
+        _desc_pagamento: d.tipo === "comissao" ? "Retirada Pessoal" : "Despesa Estúdio",
         user_id: "admin",
       });
     });
@@ -477,8 +477,8 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                       {ag._is_saida ? ag.cliente_nome : getClientName(ag.user_id, ag.cliente_nome)}
                     </p>
                     {ag._is_despesa && (
-                      <span className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${ag._despesa_tipo === "pessoal" ? "bg-purple-500/20 border-purple-500/40 text-purple-300" : "bg-rose/20 border-rose/40 text-rose"}`}>
-                        {ag._despesa_tipo === "pessoal" ? "👤 Retirada (Comissão)" : "🏛 Aba Despesas"}
+                      <span className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${ag._despesa_tipo === "comissao" ? "bg-purple-500/20 border-purple-500/40 text-purple-300" : "bg-rose/20 border-rose/40 text-rose"}`}>
+                        {ag._despesa_tipo === "comissao" ? "👤 Retirada (Comissão)" : "🏛 Aba Despesas"}
                       </span>
                     )}
                     {isPendingAmount && (

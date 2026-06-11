@@ -93,7 +93,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  const [salvandoRetirada, setSalvandoRetirada] = useState(false);
 
  const handleRetirarComissao = async () => {
-   const valNum = parseFloat(retiradaValor.replace(",", "."));
+    const valNum = parseFloat(retiradaValor.replace(/\./g, "").replace(",", "."));
    if (isNaN(valNum) || valNum <= 0) return toast.error("Informe um valor válido para retirada");
    
    setSalvandoRetirada(true);
@@ -109,20 +109,19 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
        data_vencimento: localDate,
        pago: true,
        data_pagamento: localDate,
-       tipo: "pessoal",
+       tipo: "comissao",
      };
 
-     const { error } = await supabase.from("despesas").insert([payload]);
+     const { data: insertedData, error } = await supabase.from("despesas").insert([payload]).select();
      if (error) throw error;
      
      toast.success("Retirada registrada com sucesso!");
      setShowRetiradaModal(false);
      setRetiradaValor("");
      setRetiradaJustificativa("");
-     // Force reload of despesas to update UI
-     (supabase.from as any)("despesas").select("valor,pago,data_vencimento,tipo").then(({ data }: any) => {
-       if (data) setDespesas(data);
-     });
+      if (insertedData) {
+        setDespesas((prev) => [...prev, ...insertedData]);
+      }
    } catch (err: any) {
      toast.error("Erro ao registrar retirada: " + err.message);
    } finally {
@@ -155,12 +154,16 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  }, [diaCorte, cicloOffset]);
 
  // Despesas (para lucro do ciclo)
- const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string; tipo?: string }[]>([]);
- useEffect(() => {
- (supabase.from as any)("despesas").select("valor,pago,data_vencimento,tipo").then(({ data }: any) => {
- if (data) setDespesas(data);
- });
- }, []);
+  const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string; tipo?: string; observacao?: string; descricao?: string }[]>([]);
+  useEffect(() => {
+    (supabase.from as any)("despesas")
+      .select("valor,pago,data_vencimento,tipo,observacao,descricao")
+      .gte("data_vencimento", ciclo.startISO)
+      .lte("data_vencimento", ciclo.endISO)
+      .then(({ data }: any) => {
+        if (data) setDespesas(data);
+      });
+  }, [ciclo.startISO, ciclo.endISO]);
 
 
  // Fechamento do dia
@@ -219,7 +222,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  .filter((d) => (d.tipo || "estudio") === "estudio" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO)
  .reduce((s, d) => s + Number(d.valor), 0);
  const despPessoal = despesas
- .filter((d) => d.tipo === "pessoal" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO)
+ .filter((d) => d.tipo === "comissao" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO)
  .reduce((s, d) => s + Number(d.valor), 0);
 
  const baseComissao = cicloAgs.reduce((s, a) => {
@@ -750,9 +753,9 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
         </button>
       </div>
       
-      {despesas.filter(d => d.tipo === "pessoal" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO).length > 0 ? (
+      {despesas.filter(d => d.tipo === "comissao" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO).length > 0 ? (
         <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar">
-          {despesas.filter(d => d.tipo === "pessoal" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO).map((d, i) => (
+          {despesas.filter(d => d.tipo === "comissao" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO).map((d, i) => (
             <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] shadow-sm hover:bg-primary-foreground/[0.06] transition-colors">
               <div>
                 <p className="font-body text-[11px] font-semibold text-primary-foreground/95 leading-none">{d.observacao || "Retirada pessoal"}</p>

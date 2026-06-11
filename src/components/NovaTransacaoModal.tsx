@@ -66,7 +66,7 @@ export default function NovaTransacaoModal({ open, onOpenChange, onSuccess, init
 
   const handleSave = async () => {
     if (!descricao.trim()) return toast.error("Informe uma descrição");
-    const valNum = parseFloat(valor.replace(",", "."));
+    const valNum = parseFloat(valor.replace(/\./g, "").replace(",", "."));
     if (isNaN(valNum) || valNum <= 0) return toast.error("Informe um valor válido");
 
     setSaving(true);

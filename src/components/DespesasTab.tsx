@@ -75,6 +75,7 @@ const DespesasTab = () => {
  setLoading(true);
  const { data } = await (supabase.from as any)("despesas")
  .select("*")
+ .neq("tipo", "comissao")
  .order("data_vencimento", { ascending: true });
  if (data) setDespesas(data as Despesa[]);
  setLoading(false);
