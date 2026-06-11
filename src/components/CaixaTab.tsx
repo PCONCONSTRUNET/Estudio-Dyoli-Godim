@@ -335,7 +335,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  Comissão {comissaoPct}%
  </span>
  <span className="font-heading text-[12px] font-bold text-purple-200 tabular-nums">
- {formatCurrency(cicloStats.comissaoGerada)}
+ {formatCurrency(cicloStats.comissao)}
  </span>
  <Info className="w-3 h-3 text-purple-300/60 group-hover:text-purple-200 transition-colors" />
  </button>
@@ -725,18 +725,12 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  </DialogHeader>
   <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-3">
     {/* Resumo principal */}
-    <div className="rounded-xl bg-gradient-to-br from-purple-500/[0.10] to-purple-500/[0.02] border border-purple-500/20 p-3 flex items-center justify-between">
-      <div>
-        <p className="font-body text-[9px] text-purple-300/70 uppercase tracking-[0.2em] mb-0.5">Comissão Gerada</p>
-        <p className="font-heading text-xl font-bold text-purple-200 tabular-nums leading-none">
-          {formatCurrency(cicloStats.comissaoGerada)}
-        </p>
-      </div>
-      <div className="text-right border-l border-purple-500/20 pl-4">
-        <p className="font-body text-[9px] text-purple-300/70 uppercase tracking-[0.2em] mb-0.5">Saldo a Retirar</p>
-        <p className="font-heading text-xl font-bold text-white tabular-nums leading-none drop-shadow-[0_0_12px_hsl(280_70%_60%/0.8)]">
-          {formatCurrency(cicloStats.comissao)}
-        </p>
+    <div className="flex bg-primary-foreground/[0.02] border border-primary-foreground/[0.06] rounded-xl p-5 md:p-6 relative overflow-hidden group items-center justify-center">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl -mr-16 -mt-16 transition-all group-hover:bg-purple-500/10" />
+      <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl -ml-12 -mb-12" />
+      <div className="text-center relative z-10">
+        <p className="font-body text-[9px] md:text-[10px] font-bold text-purple-300/70 uppercase tracking-[0.2em] mb-1.5">Comissão Disponível</p>
+        <p className="font-heading text-3xl md:text-4xl font-bold text-purple-300 tracking-tight drop-shadow-[0_0_15px_rgba(216,180,254,0.4)]">{formatCurrency(cicloStats.comissao)}</p>
       </div>
     </div>
 
