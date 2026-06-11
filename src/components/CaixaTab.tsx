@@ -755,7 +755,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
       
       {despesas.filter(d => d.tipo === "comissao" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO).length > 0 ? (
         <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar">
-          {despesas.filter(d => d.tipo === "comissao" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO).map((d, i) => (
+          {despesas.filter(d => d.tipo === "comissao" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO).sort((a, b) => b.data_vencimento.localeCompare(a.data_vencimento)).map((d, i) => (
             <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] shadow-sm hover:bg-primary-foreground/[0.06] transition-colors">
               <div>
                 <p className="font-body text-[11px] font-semibold text-primary-foreground/95 leading-none">{d.observacao || "Retirada pessoal"}</p>
