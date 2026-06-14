@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Save, X, Check, AlertTriangle, Clock, Bell, ChevronRight, ChevronDown, Eye, Receipt, TrendingDown, TrendingUp, Sparkles, CalendarDays, Wallet, Repeat, Search, BarChart3, PieChart as PieChartIcon } from "lucide-react";
+import { Save, X, Check, AlertTriangle, Clock, Bell, ChevronRight, ChevronDown, Eye, Receipt, TrendingDown, TrendingUp, Sparkles, CalendarDays, Wallet, Repeat, Search, BarChart3, PieChart as PieChartIcon, List } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
@@ -615,11 +615,15 @@ const DespesasTab = () => {
      
      <div className="flex items-center gap-2">
        <button
-         onClick={() => setShowCharts(true)}
-         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gold/30 bg-gold/10 text-gold hover:bg-gold/20 text-[12px] font-semibold transition-all"
+         onClick={() => setShowCharts(!showCharts)}
+         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[12px] font-semibold transition-all ${
+           showCharts 
+             ? "bg-gold text-charcoal border-gold shadow-sm"
+             : "border-gold/30 bg-gold/10 text-gold hover:bg-gold/20"
+         }`}
        >
-         <BarChart3 className="w-3.5 h-3.5" />
-         Gráficos
+         {showCharts ? <List className="w-3.5 h-3.5" /> : <BarChart3 className="w-3.5 h-3.5" />}
+         {showCharts ? "Ver Lista" : "Gráficos"}
        </button>
 
        <div className="flex bg-primary-foreground/[0.04] rounded-xl p-1 gap-1 shrink-0">
@@ -643,8 +647,105 @@ const DespesasTab = () => {
    </div>
  </div>
 
- {/* Despesas list */}
- <div className="relative">
+ {/* Main Content Area */}
+ {showCharts ? (
+   <div className="animate-fade-in space-y-4">
+     {/* Header do Dashboard interno */}
+     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.06]">
+       <div className="flex items-center gap-3">
+         <div className="p-2.5 rounded-xl bg-gold/10">
+           <PieChartIcon className="w-5 h-5 text-gold" />
+         </div>
+         <div>
+           <h3 className="font-heading text-[15px] font-bold text-primary-foreground">Dashboard de Despesas</h3>
+           <p className="font-body text-[11px] text-primary-foreground/60">
+             Visão geral simplificada dos seus gastos
+           </p>
+         </div>
+       </div>
+       
+       <div className="flex bg-primary-foreground/[0.04] rounded-xl p-1 border border-primary-foreground/[0.06]">
+         {(["mensal", "categoria"] as const).map(v => (
+           <button
+             key={v}
+             onClick={() => setChartView(v)}
+             className={`px-4 py-2 font-body text-[12px] font-medium transition-all rounded-lg ${
+               chartView === v
+                 ? "bg-gold text-charcoal shadow-sm"
+                 : "text-primary-foreground/70 hover:text-primary-foreground"
+             }`}
+           >
+             {v === "mensal" ? "📅 Por Mês" : "🏷️ Categoria"}
+           </button>
+         ))}
+       </div>
+     </div>
+
+     {/* Conteúdo do Gráfico */}
+     <div className="p-5 sm:p-6 rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.02]">
+       <style>{`
+         .recharts-wrapper, .recharts-surface, .recharts-wrapper > svg {
+           background: transparent !important;
+         }
+       `}</style>
+       {chartView === "mensal" ? (
+         dadosMensais.length > 0 ? (
+           <>
+             <p className="font-body text-[12px] text-primary-foreground/70 mb-6 text-center">
+               Total gasto nos últimos {dadosMensais.length} meses {tipoFilter !== "todos" ? `(${tipoFilter === "estudio" ? "Estúdio" : "Pessoal"})` : ""}
+             </p>
+             <ResponsiveContainer width="100%" height={260}>
+               <BarChart data={dadosMensais} margin={{ top: 10, right: 10, left: -20, bottom: 0 }} style={{ background: "transparent" }}>
+                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                 <XAxis dataKey="mes" tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 11, fontFamily: "var(--font-body)" }} axisLine={false} tickLine={false} />
+                 <YAxis tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 11, fontFamily: "var(--font-body)" }} axisLine={false} tickLine={false} tickFormatter={v => `R$${v >= 1000 ? (v / 1000).toFixed(1) + "k" : v}`} />
+                 <Tooltip content={<CustomBarTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
+                 <Bar dataKey="total" fill="#facc15" radius={[6, 6, 0, 0]} maxBarSize={48} />
+               </BarChart>
+             </ResponsiveContainer>
+           </>
+         ) : (
+           <div className="py-12 text-center"><p className="font-body text-[13px] text-primary-foreground/60">Nenhum dado para exibir</p></div>
+         )
+       ) : (
+         dadosCategoria.length > 0 ? (
+           <>
+             <p className="font-body text-[12px] text-primary-foreground/70 mb-4 text-center">
+               Onde você mais gastou {tipoFilter !== "todos" ? `(${tipoFilter === "estudio" ? "Estúdio" : "Pessoal"})` : ""}
+             </p>
+             <div className="flex flex-col md:flex-row items-center gap-8">
+               <div className="w-full md:w-1/2 h-[260px]">
+                 <ResponsiveContainer width="100%" height="100%">
+                   <PieChart style={{ background: "transparent" }}>
+                     <Pie data={dadosCategoria} cx="50%" cy="50%" innerRadius={70} outerRadius={110} paddingAngle={2} dataKey="value">
+                       {dadosCategoria.map((entry, index) => <Cell key={index} fill={entry.fill} />)}
+                     </Pie>
+                     <Tooltip content={<CustomPieTooltip />} />
+                   </PieChart>
+                 </ResponsiveContainer>
+               </div>
+               <div className="w-full md:w-1/2 space-y-2.5 max-h-[260px] overflow-y-auto custom-scrollbar pr-2">
+                 {dadosCategoria.map(cat => (
+                   <div key={cat.name} className="flex items-center gap-3 p-3 rounded-xl bg-charcoal border border-primary-foreground/[0.04]">
+                     <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: cat.fill }} />
+                     <p className="font-body text-[12px] text-primary-foreground/80 flex-1 truncate">{cat.name}</p>
+                     <div className="text-right">
+                       <p className="font-body text-[13px] font-bold text-primary-foreground/95">{formatCurrency(cat.value)}</p>
+                       <p className="font-body text-[10px] text-primary-foreground/50">{cat.pct}% do total</p>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             </div>
+           </>
+         ) : (
+           <div className="py-12 text-center"><p className="font-body text-[13px] text-primary-foreground/60">Nenhum dado para exibir</p></div>
+         )
+       )}
+     </div>
+   </div>
+ ) : (
+ <div className="relative animate-fade-in">
  {filtered.length === 0 ? (
  <div className="py-12 text-center rounded-xl border border-dashed border-primary-foreground/[0.08]">
  <p className="font-body text-[13px] text-primary-foreground/95">Nenhuma despesa encontrada</p>
@@ -803,121 +904,7 @@ const DespesasTab = () => {
  </div>
  )}
    </div>
-
- {/* Charts Dialog */}
- <Dialog open={showCharts} onOpenChange={setShowCharts}>
-   <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md border-primary-foreground/[0.06] bg-charcoal overflow-hidden p-0 gap-0">
-     <DialogHeader className="p-5 border-b border-primary-foreground/[0.06] bg-primary-foreground/[0.02]">
-       <DialogTitle className="font-heading text-lg font-semibold text-primary-foreground flex items-center gap-2">
-         <PieChartIcon className="w-5 h-5 text-gold" />
-         Dashboard de Despesas
-       </DialogTitle>
-     </DialogHeader>
-     
-     <div className="p-0">
-       <style>{`
-         .recharts-wrapper, .recharts-surface, .recharts-wrapper > svg {
-           background: transparent !important;
-         }
-       `}</style>
-       <div className="flex border-b border-primary-foreground/[0.06]">
-         {(["mensal", "categoria"] as const).map(v => (
-           <button
-             key={v}
-             onClick={() => setChartView(v)}
-             className={`flex-1 py-3 font-body text-[12px] font-medium transition-all ${
-               chartView === v
-                 ? "text-gold border-b-2 border-gold bg-gold/[0.04]"
-                 : "text-primary-foreground/70 hover:text-primary-foreground/60"
-             }`}
-           >
-             {v === "mensal" ? "📅 Despesas por Mês" : "🏷️ Por Categoria"}
-           </button>
-         ))}
-       </div>
-
-       <div className="p-5">
-         {chartView === "mensal" ? (
-           dadosMensais.length > 0 ? (
-             <>
-               <p className="font-body text-[11px] text-primary-foreground/70 mb-3">
-                 Últimos {dadosMensais.length} meses {tipoFilter !== "todos" ? `(${tipoFilter === "estudio" ? "Estúdio" : "Pessoal"})` : ""}
-               </p>
-               <ResponsiveContainer width="100%" height={220}>
-                 <BarChart data={dadosMensais} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} style={{ background: "transparent" }}>
-                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                   <XAxis
-                     dataKey="mes"
-                     tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 11, fontFamily: "var(--font-body)" }}
-                     axisLine={false}
-                     tickLine={false}
-                   />
-                   <YAxis
-                     tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 10, fontFamily: "var(--font-body)" }}
-                     axisLine={false}
-                     tickLine={false}
-                     tickFormatter={v => `R$${v >= 1000 ? (v / 1000).toFixed(1) + "k" : v}`}
-                   />
-                   <Tooltip content={<CustomBarTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
-                   <Bar dataKey="total" fill="#facc15" radius={[6, 6, 0, 0]} maxBarSize={48} />
-                 </BarChart>
-               </ResponsiveContainer>
-             </>
-           ) : (
-             <div className="py-10 text-center">
-               <p className="font-body text-[13px] text-primary-foreground/60">Nenhum dado para exibir</p>
-             </div>
-           )
-         ) : (
-           dadosCategoria.length > 0 ? (
-             <>
-               <p className="font-body text-[11px] text-primary-foreground/70 mb-3">
-                 Distribuição total {tipoFilter !== "todos" ? `(${tipoFilter === "estudio" ? "Estúdio" : "Pessoal"})` : ""}
-               </p>
-               <ResponsiveContainer width="100%" height={240}>
-                 <PieChart style={{ background: "transparent" }}>
-                   <Pie
-                     data={dadosCategoria}
-                     cx="50%"
-                     cy="50%"
-                     innerRadius={60}
-                     outerRadius={100}
-                     paddingAngle={2}
-                     dataKey="value"
-                   >
-                     {dadosCategoria.map((entry, index) => (
-                       <Cell key={index} fill={entry.fill} />
-                     ))}
-                   </Pie>
-                   <Tooltip content={<CustomPieTooltip />} />
-                 </PieChart>
-               </ResponsiveContainer>
-
-               <div className="mt-4 space-y-2 max-h-[150px] overflow-y-auto custom-scrollbar pr-2">
-                 {dadosCategoria.map(cat => (
-                   <div key={cat.name} className="flex items-center gap-2">
-                     <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.fill }} />
-                     <p className="font-body text-[11px] text-primary-foreground/70 flex-1 truncate">{cat.name}</p>
-                     <p className="font-body text-[11px] font-semibold text-primary-foreground/90">
-                       {formatCurrency(cat.value)}
-                     </p>
-                     <p className="font-body text-[10px] text-primary-foreground/60 w-8 text-right">
-                       {cat.pct}%
-                     </p>
-                   </div>
-                 ))}
-               </div>
-             </>
-           ) : (
-             <div className="py-10 text-center">
-               <p className="font-body text-[13px] text-primary-foreground/60">Nenhum dado para exibir</p>
-             </div>
-           )
-         )}
-       </div>
-     </div>
-   </DialogContent>
- </Dialog>
+ )}
 
  {/* Add Dialog */}
  <Dialog open={showForm} onOpenChange={setShowForm}>
