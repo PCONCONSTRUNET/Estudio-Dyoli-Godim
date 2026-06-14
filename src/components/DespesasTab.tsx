@@ -362,22 +362,45 @@ const DespesasTab = () => {
  const countPagas = despesas.filter((d) => d.pago && (tipoFilter === "todos" || (d.tipo || "estudio") === tipoFilter)).length;
 
  const dadosMensais = useMemo(() => {
+   const currentYear = new Date().getFullYear().toString();
    const map: Record<string, { pago: number; pendente: number; total: number }> = {};
+   
+   for (let i = 1; i <= 12; i++) {
+     const mStr = i.toString().padStart(2, '0');
+     map[`${currentYear}-${mStr}`] = { pago: 0, pendente: 0, total: 0 };
+   }
+
    despesas.forEach(d => {
      if (tipoFilter !== "todos" && (d.tipo || "estudio") !== tipoFilter) return;
      if (!d.data_vencimento) return;
      const parts = d.data_vencimento.split("-");
      if (parts.length < 2) return;
      const [y, m] = parts;
+     
+     if (y !== currentYear) return;
      const key = `${y}-${m}`;
      
-     if (!map[key]) map[key] = { pago: 0, pendente: 0, total: 0 };
-     const val = Number(d.valor);
-     map[key].total += val;
-     if (d.pago) map[key].pago += val;
-     else map[key].pendente += val;
+     if (map[key]) {
+       const val = Number(d.valor);
+       map[key].total += val;
+       if (d.pago) map[key].pago += val;
+       else map[key].pendente += val;
+     }
    });
-   const sorted = Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).slice(-6);
+
+   let lastMonthWithData = new Date().getMonth() + 1;
+   for (let i = 12; i >= 1; i--) {
+     const mStr = i.toString().padStart(2, '0');
+     if (map[`${currentYear}-${mStr}`].total > 0) {
+       lastMonthWithData = Math.max(lastMonthWithData, i);
+       break;
+     }
+   }
+
+   const sorted = Object.entries(map)
+     .sort(([a], [b]) => a.localeCompare(b))
+     .slice(0, lastMonthWithData);
+     
    return sorted.map(([key, data]) => {
      const [, m] = key.split("-");
      return { mes: MONTHS_PT[Number(m) - 1] || "N/A", ...data };
@@ -742,7 +765,7 @@ const DespesasTab = () => {
            <div className="flex flex-col lg:flex-row gap-8">
              <div className="lg:w-2/3">
                <p className="font-body text-[12px] text-primary-foreground/70 mb-6 text-center">
-                 Gastos nos últimos {dadosMensais.length} meses {tipoFilter !== "todos" ? `(${tipoFilter === "estudio" ? "Estúdio" : "Pessoal"})` : ""}
+                 Gastos deste ano ({new Date().getFullYear()}) {tipoFilter !== "todos" ? `(${tipoFilter === "estudio" ? "Estúdio" : "Pessoal"})` : ""}
                </p>
                <ResponsiveContainer width="100%" height={260}>
                  <BarChart data={dadosMensais} margin={{ top: 10, right: 10, left: -20, bottom: 0 }} style={{ background: "transparent" }}>
