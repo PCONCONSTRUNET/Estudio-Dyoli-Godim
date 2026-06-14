@@ -345,7 +345,7 @@ const GastosTab = () => {
                 : "text-white/40 hover:text-white/80"
             }`}
           >
-            {resp === "Dona" ? "Gastos da Dona" : "Gastos da Zélia"}
+            {resp === "Dona" ? "Gastos da Dyoli" : "Gastos da Zélia"}
           </button>
         ))}
       </div>
@@ -674,7 +674,7 @@ const GastosTab = () => {
                       : "text-white/40 hover:text-white/80"
                   }`}
                 >
-                  {resp === "Dona" ? "Dona" : "Zélia"}
+                  {resp === "Dona" ? "Dyoli" : "Zélia"}
                 </button>
               ))}
             </div>
