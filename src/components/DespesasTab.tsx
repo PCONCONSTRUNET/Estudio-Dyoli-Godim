@@ -1,6 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Save, X, Check, AlertTriangle, Clock, Bell, ChevronRight, ChevronDown, Eye, Receipt, TrendingDown, TrendingUp, Sparkles, CalendarDays, Wallet, Repeat, Search } from "lucide-react";
+import { Save, X, Check, AlertTriangle, Clock, Bell, ChevronRight, ChevronDown, Eye, Receipt, TrendingDown, TrendingUp, Sparkles, CalendarDays, Wallet, Repeat, Search, BarChart3, PieChart as PieChartIcon } from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend,
+} from "recharts";
 import PlusButton from "@/components/ui/plus-button";
 import BinButton from "@/components/ui/bin-button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -32,6 +36,44 @@ const formatCurrency = (v: number) =>
 const formatDate = (d: string) =>
  new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 
+const MONTHS_PT = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+const CATEGORIA_COLORS: Record<string, string> = {
+  "Aluguel": "#f59e0b",
+  "Fornecedor": "#3b82f6",
+  "Material": "#ec4899",
+  "Conta de Luz": "#eab308",
+  "Conta de Água": "#06b6d4",
+  "Internet": "#8b5cf6",
+  "Outros": "#94a3b8",
+};
+
+const CustomBarTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-xl border border-gold/20 bg-charcoal/95 backdrop-blur px-3 py-2 shadow-xl">
+      <p className="font-body text-[11px] text-primary-foreground/60 mb-0.5">{label}</p>
+      <p className="font-heading text-[14px] font-bold text-gold">
+        {formatCurrency(payload[0]?.value ?? 0)}
+      </p>
+    </div>
+  );
+};
+
+const CustomPieTooltip = ({ active, payload }: any) => {
+  if (!active || !payload?.length) return null;
+  const d = payload[0];
+  return (
+    <div className="rounded-xl border border-primary-foreground/10 bg-charcoal/95 backdrop-blur px-3 py-2 shadow-xl">
+      <p className="font-body text-[11px] text-primary-foreground/60 mb-0.5">{d.name}</p>
+      <p className="font-heading text-[14px] font-bold" style={{ color: d.payload.fill }}>
+        {formatCurrency(d.value)}
+      </p>
+      <p className="font-body text-[10px] text-primary-foreground/70">{d.payload.pct}%</p>
+    </div>
+  );
+};
+
 const DespesasTab = () => {
  const { confirm } = useConfirm();
  const [despesas, setDespesas] = useState<Despesa[]>([]);
@@ -41,6 +83,8 @@ const DespesasTab = () => {
  const [tipoFilter, setTipoFilter] = useState<"todos" | "estudio" | "pessoal">("todos");
  const [searchTerm, setSearchTerm] = useState("");
  const [showValores, setShowValores] = useState(false);
+ const [showCharts, setShowCharts] = useState(false);
+ const [chartView, setChartView] = useState<"mensal" | "categoria">("mensal");
 
  const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => {
  const saved = localStorage.getItem("despesas_dismissed");
@@ -515,31 +559,49 @@ const DespesasTab = () => {
        </button>
      )}
    </div>
-   <div className="flex items-center justify-between gap-3 bg-primary-foreground/[0.02] p-1.5 rounded-2xl border border-primary-foreground/[0.06]">
-   <div className="flex bg-primary-foreground/[0.04] rounded-xl p-1 gap-1 flex-1 sm:flex-none">
-   <button 
-   onClick={() => setFilter("pendentes")} 
-   className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${filter === "pendentes" ? "bg-primary-foreground text-charcoal shadow-sm" : "text-primary-foreground/60 hover:text-primary-foreground"}`}
-   >
-   Pendentes
-   </button>
-   <button 
-   onClick={() => setFilter("pagas")} 
-   className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${filter === "pagas" ? "bg-primary-foreground text-charcoal shadow-sm" : "text-primary-foreground/60 hover:text-primary-foreground"}`}
-   >
-   Pagas
-   </button>
-   </div>
+   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-primary-foreground/[0.02] p-1.5 rounded-2xl border border-primary-foreground/[0.06]">
+     <div className="flex bg-primary-foreground/[0.04] rounded-xl p-1 gap-1 flex-1 sm:flex-none">
+       <button 
+         onClick={() => setFilter("pendentes")} 
+         className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${filter === "pendentes" ? "bg-primary-foreground text-charcoal shadow-sm" : "text-primary-foreground/60 hover:text-primary-foreground"}`}
+       >
+         Pendentes
+       </button>
+       <button 
+         onClick={() => setFilter("pagas")} 
+         className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${filter === "pagas" ? "bg-primary-foreground text-charcoal shadow-sm" : "text-primary-foreground/60 hover:text-primary-foreground"}`}
+       >
+         Pagas
+       </button>
+     </div>
+     
+     <div className="flex items-center gap-2">
+       <button
+         onClick={() => setShowCharts(true)}
+         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gold/30 bg-gold/10 text-gold hover:bg-gold/20 text-[12px] font-semibold transition-all"
+       >
+         <BarChart3 className="w-3.5 h-3.5" />
+         Gráficos
+       </button>
 
-   <select
-   value={tipoFilter}
-   onChange={(e) => setTipoFilter(e.target.value as any)}
-   className="bg-charcoal text-primary-foreground/90 border border-primary-foreground/[0.1] rounded-xl px-2 py-1.5 text-[12px] font-medium outline-none focus:border-gold/50 cursor-pointer"
-   >
-   <option value="todos">Todas as contas</option>
-   <option value="estudio">🏛 Estúdio</option>
-   <option value="pessoal">👤 Pessoal</option>
-   </select>
+       <div className="flex bg-primary-foreground/[0.04] rounded-xl p-1 gap-1 shrink-0">
+         {(["todos", "estudio", "pessoal"] as const).map(tipo => (
+           <button
+             key={tipo}
+             onClick={() => setTipoFilter(tipo)}
+             className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all flex items-center gap-1 ${
+               tipoFilter === tipo 
+                 ? "bg-primary-foreground text-charcoal shadow-sm" 
+                 : "text-primary-foreground/60 hover:text-primary-foreground"
+             }`}
+           >
+             {tipo === "todos" && "Todas"}
+             {tipo === "estudio" && "🏛"}
+             {tipo === "pessoal" && "👤"}
+           </button>
+         ))}
+       </div>
+     </div>
    </div>
  </div>
 
@@ -702,7 +764,122 @@ const DespesasTab = () => {
  })()}
  </div>
  )}
-  </div>
+   </div>
+
+ {/* Charts Dialog */}
+ <Dialog open={showCharts} onOpenChange={setShowCharts}>
+   <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md border-primary-foreground/[0.06] bg-charcoal overflow-hidden p-0 gap-0">
+     <DialogHeader className="p-5 border-b border-primary-foreground/[0.06] bg-primary-foreground/[0.02]">
+       <DialogTitle className="font-heading text-lg font-semibold text-primary-foreground flex items-center gap-2">
+         <PieChartIcon className="w-5 h-5 text-gold" />
+         Dashboard de Despesas
+       </DialogTitle>
+     </DialogHeader>
+     
+     <div className="p-0">
+       <style>{`
+         .recharts-wrapper, .recharts-surface, .recharts-wrapper > svg {
+           background: transparent !important;
+         }
+       `}</style>
+       <div className="flex border-b border-primary-foreground/[0.06]">
+         {(["mensal", "categoria"] as const).map(v => (
+           <button
+             key={v}
+             onClick={() => setChartView(v)}
+             className={`flex-1 py-3 font-body text-[12px] font-medium transition-all ${
+               chartView === v
+                 ? "text-gold border-b-2 border-gold bg-gold/[0.04]"
+                 : "text-primary-foreground/70 hover:text-primary-foreground/60"
+             }`}
+           >
+             {v === "mensal" ? "📅 Despesas por Mês" : "🏷️ Por Categoria"}
+           </button>
+         ))}
+       </div>
+
+       <div className="p-5">
+         {chartView === "mensal" ? (
+           dadosMensais.length > 0 ? (
+             <>
+               <p className="font-body text-[11px] text-primary-foreground/70 mb-3">
+                 Últimos {dadosMensais.length} meses {tipoFilter !== "todos" ? `(${tipoFilter === "estudio" ? "Estúdio" : "Pessoal"})` : ""}
+               </p>
+               <ResponsiveContainer width="100%" height={220}>
+                 <BarChart data={dadosMensais} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} style={{ background: "transparent" }}>
+                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                   <XAxis
+                     dataKey="mes"
+                     tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 11, fontFamily: "var(--font-body)" }}
+                     axisLine={false}
+                     tickLine={false}
+                   />
+                   <YAxis
+                     tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 10, fontFamily: "var(--font-body)" }}
+                     axisLine={false}
+                     tickLine={false}
+                     tickFormatter={v => `R$${v >= 1000 ? (v / 1000).toFixed(1) + "k" : v}`}
+                   />
+                   <Tooltip content={<CustomBarTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
+                   <Bar dataKey="total" fill="#facc15" radius={[6, 6, 0, 0]} maxBarSize={48} />
+                 </BarChart>
+               </ResponsiveContainer>
+             </>
+           ) : (
+             <div className="py-10 text-center">
+               <p className="font-body text-[13px] text-primary-foreground/60">Nenhum dado para exibir</p>
+             </div>
+           )
+         ) : (
+           dadosCategoria.length > 0 ? (
+             <>
+               <p className="font-body text-[11px] text-primary-foreground/70 mb-3">
+                 Distribuição total {tipoFilter !== "todos" ? `(${tipoFilter === "estudio" ? "Estúdio" : "Pessoal"})` : ""}
+               </p>
+               <ResponsiveContainer width="100%" height={240}>
+                 <PieChart style={{ background: "transparent" }}>
+                   <Pie
+                     data={dadosCategoria}
+                     cx="50%"
+                     cy="50%"
+                     innerRadius={60}
+                     outerRadius={100}
+                     paddingAngle={2}
+                     dataKey="value"
+                   >
+                     {dadosCategoria.map((entry, index) => (
+                       <Cell key={index} fill={entry.fill} />
+                     ))}
+                   </Pie>
+                   <Tooltip content={<CustomPieTooltip />} />
+                 </PieChart>
+               </ResponsiveContainer>
+
+               <div className="mt-4 space-y-2 max-h-[150px] overflow-y-auto custom-scrollbar pr-2">
+                 {dadosCategoria.map(cat => (
+                   <div key={cat.name} className="flex items-center gap-2">
+                     <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.fill }} />
+                     <p className="font-body text-[11px] text-primary-foreground/70 flex-1 truncate">{cat.name}</p>
+                     <p className="font-body text-[11px] font-semibold text-primary-foreground/90">
+                       {formatCurrency(cat.value)}
+                     </p>
+                     <p className="font-body text-[10px] text-primary-foreground/60 w-8 text-right">
+                       {cat.pct}%
+                     </p>
+                   </div>
+                 ))}
+               </div>
+             </>
+           ) : (
+             <div className="py-10 text-center">
+               <p className="font-body text-[13px] text-primary-foreground/60">Nenhum dado para exibir</p>
+             </div>
+           )
+         )}
+       </div>
+     </div>
+   </DialogContent>
+ </Dialog>
 
  {/* Add Dialog */}
  <Dialog open={showForm} onOpenChange={setShowForm}>
