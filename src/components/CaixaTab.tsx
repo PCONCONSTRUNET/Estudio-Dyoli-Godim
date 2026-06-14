@@ -315,14 +315,14 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  </div>
  </div>
 
- {/* Número-herói: LUCRO */}
+ {/* Número-herói: RECEBIDO (SALDO EM CAIXA) */}
  <div className="text-center py-2">
  <p className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-[0.3em] mb-1 flex items-center justify-center gap-1.5">
- <span className={`w-1.5 h-1.5 rounded-full ${cicloStats.lucro >= 0 ? "bg-green-400 animate-pulse" : "bg-red-400 animate-pulse"}`} />
- Lucro do ciclo
+ <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+ Saldo em Caixa
  </p>
- <p className={`font-heading text-4xl sm:text-5xl font-bold tabular-nums tracking-tight ${cicloStats.lucro >= 0 ? "text-green-400 drop-shadow-[0_0_18px_hsl(142_70%_55%/0.45)]" : "text-red-400 drop-shadow-[0_0_18px_hsl(0_70%_55%/0.4)]"}`}>
- {formatCurrency(cicloStats.lucro)}
+ <p className="font-heading text-4xl sm:text-5xl font-bold tabular-nums tracking-tight text-green-400 drop-shadow-[0_0_18px_hsl(142_70%_55%/0.45)]">
+ {formatCurrency(cicloStats.recebido)}
  </p>
  <button
  type="button"
@@ -399,13 +399,10 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  <p className="font-heading text-[15px] font-bold text-gold tabular-nums mt-1 leading-tight">{formatCurrency(cicloStats.total)}</p>
  <p className="font-body text-[9px] text-primary-foreground/95 mt-0.5">total bruto</p>
  </div>
- <div className="p-3 rounded-2xl bg-red-500/[0.05] border border-red-500/15 hover:border-red-500/25 transition-all">
- <p className="font-body text-[9px] text-primary-foreground/75 uppercase tracking-widest font-medium">Despesas Estúdio</p>
- <p className="font-heading text-[15px] font-bold text-red-400 tabular-nums mt-1 leading-tight">- {formatCurrency(cicloStats.desp)}</p>
- <p className="font-body text-[9px] text-primary-foreground/95 mt-0.5">já pagas</p>
- {cicloStats.despPessoal > 0 && (
- <p className="font-body text-[8px] text-purple-400/70 mt-0.5">Pessoal: {formatCurrency(cicloStats.despPessoal)}</p>
- )}
+ <div className={`p-3 rounded-2xl ${cicloStats.lucro >= 0 ? "bg-green-500/[0.06] border-green-500/15 hover:border-green-500/25" : "bg-red-500/[0.05] border-red-500/15 hover:border-red-500/25"} transition-all`}>
+ <p className="font-body text-[9px] text-primary-foreground/75 uppercase tracking-widest font-medium">Lucro do Ciclo</p>
+ <p className={`font-heading text-[15px] font-bold ${cicloStats.lucro >= 0 ? "text-green-400" : "text-red-400"} tabular-nums mt-1 leading-tight`}>{formatCurrency(cicloStats.lucro)}</p>
+ <p className="font-body text-[9px] text-primary-foreground/95 mt-0.5">resultado real</p>
  </div>
  </div>
 
