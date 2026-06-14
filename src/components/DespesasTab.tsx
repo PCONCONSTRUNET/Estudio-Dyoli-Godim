@@ -50,14 +50,34 @@ const CATEGORIA_COLORS: Record<string, string> = {
 
 const CustomBarTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
+  const data = payload[0].payload;
   return (
-    <div className="rounded-xl border border-gold/20 bg-charcoal/95 backdrop-blur px-3 py-2 shadow-xl">
-      <p className="font-body text-[11px] text-primary-foreground/60 mb-0.5">{label}</p>
-      <p className="font-heading text-[14px] font-bold text-gold">
-        {formatCurrency(payload[0]?.value ?? 0)}
-      </p>
+    <div className="rounded-xl border border-primary-foreground/[0.08] bg-charcoal/95 backdrop-blur px-3 py-2.5 shadow-xl min-w-[150px]">
+      <p className="font-body text-[11px] text-primary-foreground/60 mb-2">{label}</p>
+      <div className="space-y-1.5">
+        <p className="font-body text-[12px] flex items-center justify-between gap-4">
+          <span className="text-primary-foreground/70 flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-green-400"/> Pago:</span>
+          <span className="font-semibold text-green-400">{formatCurrency(data.pago)}</span>
+        </p>
+        <p className="font-body text-[12px] flex items-center justify-between gap-4">
+          <span className="text-primary-foreground/70 flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-yellow-400"/> Pendente:</span>
+          <span className="font-semibold text-yellow-400">{formatCurrency(data.pendente)}</span>
+        </p>
+        <div className="h-px w-full bg-primary-foreground/[0.06] my-1" />
+        <p className="font-body text-[12px] flex items-center justify-between gap-4">
+          <span className="text-primary-foreground/70 font-medium">Total:</span>
+          <span className="font-bold text-primary-foreground">{formatCurrency(data.total)}</span>
+        </p>
+      </div>
     </div>
   );
+};
+
+const formatDateBr = (d: string) => {
+  if (!d) return "";
+  const parts = d.split("-");
+  if (parts.length !== 3) return d;
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
 };
 
 const CustomPieTooltip = ({ active, payload }: any) => {
@@ -342,21 +362,33 @@ const DespesasTab = () => {
  const countPagas = despesas.filter((d) => d.pago && (tipoFilter === "todos" || (d.tipo || "estudio") === tipoFilter)).length;
 
  const dadosMensais = useMemo(() => {
-   const map: Record<string, number> = {};
+   const map: Record<string, { pago: number; pendente: number; total: number }> = {};
    despesas.forEach(d => {
      if (tipoFilter !== "todos" && (d.tipo || "estudio") !== tipoFilter) return;
-     if (!d.data_vencimento) return; // Prevent crash if data is missing
+     if (!d.data_vencimento) return;
      const parts = d.data_vencimento.split("-");
      if (parts.length < 2) return;
      const [y, m] = parts;
      const key = `${y}-${m}`;
-     map[key] = (map[key] ?? 0) + Number(d.valor);
+     
+     if (!map[key]) map[key] = { pago: 0, pendente: 0, total: 0 };
+     const val = Number(d.valor);
+     map[key].total += val;
+     if (d.pago) map[key].pago += val;
+     else map[key].pendente += val;
    });
    const sorted = Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).slice(-6);
-   return sorted.map(([key, total]) => {
+   return sorted.map(([key, data]) => {
      const [, m] = key.split("-");
-     return { mes: MONTHS_PT[Number(m) - 1] || "N/A", total };
+     return { mes: MONTHS_PT[Number(m) - 1] || "N/A", ...data };
    });
+ }, [despesas, tipoFilter]);
+
+ const ultimosPagos = useMemo(() => {
+   return despesas
+     .filter(d => d.pago && (tipoFilter === "todos" || (d.tipo || "estudio") === tipoFilter))
+     .sort((a, b) => (b.data_vencimento || "").localeCompare(a.data_vencimento || ""))
+     .slice(0, 10);
  }, [despesas, tipoFilter]);
 
  const dadosCategoria = useMemo(() => {
@@ -688,22 +720,62 @@ const DespesasTab = () => {
            background: transparent !important;
          }
        `}</style>
+       
+       {/* Indicadores KPI no topo do Dashboard */}
+       <div className="grid grid-cols-3 gap-3 mb-8">
+         <div className="bg-primary-foreground/[0.03] border border-primary-foreground/[0.06] rounded-xl p-3 flex flex-col justify-center text-center">
+           <p className="text-[10px] text-primary-foreground/60 uppercase font-semibold mb-1">Pendente</p>
+           <p className="text-[14px] md:text-[16px] font-heading font-bold text-yellow-400">{formatCurrency(totalPendente)}</p>
+         </div>
+         <div className="bg-primary-foreground/[0.03] border border-primary-foreground/[0.06] rounded-xl p-3 flex flex-col justify-center text-center">
+           <p className="text-[10px] text-primary-foreground/60 uppercase font-semibold mb-1">Atrasado</p>
+           <p className="text-[14px] md:text-[16px] font-heading font-bold text-red-400">{formatCurrency(totalAtrasado)}</p>
+         </div>
+         <div className="bg-primary-foreground/[0.03] border border-primary-foreground/[0.06] rounded-xl p-3 flex flex-col justify-center text-center">
+           <p className="text-[10px] text-primary-foreground/60 uppercase font-semibold mb-1">Pago</p>
+           <p className="text-[14px] md:text-[16px] font-heading font-bold text-green-400">{formatCurrency(totalPago)}</p>
+         </div>
+       </div>
+
        {chartView === "mensal" ? (
          dadosMensais.length > 0 ? (
-           <>
-             <p className="font-body text-[12px] text-primary-foreground/70 mb-6 text-center">
-               Total gasto nos últimos {dadosMensais.length} meses {tipoFilter !== "todos" ? `(${tipoFilter === "estudio" ? "Estúdio" : "Pessoal"})` : ""}
-             </p>
-             <ResponsiveContainer width="100%" height={260}>
-               <BarChart data={dadosMensais} margin={{ top: 10, right: 10, left: -20, bottom: 0 }} style={{ background: "transparent" }}>
-                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                 <XAxis dataKey="mes" tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 11, fontFamily: "var(--font-body)" }} axisLine={false} tickLine={false} />
-                 <YAxis tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 11, fontFamily: "var(--font-body)" }} axisLine={false} tickLine={false} tickFormatter={v => `R$${v >= 1000 ? (v / 1000).toFixed(1) + "k" : v}`} />
-                 <Tooltip content={<CustomBarTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
-                 <Bar dataKey="total" fill="#facc15" radius={[6, 6, 0, 0]} maxBarSize={48} />
-               </BarChart>
-             </ResponsiveContainer>
-           </>
+           <div className="flex flex-col lg:flex-row gap-8">
+             <div className="lg:w-2/3">
+               <p className="font-body text-[12px] text-primary-foreground/70 mb-6 text-center">
+                 Gastos nos últimos {dadosMensais.length} meses {tipoFilter !== "todos" ? `(${tipoFilter === "estudio" ? "Estúdio" : "Pessoal"})` : ""}
+               </p>
+               <ResponsiveContainer width="100%" height={260}>
+                 <BarChart data={dadosMensais} margin={{ top: 10, right: 10, left: -20, bottom: 0 }} style={{ background: "transparent" }}>
+                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                   <XAxis dataKey="mes" tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 11, fontFamily: "var(--font-body)" }} axisLine={false} tickLine={false} />
+                   <YAxis tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 11, fontFamily: "var(--font-body)" }} axisLine={false} tickLine={false} tickFormatter={v => `R$${v >= 1000 ? (v / 1000).toFixed(1) + "k" : v}`} />
+                   <Tooltip content={<CustomBarTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
+                   <Legend iconType="circle" wrapperStyle={{ fontSize: 11, fontFamily: "var(--font-body)", color: "rgba(255,255,255,0.7)", paddingTop: 10 }} />
+                   <Bar dataKey="pago" name="Pago" stackId="a" fill="#4ade80" radius={[0, 0, 0, 0]} maxBarSize={48} />
+                   <Bar dataKey="pendente" name="Pendente (e Atrasado)" stackId="a" fill="#facc15" radius={[6, 6, 0, 0]} maxBarSize={48} />
+                 </BarChart>
+               </ResponsiveContainer>
+             </div>
+             
+             <div className="lg:w-1/3">
+               <h4 className="text-[13px] font-semibold text-primary-foreground mb-4 flex items-center gap-2">
+                 <Check className="w-4 h-4 text-green-400"/> Últimos Pagamentos
+               </h4>
+               <div className="space-y-2.5 max-h-[260px] overflow-y-auto custom-scrollbar pr-2">
+                 {ultimosPagos.length > 0 ? ultimosPagos.map(d => (
+                   <div key={d.id} className="p-3 rounded-xl bg-charcoal border border-primary-foreground/[0.04]">
+                     <p className="text-[12px] text-primary-foreground/90 font-medium truncate">{d.descricao}</p>
+                     <div className="flex justify-between items-center mt-1.5">
+                       <p className="text-[10px] text-primary-foreground/50">{formatDateBr(d.data_vencimento)}</p>
+                       <p className="text-[12px] text-green-400 font-bold">{formatCurrency(Number(d.valor))}</p>
+                     </div>
+                   </div>
+                 )) : (
+                   <p className="text-[12px] text-primary-foreground/50 italic">Nenhum pagamento recente.</p>
+                 )}
+               </div>
+             </div>
+           </div>
          ) : (
            <div className="py-12 text-center"><p className="font-body text-[13px] text-primary-foreground/60">Nenhum dado para exibir</p></div>
          )
