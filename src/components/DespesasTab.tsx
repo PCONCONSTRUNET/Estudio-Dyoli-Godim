@@ -194,12 +194,12 @@ const DespesasTab = () => {
  };
 
  const totalPendente = useMemo(
- () => despesas.filter((d) => !d.pago).reduce((s, d) => s + Number(d.valor), 0),
- [despesas]
+ () => despesas.filter((d) => !d.pago && (tipoFilter === "todos" || (d.tipo || "estudio") === tipoFilter)).reduce((s, d) => s + Number(d.valor), 0),
+ [despesas, tipoFilter]
  );
  const totalPago = useMemo(
- () => despesas.filter((d) => d.pago).reduce((s, d) => s + Number(d.valor), 0),
- [despesas]
+ () => despesas.filter((d) => d.pago && (tipoFilter === "todos" || (d.tipo || "estudio") === tipoFilter)).reduce((s, d) => s + Number(d.valor), 0),
+ [despesas, tipoFilter]
  );
 
  const handleAdd = async () => {
@@ -290,12 +290,12 @@ const DespesasTab = () => {
  };
 
  const totalAtrasado = useMemo(
- () => despesas.filter((d) => !d.pago && d.data_vencimento < today).reduce((s, d) => s + Number(d.valor), 0),
- [despesas, today]
+ () => despesas.filter((d) => !d.pago && d.data_vencimento < today && (tipoFilter === "todos" || (d.tipo || "estudio") === tipoFilter)).reduce((s, d) => s + Number(d.valor), 0),
+ [despesas, today, tipoFilter]
  );
- const countAtrasadas = despesas.filter((d) => !d.pago && d.data_vencimento < today).length;
- const countPendentes = despesas.filter((d) => !d.pago).length;
- const countPagas = despesas.filter((d) => d.pago).length;
+ const countAtrasadas = despesas.filter((d) => !d.pago && d.data_vencimento < today && (tipoFilter === "todos" || (d.tipo || "estudio") === tipoFilter)).length;
+ const countPendentes = despesas.filter((d) => !d.pago && (tipoFilter === "todos" || (d.tipo || "estudio") === tipoFilter)).length;
+ const countPagas = despesas.filter((d) => d.pago && (tipoFilter === "todos" || (d.tipo || "estudio") === tipoFilter)).length;
 
  if (loading) {
  return (
