@@ -341,6 +341,44 @@ const DespesasTab = () => {
  const countPendentes = despesas.filter((d) => !d.pago && (tipoFilter === "todos" || (d.tipo || "estudio") === tipoFilter)).length;
  const countPagas = despesas.filter((d) => d.pago && (tipoFilter === "todos" || (d.tipo || "estudio") === tipoFilter)).length;
 
+ const dadosMensais = useMemo(() => {
+   const map: Record<string, number> = {};
+   despesas.forEach(d => {
+     if (tipoFilter !== "todos" && (d.tipo || "estudio") !== tipoFilter) return;
+     if (!d.data_vencimento) return; // Prevent crash if data is missing
+     const parts = d.data_vencimento.split("-");
+     if (parts.length < 2) return;
+     const [y, m] = parts;
+     const key = `${y}-${m}`;
+     map[key] = (map[key] ?? 0) + Number(d.valor);
+   });
+   const sorted = Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).slice(-6);
+   return sorted.map(([key, total]) => {
+     const [, m] = key.split("-");
+     return { mes: MONTHS_PT[Number(m) - 1] || "N/A", total };
+   });
+ }, [despesas, tipoFilter]);
+
+ const dadosCategoria = useMemo(() => {
+   const map: Record<string, number> = {};
+   let totalGlobal = 0;
+   despesas.forEach(d => {
+     if (tipoFilter !== "todos" && (d.tipo || "estudio") !== tipoFilter) return;
+     const cat = d.categoria || "Outros";
+     map[cat] = (map[cat] ?? 0) + Number(d.valor);
+     totalGlobal += Number(d.valor);
+   });
+   const sorted = Object.entries(map)
+     .sort(([, a], [, b]) => b - a)
+     .map(([name, value]) => ({
+       name,
+       value,
+       fill: CATEGORIA_COLORS[name] ?? "#94a3b8",
+       pct: totalGlobal > 0 ? ((value / totalGlobal) * 100).toFixed(1) : "0",
+     }));
+   return sorted;
+ }, [despesas, tipoFilter]);
+
  if (loading) {
  return (
  <div className="flex items-center justify-center py-20">
