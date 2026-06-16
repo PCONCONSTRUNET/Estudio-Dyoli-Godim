@@ -273,13 +273,17 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     }
   };
 
-  const deleteAgendamento = (id: string) => {
+  const deleteAgendamento = (id: string, isVenda?: boolean) => {
     confirm({
       title: "Excluir Pedido",
-      description: "Esta ação apagará permanentemente o agendamento.",
+      description: "Esta ação apagará permanentemente o pedido.",
       variant: "destructive",
       onConfirm: async () => {
-        await supabase.from("agendamentos").delete().eq("id", id);
+        if (isVenda) {
+          await supabase.from("vendas").delete().eq("id", id);
+        } else {
+          await supabase.from("agendamentos").delete().eq("id", id);
+        }
         onUpdate();
         toast.success("Pedido excluído");
       }
@@ -1019,7 +1023,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                         )}
                       </div>
                       <div className="flex justify-end">
-                        <BinButton size="sm" onClick={() => deleteAgendamento(a.id)} />
+                        <BinButton size="sm" onClick={() => deleteAgendamento(a.id, a.origem === "venda")} />
                       </div>
 
                     </div>
