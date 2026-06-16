@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase, supabaseAdmin } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Edit2, Save, X, Upload, ShoppingBag, Image, Package } from "lucide-react";
 import BinButton from "@/components/ui/bin-button";
@@ -53,16 +53,28 @@ const ProdutosTab = () => {
     setLoading(false);
   };
 
+  const SUPABASE_URL = "https://vlepenxinekoljxecomr.supabase.co";
+  const SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsZXBlbnhpbmVrb2xqeGVjb21yIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTA2MjQ0OSwiZXhwIjoyMDkwNjM4NDQ5fQ.n-vDPXUpnGZOEBpZJpzQ5TYEQSQwbWWPwAk3ShhYWnM";
+
   const uploadImages = async (files: File[]): Promise<string[]> => {
     const urls: string[] = [];
     for (const file of files) {
       const ext = file.name.split(".").pop();
       const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      // Usa supabaseAdmin para bypass do RLS no storage
-      const { error } = await supabaseAdmin.storage.from("produtos").upload(path, file);
-      if (error) throw error;
-      const { data } = supabaseAdmin.storage.from("produtos").getPublicUrl(path);
-      urls.push(data.publicUrl);
+      const res = await fetch(`${SUPABASE_URL}/storage/v1/object/produtos/${path}`, {
+        method: "POST",
+        headers: {
+          "apikey": SERVICE_KEY,
+          "Authorization": `Bearer ${SERVICE_KEY}`,
+          "Content-Type": file.type || "application/octet-stream",
+        },
+        body: file,
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ message: res.statusText }));
+        throw new Error("Erro no upload: " + (err.message || res.statusText));
+      }
+      urls.push(`${SUPABASE_URL}/storage/v1/object/public/produtos/${path}`);
     }
     return urls;
   };
