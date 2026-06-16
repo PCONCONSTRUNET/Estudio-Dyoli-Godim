@@ -87,14 +87,12 @@ const ProdutosTab = () => {
         payload.imagens = urls;
       }
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("produtos")
-        .insert(payload)
-        .select()
-        .single();
+        .insert(payload);
         
       if (error) throw error;
-      if (data) setProdutos((prev) => [...prev, data as Produto]);
+      await loadProdutos();
       resetNewForm();
       toast.success("Produto adicionado com sucesso!");
     } catch (e: any) {
