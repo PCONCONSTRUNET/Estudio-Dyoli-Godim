@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, supabaseAdmin } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Edit2, Save, X, Upload, ShoppingBag, Image, Package } from "lucide-react";
 import BinButton from "@/components/ui/bin-button";
@@ -75,15 +75,18 @@ const ProdutosTab = () => {
       
       const estoqueNum = newEstoque ? Number(newEstoque) : 0;
 
-      const { error } = await supabase.rpc("admin_insert_produto", {
-        p_nome: newNome,
-        p_descricao: newDescricao,
-        p_preco: Number(newPreco),
-        p_estoque: estoqueNum,
-        p_imagem_url: urls.length > 0 ? urls[0] : "",
-        p_imagens: urls,
-        p_ordem: produtos.length + 1,
-      });
+      const { error } = await supabaseAdmin
+        .from("produtos")
+        .insert({
+          nome: newNome,
+          descricao: newDescricao,
+          preco: Number(newPreco),
+          estoque: estoqueNum,
+          imagem_url: urls.length > 0 ? urls[0] : "",
+          imagens: urls,
+          ativo: true,
+          ordem: produtos.length + 1,
+        });
         
       if (error) throw error;
       await loadProdutos();
@@ -125,15 +128,18 @@ const ProdutosTab = () => {
       }
 
       const estoqueNum = editEstoque ? Number(editEstoque) : 0;
-      const { error } = await supabase.rpc("admin_update_produto", {
-        p_id: id,
-        p_nome: editNome,
-        p_descricao: editDescricao,
-        p_preco: Number(editPreco),
-        p_estoque: estoqueNum,
-        p_imagem_url: urls.length > 0 ? urls[0] : "",
-        p_imagens: urls,
-      });
+      const { error } = await supabaseAdmin
+        .from("produtos")
+        .update({
+          nome: editNome,
+          descricao: editDescricao,
+          preco: Number(editPreco),
+          estoque: estoqueNum,
+          imagem_url: urls.length > 0 ? urls[0] : "",
+          imagens: urls,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id);
       if (error) throw error;
         
       setProdutos((prev) =>
@@ -153,12 +159,12 @@ const ProdutosTab = () => {
   const toggleActive = async (id: string) => {
     const p = produtos.find((p) => p.id === id);
     if (!p) return;
-    await supabase.rpc("admin_toggle_produto_ativo", { p_id: id, p_ativo: !p.ativo });
+    await supabaseAdmin.from("produtos").update({ ativo: !p.ativo, updated_at: new Date().toISOString() }).eq("id", id);
     setProdutos((prev) => prev.map((p) => (p.id === id ? { ...p, ativo: !p.ativo } : p)));
   };
 
   const removeProduto = async (id: string) => {
-    await supabase.rpc("admin_delete_produto", { p_id: id });
+    await supabaseAdmin.from("produtos").delete().eq("id", id);
     setProdutos((prev) => prev.filter((p) => p.id !== id));
   };
 
