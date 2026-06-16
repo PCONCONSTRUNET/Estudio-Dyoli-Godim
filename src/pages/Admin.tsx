@@ -371,33 +371,14 @@ const Admin = () => {
   });
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      if (password !== ADMIN_PASSWORD) {
-        setError("Senha incorreta");
-        setLoading(false);
-        return;
-      }
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: ADMIN_EMAIL,
-        password,
-      });
-      if (authError) {
-        setError("Falha na autenticação: " + authError.message);
-        setLoading(false);
-        return;
-      }
-      try { localStorage.setItem(ADMIN_AUTH_KEY, "true"); } catch {}
-      setAuthenticated(true);
-    } catch (e: any) {
-      setError("Erro: " + (e.message || "Tente novamente"));
-    } finally {
-      setLoading(false);
+  const handleLogin = () => {
+    if (password !== ADMIN_PASSWORD) {
+      setError("Senha incorreta");
+      return;
     }
+    try { localStorage.setItem(ADMIN_AUTH_KEY, "true"); } catch {}
+    setAuthenticated(true);
   };
 
   const handleLogout = async () => {
@@ -477,10 +458,9 @@ const Admin = () => {
 
               <button
                 type="submit"
-                disabled={loading}
                 className="btn-entrar-admin"
               >
-                {loading ? "Entrando..." : "Entrar no painel"}
+                Entrar no painel
               </button>
             </form>
 

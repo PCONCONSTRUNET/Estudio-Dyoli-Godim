@@ -74,22 +74,16 @@ const ProdutosTab = () => {
       if (newImagensFiles.length > 0) urls = await uploadImages(newImagensFiles);
       
       const estoqueNum = newEstoque ? Number(newEstoque) : 0;
-      const payload: any = {
-        nome: newNome,
-        descricao: newDescricao,
-        preco: Number(newPreco),
-        estoque: estoqueNum,
-        ativo: true,
-        ordem: produtos.length + 1,
-      };
-      if (urls.length > 0) {
-        payload.imagem_url = urls[0];
-        payload.imagens = urls;
-      }
 
-      const { error } = await supabase
-        .from("produtos")
-        .insert(payload);
+      const { error } = await supabase.rpc("admin_insert_produto", {
+        p_nome: newNome,
+        p_descricao: newDescricao,
+        p_preco: Number(newPreco),
+        p_estoque: estoqueNum,
+        p_imagem_url: urls.length > 0 ? urls[0] : "",
+        p_imagens: urls,
+        p_ordem: produtos.length + 1,
+      });
         
       if (error) throw error;
       await loadProdutos();
@@ -125,30 +119,22 @@ const ProdutosTab = () => {
   const saveEdit = async (id: string) => {
     setUploading(true);
     try {
-      let urls = [...editPreviews]; // mantem previews antigos ou URLs
-      
-      // Filtra URLs antigos que ainda existem e adiciona os novos
-      // Simplificando: vamos focar em adicionar novas imagens ou manter o estado atual. 
-      // Se tivermos arquivos novos, fazemos upload e substituímos (para simplificar por enquanto, ou anexamos).
-      // Vamos substituir todas por praticidade ou só anexar? 
-      // O ideal é se o usuário selecionar imagens novas, substitui. Se não, mantém.
+      let urls = [...editPreviews];
       if (editImagensFiles.length > 0) {
         urls = await uploadImages(editImagensFiles);
       }
 
       const estoqueNum = editEstoque ? Number(editEstoque) : 0;
-      await supabase
-        .from("produtos")
-        .update({
-          nome: editNome,
-          descricao: editDescricao,
-          preco: Number(editPreco),
-          estoque: estoqueNum,
-          imagem_url: urls.length > 0 ? urls[0] : "",
-          imagens: urls,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", id);
+      const { error } = await supabase.rpc("admin_update_produto", {
+        p_id: id,
+        p_nome: editNome,
+        p_descricao: editDescricao,
+        p_preco: Number(editPreco),
+        p_estoque: estoqueNum,
+        p_imagem_url: urls.length > 0 ? urls[0] : "",
+        p_imagens: urls,
+      });
+      if (error) throw error;
         
       setProdutos((prev) =>
         prev.map((p) =>
@@ -167,12 +153,12 @@ const ProdutosTab = () => {
   const toggleActive = async (id: string) => {
     const p = produtos.find((p) => p.id === id);
     if (!p) return;
-    await supabase.from("produtos").update({ ativo: !p.ativo, updated_at: new Date().toISOString() }).eq("id", id);
+    await supabase.rpc("admin_toggle_produto_ativo", { p_id: id, p_ativo: !p.ativo });
     setProdutos((prev) => prev.map((p) => (p.id === id ? { ...p, ativo: !p.ativo } : p)));
   };
 
   const removeProduto = async (id: string) => {
-    await supabase.from("produtos").delete().eq("id", id);
+    await supabase.rpc("admin_delete_produto", { p_id: id });
     setProdutos((prev) => prev.filter((p) => p.id !== id));
   };
 
