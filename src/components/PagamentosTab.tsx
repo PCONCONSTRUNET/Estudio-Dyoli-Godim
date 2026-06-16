@@ -64,15 +64,14 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     else { setSortField(field); setSortDir("desc"); }
   };
 
-  const handleDelete = (id: string, isSaida?: boolean) => {
+  const handleDelete = (id: string, tableType: "despesas" | "vendas" | "agendamentos") => {
     confirm({
       title: "Excluir Transação",
       description: "Tem certeza que deseja excluir esta transação? Essa ação não pode ser desfeita.",
       variant: "destructive",
       onConfirm: async () => {
         try {
-          const table = isSaida ? "despesas" : "agendamentos";
-          const { error } = await supabase.from(table as any).delete().eq("id", id);
+          const { error } = await supabase.from(tableType as any).delete().eq("id", id);
           if (error) throw error;
           toast.success("Transação excluída com sucesso.");
           if (onUpdate) onUpdate();
@@ -625,7 +624,8 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDelete(ag.id, ag._is_saida);
+                        const tableType = ag._is_saida ? "despesas" : ag._is_venda ? "vendas" : "agendamentos";
+                        handleDelete(ag.id, tableType);
                       }}
                       className="px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 font-body text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors"
                     >
