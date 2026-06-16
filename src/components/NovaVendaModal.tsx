@@ -212,11 +212,13 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
         data_venda: data,
       });
 
-      // 3. Abater Estoque
+      // 3. Abater Estoque (buscando o valor real do banco primeiro)
       for (const item of selectedItems) {
-        const estoqueAtual = Number(item.produto.estoque) || 0;
-        const novoEstoque = Math.max(0, estoqueAtual - item.qtd);
-        await adminFetch(`produtos?id=eq.${item.produto.id}`, "PATCH", { estoque: novoEstoque });
+        const { data: p } = await supabase.from("produtos").select("estoque").eq("id", item.produto.id).single();
+        if (p) {
+          const novoEstoque = Math.max(0, Number(p.estoque) - item.qtd);
+          await supabase.from("produtos").update({ estoque: novoEstoque }).eq("id", item.produto.id);
+        }
       }
 
       toast.success(clienteId === "novo" ? `Venda registrada! ${finalNomeCliente} cadastrado(a) como novo cliente. ✓` : "Venda registrada com sucesso!");
