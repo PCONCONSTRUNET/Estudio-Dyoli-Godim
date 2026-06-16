@@ -46,8 +46,10 @@ interface Props {
   onUpdate: () => void;
 }
 
-const formatDate = (d: string) =>
-  new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+const formatDate = (d: string) => {
+  if (!d) return "";
+  return new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+};
 
 const formatCurrency = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
