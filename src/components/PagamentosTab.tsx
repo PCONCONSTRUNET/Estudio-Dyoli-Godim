@@ -71,6 +71,21 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
       variant: "destructive",
       onConfirm: async () => {
         try {
+          // Se for uma venda, precisa restaurar o estoque dos produtos
+          if (tableType === "vendas") {
+            const { data: vendaData } = await supabase.from("vendas").select("itens").eq("id", id).single();
+            if (vendaData && Array.isArray(vendaData.itens)) {
+              for (const item of vendaData.itens) {
+                if (item.id && item.quantidade) {
+                  const { data: prod } = await supabase.from("produtos").select("estoque").eq("id", item.id).single();
+                  if (prod) {
+                    await supabase.from("produtos").update({ estoque: Number(prod.estoque) + Number(item.quantidade) }).eq("id", item.id);
+                  }
+                }
+              }
+            }
+          }
+
           const { error } = await supabase.from(tableType as any).delete().eq("id", id);
           if (error) throw error;
           toast.success("Transação excluída com sucesso.");
