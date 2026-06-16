@@ -224,9 +224,9 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
       const term = searchTerm.toLowerCase();
       list = list.filter(
         (a) =>
-          getClientName(a.user_id, a.cliente_nome).toLowerCase().includes(term) ||
-          a.servico.toLowerCase().includes(term) ||
-          a.data_agendamento.includes(term)
+          (getClientName(a.user_id, a.cliente_nome) || "").toLowerCase().includes(term) ||
+          (a.servico || "").toLowerCase().includes(term) ||
+          (a.data_agendamento || "").includes(term)
       );
     }
     list.sort(
