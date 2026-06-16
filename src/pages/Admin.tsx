@@ -61,6 +61,7 @@ interface LembreteConfig { id: string; tipo: string; ativo: boolean; mensagem: s
 type Tab = "dashboard" | "agendamentos" | "pedidos" | "clientes" | "horarios" | "servicos" | "servicos_app" | "financeiro" | "caixa" | "dividas" | "pagamentos" | "produtos" | "despesas" | "gastos" | "gateway" | "chatbot" | "anamnese" | "avaliacoes";
 
 const ADMIN_PASSWORD = "dyoliadmin";
+const ADMIN_EMAIL = "dyoli@proton.me";
 
 const getDateKey = (date: Date) => {
   const year = date.getFullYear();
@@ -369,7 +370,6 @@ const Admin = () => {
     }
   });
   const [password, setPassword] = useState("");
-  const [adminEmail, setAdminEmail] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -377,19 +377,17 @@ const Admin = () => {
     setLoading(true);
     setError("");
     try {
-      // 1. Verificar senha local
       if (password !== ADMIN_PASSWORD) {
         setError("Senha incorreta");
         setLoading(false);
         return;
       }
-      // 2. Fazer login real no Supabase para obter sessão autenticada
       const { error: authError } = await supabase.auth.signInWithPassword({
-        email: adminEmail.trim(),
+        email: ADMIN_EMAIL,
         password,
       });
       if (authError) {
-        setError("E-mail ou senha inválidos no Supabase: " + authError.message);
+        setError("Falha na autenticação: " + authError.message);
         setLoading(false);
         return;
       }
@@ -457,18 +455,6 @@ const Admin = () => {
               }}
               className="space-y-3"
             >
-              <div>
-                <label className="font-body text-[10px] uppercase tracking-widest text-primary-foreground/40 font-medium block mb-2">
-                  E-mail
-                </label>
-                <input
-                  type="email"
-                  value={adminEmail}
-                  onChange={(e) => { setAdminEmail(e.target.value); if (error) setError(""); }}
-                  placeholder="dyoli@email.com"
-                  className="w-full rounded-2xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] px-4 py-3.5 text-primary-foreground font-body text-[15px] placeholder:text-primary-foreground/25 focus:outline-none focus:border-gold/40 focus:ring-2 focus:ring-gold/20 transition-all"
-                />
-              </div>
               <div>
                 <label className="font-body text-[10px] uppercase tracking-widest text-primary-foreground/40 font-medium block mb-2">
                   Senha
