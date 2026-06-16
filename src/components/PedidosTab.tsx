@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search, CheckCircle, X, UserX, ChevronDown, Bell, Clock, AlertTriangle, Eye, Wallet, History, Plus } from "lucide-react";
 import BinButton from "@/components/ui/bin-button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -46,10 +46,8 @@ interface Props {
   onUpdate: () => void;
 }
 
-const formatDate = (d: string) => {
-  if (!d) return "";
-  return new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
-};
+const formatDate = (d: string) =>
+  new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
 
 const formatCurrency = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -113,47 +111,63 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
 
-  const [vendas, setVendas] = useState<any[]>([]);
-
-  useEffect(() => {
-    (supabase.from as any)("vendas").select("*").then(({ data }: any) => {
-      if (data) setVendas(data);
-    });
-  }, [agendamentos]);
-
-  const allAgendamentos = useMemo(() => {
-    const vList = vendas.map(v => ({
-      id: v.id,
-      servico: "Venda de Produtos",
-      variacao: "Loja",
-      data_agendamento: v.data_venda || (v.created_at ? v.created_at.split("T")[0] : ""),
-      horario: v.created_at ? `${String(new Date(v.created_at).getHours()).padStart(2, "0")}:${String(new Date(v.created_at).getMinutes()).padStart(2, "0")}` : "00:00",
-      valor: Number(v.valor_total),
-      valor_pago: v.pago ? Number(v.valor_total) : 0,
-      valor_troco: 0,
-      valor_gorjeta: 0,
-      valor_credito: 0,
-      status: v.pago ? "concluido" : "pendente",
-      created_at: v.created_at,
-      user_id: v.cliente_id || "admin",
-      cliente_nome: v.cliente_nome,
-      _is_venda: true,
-      forma_pagamento: v.forma_pagamento,
-    }));
-    return [...agendamentos, ...vList];
-  }, [agendamentos, vendas]);
-
   const today = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0];
+
+  // Vendas de produto não pagas aparecem como pedidos pendentes
+  const [vendasPendentes, setVendasPendentes] = useState<Agendamento[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    (supabase.from as any)("vendas")
+      .select("id,valor_total,cliente_nome,cliente_id,created_at,data_venda,pago,forma_pagamento")
+      .eq("pago", false)
+      .then(({ data }: any) => {
+        if (cancelled || !data) return;
+        const mapped: Agendamento[] = (data as any[]).map((v) => {
+          const rawDate: string = v.data_venda || (v.created_at ? String(v.created_at).split("T")[0] : today);
+          const safeDate = rawDate && rawDate.length >= 8 ? rawDate : today;
+          const rawHora: string = v.created_at ? String(v.created_at) : "";
+          let horario = "00:00";
+          try {
+            if (rawHora) {
+              const d = new Date(rawHora);
+              horario = `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+            }
+          } catch {}
+          return {
+            id: String(v.id),
+            servico: "Venda de Produtos",
+            variacao: "Loja",
+            data_agendamento: safeDate,
+            horario,
+            valor: Number(v.valor_total) || 0,
+            valor_pago: 0,
+            status: "pendente",
+            user_id: v.cliente_id ? String(v.cliente_id) : "admin",
+            created_at: v.created_at || "",
+            cliente_nome: v.cliente_nome || null,
+            origem: "venda",
+            forma_pagamento: v.forma_pagamento || null,
+          } as Agendamento & { _is_venda: true };
+        });
+        setVendasPendentes(mapped);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Combina agendamentos + vendas pendentes
+  const allItems = useMemo<Agendamento[]>(() => {
+    return [...agendamentos, ...vendasPendentes];
+  }, [agendamentos, vendasPendentes]);
 
   // Notifications: today's appointments, pending payments, no-shows
   const notifications = useMemo(() => {
     const notifs: { tipo: "hoje" | "pendente" | "sinal" | "falta" | "proximo"; agendamento: Agendamento; label: string }[] = [];
     const todayDate = new Date(today + "T12:00:00");
 
-    allAgendamentos.forEach((a) => {
+    agendamentos.forEach((a) => {
       if (a.status === "cancelado") return;
 
-      const aDate = new Date((a.data_agendamento || today) + "T12:00:00");
+      const aDate = new Date(a.data_agendamento + "T12:00:00");
       const diffDays = Math.round((aDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
 
       // Falta (no-show)
@@ -214,7 +228,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
   };
 
   const filtered = useMemo(() => {
-    let list = [...allAgendamentos];
+    let list = [...allItems];
     if (statusFilter !== "todos") list = list.filter((a) => a.status === statusFilter);
     if (pagamentoFilter !== "todos") {
       list = list.filter((a) => matchesPagamentoFilter(a, pagamentoFilter));
@@ -226,25 +240,20 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
       const term = searchTerm.toLowerCase();
       list = list.filter(
         (a) =>
-          (getClientName(a.user_id, a.cliente_nome) || "").toLowerCase().includes(term) ||
-          (a.servico || "").toLowerCase().includes(term) ||
-          (a.data_agendamento || "").includes(term)
+          getClientName(a.user_id, a.cliente_nome).toLowerCase().includes(term) ||
+          a.servico.toLowerCase().includes(term) ||
+          a.data_agendamento.includes(term)
       );
     }
     list.sort(
       (a, b) =>
-        (b.data_agendamento || "").localeCompare(a.data_agendamento || "") ||
-        (b.horario || "").localeCompare(a.horario || "")
+        b.data_agendamento.localeCompare(a.data_agendamento) ||
+        b.horario.localeCompare(a.horario)
     );
     return list;
-  }, [agendamentos, statusFilter, pagamentoFilter, dateFilter, searchTerm, getClientName]);
+  }, [allItems, statusFilter, pagamentoFilter, dateFilter, searchTerm, getClientName]);
 
   const updateStatus = async (id: string, status: string) => {
-    const a = allAgendamentos.find(x => x.id === id);
-    if (a?._is_venda) {
-      toast.info("Vendas não possuem status de presença. Para cancelar, utilize o botão Excluir.");
-      return;
-    }
     await supabase.from("agendamentos").update({ status }).eq("id", id);
     onUpdate();
     toast.success(`Status atualizado para ${status}`);
@@ -254,6 +263,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
       notifyLembreteById(id, "cancelamento");
     } else if (status === "concluido") {
       notifyLembreteById(id, "comparecimento");
+      // schedule a follow-up message; respects ativo flag in DB
       notifyLembreteById(id, "pos_atendimento");
     }
   };
@@ -261,26 +271,10 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
   const deleteAgendamento = (id: string) => {
     confirm({
       title: "Excluir Pedido",
-      description: "Esta ação apagará permanentemente o pedido e, caso seja uma venda, restaurará o estoque.",
+      description: "Esta ação apagará permanentemente o agendamento.",
       variant: "destructive",
       onConfirm: async () => {
-        const a = allAgendamentos.find(x => x.id === id);
-        if (a?._is_venda) {
-            const { data: vendaData } = await supabase.from("vendas").select("itens").eq("id", id).single();
-            if (vendaData && Array.isArray(vendaData.itens)) {
-              for (const item of vendaData.itens) {
-                if (item.produto_id && item.qtd) {
-                  const { data: prod } = await supabase.from("produtos").select("estoque").eq("id", item.produto_id).single();
-                  if (prod) {
-                    await supabase.from("produtos").update({ estoque: Number(prod.estoque) + Number(item.qtd) }).eq("id", item.produto_id);
-                  }
-                }
-              }
-            }
-            await supabase.from("vendas").delete().eq("id", id);
-        } else {
-            await supabase.from("agendamentos").delete().eq("id", id);
-        }
+        await supabase.from("agendamentos").delete().eq("id", id);
         onUpdate();
         toast.success("Pedido excluído");
       }
@@ -407,14 +401,10 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
   const registrarPagamentoIntegral = (a: Agendamento) => {
     confirm({
       title: "Quitar Pagamento",
-      description: "Deseja marcar este pedido como totalmente pago?",
+      description: "Deseja marcar este agendamento como totalmente pago?",
       onConfirm: async () => {
         const total = Number(a.valor);
-        if ((a as any)._is_venda) {
-           await supabase.from("vendas").update({ valor_pago: total, pago: true }).eq("id", a.id);
-        } else {
-           await supabase.from("agendamentos").update({ valor_pago: total }).eq("id", a.id);
-        }
+        await supabase.from("agendamentos").update({ valor_pago: total }).eq("id", a.id);
         await logPagamento(a, total, "quitar");
         onUpdate();
         toast.success("Pagamento registrado como quitado");
@@ -441,11 +431,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
       return;
     }
     const novoTotal = Number(addValorAg.valor) + valorAdicional;
-    if ((addValorAg as any)._is_venda) {
-       await supabase.from("vendas").update({ valor_total: novoTotal }).eq("id", addValorAg.id);
-    } else {
-       await supabase.from("agendamentos").update({ valor: novoTotal }).eq("id", addValorAg.id);
-    }
+    await supabase.from("agendamentos").update({ valor: novoTotal }).eq("id", addValorAg.id);
     
     try {
       const { data: userRes } = await supabase.auth.getUser();
@@ -488,19 +474,12 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
       return;
     }
     const totalAgora = Math.min(Number(pagamentoAg.valor), Number(pagamentoAg.valor_pago || 0) + valor);
-    const fullyPaid = totalAgora >= Number(pagamentoAg.valor);
-
-    if ((pagamentoAg as any)._is_venda) {
-       await supabase.from("vendas").update({ valor_pago: totalAgora, pago: fullyPaid }).eq("id", pagamentoAg.id);
-    } else {
-       await supabase.from("agendamentos").update({ valor_pago: totalAgora }).eq("id", pagamentoAg.id);
-    }
-
-    await logPagamento(pagamentoAg, totalAgora, fullyPaid ? "quitar" : "registro");
+    await supabase.from("agendamentos").update({ valor_pago: totalAgora }).eq("id", pagamentoAg.id);
+    await logPagamento(pagamentoAg, totalAgora, totalAgora >= Number(pagamentoAg.valor) ? "quitar" : "registro");
     onUpdate();
     setPagamentoAg(null);
     setPagamentoInput("");
-    if (fullyPaid) {
+    if (totalAgora >= Number(pagamentoAg.valor)) {
       toast.success("Pagamento quitado integralmente ✅");
     } else {
       toast.success(`Pagamento parcial registrado · ainda falta ${formatCurrency(Number(pagamentoAg.valor) - totalAgora - Number(pagamentoAg.valor_desconto_credito || 0))}`);
@@ -511,28 +490,28 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
 
 
   const counts = useMemo(() => ({
-    todos: allAgendamentos.length,
-    confirmado: allAgendamentos.filter((a) => a.status === "confirmado").length,
-    concluido: allAgendamentos.filter((a) => a.status === "concluido").length,
-    cancelado: allAgendamentos.filter((a) => a.status === "cancelado").length,
-    falta: allAgendamentos.filter((a) => a.status === "falta").length,
-  }), [allAgendamentos]);
+    todos: agendamentos.length,
+    confirmado: agendamentos.filter((a) => a.status === "confirmado").length,
+    concluido: agendamentos.filter((a) => a.status === "concluido").length,
+    cancelado: agendamentos.filter((a) => a.status === "cancelado").length,
+    falta: agendamentos.filter((a) => a.status === "falta").length,
+  }), [agendamentos]);
 
   const pagamentoCounts = useMemo(() => {
     return {
-      todos: allAgendamentos.length,
-      pago: allAgendamentos.filter((a) => isPago(a)).length,
-      sinal: allAgendamentos.filter((a) => isSinalPago(a)).length,
-      recepcao: allAgendamentos.filter((a) => isFormaRecepcao(a.forma_pagamento)).length,
-      pendente: allAgendamentos.filter((a) => isNaoPago(a)).length,
+      todos: agendamentos.length,
+      pago: agendamentos.filter((a) => isPago(a)).length,
+      sinal: agendamentos.filter((a) => isSinalPago(a)).length,
+      recepcao: agendamentos.filter((a) => isFormaRecepcao(a.forma_pagamento)).length,
+      pendente: agendamentos.filter((a) => isNaoPago(a)).length,
     };
-  }, [allAgendamentos]);
+  }, [agendamentos]);
 
   const devedores = useMemo(() => {
-    return allAgendamentos
+    return agendamentos
       .filter((a) => a.status !== "cancelado" && a.status !== "falta" && !isPago(a))
-      .sort((a, b) => (b.data_agendamento || "").localeCompare(a.data_agendamento || ""));
-  }, [allAgendamentos]);
+      .sort((a, b) => b.data_agendamento.localeCompare(a.data_agendamento));
+  }, [agendamentos]);
 
   const totalAReceber = useMemo(() => {
     return devedores.reduce((sum, a) => sum + (Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0)), 0);
