@@ -119,10 +119,11 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     let cancelled = false;
     (supabase.from as any)("vendas")
       .select("id,valor_total,cliente_nome,cliente_id,created_at,data_venda,pago,forma_pagamento")
-      .or("pago.is.null,pago.eq.false")
       .then(({ data }: any) => {
         if (cancelled || !data) return;
-        const mapped: Agendamento[] = (data as any[]).map((v) => {
+        // Filtra no JS: pago == false, null ou undefined
+        const naoPagas = (data as any[]).filter((v) => !v.pago);
+        const mapped: Agendamento[] = naoPagas.map((v) => {
           const rawDate: string = v.data_venda || (v.created_at ? String(v.created_at).split("T")[0] : today);
           const safeDate = rawDate && rawDate.length >= 8 ? rawDate : today;
           const rawHora: string = v.created_at ? String(v.created_at) : "";
@@ -152,7 +153,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
         setVendasPendentes(mapped);
       });
     return () => { cancelled = true; };
-  }, []);
+  }, [agendamentos.length]);
 
   // Combina agendamentos + vendas pendentes
   const allItems = useMemo<Agendamento[]>(() => {
