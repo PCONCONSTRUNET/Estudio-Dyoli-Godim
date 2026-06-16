@@ -478,7 +478,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                     </p>
                     {ag._is_despesa && (
                       <span className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${ag._despesa_tipo === "comissao" ? "bg-purple-500/20 border-purple-500/40 text-purple-300" : "bg-rose/20 border-rose/40 text-rose"}`}>
-                        {ag._despesa_tipo === "comissao" ? "👤 Retirada (Comissão)" : "🏛 Aba Despesas"}
+                        {ag._despesa_tipo === "comissao" ? "👤 Retirada (Comissão)" : "🏛 Pagamento de Despesa"}
                       </span>
                     )}
                     {isPendingAmount && (
@@ -529,7 +529,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                         isPendingAmount ? "border-amber-500/50" : ag._is_saida ? "border-red-500/50" : "border-emerald-500/50"
                       }`} />
                       <StatusIcon className="h-3 w-3 relative z-10" />
-                      <span className="relative z-10">{isPendingAmount ? "Pendente" : ag._is_saida ? "Retirado" : "Pago"}</span>
+                      <span className="relative z-10">{isPendingAmount ? "Pendente" : (ag._is_saida && ag._despesa_tipo === "comissao" ? "Retirado" : "Pago")}</span>
                     </span>
                   </div>
                 </div>
@@ -573,7 +573,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                           isPendingAmount ? "border-amber-500/50" : ag._is_saida ? "border-red-500/50" : "border-emerald-500/50"
                         }`} />
                         <StatusIcon className="h-3 w-3 relative z-10" />
-                        <span className="relative z-10">{isPendingAmount ? "Pendente" : ag._is_saida ? "Retirado" : "Pago"}</span>
+                        <span className="relative z-10">{isPendingAmount ? "Pendente" : (ag._is_saida && ag._despesa_tipo === "comissao" ? "Retirado" : "Pago")}</span>
                       </span>
                     } />
                     {!ag._is_saida && ag.status && <Detail label="Status do Serviço" value={ag.status.charAt(0).toUpperCase() + ag.status.slice(1)} />}

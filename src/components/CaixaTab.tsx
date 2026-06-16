@@ -219,10 +219,10 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  const trocos = cicloAgs.reduce((s, a) => s + Number(a.valor_troco || 0), 0);
  
  const desp = despesas
- .filter((d) => (d.tipo || "estudio") === "estudio" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO)
+ .filter((d) => (d.tipo || "estudio") === "estudio" && d.pago && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO)
  .reduce((s, d) => s + Number(d.valor), 0);
  const despPessoal = despesas
- .filter((d) => d.tipo === "comissao" && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO)
+ .filter((d) => d.tipo === "comissao" && d.pago && d.data_vencimento >= ciclo.startISO && d.data_vencimento <= ciclo.endISO)
  .reduce((s, d) => s + Number(d.valor), 0);
 
  const baseComissao = cicloAgs.reduce((s, a) => {
