@@ -111,6 +111,36 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
 
+  const [vendas, setVendas] = useState<any[]>([]);
+
+  useEffect(() => {
+    (supabase.from as any)("vendas").select("*").then(({ data }: any) => {
+      if (data) setVendas(data);
+    });
+  }, [agendamentos]);
+
+  const allAgendamentos = useMemo(() => {
+    const vList = vendas.map(v => ({
+      id: v.id,
+      servico: "Venda de Produtos",
+      variacao: "Loja",
+      data_agendamento: v.data_venda || v.created_at?.split("T")[0],
+      horario: v.created_at ? `${String(new Date(v.created_at).getHours()).padStart(2, "0")}:${String(new Date(v.created_at).getMinutes()).padStart(2, "0")}` : "00:00",
+      valor: Number(v.valor_total),
+      valor_pago: v.pago ? Number(v.valor_total) : 0,
+      valor_troco: 0,
+      valor_gorjeta: 0,
+      valor_credito: 0,
+      status: v.pago ? "concluido" : "pendente",
+      created_at: v.created_at,
+      user_id: v.cliente_id || "admin",
+      cliente_nome: v.cliente_nome,
+      _is_venda: true,
+      forma_pagamento: v.forma_pagamento,
+    }));
+    return [...agendamentos, ...vList];
+  }, [agendamentos, vendas]);
+
   const today = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0];
 
   // Notifications: today's appointments, pending payments, no-shows
@@ -118,7 +148,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     const notifs: { tipo: "hoje" | "pendente" | "sinal" | "falta" | "proximo"; agendamento: Agendamento; label: string }[] = [];
     const todayDate = new Date(today + "T12:00:00");
 
-    agendamentos.forEach((a) => {
+    allAgendamentos.forEach((a) => {
       if (a.status === "cancelado") return;
 
       const aDate = new Date(a.data_agendamento + "T12:00:00");
@@ -182,7 +212,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
   };
 
   const filtered = useMemo(() => {
-    let list = [...agendamentos];
+    let list = [...allAgendamentos];
     if (statusFilter !== "todos") list = list.filter((a) => a.status === statusFilter);
     if (pagamentoFilter !== "todos") {
       list = list.filter((a) => matchesPagamentoFilter(a, pagamentoFilter));
@@ -208,6 +238,11 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
   }, [agendamentos, statusFilter, pagamentoFilter, dateFilter, searchTerm, getClientName]);
 
   const updateStatus = async (id: string, status: string) => {
+    const a = allAgendamentos.find(x => x.id === id);
+    if (a?._is_venda) {
+      toast.info("Vendas não possuem status de presença. Para cancelar, utilize o botão Excluir.");
+      return;
+    }
     await supabase.from("agendamentos").update({ status }).eq("id", id);
     onUpdate();
     toast.success(`Status atualizado para ${status}`);
@@ -217,7 +252,6 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
       notifyLembreteById(id, "cancelamento");
     } else if (status === "concluido") {
       notifyLembreteById(id, "comparecimento");
-      // schedule a follow-up message; respects ativo flag in DB
       notifyLembreteById(id, "pos_atendimento");
     }
   };
@@ -225,10 +259,26 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
   const deleteAgendamento = (id: string) => {
     confirm({
       title: "Excluir Pedido",
-      description: "Esta ação apagará permanentemente o agendamento.",
+      description: "Esta ação apagará permanentemente o pedido e, caso seja uma venda, restaurará o estoque.",
       variant: "destructive",
       onConfirm: async () => {
-        await supabase.from("agendamentos").delete().eq("id", id);
+        const a = allAgendamentos.find(x => x.id === id);
+        if (a?._is_venda) {
+            const { data: vendaData } = await supabase.from("vendas").select("itens").eq("id", id).single();
+            if (vendaData && Array.isArray(vendaData.itens)) {
+              for (const item of vendaData.itens) {
+                if (item.produto_id && item.qtd) {
+                  const { data: prod } = await supabase.from("produtos").select("estoque").eq("id", item.produto_id).single();
+                  if (prod) {
+                    await supabase.from("produtos").update({ estoque: Number(prod.estoque) + Number(item.qtd) }).eq("id", item.produto_id);
+                  }
+                }
+              }
+            }
+            await supabase.from("vendas").delete().eq("id", id);
+        } else {
+            await supabase.from("agendamentos").delete().eq("id", id);
+        }
         onUpdate();
         toast.success("Pedido excluído");
       }
@@ -355,10 +405,14 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
   const registrarPagamentoIntegral = (a: Agendamento) => {
     confirm({
       title: "Quitar Pagamento",
-      description: "Deseja marcar este agendamento como totalmente pago?",
+      description: "Deseja marcar este pedido como totalmente pago?",
       onConfirm: async () => {
         const total = Number(a.valor);
-        await supabase.from("agendamentos").update({ valor_pago: total }).eq("id", a.id);
+        if ((a as any)._is_venda) {
+           await supabase.from("vendas").update({ valor_pago: total, pago: true }).eq("id", a.id);
+        } else {
+           await supabase.from("agendamentos").update({ valor_pago: total }).eq("id", a.id);
+        }
         await logPagamento(a, total, "quitar");
         onUpdate();
         toast.success("Pagamento registrado como quitado");
@@ -385,7 +439,11 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
       return;
     }
     const novoTotal = Number(addValorAg.valor) + valorAdicional;
-    await supabase.from("agendamentos").update({ valor: novoTotal }).eq("id", addValorAg.id);
+    if ((addValorAg as any)._is_venda) {
+       await supabase.from("vendas").update({ valor_total: novoTotal }).eq("id", addValorAg.id);
+    } else {
+       await supabase.from("agendamentos").update({ valor: novoTotal }).eq("id", addValorAg.id);
+    }
     
     try {
       const { data: userRes } = await supabase.auth.getUser();
@@ -428,12 +486,19 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
       return;
     }
     const totalAgora = Math.min(Number(pagamentoAg.valor), Number(pagamentoAg.valor_pago || 0) + valor);
-    await supabase.from("agendamentos").update({ valor_pago: totalAgora }).eq("id", pagamentoAg.id);
-    await logPagamento(pagamentoAg, totalAgora, totalAgora >= Number(pagamentoAg.valor) ? "quitar" : "registro");
+    const fullyPaid = totalAgora >= Number(pagamentoAg.valor);
+
+    if ((pagamentoAg as any)._is_venda) {
+       await supabase.from("vendas").update({ valor_pago: totalAgora, pago: fullyPaid }).eq("id", pagamentoAg.id);
+    } else {
+       await supabase.from("agendamentos").update({ valor_pago: totalAgora }).eq("id", pagamentoAg.id);
+    }
+
+    await logPagamento(pagamentoAg, totalAgora, fullyPaid ? "quitar" : "registro");
     onUpdate();
     setPagamentoAg(null);
     setPagamentoInput("");
-    if (totalAgora >= Number(pagamentoAg.valor)) {
+    if (fullyPaid) {
       toast.success("Pagamento quitado integralmente ✅");
     } else {
       toast.success(`Pagamento parcial registrado · ainda falta ${formatCurrency(Number(pagamentoAg.valor) - totalAgora - Number(pagamentoAg.valor_desconto_credito || 0))}`);
