@@ -81,20 +81,44 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     return { startISO: toISO(start), endISO: toISO(end), startDate: start, endDate: end };
   }, [diaCorte, cicloOffset]);
 
-  // Load despesas
+  // Load despesas e vendas
   const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string; categoria: string; descricao: string; data_pagamento: string | null; tipo?: string }[]>([]);
+  const [vendas, setVendas] = useState<any[]>([]);
+
   useEffect(() => {
     (supabase.from as any)("despesas").select("valor,pago,data_vencimento,categoria,descricao,data_pagamento,tipo").then(({ data }: any) => {
       if (data) setDespesas(data);
     });
+    (supabase.from as any)("vendas").select("*").then(({ data }: any) => {
+      if (data) setVendas(data);
+    });
   }, []);
 
+  const allAgendamentos = useMemo(() => {
+    const vList = vendas.map(v => ({
+      id: v.id,
+      servico: "Venda de Produtos",
+      variacao: "Loja",
+      data_agendamento: v.data_venda || v.created_at?.split("T")[0],
+      horario: v.created_at ? `${String(new Date(v.created_at).getHours()).padStart(2, "0")}:${String(new Date(v.created_at).getMinutes()).padStart(2, "0")}` : "00:00",
+      valor: Number(v.valor_total),
+      valor_pago: v.pago ? Number(v.valor_total) : 0,
+      valor_troco: 0,
+      valor_gorjeta: 0,
+      valor_credito: 0,
+      status: v.pago ? "concluido" : "pendente",
+      created_at: v.created_at,
+      user_id: v.cliente_id || "admin",
+      cliente_nome: v.cliente_nome,
+    }));
+    return [...agendamentos, ...vList];
+  }, [agendamentos, vendas]);
 
   // Filter agendamentos by period (Mês = ciclo configurado pelo dia de corte)
   const filtered = useMemo(() => {
     const now = new Date();
     const today = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split("T")[0];
-    return agendamentos.filter(a => {
+    return allAgendamentos.filter(a => {
       if (a.status === "cancelado" || a.status === "falta") return false;
       const d = a.data_agendamento;
       if (period === "hoje") return d === today;
