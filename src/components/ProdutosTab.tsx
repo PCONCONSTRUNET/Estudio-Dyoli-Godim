@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { Edit2, Save, X, Upload, ShoppingBag, Image, Package } from "lucide-react";
 import BinButton from "@/components/ui/bin-button";
 import PlusButton from "@/components/ui/plus-button";
@@ -91,8 +92,10 @@ const ProdutosTab = () => {
       if (error) throw error;
       if (data) setProdutos((prev) => [...prev, data as Produto]);
       resetNewForm();
-    } catch (e) {
+      toast.success("Produto adicionado com sucesso!");
+    } catch (e: any) {
       console.error("Erro ao adicionar produto:", e);
+      toast.error("Erro: " + (e.message || "Falha ao adicionar"));
     }
     setUploading(false);
   };
@@ -151,8 +154,10 @@ const ProdutosTab = () => {
         )
       );
       setEditing(null);
-    } catch (e) {
+      toast.success("Produto atualizado com sucesso!");
+    } catch (e: any) {
       console.error(e);
+      toast.error("Erro ao atualizar: " + (e.message || "Falha desconhecida"));
     }
     setUploading(false);
   };
