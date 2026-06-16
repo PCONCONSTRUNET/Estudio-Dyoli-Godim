@@ -233,13 +233,14 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
   
   const lucro = recebido - desp - comissaoGerada;
   const comissao = comissaoGerada - despPessoal;
+  const saldoEmCaixa = recebido - desp - despPessoal;
   
   const today = new Date(); today.setHours(12, 0, 0, 0);
   const totalDays = Math.round((ciclo.endDate.getTime() - ciclo.startDate.getTime()) / 86400000) + 1;
   const elapsedDays = Math.max(0, Math.min(totalDays, Math.round((today.getTime() - ciclo.startDate.getTime()) / 86400000) + 1));
   const progress = cicloOffset === 0 ? Math.round((elapsedDays / totalDays) * 100) : (cicloOffset < 0 ? 100 : 0);
   const qtd = cicloAgs.filter((a) => a.servico !== "Adição de Crédito").length;
-  return { recebido, total, pagoComCredito, gorjetas, trocos, desp, despPessoal, lucro, comissao, comissaoGerada, baseComissao, totalDays, elapsedDays, progress, qtd, items: cicloAgs };
+  return { recebido, total, pagoComCredito, gorjetas, trocos, desp, despPessoal, lucro, comissao, comissaoGerada, baseComissao, totalDays, elapsedDays, progress, qtd, items: cicloAgs, saldoEmCaixa };
  }, [agendamentos, ciclo, despesas, comissaoPct, cicloOffset]);
 
  const comissaoBreakdown = useMemo(() => {
@@ -315,14 +316,14 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  </div>
  </div>
 
- {/* Número-herói: RECEBIDO (SALDO EM CAIXA) */}
+ {/* Número-herói: SALDO EM CAIXA (REAL) */}
  <div className="text-center py-2">
  <p className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-[0.3em] mb-1 flex items-center justify-center gap-1.5">
- <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+ <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${cicloStats.saldoEmCaixa >= 0 ? "bg-green-400" : "bg-red-400"}`} />
  Saldo em Caixa
  </p>
- <p className="font-heading text-4xl sm:text-5xl font-bold tabular-nums tracking-tight text-green-400 drop-shadow-[0_0_18px_hsl(142_70%_55%/0.45)]">
- {formatCurrency(cicloStats.recebido)}
+ <p className={`font-heading text-4xl sm:text-5xl font-bold tabular-nums tracking-tight ${cicloStats.saldoEmCaixa >= 0 ? "text-green-400 drop-shadow-[0_0_18px_hsl(142_70%_55%/0.45)]" : "text-red-400 drop-shadow-[0_0_18px_hsl(0_70%_55%/0.45)]"}`}>
+ {formatCurrency(cicloStats.saldoEmCaixa)}
  </p>
  <button
  type="button"
