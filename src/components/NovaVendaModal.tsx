@@ -29,8 +29,11 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
   const SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsZXBlbnhpbmVrb2xqeGVjb21yIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTA2MjQ0OSwiZXhwIjoyMDkwNjM4NDQ5fQ.n-vDPXUpnGZOEBpZJpzQ5TYEQSQwbWWPwAk3ShhYWnM";
 
   // Pagamento form
-  const [clienteNome, setClienteNome] = useState("");
-  const [clienteTelefone, setClienteTelefone] = useState("");
+  const [clienteBusca, setClienteBusca] = useState("");
+  const [clienteId, setClienteId] = useState(""); // "" = não selecionado, "novo" = cadastrar manual, ou ID do cliente
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [novoClienteNome, setNovoClienteNome] = useState("");
+  const [novoClienteTelefone, setNovoClienteTelefone] = useState("");
   
   const [clientesSugeridos, setClientesSugeridos] = useState<{ id: string; nome: string; telefone?: string }[]>([]);
   const [valorSugerido, setValorSugerido] = useState(0);
@@ -46,8 +49,11 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
       setStep("produtos");
       setSearch("");
       setSelectedItems([]);
-      setClienteNome("");
-      setClienteTelefone("");
+      setClienteBusca("");
+      setClienteId("");
+      setShowDropdown(false);
+      setNovoClienteNome("");
+      setNovoClienteTelefone("");
       setPago(true);
       setFormaPagamento("pix");
       setData(new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]);
@@ -149,36 +155,42 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
   };
 
   const handleSave = async () => {
-    if (!clienteNome.trim()) return toast.error("Informe o nome do cliente");
+    let finalClienteId = clienteId;
+    let finalNomeCliente = "";
+    let finalTelCliente = "";
+
+    if (clienteId === "novo") {
+      finalNomeCliente = novoClienteNome.trim();
+      finalTelCliente = novoClienteTelefone.trim();
+      if (!finalNomeCliente) return toast.error("Informe o nome do cliente presencial");
+    } else if (clienteId) {
+      const clienteEncontrado = clientesSugeridos.find(c => c.id === clienteId);
+      if (clienteEncontrado) {
+        finalNomeCliente = clienteEncontrado.nome;
+        finalTelCliente = clienteEncontrado.telefone || "";
+      } else {
+        return toast.error("Cliente inválido selecionado");
+      }
+    } else {
+      return toast.error("Selecione um cliente ou cadastre um novo");
+    }
+
     const valNum = parseFloat(valorFinal.replace(/,/g, "."));
     if (isNaN(valNum) || valNum <= 0) return toast.error("Informe um valor válido");
 
     setSaving(true);
     try {
-      const nomeCliente = clienteNome.trim();
-      const telCliente = clienteTelefone.trim();
-
-      // 1. Auto-registrar cliente se não existir
-      const clienteExistente = clientesSugeridos.find(
-        c => c.nome.toLowerCase() === nomeCliente.toLowerCase()
-      );
-      let clienteId: string | null = clienteExistente?.id || null;
-
-      if (!clienteExistente) {
-        // Novo cliente — registrar na tabela clientes
+      // 1. Auto-registrar cliente se for "novo"
+      if (clienteId === "novo") {
         const novoCliente = await adminFetch("clientes", "POST", {
-          nome: nomeCliente,
-          telefone: telCliente,
+          nome: finalNomeCliente,
+          telefone: finalTelCliente,
         });
-        clienteId = novoCliente?.[0]?.id || null;
-        if (clienteId) {
-          setClientesSugeridos(prev => [...prev, { id: clienteId!, nome: nomeCliente, telefone: telCliente }]);
+        finalClienteId = novoCliente?.[0]?.id || null;
+        if (finalClienteId) {
+          setClientesSugeridos(prev => [...prev, { id: finalClienteId!, nome: finalNomeCliente, telefone: finalTelCliente }]);
         }
-      } else if (telCliente && clienteExistente) {
-        // Atualiza telefone se foi informado e cliente já existia
-        await adminFetch(`clientes?id=eq.${clienteExistente.id}`, "PATCH", { telefone: telCliente }).catch(() => {});
       }
-
       // 2. Registrar venda na tabela vendas
       const itens = selectedItems.map(i => ({
         produto_id: i.produto.id,
@@ -189,9 +201,9 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
       }));
 
       await adminFetch("vendas", "POST", {
-        cliente_id: clienteId,
-        cliente_nome: nomeCliente,
-        telefone: telCliente,
+        cliente_id: finalClienteId,
+        cliente_nome: finalNomeCliente,
+        telefone: finalTelCliente,
         itens,
         valor_total: valNum,
         valor_pago: pago ? valNum : 0,
@@ -207,7 +219,7 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
         await adminFetch(`produtos?id=eq.${item.produto.id}`, "PATCH", { estoque: novoEstoque });
       }
 
-      toast.success(clienteExistente ? "Venda registrada com sucesso!" : `Venda registrada! ${nomeCliente} cadastrado(a) como novo cliente. ✓`);
+      toast.success(clienteId === "novo" ? `Venda registrada! ${finalNomeCliente} cadastrado(a) como novo cliente. ✓` : "Venda registrada com sucesso!");
       onSuccess();
       onOpenChange(false);
     } catch (err: any) {
@@ -313,51 +325,92 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
           </div>
         ) : (
           <div className="flex flex-col p-4 space-y-4 max-h-[70vh] overflow-y-auto scrollbar-thin">
-            <div className="space-y-1">
-              <label className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-wider">Cliente</label>
+            <div className="space-y-1 relative">
+              <label className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-wider">Cliente <span className="text-red-400">*</span></label>
               <div className="relative">
-                <User className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-primary-foreground/50" />
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-primary-foreground/50" />
                 <input
                   type="text"
-                  list="clientes-list"
-                  placeholder="Nome do cliente"
-                  value={clienteNome}
+                  placeholder="Buscar cliente..."
+                  value={clienteBusca}
+                  onFocus={() => setShowDropdown(true)}
                   onChange={(e) => {
-                    const newName = e.target.value;
-                    setClienteNome(newName);
-                    const existing = clientesSugeridos.find(c => c.nome.toLowerCase() === newName.toLowerCase());
-                    if (existing && existing.telefone) {
-                      setClienteTelefone(existing.telefone);
-                    }
+                    setClienteBusca(e.target.value);
+                    setClienteId("");
+                    setShowDropdown(true);
                   }}
-                  className="w-full bg-primary-foreground/[0.03] border border-primary-foreground/[0.08] rounded-xl py-2 pl-8 pr-3 text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/30"
+                  className="w-full bg-primary-foreground/[0.03] border border-primary-foreground/[0.08] rounded-xl py-2 pl-8 pr-8 text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/30"
                 />
-                <datalist id="clientes-list">
-                  {clientesSugeridos.map(c => <option key={c.id} value={c.nome} />)}
-                </datalist>
+                {clienteId && (
+                  <button
+                    onClick={() => { setClienteId(""); setClienteBusca(""); setNovoClienteNome(""); setNovoClienteTelefone(""); }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-md hover:bg-rose/20 text-rose/70 flex items-center justify-center transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
               </div>
-              {clienteNome.trim() && !clientesSugeridos.some(c => c.nome.toLowerCase() === clienteNome.trim().toLowerCase()) && (
-                <div className="flex items-center gap-1.5 mt-1">
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gold/15 border border-gold/30 text-gold text-[10px] font-semibold">
-                    ✦ Novo Cliente
-                  </span>
-                  <span className="font-body text-[10px] text-primary-foreground/50">será cadastrado ao confirmar</span>
+              
+              {showDropdown && (
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-[#1a1a1a] border border-primary-foreground/[0.08] rounded-xl shadow-2xl py-1">
+                  <button
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      setClienteId("novo");
+                      setClienteBusca("Sem cliente (cadastrar novo)");
+                      setShowDropdown(false);
+                    }}
+                    className="w-full text-left px-3 py-2 font-body text-[12px] text-primary-foreground/60 hover:bg-white/[0.04] transition-colors"
+                  >
+                    + Sem cliente (cadastrar novo)
+                  </button>
+                  <div className="h-px bg-primary-foreground/[0.06] my-1 mx-2" />
+                  {clientesSugeridos
+                    .filter(c => c.nome.toLowerCase().includes(clienteBusca.toLowerCase()) || (c.telefone && c.telefone.includes(clienteBusca)))
+                    .map(c => (
+                      <button
+                        key={c.id}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          setClienteId(c.id);
+                          setClienteBusca(c.nome);
+                          setShowDropdown(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 font-body text-[12px] transition-colors flex justify-between items-center ${clienteId === c.id ? "bg-gold/10 text-gold" : "text-primary-foreground hover:bg-white/[0.04]"}`}
+                      >
+                        <span className="truncate">{c.nome}</span>
+                        {c.telefone && <span className="text-[10px] text-primary-foreground/40">{c.telefone}</span>}
+                      </button>
+                    ))
+                  }
                 </div>
               )}
             </div>
 
-            <div className="space-y-1">
-              <label className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-wider">Telefone / WhatsApp</label>
-              <div className="relative">
-                <input
-                  type="tel"
-                  placeholder="(00) 00000-0000"
-                  value={clienteTelefone}
-                  onChange={(e) => setClienteTelefone(e.target.value)}
-                  className="w-full bg-primary-foreground/[0.03] border border-primary-foreground/[0.08] rounded-xl py-2 px-3 text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/30"
-                />
+            {clienteId === "novo" && (
+              <div className="space-y-3 p-3 rounded-xl border border-gold/20 bg-gold/[0.02]">
+                <div className="space-y-1">
+                  <label className="font-body text-[10px] text-gold uppercase tracking-wider">Nome do cliente (presencial) <span className="text-red-400">*</span></label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Maria Silva"
+                    value={novoClienteNome}
+                    onChange={(e) => setNovoClienteNome(e.target.value)}
+                    className="w-full bg-primary-foreground/[0.03] border border-gold/30 rounded-xl py-2 px-3 text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/60"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-body text-[10px] text-gold uppercase tracking-wider">Telefone / WhatsApp</label>
+                  <input
+                    type="tel"
+                    placeholder="(00) 00000-0000"
+                    value={novoClienteTelefone}
+                    onChange={(e) => setNovoClienteTelefone(e.target.value)}
+                    className="w-full bg-primary-foreground/[0.03] border border-gold/30 rounded-xl py-2 px-3 text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/60"
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="space-y-1">
               <label className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-wider">Data da Venda</label>
