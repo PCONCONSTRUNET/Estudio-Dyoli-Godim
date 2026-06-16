@@ -31,8 +31,10 @@ interface Props {
   onUpdate?: () => void;
 }
 
-const formatCurrency = (v: number) =>
-  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const formatCurrency = (v: number | string | null | undefined) => {
+  const num = Number(v) || 0;
+  return num.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+};
 
 const formatDate = (d: string) => {
   const [y, m, day] = d.split("-");
@@ -580,15 +582,15 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                         {paymentLabel(ag.forma_pagamento)}
                       </span>
                     } />
-                    {!ag._is_saida && <Detail label="Duração" value={`${ag.duracao_minutos} min`} />}
+                    {!ag._is_saida && !ag._is_venda && <Detail label="Duração" value={`${ag.duracao_minutos} min`} />}
                     <Detail label={ag._is_saida ? "Valor da Saída" : "Valor Desta Fatura"} value={formatCurrency(ag.valor_fatura)} />
                      {!ag._is_saida && <Detail label="Valor Total Original" value={
                        Number(ag.valor_desconto_credito) > 0 ? (
                          <div className="flex items-center gap-2 mt-0.5">
-                           <span className="text-primary-foreground/75 text-[12px] line-through">{formatCurrency(ag.valor)}</span>
-                           <span className="text-green-400 font-bold">{formatCurrency(Math.max(0, ag.valor - Number(ag.valor_desconto_credito)))}</span>
+                           <span className="text-primary-foreground/75 text-[12px] line-through">{formatCurrency(ag.valor || ag.valor_fatura)}</span>
+                           <span className="text-green-400 font-bold">{formatCurrency(Math.max(0, Number(ag.valor || ag.valor_fatura) - Number(ag.valor_desconto_credito)))}</span>
                          </div>
-                       ) : formatCurrency(ag.valor)
+                       ) : formatCurrency(ag.valor || ag.valor_fatura)
                      } />}
                     <Detail label={ag._is_saida ? "Status" : "Status da Fatura"} value={
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-body text-[9px] font-bold uppercase tracking-wider border relative ${
@@ -605,7 +607,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                         <span className="relative z-10">{isPendingAmount ? "Pendente" : (ag._is_saida && ag._despesa_tipo === "comissao" ? "Retirado" : "Pago")}</span>
                       </span>
                     } />
-                    {!ag._is_saida && ag.status && <Detail label="Status do Serviço" value={ag.status.charAt(0).toUpperCase() + ag.status.slice(1)} />}
+                    {!ag._is_saida && !ag._is_venda && ag.status && <Detail label="Status do Serviço" value={ag.status.charAt(0).toUpperCase() + ag.status.slice(1)} />}
                      {Number(ag.valor_desconto_credito) > 0 && (
                        <Detail label="Desc. de Crédito Utilizado" value={<span className="text-amber-400">- {formatCurrency(Number(ag.valor_desconto_credito))}</span>} />
                      )}
