@@ -1034,45 +1034,57 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
       // Auto-registrar o cliente caso seja inserido apenas o nome
       if (!userId && clienteNome) {
-        try {
-          const fakeEmail = `manual_${globalThis.crypto?.randomUUID?.() || Date.now()}@estudiodyoligodim.com.br`;
-          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://vlepenxinekoljxecomr.supabase.co";
-          const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsZXBlbnhpbmVrb2xqeGVjb21yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNjI0NDksImV4cCI6MjA5MDYzODQ0OX0.5U3grLWxVeHl2JnuTRWh4P3lPmiv04YAOFosjDZmjMA";
-
-          const authResponse = await fetch(`${supabaseUrl}/auth/v1/signup`, {
-            method: "POST",
-            headers: {
-              "apikey": supabaseKey,
-              "Authorization": `Bearer ${supabaseKey}`,
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              email: fakeEmail,
-              password: `Manual@${Date.now()}!XyZ`,
-              data: {
-                nome: clienteNome,
-                whatsapp: manualClienteTelefone.trim()
-              }
-            })
-          });
-
-          if (authResponse.ok) {
-            const result = await authResponse.json();
-            const newId = result.id || result.user?.id;
-            if (newId) {
-              userId = newId;
-              setClientes(prev => [{
-                id: newId,
-                nome: clienteNome,
-                whatsapp: manualClienteTelefone.trim(),
-                created_at: new Date().toISOString()
-              }, ...prev]);
-            }
-          } else {
-            console.error("Falha ao criar cliente automaticamente:", await authResponse.text());
+        let existingClient = null;
+        if (manualClienteTelefone) {
+          const cleanPhone = manualClienteTelefone.replace(/\D/g, "");
+          if (cleanPhone) {
+            existingClient = clientes.find(c => c.whatsapp === cleanPhone);
           }
-        } catch (authErr) {
-          console.error("Erro na requisição para criar cliente:", authErr);
+        }
+        
+        if (existingClient) {
+          userId = existingClient.id;
+        } else {
+          try {
+            const fakeEmail = `manual_${globalThis.crypto?.randomUUID?.() || Date.now()}@estudiodyoligodim.com.br`;
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://vlepenxinekoljxecomr.supabase.co";
+            const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsZXBlbnhpbmVrb2xqeGVjb21yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNjI0NDksImV4cCI6MjA5MDYzODQ0OX0.5U3grLWxVeHl2JnuTRWh4P3lPmiv04YAOFosjDZmjMA";
+
+            const authResponse = await fetch(`${supabaseUrl}/auth/v1/signup`, {
+              method: "POST",
+              headers: {
+                "apikey": supabaseKey,
+                "Authorization": `Bearer ${supabaseKey}`,
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                email: fakeEmail,
+                password: `Manual@${Date.now()}!XyZ`,
+                data: {
+                  nome: clienteNome,
+                  whatsapp: manualClienteTelefone.trim()
+                }
+              })
+            });
+
+            if (authResponse.ok) {
+              const result = await authResponse.json();
+              const newId = result.id || result.user?.id;
+              if (newId) {
+                userId = newId;
+                setClientes(prev => [{
+                  id: newId,
+                  nome: clienteNome,
+                  whatsapp: manualClienteTelefone.trim(),
+                  created_at: new Date().toISOString()
+                }, ...prev]);
+              }
+            } else {
+              console.error("Falha ao criar cliente automaticamente:", await authResponse.text());
+            }
+          } catch (authErr) {
+            console.error("Erro na requisição para criar cliente:", authErr);
+          }
         }
       }
 
