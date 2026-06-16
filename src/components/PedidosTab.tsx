@@ -504,19 +504,19 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
 
   const pagamentoCounts = useMemo(() => {
     return {
-      todos: agendamentos.length,
-      pago: agendamentos.filter((a) => isPago(a)).length,
-      sinal: agendamentos.filter((a) => isSinalPago(a)).length,
-      recepcao: agendamentos.filter((a) => isFormaRecepcao(a.forma_pagamento)).length,
-      pendente: agendamentos.filter((a) => isNaoPago(a)).length,
+      todos: allItems.length,
+      pago: allItems.filter((a) => isPago(a)).length,
+      sinal: allItems.filter((a) => isSinalPago(a)).length,
+      recepcao: allItems.filter((a) => isFormaRecepcao(a.forma_pagamento)).length,
+      pendente: allItems.filter((a) => isNaoPago(a)).length,
     };
-  }, [agendamentos]);
+  }, [allItems]);
 
   const devedores = useMemo(() => {
-    return agendamentos
+    return allItems
       .filter((a) => a.status !== "cancelado" && a.status !== "falta" && !isPago(a))
-      .sort((a, b) => b.data_agendamento.localeCompare(a.data_agendamento));
-  }, [agendamentos]);
+      .sort((a, b) => (b.data_agendamento || "").localeCompare(a.data_agendamento || ""));
+  }, [allItems]);
 
   const totalAReceber = useMemo(() => {
     return devedores.reduce((sum, a) => sum + (Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0)), 0);
