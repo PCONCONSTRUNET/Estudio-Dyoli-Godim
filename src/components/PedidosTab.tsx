@@ -104,6 +104,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("todos");
   const [pagamentoFilter, setPagamentoFilter] = useState<PagamentoFilter>("todos");
+  const [dateFilter, setDateFilter] = useState<string>("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => {
     const saved = localStorage.getItem("pedidos_dismissed");
@@ -186,6 +187,9 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     if (pagamentoFilter !== "todos") {
       list = list.filter((a) => matchesPagamentoFilter(a, pagamentoFilter));
     }
+    if (dateFilter) {
+      list = list.filter((a) => a.data_agendamento === dateFilter);
+    }
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       list = list.filter(
@@ -201,7 +205,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
         b.horario.localeCompare(a.horario)
     );
     return list;
-  }, [agendamentos, statusFilter, pagamentoFilter, searchTerm, getClientName]);
+  }, [agendamentos, statusFilter, pagamentoFilter, dateFilter, searchTerm, getClientName]);
 
   const updateStatus = async (id: string, status: string) => {
     await supabase.from("agendamentos").update({ status }).eq("id", id);
@@ -626,6 +630,20 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
           <option value="cancelado">Cancelados</option>
           <option value="falta">Faltas</option>
         </select>
+
+        <div className="flex items-center gap-1 shrink-0">
+          <input
+            type="date"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            className={`rounded-full border border-gold/20 px-3 py-1.5 font-body text-[11px] font-medium focus:outline-none focus:ring-2 focus:ring-gold/20 cursor-pointer ${dateFilter ? 'bg-gold/15 text-gold' : 'bg-gold/5 text-gold/70'}`}
+          />
+          {dateFilter && (
+            <button onClick={() => setDateFilter("")} className="text-gold/50 hover:text-rose p-1 transition-colors" title="Limpar data">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
 
         <div className="flex items-center gap-1 ml-auto">
           {([
