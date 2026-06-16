@@ -369,14 +369,41 @@ const Admin = () => {
     }
   });
   const [password, setPassword] = useState("");
+  const [adminEmail, setAdminEmail] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    try { localStorage.setItem(ADMIN_AUTH_KEY, "true"); } catch {}
-    setAuthenticated(true);
+  const handleLogin = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      // 1. Verificar senha local
+      if (password !== ADMIN_PASSWORD) {
+        setError("Senha incorreta");
+        setLoading(false);
+        return;
+      }
+      // 2. Fazer login real no Supabase para obter sessão autenticada
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: adminEmail.trim(),
+        password,
+      });
+      if (authError) {
+        setError("E-mail ou senha inválidos no Supabase: " + authError.message);
+        setLoading(false);
+        return;
+      }
+      try { localStorage.setItem(ADMIN_AUTH_KEY, "true"); } catch {}
+      setAuthenticated(true);
+    } catch (e: any) {
+      setError("Erro: " + (e.message || "Tente novamente"));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     try { localStorage.removeItem(ADMIN_AUTH_KEY); } catch {}
     setAuthenticated(false);
   };
@@ -426,15 +453,22 @@ const Admin = () => {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                if (password === ADMIN_PASSWORD) {
-                  handleLogin();
-                  setError("");
-                } else {
-                  setError("Senha incorreta");
-                }
+                handleLogin();
               }}
               className="space-y-3"
             >
+              <div>
+                <label className="font-body text-[10px] uppercase tracking-widest text-primary-foreground/40 font-medium block mb-2">
+                  E-mail
+                </label>
+                <input
+                  type="email"
+                  value={adminEmail}
+                  onChange={(e) => { setAdminEmail(e.target.value); if (error) setError(""); }}
+                  placeholder="dyoli@email.com"
+                  className="w-full rounded-2xl bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] px-4 py-3.5 text-primary-foreground font-body text-[15px] placeholder:text-primary-foreground/25 focus:outline-none focus:border-gold/40 focus:ring-2 focus:ring-gold/20 transition-all"
+                />
+              </div>
               <div>
                 <label className="font-body text-[10px] uppercase tracking-widest text-primary-foreground/40 font-medium block mb-2">
                   Senha
@@ -457,9 +491,10 @@ const Admin = () => {
 
               <button
                 type="submit"
+                disabled={loading}
                 className="btn-entrar-admin"
               >
-                Entrar no painel
+                {loading ? "Entrando..." : "Entrar no painel"}
               </button>
             </form>
 
