@@ -153,10 +153,10 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const comissaoValor = baseComissao * (comissaoPct / 100) + totalGorjetas;
 
   const totalDespesas = despesas
-    .filter(d => (d.tipo || "estudio") === "estudio" && d.data_vencimento >= periodRange.start && d.data_vencimento <= periodRange.end)
+    .filter(d => (d.tipo || "estudio") === "estudio" && d.pago && d.data_vencimento >= periodRange.start && d.data_vencimento <= periodRange.end)
     .reduce((s, d) => s + Number(d.valor), 0);
   const totalDespesasPessoais = despesas
-    .filter(d => d.tipo === "pessoal" && d.data_vencimento >= periodRange.start && d.data_vencimento <= periodRange.end)
+    .filter(d => d.tipo === "pessoal" && d.pago && d.data_vencimento >= periodRange.start && d.data_vencimento <= periodRange.end)
     .reduce((s, d) => s + Number(d.valor), 0);
   const lucroLiquido = totalRecebido - totalDespesas - comissaoValor;
 
