@@ -119,7 +119,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     let cancelled = false;
     (supabase.from as any)("vendas")
       .select("id,valor_total,cliente_nome,cliente_id,created_at,data_venda,pago,forma_pagamento")
-      .eq("pago", false)
+      .or("pago.is.null,pago.eq.false")
       .then(({ data }: any) => {
         if (cancelled || !data) return;
         const mapped: Agendamento[] = (data as any[]).map((v) => {
