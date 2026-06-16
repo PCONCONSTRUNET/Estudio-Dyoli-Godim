@@ -94,8 +94,14 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
       .order("nome");
 
     const map = new Map<string, { id: string; nome: string; telefone?: string }>();
-    (fromClientes || []).forEach(c => map.set(c.nome.trim().toLowerCase(), { id: c.id, nome: c.nome.trim(), telefone: c.telefone }));
-    (fromProfiles || []).forEach(p => { if (!map.has(p.nome.trim().toLowerCase())) map.set(p.nome.trim().toLowerCase(), { id: p.id, nome: p.nome.trim() }); });
+    (fromClientes || []).forEach(c => {
+      if (c.nome) map.set(c.nome.trim().toLowerCase(), { id: c.id, nome: c.nome.trim(), telefone: c.telefone });
+    });
+    (fromProfiles || []).forEach(p => {
+      if (p.nome && !map.has(p.nome.trim().toLowerCase())) {
+        map.set(p.nome.trim().toLowerCase(), { id: p.id, nome: p.nome.trim() });
+      }
+    });
 
     setClientesSugeridos([...map.values()].sort((a, b) => a.nome.localeCompare(b.nome)));
   };
