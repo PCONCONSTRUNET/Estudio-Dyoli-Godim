@@ -153,8 +153,10 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  return { startISO: toISO(start), endISO: toISO(end), startDate: start, endDate: end };
  }, [diaCorte, cicloOffset]);
 
- // Despesas (para lucro do ciclo)
+ // Despesas e vendas
   const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string; tipo?: string; observacao?: string; descricao?: string }[]>([]);
+  const [vendas, setVendas] = useState<any[]>([]);
+
   useEffect(() => {
     (supabase.from as any)("despesas")
       .select("valor,pago,data_vencimento,tipo,observacao,descricao")
@@ -163,17 +165,40 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
       .then(({ data }: any) => {
         if (data) setDespesas(data);
       });
+      
+    (supabase.from as any)("vendas").select("*").then(({ data }: any) => {
+      if (data) setVendas(data);
+    });
   }, [ciclo.startISO, ciclo.endISO]);
 
+  const allAgendamentos = useMemo(() => {
+    const vList = vendas.map(v => ({
+      id: v.id,
+      servico: "Venda de Produtos",
+      variacao: "Loja",
+      data_agendamento: v.data_venda || v.created_at?.split("T")[0],
+      horario: v.created_at ? `${String(new Date(v.created_at).getHours()).padStart(2, "0")}:${String(new Date(v.created_at).getMinutes()).padStart(2, "0")}` : "00:00",
+      valor: Number(v.valor_total),
+      valor_pago: v.pago ? Number(v.valor_total) : 0,
+      valor_troco: 0,
+      valor_gorjeta: 0,
+      valor_credito: 0,
+      status: v.pago ? "concluido" : "pendente",
+      created_at: v.created_at,
+      user_id: v.cliente_id || "admin",
+      cliente_nome: v.cliente_nome,
+    }));
+    return [...agendamentos, ...vList];
+  }, [agendamentos, vendas]);
 
  // Fechamento do dia
  const caixaData = useMemo(() => {
- const dayAgs = agendamentos.filter((a) => a.data_agendamento === caixaDate && a.status !== "cancelado");
+ const dayAgs = allAgendamentos.filter((a) => a.data_agendamento === caixaDate && a.status !== "cancelado");
  
  const total = dayAgs.reduce((s, a) => s + Math.max(0, Number(a.valor) - Number(a.valor_desconto_credito || 0)) + Number(a.valor_gorjeta || 0), 0);
  const recebido = dayAgs.reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0), 0);
  const pagoComCredito = dayAgs.reduce((s, a) => s + Number(a.valor_desconto_credito || 0), 0);
- const faltas = agendamentos.filter((a) => a.data_agendamento === caixaDate && a.status === "falta").length;
+ const faltas = allAgendamentos.filter((a) => a.data_agendamento === caixaDate && a.status === "falta").length;
  const qtd = dayAgs.filter(a => !(a.servico === "Adição de Crédito" || a.servico === "Entrada Manual" || (a.servico && a.servico.startsWith("Pagamento de Dívida")))).length;
  
  const pendente = dayAgs.reduce((s, a) => s + Math.max(0, Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0)), 0);
@@ -181,7 +206,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  const progressPercent = total > 0 ? Math.round((recebido / total) * 100) : (recebido > 0 ? 100 : 0);
  
  return { items: dayAgs, total, recebido, pagoComCredito, pendente, qtd, faltas, progressPercent };
- }, [agendamentos, caixaDate]);
+ }, [allAgendamentos, caixaDate]);
 
  // Lista de pagamentos por período
  const periodRange = useMemo(() => {
@@ -199,16 +224,16 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  }, [period, ciclo, customStart, customEnd]);
 
  const filtered = useMemo(() => {
- return agendamentos.filter((a) => {
+ return allAgendamentos.filter((a) => {
  if (a.status === "cancelado" || a.status === "falta") return false;
  const d = a.data_agendamento;
  return d >= periodRange.start && d <= periodRange.end;
  });
- }, [agendamentos, periodRange]);
+ }, [allAgendamentos, periodRange]);
 
  // Cálculos do ciclo (compartilhados)
  const cicloStats = useMemo(() => {
- const cicloAgs = agendamentos.filter(
+ const cicloAgs = allAgendamentos.filter(
  (a) => a.status !== "cancelado" && a.status !== "falta" &&
  a.data_agendamento >= ciclo.startISO && a.data_agendamento <= ciclo.endISO,
  );  
@@ -241,7 +266,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
   const progress = cicloOffset === 0 ? Math.round((elapsedDays / totalDays) * 100) : (cicloOffset < 0 ? 100 : 0);
   const qtd = cicloAgs.filter((a) => a.servico !== "Adição de Crédito").length;
   return { recebido, total, pagoComCredito, gorjetas, trocos, desp, despPessoal, lucro, comissao, comissaoGerada, baseComissao, totalDays, elapsedDays, progress, qtd, items: cicloAgs, saldoEmCaixa };
- }, [agendamentos, ciclo, despesas, comissaoPct, cicloOffset]);
+ }, [allAgendamentos, ciclo, despesas, comissaoPct, cicloOffset]);
 
  const comissaoBreakdown = useMemo(() => {
  const byDay: Record<string, { date: string; recebido: number; qtd: number }> = {};
