@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, supabaseAdmin } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Edit2, Save, X, Upload, ShoppingBag, Image, Package } from "lucide-react";
 import BinButton from "@/components/ui/bin-button";
@@ -58,9 +58,10 @@ const ProdutosTab = () => {
     for (const file of files) {
       const ext = file.name.split(".").pop();
       const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error } = await supabase.storage.from("produtos").upload(path, file);
+      // Usa supabaseAdmin para bypass do RLS no storage
+      const { error } = await supabaseAdmin.storage.from("produtos").upload(path, file);
       if (error) throw error;
-      const { data } = supabase.storage.from("produtos").getPublicUrl(path);
+      const { data } = supabaseAdmin.storage.from("produtos").getPublicUrl(path);
       urls.push(data.publicUrl);
     }
     return urls;
