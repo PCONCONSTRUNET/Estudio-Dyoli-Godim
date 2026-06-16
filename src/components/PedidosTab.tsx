@@ -118,11 +118,15 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
   useEffect(() => {
     let cancelled = false;
     (supabase.from as any)("vendas")
-      .select("id,valor_total,cliente_nome,cliente_id,created_at,data_venda,pago,forma_pagamento")
-      .then(({ data }: any) => {
-        if (cancelled || !data) return;
+      .select("*")
+      .then(({ data, error }: any) => {
+        if (cancelled) return;
+        if (error) { console.error("[PedidosTab] erro ao buscar vendas:", error); return; }
+        if (!data) return;
+        console.log("[PedidosTab] vendas brutas:", data);
         // Filtra no JS: pago == false, null ou undefined
         const naoPagas = (data as any[]).filter((v) => !v.pago);
+        console.log("[PedidosTab] vendas não pagas:", naoPagas);
         const mapped: Agendamento[] = naoPagas.map((v) => {
           const rawDate: string = v.data_venda || (v.created_at ? String(v.created_at).split("T")[0] : today);
           const safeDate = rawDate && rawDate.length >= 8 ? rawDate : today;
