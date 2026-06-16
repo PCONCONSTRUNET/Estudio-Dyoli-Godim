@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase, supabaseAdmin } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Edit2, Save, X, Upload, ShoppingBag, Image, Package } from "lucide-react";
 import BinButton from "@/components/ui/bin-button";
@@ -66,6 +66,24 @@ const ProdutosTab = () => {
     return urls;
   };
 
+  const adminFetch = async (path: string, method: string, body?: object) => {
+    const SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsZXBlbnhpbmVrb2xqeGVjb21yIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTA2MjQ0OSwiZXhwIjoyMDkwNjM4NDQ5fQ.n-vDPXUpnGZOEBpZJpzQ5TYEQSQwbWWPwAk3ShhYWnM";
+    const res = await fetch(`https://vlepenxinekoljxecomr.supabase.co/rest/v1/${path}`, {
+      method,
+      headers: {
+        "apikey": SERVICE_KEY,
+        "Authorization": `Bearer ${SERVICE_KEY}`,
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal",
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ message: res.statusText }));
+      throw new Error(err.message || res.statusText);
+    }
+  };
+
   const addProduto = async () => {
     if (!newNome || !newPreco) return;
     setUploading(true);
@@ -75,20 +93,17 @@ const ProdutosTab = () => {
       
       const estoqueNum = newEstoque ? Number(newEstoque) : 0;
 
-      const { error } = await supabaseAdmin
-        .from("produtos")
-        .insert({
-          nome: newNome,
-          descricao: newDescricao,
-          preco: Number(newPreco),
-          estoque: estoqueNum,
-          imagem_url: urls.length > 0 ? urls[0] : "",
-          imagens: urls,
-          ativo: true,
-          ordem: produtos.length + 1,
-        });
+      await adminFetch("produtos", "POST", {
+        nome: newNome,
+        descricao: newDescricao,
+        preco: Number(newPreco),
+        estoque: estoqueNum,
+        imagem_url: urls.length > 0 ? urls[0] : "",
+        imagens: urls,
+        ativo: true,
+        ordem: produtos.length + 1,
+      });
         
-      if (error) throw error;
       await loadProdutos();
       resetNewForm();
       toast.success("Produto adicionado com sucesso!");
@@ -128,19 +143,15 @@ const ProdutosTab = () => {
       }
 
       const estoqueNum = editEstoque ? Number(editEstoque) : 0;
-      const { error } = await supabaseAdmin
-        .from("produtos")
-        .update({
-          nome: editNome,
-          descricao: editDescricao,
-          preco: Number(editPreco),
-          estoque: estoqueNum,
-          imagem_url: urls.length > 0 ? urls[0] : "",
-          imagens: urls,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", id);
-      if (error) throw error;
+      await adminFetch(`produtos?id=eq.${id}`, "PATCH", {
+        nome: editNome,
+        descricao: editDescricao,
+        preco: Number(editPreco),
+        estoque: estoqueNum,
+        imagem_url: urls.length > 0 ? urls[0] : "",
+        imagens: urls,
+        updated_at: new Date().toISOString(),
+      });
         
       setProdutos((prev) =>
         prev.map((p) =>
@@ -159,12 +170,12 @@ const ProdutosTab = () => {
   const toggleActive = async (id: string) => {
     const p = produtos.find((p) => p.id === id);
     if (!p) return;
-    await supabaseAdmin.from("produtos").update({ ativo: !p.ativo, updated_at: new Date().toISOString() }).eq("id", id);
+    await adminFetch(`produtos?id=eq.${id}`, "PATCH", { ativo: !p.ativo, updated_at: new Date().toISOString() });
     setProdutos((prev) => prev.map((p) => (p.id === id ? { ...p, ativo: !p.ativo } : p)));
   };
 
   const removeProduto = async (id: string) => {
-    await supabaseAdmin.from("produtos").delete().eq("id", id);
+    await adminFetch(`produtos?id=eq.${id}`, "DELETE");
     setProdutos((prev) => prev.filter((p) => p.id !== id));
   };
 
