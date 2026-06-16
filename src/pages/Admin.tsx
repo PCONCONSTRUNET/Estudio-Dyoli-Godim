@@ -518,6 +518,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [manualItens, setManualItens] = useState<ManualItem[]>([]);
   const [manualCliente, setManualCliente] = useState("");
   const [manualClienteNome, setManualClienteNome] = useState("");
+  const [manualClienteTelefone, setManualClienteTelefone] = useState("");
   const [manualData, setManualData] = useState(() => getDateKey(new Date()));
   const [manualHorario, setManualHorario] = useState("09:00");
   const [manualHorarioFim, setManualHorarioFim] = useState("10:00");
@@ -977,7 +978,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     loadManualServicos();
     setManualItens([]);
     setManualCliente("");
-    setManualClienteNome("");
+    setManualClienteNome(""); setManualClienteTelefone("");
     setManualData(selectedAgendaDate);
     setManualHorario(initialTime || "09:00");
     setManualHorarioFim(initialTime ? calcFim(initialTime, 60) : "10:00");
@@ -1050,7 +1051,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
               password: `Manual@${Date.now()}!XyZ`,
               data: {
                 nome: clienteNome,
-                whatsapp: ""
+                whatsapp: manualClienteTelefone.trim()
               }
             })
           });
@@ -1063,7 +1064,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
               setClientes(prev => [{
                 id: newId,
                 nome: clienteNome,
-                whatsapp: "",
+                whatsapp: manualClienteTelefone.trim(),
                 created_at: new Date().toISOString()
               }, ...prev]);
             }
@@ -2245,7 +2246,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                         />
                         {manualCliente && (
                           <button
-                            onClick={() => { setManualCliente(""); setManualClienteSearch(""); setManualClienteNome(""); }}
+                            onClick={() => { setManualCliente(""); setManualClienteSearch(""); setManualClienteNome(""); setManualClienteTelefone(""); }}
                             className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg bg-rose/10 hover:bg-rose/20 text-rose flex items-center justify-center transition-colors z-10"
                           >
                             <X className="h-3.5 w-3.5" />
@@ -2272,7 +2273,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                           <div className="max-h-52 overflow-y-auto">
                             <button
                               onMouseDown={(e) => e.preventDefault()}
-                              onClick={() => { setManualCliente(""); setManualClienteNome(""); setManualClienteSearch(""); setManualClienteOpen(false); }}
+                              onClick={() => { setManualCliente(""); setManualClienteNome(""); setManualClienteTelefone(""); setManualClienteSearch(""); setManualClienteOpen(false); }}
                               className={`w-full text-left px-4 py-3 font-body text-[13px] transition-all hover:bg-white/[0.04] ${
                                 !manualCliente ? "bg-white/[0.04] text-primary-foreground/70" : "text-primary-foreground/40"
                               }`}
@@ -2327,18 +2328,32 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                     </div>
 
                     {!manualCliente && (
-                      <div className="space-y-2.5 mt-4 p-4 rounded-2xl border border-gold/30 bg-gold/[0.03] shadow-[inset_0_0_20px_rgba(212,175,55,0.05)] relative overflow-hidden">
+                      <div className="space-y-4 mt-4 p-4 rounded-2xl border border-gold/30 bg-gold/[0.03] shadow-[inset_0_0_20px_rgba(212,175,55,0.05)] relative overflow-hidden">
                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-white/40 via-white to-white/40 shadow-[0_0_12px_rgba(255,255,255,0.8)]"></div>
-                        <label className="font-body text-[11px] uppercase tracking-[0.2em] text-gold font-bold px-1 block flex items-center gap-1.5 z-10 relative">
-                          Nome do cliente (presencial) <span className="text-red-400">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Ex: Maria Silva"
-                          value={manualClienteNome}
-                          onChange={(e) => setManualClienteNome(e.target.value)}
-                          className="w-full px-4 py-3.5 rounded-xl bg-white/[0.08] border border-gold/40 text-primary-foreground font-body text-[14px] focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/40 placeholder:text-primary-foreground/50 backdrop-blur-sm transition-all shadow-[0_2px_12px_-4px_rgba(0,0,0,0.5)] z-10 relative"
-                        />
+                        <div className="space-y-2.5 z-10 relative">
+                          <label className="font-body text-[11px] uppercase tracking-[0.2em] text-gold font-bold px-1 block flex items-center gap-1.5">
+                            Nome do cliente (presencial) <span className="text-red-400">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Ex: Maria Silva"
+                            value={manualClienteNome}
+                            onChange={(e) => setManualClienteNome(e.target.value)}
+                            className="w-full px-4 py-3.5 rounded-xl bg-white/[0.08] border border-gold/40 text-primary-foreground font-body text-[14px] focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/40 placeholder:text-primary-foreground/50 backdrop-blur-sm transition-all shadow-[0_2px_12px_-4px_rgba(0,0,0,0.5)]"
+                          />
+                        </div>
+                        <div className="space-y-2.5 z-10 relative">
+                          <label className="font-body text-[11px] uppercase tracking-[0.2em] text-gold font-bold px-1 block flex items-center gap-1.5">
+                            Telefone / WhatsApp (Opcional)
+                          </label>
+                          <input
+                            type="tel"
+                            placeholder="Ex: 51999999999"
+                            value={manualClienteTelefone}
+                            onChange={(e) => setManualClienteTelefone(e.target.value)}
+                            className="w-full px-4 py-3.5 rounded-xl bg-white/[0.08] border border-gold/40 text-primary-foreground font-body text-[14px] focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/40 placeholder:text-primary-foreground/50 backdrop-blur-sm transition-all shadow-[0_2px_12px_-4px_rgba(0,0,0,0.5)]"
+                          />
+                        </div>
                       </div>
                     )}
 
