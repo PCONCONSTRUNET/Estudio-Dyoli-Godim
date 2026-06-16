@@ -57,10 +57,23 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
   }, [selectedItems]);
 
   const fetchClientes = async () => {
-    const { data } = await supabase.from("profiles").select("id, nome").order("nome");
-    if (data) {
-      setClientesSugeridos(data);
-    }
+    // Busca nomes de clientes do histórico de agendamentos (não precisa de conta)
+    const { data: fromAgendamentos } = await supabase
+      .from("agendamentos")
+      .select("cliente_nome")
+      .not("cliente_nome", "is", null);
+
+    // Busca também de profiles (clientes com conta)
+    const { data: fromProfiles } = await supabase
+      .from("profiles")
+      .select("nome")
+      .order("nome");
+
+    const nomes = new Set<string>();
+    (fromAgendamentos || []).forEach(a => { if (a.cliente_nome) nomes.add(a.cliente_nome.trim()); });
+    (fromProfiles || []).forEach(p => { if (p.nome) nomes.add(p.nome.trim()); });
+
+    setClientesSugeridos([...nomes].sort().map(n => ({ id: n, nome: n })));
   };
 
   const activeProducts = useMemo(() => {
@@ -272,6 +285,14 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
                   {clientesSugeridos.map(c => <option key={c.id} value={c.nome} />)}
                 </datalist>
               </div>
+              {clienteNome.trim() && !clientesSugeridos.some(c => c.nome.toLowerCase() === clienteNome.trim().toLowerCase()) && (
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gold/15 border border-gold/30 text-gold text-[10px] font-semibold">
+                    ✦ Novo Cliente
+                  </span>
+                  <span className="font-body text-[10px] text-primary-foreground/50">será cadastrado ao confirmar</span>
+                </div>
+              )}
             </div>
 
             <div className="space-y-1">
