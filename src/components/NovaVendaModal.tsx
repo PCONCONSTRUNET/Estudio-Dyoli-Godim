@@ -29,11 +29,8 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
   const SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsZXBlbnhpbmVrb2xqeGVjb21yIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTA2MjQ0OSwiZXhwIjoyMDkwNjM4NDQ5fQ.n-vDPXUpnGZOEBpZJpzQ5TYEQSQwbWWPwAk3ShhYWnM";
 
   // Pagamento form
-  const [manualCliente, setManualCliente] = useState("");
-  const [manualClienteSearch, setManualClienteSearch] = useState("");
-  const [manualClienteOpen, setManualClienteOpen] = useState(false);
-  const [manualClienteNome, setManualClienteNome] = useState("");
-  const [manualClienteTelefone, setManualClienteTelefone] = useState("");
+  const [clienteNome, setClienteNome] = useState("");
+  const [clienteTelefone, setClienteTelefone] = useState("");
   
   const [clientesSugeridos, setClientesSugeridos] = useState<{ id: string; nome: string; telefone?: string }[]>([]);
   const [valorSugerido, setValorSugerido] = useState(0);
@@ -49,11 +46,8 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
       setStep("produtos");
       setSearch("");
       setSelectedItems([]);
-      setManualCliente("");
-      setManualClienteSearch("");
-      setManualClienteOpen(false);
-      setManualClienteNome("");
-      setManualClienteTelefone("");
+      setClienteNome("");
+      setClienteTelefone("");
       setPago(true);
       setFormaPagamento("pix");
       setData(new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]);
@@ -149,24 +143,23 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
   };
 
   const handleSave = async () => {
-    const nomeCliente = manualCliente 
-      ? clientesSugeridos.find(c => c.id === manualCliente)?.nome || "" 
-      : manualClienteNome.trim();
-      
-    if (!nomeCliente) return toast.error("Informe o nome do cliente");
+    if (!clienteNome.trim()) return toast.error("Informe o nome do cliente");
     const valNum = parseFloat(valorFinal.replace(/,/g, "."));
     if (isNaN(valNum) || valNum <= 0) return toast.error("Informe um valor válido");
 
     setSaving(true);
     try {
-      const telCliente = manualCliente 
-        ? clientesSugeridos.find(c => c.id === manualCliente)?.telefone || "" 
-        : manualClienteTelefone.trim();
+      const nomeCliente = clienteNome.trim();
+      const telCliente = clienteTelefone.trim();
 
-      let clienteId = manualCliente || null;
+      // 1. Auto-registrar cliente se não existir
+      const clienteExistente = clientesSugeridos.find(
+        c => c.nome.toLowerCase() === nomeCliente.toLowerCase()
+      );
+      let clienteId: string | null = clienteExistente?.id || null;
 
-      // Se for cliente novo, auto-registra
-      if (!clienteId) {
+      if (!clienteExistente) {
+        // Novo cliente — registrar na tabela clientes
         const novoCliente = await adminFetch("clientes", "POST", {
           nome: nomeCliente,
           telefone: telCliente,
@@ -175,6 +168,9 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
         if (clienteId) {
           setClientesSugeridos(prev => [...prev, { id: clienteId!, nome: nomeCliente, telefone: telCliente }]);
         }
+      } else if (telCliente && clienteExistente) {
+        // Atualiza telefone se foi informado e cliente já existia
+        await adminFetch(`clientes?id=eq.${clienteExistente.id}`, "PATCH", { telefone: telCliente }).catch(() => {});
       }
 
       // 2. Registrar venda na tabela vendas
@@ -205,7 +201,7 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
         await adminFetch(`produtos?id=eq.${item.produto.id}`, "PATCH", { estoque: novoEstoque });
       }
 
-      toast.success(manualCliente ? "Venda registrada com sucesso!" : `Venda registrada! ${nomeCliente} cadastrado(a) como novo cliente. ✓`);
+      toast.success(clienteExistente ? "Venda registrada com sucesso!" : `Venda registrada! ${nomeCliente} cadastrado(a) como novo cliente. ✓`);
       onSuccess();
       onOpenChange(false);
     } catch (err: any) {
@@ -311,108 +307,51 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
           </div>
         ) : (
           <div className="flex flex-col p-4 space-y-4 max-h-[70vh] overflow-y-auto scrollbar-thin">
-            <div className="relative space-y-2.5">
-              <label className="font-body text-[11px] uppercase tracking-[0.2em] text-gold font-bold drop-shadow-[0_0_8px_rgba(255,215,0,0.5)] px-1 block flex items-center gap-1.5">
-                Cliente <span className="text-red-400">*</span>
-              </label>
-              <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center justify-center transition-all duration-300 group-focus-within:scale-110 group-focus-within:rotate-3 z-10">
-                  <Search className="h-5 w-5 text-white stroke-[2.5px] drop-shadow-[0_0_4px_rgba(255,255,255,0.4)]" />
-                </div>
+            <div className="space-y-1">
+              <label className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-wider">Cliente</label>
+              <div className="relative">
+                <User className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-primary-foreground/50" />
                 <input
                   type="text"
-                  placeholder={manualCliente ? clientesSugeridos.find(c => c.id === manualCliente)?.nome || "Cliente selecionado" : "Buscar cliente..."}
-                  value={manualClienteSearch}
-                  onFocus={() => setManualClienteOpen(true)}
-                  onChange={(e) => { setManualClienteSearch(e.target.value); setManualClienteOpen(true); }}
-                  className={`w-full pl-12 pr-10 py-3.5 rounded-2xl border font-body text-[14px] focus:outline-none focus:border-gold/60 focus:ring-2 focus:ring-gold/30 placeholder:text-primary-foreground/30 backdrop-blur-sm transition-all shadow-[0_4px_20px_-8px_rgba(0,0,0,0.5)] hover:bg-white/[0.06] ${
-                    manualCliente ? "border-gold/60 text-gold font-medium bg-gold/[0.08]" : "border-gold/40 text-primary-foreground bg-white/[0.08]"
-                  }`}
+                  list="clientes-list"
+                  placeholder="Nome do cliente"
+                  value={clienteNome}
+                  onChange={(e) => {
+                    const newName = e.target.value;
+                    setClienteNome(newName);
+                    const existing = clientesSugeridos.find(c => c.nome.toLowerCase() === newName.toLowerCase());
+                    if (existing && existing.telefone) {
+                      setClienteTelefone(existing.telefone);
+                    }
+                  }}
+                  className="w-full bg-primary-foreground/[0.03] border border-primary-foreground/[0.08] rounded-xl py-2 pl-8 pr-3 text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/30"
                 />
-                {manualCliente && (
-                  <button
-                    onClick={() => { setManualCliente(""); setManualClienteSearch(""); setManualClienteNome(""); setManualClienteTelefone(""); }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg bg-rose/10 hover:bg-rose/20 text-rose flex items-center justify-center transition-colors z-10"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                )}
+                <datalist id="clientes-list">
+                  {clientesSugeridos.map(c => <option key={c.id} value={c.nome} />)}
+                </datalist>
               </div>
-              {manualClienteOpen && (
-                <div className="absolute z-50 mt-1 left-0 right-0 rounded-2xl border border-gold/20 bg-charcoal/95 backdrop-blur-xl shadow-2xl overflow-hidden">
-                  <div className="max-h-52 overflow-y-auto">
-                    <button
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => { setManualCliente(""); setManualClienteNome(""); setManualClienteTelefone(""); setManualClienteSearch(""); setManualClienteOpen(false); }}
-                      className={`w-full text-left px-4 py-3 font-body text-[13px] transition-all hover:bg-white/[0.04] ${
-                        !manualCliente ? "bg-white/[0.04] text-primary-foreground/70" : "text-primary-foreground/40"
-                      }`}
-                    >
-                      Sem cliente (cadastrar novo)
-                    </button>
-                    {clientesSugeridos
-                      .filter(c => c.nome.toLowerCase().includes(manualClienteSearch.toLowerCase()) || (c.telefone && c.telefone.includes(manualClienteSearch)))
-                      .length === 0 && manualClienteSearch ? (
-                      <p className="px-4 py-3 font-body text-[12px] text-primary-foreground/30 text-center">Nenhum cliente encontrado</p>
-                    ) : (
-                      clientesSugeridos
-                        .filter(c => c.nome.toLowerCase().includes(manualClienteSearch.toLowerCase()) || (c.telefone && c.telefone.includes(manualClienteSearch)))
-                        .map(c => (
-                          <button
-                            key={c.id}
-                            onMouseDown={(e) => e.preventDefault()}
-                            onClick={() => {
-                              setManualCliente(c.id);
-                              setManualClienteNome(c.nome);
-                              setManualClienteSearch("");
-                              setManualClienteOpen(false);
-                            }}
-                            className={`w-full text-left px-4 py-3 font-body text-[13px] transition-all hover:bg-gold/10 flex items-center justify-between gap-3 ${
-                              manualCliente === c.id ? "bg-gold/10 text-gold" : "text-primary-foreground"
-                            }`}
-                          >
-                            <span className="font-medium truncate">{c.nome}</span>
-                            {c.telefone && <span className="text-[11px] text-primary-foreground/40 tabular-nums">{c.telefone}</span>}
-                          </button>
-                        ))
-                    )}
-                  </div>
+              {clienteNome.trim() && !clientesSugeridos.some(c => c.nome.toLowerCase() === clienteNome.trim().toLowerCase()) && (
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gold/15 border border-gold/30 text-gold text-[10px] font-semibold">
+                    ✦ Novo Cliente
+                  </span>
+                  <span className="font-body text-[10px] text-primary-foreground/50">será cadastrado ao confirmar</span>
                 </div>
-              )}
-              {manualClienteOpen && (
-                <div className="fixed inset-0 z-40" onClick={() => setManualClienteOpen(false)} />
               )}
             </div>
 
-            {!manualCliente && (
-              <div className="space-y-4 mt-4 p-4 rounded-2xl border border-gold/30 bg-gold/[0.03] shadow-[inset_0_0_20px_rgba(212,175,55,0.05)] relative overflow-hidden">
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-white/40 via-white to-white/40 shadow-[0_0_12px_rgba(255,255,255,0.8)]"></div>
-                <div className="space-y-2.5 z-10 relative">
-                  <label className="font-body text-[11px] uppercase tracking-[0.2em] text-gold font-bold px-1 block flex items-center gap-1.5">
-                    Nome do cliente (presencial) <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Ex: Maria Silva"
-                    value={manualClienteNome}
-                    onChange={(e) => setManualClienteNome(e.target.value)}
-                    className="w-full px-4 py-3.5 rounded-xl bg-white/[0.08] border border-gold/40 text-primary-foreground font-body text-[14px] focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/40 placeholder:text-primary-foreground/50 backdrop-blur-sm transition-all shadow-[0_2px_12px_-4px_rgba(0,0,0,0.5)]"
-                  />
-                </div>
-                <div className="space-y-2.5 z-10 relative">
-                  <label className="font-body text-[11px] uppercase tracking-[0.2em] text-gold font-bold px-1 block flex items-center gap-1.5">
-                    Telefone / WhatsApp (Opcional)
-                  </label>
-                  <input
-                    type="tel"
-                    placeholder="Ex: 51999999999"
-                    value={manualClienteTelefone}
-                    onChange={(e) => setManualClienteTelefone(e.target.value)}
-                    className="w-full px-4 py-3.5 rounded-xl bg-white/[0.08] border border-gold/40 text-primary-foreground font-body text-[14px] focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/40 placeholder:text-primary-foreground/50 backdrop-blur-sm transition-all shadow-[0_2px_12px_-4px_rgba(0,0,0,0.5)]"
-                  />
-                </div>
+            <div className="space-y-1">
+              <label className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-wider">Telefone / WhatsApp</label>
+              <div className="relative">
+                <input
+                  type="tel"
+                  placeholder="(00) 00000-0000"
+                  value={clienteTelefone}
+                  onChange={(e) => setClienteTelefone(e.target.value)}
+                  className="w-full bg-primary-foreground/[0.03] border border-primary-foreground/[0.08] rounded-xl py-2 px-3 text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/30"
+                />
               </div>
-            )}
+            </div>
 
             <div className="space-y-1">
               <label className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-wider">Data da Venda</label>
