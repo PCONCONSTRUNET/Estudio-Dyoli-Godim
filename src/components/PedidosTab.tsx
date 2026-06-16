@@ -281,6 +281,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
       onConfirm: async () => {
         if (isVenda) {
           await supabase.from("vendas").delete().eq("id", id);
+          setVendasPendentes(prev => prev.filter(v => v.id !== id));
         } else {
           await supabase.from("agendamentos").delete().eq("id", id);
         }
