@@ -218,18 +218,18 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
                       </div>
 
                       {isSelected && (
-                        <div className="flex items-center gap-2 ml-3">
+                        <div className="flex items-center gap-1.5 ml-3">
                           <button
                             onClick={() => handleUpdateQtd(p.id, -1)}
-                            className="w-7 h-7 rounded-lg bg-primary-foreground/[0.05] flex items-center justify-center hover:bg-primary-foreground/[0.1] transition-all"
+                            className="w-7 h-7 rounded-lg bg-rose/20 border border-rose/40 flex items-center justify-center hover:bg-rose/30 transition-all text-rose"
                           >
                             <Minus className="w-3 h-3" />
                           </button>
-                          <span className="font-body text-[13px] font-semibold w-4 text-center">{isSelected.qtd}</span>
+                          <span className="font-body text-[14px] font-bold w-5 text-center text-primary-foreground">{isSelected.qtd}</span>
                           <button
                             onClick={() => handleUpdateQtd(p.id, 1)}
                             disabled={isSelected.qtd >= p.estoque}
-                            className="w-7 h-7 rounded-lg bg-primary-foreground/[0.05] flex items-center justify-center hover:bg-primary-foreground/[0.1] transition-all disabled:opacity-50"
+                            className="w-7 h-7 rounded-lg bg-gold/20 border border-gold/40 flex items-center justify-center hover:bg-gold/30 transition-all text-gold disabled:opacity-40"
                           >
                             <Plus className="w-3 h-3" />
                           </button>
@@ -248,9 +248,9 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
               </div>
               <button
                 onClick={handleAvancar}
-                className="w-full py-2.5 rounded-xl font-body text-[12px] font-bold uppercase tracking-wider transition-all bg-gold text-[#0a0a0a] hover:bg-gold/90 shadow-[0_0_15px_rgba(212,175,55,0.2)]"
+                className="w-full py-3 rounded-xl font-body text-[13px] font-bold uppercase tracking-wider transition-all bg-gold text-[#0a0a0a] hover:bg-gold/90 shadow-[0_0_20px_rgba(212,175,55,0.35)] active:scale-[0.98]"
               >
-                Avançar
+                Avançar →
               </button>
             </div>
           </div>
@@ -353,18 +353,18 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
             <div className="pt-4 flex gap-2">
               <button
                 onClick={() => setStep("produtos")}
-                className="flex-1 py-2.5 rounded-xl border border-primary-foreground/[0.1] hover:bg-primary-foreground/[0.05] text-[12px] font-bold font-body uppercase tracking-wider transition-all"
+                className="flex-1 py-2.5 rounded-xl border border-primary-foreground/20 hover:bg-primary-foreground/[0.08] text-primary-foreground/80 text-[12px] font-bold font-body uppercase tracking-wider transition-all"
               >
-                Voltar
+                ← Voltar
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className={`flex-[2] py-2.5 rounded-xl font-body text-[12px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
-                  saving ? "opacity-50 bg-gold/50 cursor-not-allowed" : "bg-gold text-[#0a0a0a] hover:bg-gold/90 shadow-[0_0_15px_rgba(212,175,55,0.2)]"
+                className={`flex-[2] py-2.5 rounded-xl font-body text-[13px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                  saving ? "opacity-50 bg-gold/50 cursor-not-allowed" : "bg-gold text-[#0a0a0a] hover:bg-gold/90 shadow-[0_0_25px_rgba(212,175,55,0.4)] active:scale-[0.98]"
                 }`}
               >
-                {saving ? "Registrando..." : "Confirmar Venda"}
+                {saving ? "Registrando..." : "✓ Confirmar Venda"}
               </button>
             </div>
           </div>
