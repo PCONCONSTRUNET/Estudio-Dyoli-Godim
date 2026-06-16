@@ -124,7 +124,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
       id: v.id,
       servico: "Venda de Produtos",
       variacao: "Loja",
-      data_agendamento: v.data_venda || v.created_at?.split("T")[0],
+      data_agendamento: v.data_venda || (v.created_at ? v.created_at.split("T")[0] : ""),
       horario: v.created_at ? `${String(new Date(v.created_at).getHours()).padStart(2, "0")}:${String(new Date(v.created_at).getMinutes()).padStart(2, "0")}` : "00:00",
       valor: Number(v.valor_total),
       valor_pago: v.pago ? Number(v.valor_total) : 0,
@@ -151,7 +151,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     allAgendamentos.forEach((a) => {
       if (a.status === "cancelado") return;
 
-      const aDate = new Date(a.data_agendamento + "T12:00:00");
+      const aDate = new Date((a.data_agendamento || today) + "T12:00:00");
       const diffDays = Math.round((aDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
 
       // Falta (no-show)
@@ -231,8 +231,8 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     }
     list.sort(
       (a, b) =>
-        b.data_agendamento.localeCompare(a.data_agendamento) ||
-        b.horario.localeCompare(a.horario)
+        (b.data_agendamento || "").localeCompare(a.data_agendamento || "") ||
+        (b.horario || "").localeCompare(a.horario || "")
     );
     return list;
   }, [agendamentos, statusFilter, pagamentoFilter, dateFilter, searchTerm, getClientName]);
@@ -509,28 +509,28 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
 
 
   const counts = useMemo(() => ({
-    todos: agendamentos.length,
-    confirmado: agendamentos.filter((a) => a.status === "confirmado").length,
-    concluido: agendamentos.filter((a) => a.status === "concluido").length,
-    cancelado: agendamentos.filter((a) => a.status === "cancelado").length,
-    falta: agendamentos.filter((a) => a.status === "falta").length,
-  }), [agendamentos]);
+    todos: allAgendamentos.length,
+    confirmado: allAgendamentos.filter((a) => a.status === "confirmado").length,
+    concluido: allAgendamentos.filter((a) => a.status === "concluido").length,
+    cancelado: allAgendamentos.filter((a) => a.status === "cancelado").length,
+    falta: allAgendamentos.filter((a) => a.status === "falta").length,
+  }), [allAgendamentos]);
 
   const pagamentoCounts = useMemo(() => {
     return {
-      todos: agendamentos.length,
-      pago: agendamentos.filter((a) => isPago(a)).length,
-      sinal: agendamentos.filter((a) => isSinalPago(a)).length,
-      recepcao: agendamentos.filter((a) => isFormaRecepcao(a.forma_pagamento)).length,
-      pendente: agendamentos.filter((a) => isNaoPago(a)).length,
+      todos: allAgendamentos.length,
+      pago: allAgendamentos.filter((a) => isPago(a)).length,
+      sinal: allAgendamentos.filter((a) => isSinalPago(a)).length,
+      recepcao: allAgendamentos.filter((a) => isFormaRecepcao(a.forma_pagamento)).length,
+      pendente: allAgendamentos.filter((a) => isNaoPago(a)).length,
     };
-  }, [agendamentos]);
+  }, [allAgendamentos]);
 
   const devedores = useMemo(() => {
-    return agendamentos
+    return allAgendamentos
       .filter((a) => a.status !== "cancelado" && a.status !== "falta" && !isPago(a))
-      .sort((a, b) => b.data_agendamento.localeCompare(a.data_agendamento));
-  }, [agendamentos]);
+      .sort((a, b) => (b.data_agendamento || "").localeCompare(a.data_agendamento || ""));
+  }, [allAgendamentos]);
 
   const totalAReceber = useMemo(() => {
     return devedores.reduce((sum, a) => sum + (Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0)), 0);
