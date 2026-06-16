@@ -113,12 +113,16 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
 
   const [historico, setHistorico] = useState<any[]>([]);
   const [despesas, setDespesas] = useState<any[]>([]);
+  const [vendas, setVendas] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchHistoricoEDespesas = async () => {
       // Buscar apenas despesas que foram pagas (gastos do caixa + despesas baixadas)
       const { data: pagas } = await (supabase.from("despesas") as any).select("*").eq("pago", true).neq("tipo", "pessoal");
       setDespesas(pagas || []);
+
+      const { data: vd } = await (supabase.from("vendas") as any).select("*");
+      setVendas(vd || []);
 
       const ids = agendamentos.map((a) => a.id);
       if (ids.length === 0) return;
@@ -238,8 +242,28 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
       });
     });
 
+    vendas.forEach((v) => {
+      list.push({
+        id: v.id,
+        _faturaId: `venda-${v.id}`,
+        fatura_tipo: v.pago ? "pagamento" : "pendente",
+        valor_fatura: v.valor_total,
+        data_fatura: v.data_venda || v.created_at?.split("T")[0],
+        status: v.pago ? "concluido" : "pendente",
+        cliente_nome: v.cliente_nome,
+        servico: "Venda de Produtos",
+        variacao: "Loja",
+        horario: v.created_at ? `${String(new Date(v.created_at).getHours()).padStart(2, "0")}:${String(new Date(v.created_at).getMinutes()).padStart(2, "0")}` : "00:00",
+        forma_pagamento: v.forma_pagamento,
+        _is_saida: false,
+        _is_venda: true,
+        _desc_pagamento: "Venda de Produtos",
+        user_id: v.cliente_id || "admin",
+      });
+    });
+
     return list;
-  }, [agendamentos, historico, despesas]);
+  }, [agendamentos, historico, despesas, vendas]);
 
   const dateFilteredFaturas = useMemo(() => {
     let list = [...faturas];
@@ -479,6 +503,11 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                     {ag._is_despesa && (
                       <span className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${ag._despesa_tipo === "comissao" ? "bg-purple-500/20 border-purple-500/40 text-purple-300" : "bg-rose/20 border-rose/40 text-rose"}`}>
                         {ag._despesa_tipo === "comissao" ? "👤 Retirada (Comissão)" : "🏛 Pagamento de Despesa"}
+                      </span>
+                    )}
+                    {ag._is_venda && (
+                      <span className="inline-flex items-center gap-1 rounded-full border bg-sky-500/20 border-sky-500/40 text-sky-400 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                        🛒 Venda de Produto
                       </span>
                     )}
                     {isPendingAmount && (
