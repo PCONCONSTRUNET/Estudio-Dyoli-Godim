@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Search, CheckCircle, X, UserX, ChevronDown, Bell, Clock, AlertTriangle, Eye, Wallet, History, Plus } from "lucide-react";
+import { Search, CheckCircle, X, UserX, ChevronDown, Bell, Clock, AlertTriangle, Eye, Wallet, History, Plus, Edit2 } from "lucide-react";
 import BinButton from "@/components/ui/bin-button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -427,6 +427,59 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
 
   const [addValorAg, setAddValorAg] = useState<Agendamento | null>(null);
   const [addValorInput, setAddValorInput] = useState<string>("");
+
+  const [editAg, setEditAg] = useState<Agendamento | null>(null);
+  const [editValorInput, setEditValorInput] = useState<string>("");
+  const [editValorPagoInput, setEditValorPagoInput] = useState<string>("");
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const abrirEdicaoValores = (a: Agendamento) => {
+    setEditAg(a);
+    setEditValorInput(Number(a.valor).toFixed(2).replace(".", ","));
+    setEditValorPagoInput(Number(a.valor_pago || 0).toFixed(2).replace(".", ","));
+  };
+
+  const confirmarEdicaoValores = async () => {
+    if (!editAg) return;
+    setSavingEdit(true);
+    const novoValor = Number(editValorInput.replace(/\./g, "").replace(",", "."));
+    const novoValorPago = Number(editValorPagoInput.replace(/\./g, "").replace(",", "."));
+    
+    if (!Number.isFinite(novoValor) || !Number.isFinite(novoValorPago)) {
+      toast.error("Valores inválidos");
+      setSavingEdit(false);
+      return;
+    }
+
+    const table = editAg.origem === "venda" ? "vendas" : "agendamentos";
+    const updatePayload: any = editAg.origem === "venda" 
+      ? { valor_total: novoValor, pago: novoValorPago >= novoValor } 
+      : { valor: novoValor, valor_pago: novoValorPago };
+
+    await supabase.from(table).update(updatePayload).eq("id", editAg.id);
+
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      await supabase.from("pagamento_historico").insert({
+        agendamento_id: editAg.id,
+        status_anterior: statusFromValor(Number(editAg.valor_pago || 0), Number(editAg.valor)),
+        status_novo: statusFromValor(novoValorPago, novoValor),
+        valor_anterior: Number(editAg.valor_pago || 0),
+        valor_novo: novoValorPago,
+        valor_delta: novoValorPago - Number(editAg.valor_pago || 0),
+        total: novoValor,
+        acao: "ajuste_admin",
+        autor_id: userRes?.user?.id || null,
+        autor_nome: (userRes?.user?.user_metadata as any)?.nome || userRes?.user?.email || "Admin",
+      });
+      if (historicoMap[editAg.id]) await loadHistorico(editAg.id);
+    } catch (err) {}
+
+    onUpdate();
+    setEditAg(null);
+    setSavingEdit(false);
+    toast.success("Valores atualizados com sucesso");
+  };
 
   const abrirAddValor = (a: Agendamento) => {
     setAddValorAg(a);
@@ -1023,7 +1076,14 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                           </button>
                         )}
                       </div>
-                      <div className="flex justify-end">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); abrirEdicaoValores(a); }}
+                          className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary-foreground/[0.05] border border-primary-foreground/10 text-primary-foreground/60 hover:bg-blue-500/10 hover:border-blue-500/30 hover:text-blue-400 transition-all"
+                          title="Editar Valores"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </button>
                         <BinButton size="sm" onClick={() => deleteAgendamento(a.id, a.origem === "venda")} />
                       </div>
 
@@ -1084,8 +1144,15 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <p className="font-body text-[14px] font-semibold text-primary-foreground truncate">{nome}</p>
                           <span className={`shrink-0 inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase ${
-                            a.origem === "whatsapp_bot" ? "border-green-500/30 bg-green-500/10 text-green-400" : "border-blue-500/30 bg-blue-500/10 text-blue-400"
+                            a.origem === "whatsapp_bot" ? "border-green-500/30 bg-green-500/10 text-green-400" : a.origem === "venda" ? "border-purple-500/30 bg-purple-500/10 text-purple-400" : "border-blue-500/30 bg-blue-500/10 text-blue-400"
                           }`}>{origemLabel}</span>
+                          {a.origem === "venda" ? (
+                            <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-400 px-1.5 py-0.5 text-[9px] font-semibold uppercase">Venda</span>
+                          ) : a.status === "concluido" ? (
+                            <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full border border-pink-500/30 bg-pink-500/10 text-pink-400 px-1.5 py-0.5 text-[9px] font-semibold uppercase">Atendido s/ Pgto</span>
+                          ) : (
+                            <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full border border-sky-500/30 bg-sky-500/10 text-sky-400 px-1.5 py-0.5 text-[9px] font-semibold uppercase">Agendado</span>
+                          )}
                         </div>
                         <p className="font-body text-[11px] text-primary-foreground/85 mt-0.5 truncate">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""}</p>
                       </div>
@@ -1392,6 +1459,48 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
               </div>
             );
           })()}
+        </DialogContent>
+      </Dialog>
+      {/* Dialog: Editar Valores */}
+      <Dialog open={!!editAg} onOpenChange={(open) => !open && setEditAg(null)}>
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-sm rounded-2xl border-primary-foreground/[0.08] bg-charcoal p-5 shadow-2xl">
+          <DialogHeader className="mb-4">
+            <DialogTitle className="font-heading text-lg font-semibold text-primary-foreground">
+              Editar Valores
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="font-body text-[11px] font-semibold uppercase tracking-wider text-primary-foreground/75 mb-1.5 block">Valor Total (R$)</label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-[14px] text-primary-foreground/40">R$</span>
+                <input
+                  type="text"
+                  placeholder="0,00"
+                  value={editValorInput}
+                  onChange={(e) => setEditValorInput(e.target.value.replace(/[^\d,.]/g, ""))}
+                  className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.08] text-primary-foreground font-heading text-xl font-bold focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-all"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="font-body text-[11px] font-semibold uppercase tracking-wider text-primary-foreground/75 mb-1.5 block">Valor Pago (R$)</label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-body text-[14px] text-primary-foreground/40">R$</span>
+                <input
+                  type="text"
+                  placeholder="0,00"
+                  value={editValorPagoInput}
+                  onChange={(e) => setEditValorPagoInput(e.target.value.replace(/[^\d,.]/g, ""))}
+                  className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.08] text-primary-foreground font-heading text-xl font-bold focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-all"
+                />
+              </div>
+            </div>
+            <div className="pt-2 flex gap-2">
+              <button onClick={() => setEditAg(null)} className="flex-1 py-2.5 rounded-xl bg-primary-foreground/[0.04] text-primary-foreground/80 hover:bg-primary-foreground/[0.08] hover:text-primary-foreground font-heading text-[11px] font-bold uppercase tracking-wider transition-all">Cancelar</button>
+              <button onClick={confirmarEdicaoValores} disabled={savingEdit} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gold text-charcoal font-heading text-[11px] font-bold uppercase tracking-wider hover:bg-gold/90 transition-all shadow-[0_0_10px_hsl(var(--gold)/0.2)] disabled:opacity-40">Salvar</button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

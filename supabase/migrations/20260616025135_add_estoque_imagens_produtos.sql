@@ -1,0 +1,1 @@
+ALTER TABLE public.produtos ADD COLUMN estoque INTEGER NOT NULL DEFAULT 0; ALTER TABLE public.produtos ADD COLUMN imagens TEXT[] NOT NULL DEFAULT '{}';

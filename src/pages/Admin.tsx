@@ -563,6 +563,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [editAgHorario, setEditAgHorario] = useState("");
   const [editAgServico, setEditAgServico] = useState("");
   const [editAgValor, setEditAgValor] = useState(0);
+  const [editAgValorPago, setEditAgValorPago] = useState(0);
   const [editAgDuracao, setEditAgDuracao] = useState(60);
   const [editAgSaving, setEditAgSaving] = useState(false);
 
@@ -572,6 +573,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setEditAgHorario(ag.horario);
     setEditAgServico(ag.servico);
     setEditAgValor(ag.valor);
+    setEditAgValorPago(Number(ag.valor_pago || 0));
     setEditAgDuracao(ag.duracao_minutos || 60);
     setShowEditAgendamento(true);
     setDetalheAgendamento(null);
@@ -614,7 +616,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
   const handleSaveEditAgendamento = async () => {
     if (!editingAg) return;
-    if (!editAgData || !editAgHorario || !editAgServico || editAgValor < 0 || editAgDuracao <= 0) {
+    if (!editAgData || !editAgHorario || !editAgServico || editAgValor < 0 || editAgValorPago < 0 || editAgDuracao <= 0) {
       toast.error("Preencha todos os campos corretamente");
       return;
     }
@@ -625,10 +627,32 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         horario: editAgHorario,
         servico: editAgServico,
         valor: editAgValor,
+        valor_pago: editAgValorPago,
         duracao_minutos: editAgDuracao
       } as any).eq("id", editingAg.id);
 
       if (error) throw error;
+
+      try {
+        const statusFromValor = (p: number, t: number) => {
+          if (p >= t) return "quitado";
+          if (p > 0) return "sinal";
+          return "pendente";
+        };
+        const { data: userRes } = await supabase.auth.getUser();
+        await supabase.from("pagamento_historico").insert({
+          agendamento_id: editingAg.id,
+          status_anterior: statusFromValor(Number(editingAg.valor_pago || 0), Number(editingAg.valor)),
+          status_novo: statusFromValor(editAgValorPago, editAgValor),
+          valor_anterior: Number(editingAg.valor_pago || 0),
+          valor_novo: editAgValorPago,
+          valor_delta: editAgValorPago - Number(editingAg.valor_pago || 0),
+          total: editAgValor,
+          acao: "ajuste_admin",
+          autor_id: userRes?.user?.id || null,
+          autor_nome: (userRes?.user?.user_metadata as any)?.nome || userRes?.user?.email || "Admin",
+        });
+      } catch (err) {}
 
       setAgendamentos(prev => prev.map(a => a.id === editingAg.id ? {
         ...a,
@@ -636,6 +660,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         horario: editAgHorario,
         servico: editAgServico,
         valor: editAgValor,
+        valor_pago: editAgValorPago,
         duracao_minutos: editAgDuracao
       } : a));
       toast.success("Agendamento atualizado!");
@@ -1997,16 +2022,27 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/50">Duração (min)</label>
+                        <label className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/50">Valor Pago (R$)</label>
                         <input
                           type="number"
-                          step="5"
-                          min="5"
-                          value={editAgDuracao}
-                          onChange={(e) => setEditAgDuracao(Number(e.target.value))}
+                          step="0.01"
+                          min="0"
+                          value={editAgValorPago}
+                          onChange={(e) => setEditAgValorPago(Number(e.target.value))}
                           className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40"
                         />
                       </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/50">Duração (min)</label>
+                      <input
+                        type="number"
+                        step="5"
+                        min="5"
+                        value={editAgDuracao}
+                        onChange={(e) => setEditAgDuracao(Number(e.target.value))}
+                        className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40"
+                      />
                     </div>
                   </div>
                   <div className="flex items-center gap-3 mt-6">
