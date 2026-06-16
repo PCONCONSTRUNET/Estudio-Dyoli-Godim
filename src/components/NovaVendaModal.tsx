@@ -25,9 +25,13 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
   const [search, setSearch] = useState("");
   const [selectedItems, setSelectedItems] = useState<{ produto: Produto; qtd: number }[]>([]);
   
+  const SUPABASE_URL = "https://vlepenxinekoljxecomr.supabase.co";
+  const SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsZXBlbnhpbmVrb2xqeGVjb21yIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTA2MjQ0OSwiZXhwIjoyMDkwNjM4NDQ5fQ.n-vDPXUpnGZOEBpZJpzQ5TYEQSQwbWWPwAk3ShhYWnM";
+
   // Pagamento form
   const [clienteNome, setClienteNome] = useState("");
-  const [clientesSugeridos, setClientesSugeridos] = useState<{ id: string; nome: string }[]>([]);
+  const [clienteTelefone, setClienteTelefone] = useState("");
+  const [clientesSugeridos, setClientesSugeridos] = useState<{ id: string; nome: string; telefone?: string }[]>([]);
   const [valorSugerido, setValorSugerido] = useState(0);
   const [valorFinal, setValorFinal] = useState("");
   const [pago, setPago] = useState(true);
@@ -42,6 +46,7 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
       setSearch("");
       setSelectedItems([]);
       setClienteNome("");
+      setClienteTelefone("");
       setPago(true);
       setFormaPagamento("pix");
       setData(new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]);
@@ -56,24 +61,42 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
     setValorFinal(total.toFixed(2));
   }, [selectedItems]);
 
-  const fetchClientes = async () => {
-    // Busca nomes de clientes do histórico de agendamentos (não precisa de conta)
-    const { data: fromAgendamentos } = await supabase
-      .from("agendamentos")
-      .select("cliente_nome")
-      .not("cliente_nome", "is", null);
+  const adminFetch = async (path: string, method: string, body?: object) => {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+      method,
+      headers: {
+        "apikey": SERVICE_KEY,
+        "Authorization": `Bearer ${SERVICE_KEY}`,
+        "Content-Type": "application/json",
+        "Prefer": "return=representation",
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ message: res.statusText }));
+      throw new Error(err.message || res.statusText);
+    }
+    return res.json().catch(() => null);
+  };
 
-    // Busca também de profiles (clientes com conta)
-    const { data: fromProfiles } = await supabase
-      .from("profiles")
-      .select("nome")
+  const fetchClientes = async () => {
+    // Busca da tabela clientes (sem auth)
+    const { data: fromClientes } = await supabase
+      .from("clientes")
+      .select("id, nome, telefone")
       .order("nome");
 
-    const nomes = new Set<string>();
-    (fromAgendamentos || []).forEach(a => { if (a.cliente_nome) nomes.add(a.cliente_nome.trim()); });
-    (fromProfiles || []).forEach(p => { if (p.nome) nomes.add(p.nome.trim()); });
+    // Busca de profiles (clientes com conta)
+    const { data: fromProfiles } = await supabase
+      .from("profiles")
+      .select("id, nome")
+      .order("nome");
 
-    setClientesSugeridos([...nomes].sort().map(n => ({ id: n, nome: n })));
+    const map = new Map<string, { id: string; nome: string; telefone?: string }>();
+    (fromClientes || []).forEach(c => map.set(c.nome.trim().toLowerCase(), { id: c.id, nome: c.nome.trim(), telefone: c.telefone }));
+    (fromProfiles || []).forEach(p => { if (!map.has(p.nome.trim().toLowerCase())) map.set(p.nome.trim().toLowerCase(), { id: p.id, nome: p.nome.trim() }); });
+
+    setClientesSugeridos([...map.values()].sort((a, b) => a.nome.localeCompare(b.nome)));
   };
 
   const activeProducts = useMemo(() => {
@@ -125,45 +148,58 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
 
     setSaving(true);
     try {
-      // 1. Inserir no Agendamento (Caixa)
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id || null; // Usuário logado
-      const now = new Date();
-      const horario = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+      const nomeCliente = clienteNome.trim();
+      const telCliente = clienteTelefone.trim();
 
-      const variacaoText = selectedItems.map(i => `${i.qtd}x ${i.produto.nome}`).join(", ");
+      // 1. Auto-registrar cliente se não existir
+      const clienteExistente = clientesSugeridos.find(
+        c => c.nome.toLowerCase() === nomeCliente.toLowerCase()
+      );
+      let clienteId: string | null = clienteExistente?.id || null;
 
-      const payload = {
-        user_id: userId, 
-        cliente_nome: clienteNome.trim(),
-        servico: "Venda de Produtos",
-        variacao: variacaoText,
-        valor: valNum,
+      if (!clienteExistente) {
+        // Novo cliente — registrar na tabela clientes
+        const novoCliente = await adminFetch("clientes", "POST", {
+          nome: nomeCliente,
+          telefone: telCliente,
+        });
+        clienteId = novoCliente?.[0]?.id || null;
+        // Atualiza a lista local
+        setClientesSugeridos(prev => [...prev, { id: clienteId!, nome: nomeCliente, telefone: telCliente }]);
+      } else if (telCliente && clienteExistente) {
+        // Atualiza telefone se foi informado e cliente já existia
+        await adminFetch(`clientes?id=eq.${clienteExistente.id}`, "PATCH", { telefone: telCliente }).catch(() => {});
+      }
+
+      // 2. Registrar venda na tabela vendas
+      const itens = selectedItems.map(i => ({
+        produto_id: i.produto.id,
+        nome: i.produto.nome,
+        preco_unitario: i.produto.preco,
+        qtd: i.qtd,
+        subtotal: i.produto.preco * i.qtd,
+      }));
+
+      await adminFetch("vendas", "POST", {
+        cliente_id: clienteId,
+        cliente_nome: nomeCliente,
+        telefone: telCliente,
+        itens,
+        valor_total: valNum,
         valor_pago: pago ? valNum : 0,
-        data_agendamento: data,
-        horario: horario,
-        status: "concluido",
         forma_pagamento: formaPagamento,
-        observacao: "", // Conta para comissão
-        duracao_minutos: 0,
-        origem: "manual",
-      };
+        pago,
+        data_venda: data,
+      });
 
-      const { error: errorAgendamento } = await supabase.from("agendamentos").insert([payload]);
-      if (errorAgendamento) throw errorAgendamento;
-
-      // 2. Abater Estoque
+      // 3. Abater Estoque
       for (const item of selectedItems) {
         const estoqueAtual = Number(item.produto.estoque) || 0;
         const novoEstoque = Math.max(0, estoqueAtual - item.qtd);
-        const { error: errorEstoque } = await supabase
-          .from("produtos")
-          .update({ estoque: novoEstoque })
-          .eq("id", item.produto.id);
-        if (errorEstoque) throw errorEstoque;
+        await adminFetch(`produtos?id=eq.${item.produto.id}`, "PATCH", { estoque: novoEstoque });
       }
 
-      toast.success("Venda registrada com sucesso!");
+      toast.success(clienteExistente ? "Venda registrada com sucesso!" : `Venda registrada! ${nomeCliente} cadastrado(a) como novo cliente. ✓`);
       onSuccess();
       onOpenChange(false);
     } catch (err: any) {
@@ -278,7 +314,14 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
                   list="clientes-list"
                   placeholder="Nome do cliente"
                   value={clienteNome}
-                  onChange={(e) => setClienteNome(e.target.value)}
+                  onChange={(e) => {
+                    const newName = e.target.value;
+                    setClienteNome(newName);
+                    const existing = clientesSugeridos.find(c => c.nome.toLowerCase() === newName.toLowerCase());
+                    if (existing && existing.telefone) {
+                      setClienteTelefone(existing.telefone);
+                    }
+                  }}
                   className="w-full bg-primary-foreground/[0.03] border border-primary-foreground/[0.08] rounded-xl py-2 pl-8 pr-3 text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/30"
                 />
                 <datalist id="clientes-list">
@@ -293,6 +336,19 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
                   <span className="font-body text-[10px] text-primary-foreground/50">será cadastrado ao confirmar</span>
                 </div>
               )}
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-wider">Telefone / WhatsApp</label>
+              <div className="relative">
+                <input
+                  type="tel"
+                  placeholder="(00) 00000-0000"
+                  value={clienteTelefone}
+                  onChange={(e) => setClienteTelefone(e.target.value)}
+                  className="w-full bg-primary-foreground/[0.03] border border-primary-foreground/[0.08] rounded-xl py-2 px-3 text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/30"
+                />
+              </div>
             </div>
 
             <div className="space-y-1">
