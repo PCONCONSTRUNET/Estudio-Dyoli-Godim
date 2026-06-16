@@ -74,18 +74,22 @@ const ProdutosTab = () => {
       if (newImagensFiles.length > 0) urls = await uploadImages(newImagensFiles);
       
       const estoqueNum = newEstoque ? Number(newEstoque) : 0;
+      const payload: any = {
+        nome: newNome,
+        descricao: newDescricao,
+        preco: Number(newPreco),
+        estoque: estoqueNum,
+        ativo: true,
+        ordem: produtos.length + 1,
+      };
+      if (urls.length > 0) {
+        payload.imagem_url = urls[0];
+        payload.imagens = urls;
+      }
+
       const { data, error } = await supabase
         .from("produtos")
-        .insert({
-          nome: newNome,
-          descricao: newDescricao,
-          preco: Number(newPreco),
-          estoque: estoqueNum,
-          imagem_url: urls.length > 0 ? urls[0] : "",
-          imagens: urls,
-          ativo: true,
-          ordem: produtos.length + 1,
-        })
+        .insert(payload)
         .select()
         .single();
         
