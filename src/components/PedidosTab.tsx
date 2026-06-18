@@ -1,3 +1,4 @@
+import { parseCurrencyStr } from "@/lib/utils";
 import { useState, useMemo, useEffect } from "react";
 import { Search, CheckCircle, X, UserX, ChevronDown, Bell, Clock, AlertTriangle, Eye, Wallet, History, Plus, Edit2 } from "lucide-react";
 import BinButton from "@/components/ui/bin-button";
@@ -442,8 +443,8 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
   const confirmarEdicaoValores = async () => {
     if (!editAg) return;
     setSavingEdit(true);
-    const novoValor = Number(editValorInput.replace(/\./g, "").replace(",", "."));
-    const novoValorPago = Number(editValorPagoInput.replace(/\./g, "").replace(",", "."));
+    const novoValor = parseCurrencyStr(editValorInput);
+    const novoValorPago = parseCurrencyStr(editValorPagoInput);
     
     if (!Number.isFinite(novoValor) || !Number.isFinite(novoValorPago)) {
       toast.error("Valores inválidos");
@@ -488,7 +489,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
 
   const confirmarAddValor = async () => {
     if (!addValorAg) return;
-    const valorAdicional = Number(addValorInput.replace(/\./g, "").replace(",", "."));
+    const valorAdicional = parseCurrencyStr(addValorInput);
     if (!Number.isFinite(valorAdicional) || valorAdicional <= 0) {
       toast.error("Informe um valor válido");
       return;
@@ -531,7 +532,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
 
   const confirmarRegistroPagamento = async () => {
     if (!pagamentoAg) return;
-    const valor = Number(pagamentoInput.replace(/\./g, "").replace(",", "."));
+    const valor = parseCurrencyStr(pagamentoInput);
     if (!Number.isFinite(valor) || valor <= 0) {
       toast.error("Informe um valor válido");
       return;
@@ -1309,7 +1310,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
             const valorTotal = Number(pagamentoAg.valor);
             const jaPago = Number(pagamentoAg.valor_pago || 0);
             const restante = Math.max(0, valorTotal - jaPago);
-            const valorAtual = Number((pagamentoInput || "0").replace(/\./g, "").replace(",", ".")) || 0;
+            const valorAtual = parseCurrencyStr(pagamentoInput || "0") || 0;
             const novoTotal = Math.min(valorTotal, jaPago + valorAtual);
             const novoRestante = Math.max(0, valorTotal - novoTotal);
             const quitaTudo = novoTotal >= valorTotal;
@@ -1409,7 +1410,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
         <DialogContent className="w-[calc(100vw-2rem)] max-w-[calc(100vw-2rem)] sm:max-w-[360px] mx-auto bg-charcoal border-primary-foreground/[0.08] rounded-2xl p-0 sm:p-0 shadow-2xl overflow-hidden">
           {addValorAg && (() => {
             const valorTotalAtual = Number(addValorAg.valor);
-            const valorAdicional = Number((addValorInput || "0").replace(/\./g, "").replace(",", ".")) || 0;
+            const valorAdicional = parseCurrencyStr(addValorInput || "0") || 0;
             const novoTotal = valorTotalAtual + valorAdicional;
             
             return (

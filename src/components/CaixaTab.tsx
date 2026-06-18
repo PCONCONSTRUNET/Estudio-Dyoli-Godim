@@ -1,3 +1,4 @@
+import { parseCurrencyStr } from "@/lib/utils";
 import { useState, useMemo, useEffect } from "react";
 import {
  Calendar,
@@ -93,7 +94,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  const [salvandoRetirada, setSalvandoRetirada] = useState(false);
 
  const handleRetirarComissao = async () => {
-    const valNum = parseFloat(retiradaValor.replace(/\./g, "").replace(",", "."));
+    const valNum = parseCurrencyStr(retiradaValor);
    if (isNaN(valNum) || valNum <= 0) return toast.error("Informe um valor válido para retirada");
    
    setSalvandoRetirada(true);
