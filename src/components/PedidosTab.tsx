@@ -443,14 +443,18 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
   const confirmarEdicaoValores = async () => {
     if (!editAg) return;
     setSavingEdit(true);
-    const novoValor = parseCurrencyStr(editValorInput);
     const novoValorPago = parseCurrencyStr(editValorPagoInput);
+    let novoValor = parseCurrencyStr(editValorInput);
     
     if (!Number.isFinite(novoValor) || !Number.isFinite(novoValorPago)) {
       toast.error("Valores inválidos");
       setSavingEdit(false);
       return;
     }
+
+    // Se valor pago for maior que o valor do serviço (ex: placeholder R$1),
+    // ajusta o valor total do serviço automaticamente.
+    if (novoValorPago > novoValor) novoValor = novoValorPago;
 
     const table = editAg.origem === "venda" ? "vendas" : "agendamentos";
     const updatePayload: any = editAg.origem === "venda" 
@@ -537,16 +541,26 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
       toast.error("Informe um valor válido");
       return;
     }
-    const totalAgora = Math.min(Number(pagamentoAg.valor), Number(pagamentoAg.valor_pago || 0) + valor);
-    await supabase.from("agendamentos").update({ valor_pago: totalAgora }).eq("id", pagamentoAg.id);
-    await logPagamento(pagamentoAg, totalAgora, totalAgora >= Number(pagamentoAg.valor) ? "quitar" : "registro");
+    const novoTotalPago = Number(pagamentoAg.valor_pago || 0) + valor;
+    const valorServico = Number(pagamentoAg.valor);
+
+    // Se o valor pago superar o valor do serviço (ex: serviço cadastrado como R$1 placeholder),
+    // atualiza o valor total do serviço para refletir o que foi realmente cobrado.
+    const novoValorServico = novoTotalPago > valorServico ? novoTotalPago : valorServico;
+    const totalAgora = Math.min(novoValorServico, novoTotalPago);
+
+    const updatePayload: any = { valor_pago: totalAgora };
+    if (novoValorServico > valorServico) updatePayload.valor = novoValorServico;
+
+    await supabase.from("agendamentos").update(updatePayload).eq("id", pagamentoAg.id);
+    await logPagamento(pagamentoAg, totalAgora, totalAgora >= novoValorServico ? "quitar" : "registro");
     onUpdate();
     setPagamentoAg(null);
     setPagamentoInput("");
-    if (totalAgora >= Number(pagamentoAg.valor)) {
+    if (totalAgora >= novoValorServico) {
       toast.success("Pagamento quitado integralmente ✅");
     } else {
-      toast.success(`Pagamento parcial registrado · ainda falta ${formatCurrency(Number(pagamentoAg.valor) - totalAgora - Number(pagamentoAg.valor_desconto_credito || 0))}`);
+      toast.success(`Pagamento parcial registrado · ainda falta ${formatCurrency(novoValorServico - totalAgora - Number(pagamentoAg.valor_desconto_credito || 0))}`);
     }
   };
 
