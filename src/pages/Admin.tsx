@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { parseCurrencyStr } from "@/lib/utils";
 import { motion, useAnimation } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -592,7 +593,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
   const confirmarRegistroPagamento = async () => {
     if (!pagamentoAg) return;
-    const valorDigitado = Number(pagamentoInput.replace(/\./g, "").replace(",", "."));
+    const valorDigitado = parseCurrencyStr(pagamentoInput);
     if (!Number.isFinite(valorDigitado) || valorDigitado <= 0) {
       toast.error("Informe um valor válido");
       return;
@@ -1026,10 +1027,6 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
 
   const saveManualRegistration = async () => {
-    if (manualItens.length === 0 && Number(manualCredito) <= 0) {
-      toast.error("Adicione pelo menos 1 serviço ou conceda um crédito");
-      return;
-    }
     if (!manualData || !manualHorario) {
       toast.error("Preencha data e horário");
       return;
@@ -1041,8 +1038,9 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setManualSaving(true);
     try {
       let userId = manualCliente || null;
-      const duracao = manualItens.length === 0 ? 0 : (manualDuracaoTotal || 60);
       const isApenasCredito = manualItens.length === 0 && manualCredito > 0;
+      const isReservaSemServico = manualItens.length === 0 && manualCredito <= 0;
+      const duracao = isReservaSemServico ? 60 : (manualDuracaoTotal || 60);
       const valor = isApenasCredito ? manualCredito : manualValorTotal;
 
       // Agrupa duplicados: "Perfuração (×3), Troca de joia"
@@ -1052,7 +1050,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         ? Array.from(counts.entries())
           .map(([nome, qtd]) => qtd > 1 ? `${nome} (×${qtd})` : nome)
           .join(", ")
-        : "Adição de Crédito";
+        : isApenasCredito ? "Adição de Crédito" : "A definir";
 
       const clienteNome = manualCliente
         ? (clientes.find(c => c.id === manualCliente)?.nome || "")
@@ -1165,13 +1163,13 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         data_agendamento: manualData,
         horario: manualHorario,
         valor: valor,
-        valor_pago: isApenasCredito ? valor : (manualPago ? (manualValorPago ? Number(manualValorPago.replace(/\./g, "").replace(",", ".")) : Math.max(0, valor - (descontoAplicado > 0 ? descontoAplicado : 0))) : 0),
+        valor_pago: isApenasCredito ? valor : (manualPago ? (manualValorPago ? parseCurrencyStr(manualValorPago) : Math.max(0, valor - (descontoAplicado > 0 ? descontoAplicado : 0))) : 0),
         valor_troco: manualTroco,
         valor_gorjeta: manualGorjeta,
         valor_credito: isApenasCredito ? 0 : manualCredito,
         valor_desconto_credito: descontoAplicado > 0 ? descontoAplicado : null,
         duracao_minutos: duracao,
-        status: manualItens.length === 0 ? "concluido" : (manualConcluido ? "concluido" : "confirmado"),
+        status: isApenasCredito ? "concluido" : isReservaSemServico ? "confirmado" : (manualConcluido ? "concluido" : "confirmado"),
         forma_pagamento: manualFormaPagamento,
         user_id: userId,
         cliente_nome: clienteNome || null,
@@ -2088,13 +2086,23 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                     <div className="relative space-y-2.5">
                       <div className="flex items-center justify-between px-1">
                         <label className="font-body text-[11px] uppercase tracking-[0.2em] text-gold font-bold drop-shadow-[0_0_8px_rgba(255,215,0,0.5)] flex items-center gap-1.5">
-                          Serviços da comanda
+                          Serviços da comanda <span className="text-primary-foreground/40 normal-case tracking-normal font-normal">(opcional)</span>
                         </label>
-                        <span className="text-[9px] text-green-300 bg-green-500/15 border border-green-500/30 px-2 py-0.5 rounded-md ml-2 normal-case tracking-normal font-medium shadow-[0_0_8px_rgba(34,197,94,0.15)]">(ou conceda Crédito abaixo)</span>
                         {manualItens.length > 0 && (
                           <span className="font-body text-[10px] text-gold/70 tabular-nums">{manualItens.length} {manualItens.length === 1 ? "item" : "itens"}</span>
                         )}
                       </div>
+
+                      {/* Reserva sem serviço hint */}
+                      {manualItens.length === 0 && manualCredito <= 0 && (
+                        <div className="rounded-xl border border-blue-500/30 bg-blue-500/[0.07] px-3 py-2.5 flex items-start gap-2">
+                          <span className="text-[14px] shrink-0 mt-0.5">📅</span>
+                          <div>
+                            <p className="font-body text-[11px] font-semibold text-blue-300">Reserva sem serviço definido</p>
+                            <p className="font-body text-[10px] text-blue-400/70 mt-0.5 leading-snug">Você pode salvar assim para reservar o horário (R$ 0,00). Edite depois para adicionar os serviços e valores.</p>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Lista de itens adicionados */}
                       {(manualItens.length > 0 || manualCredito > 0) && (

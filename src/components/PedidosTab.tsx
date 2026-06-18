@@ -410,21 +410,33 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
   };
 
   const registrarPagamentoIntegral = (a: Agendamento) => {
-    confirm({
-      title: "Quitar Pagamento",
-      description: "Deseja marcar este agendamento como totalmente pago?",
-      onConfirm: async () => {
-        const total = Number(a.valor);
-        await supabase.from("agendamentos").update({ valor_pago: total }).eq("id", a.id);
-        await logPagamento(a, total, "quitar");
-        onUpdate();
-        toast.success("Pagamento registrado como quitado");
-      }
-    });
+    setQuitarAg(a);
+    setQuitarForma("");
+  };
+
+  const confirmarQuitarTudo = async () => {
+    if (!quitarAg) return;
+    if (!quitarForma) { toast.error("Selecione a forma de pagamento"); return; }
+    const total = Number(quitarAg.valor);
+    const updatePayload: any = { valor_pago: total, forma_pagamento: quitarForma };
+    if (quitarAg.origem === "venda") {
+      await supabase.from("vendas").update({ pago: true, forma_pagamento: quitarForma }).eq("id", quitarAg.id);
+    } else {
+      await supabase.from("agendamentos").update(updatePayload).eq("id", quitarAg.id);
+    }
+    await logPagamento(quitarAg, total, "quitar");
+    onUpdate();
+    setQuitarAg(null);
+    setQuitarForma("");
+    toast.success("Pagamento registrado como quitado ✅");
   };
 
   const [pagamentoAg, setPagamentoAg] = useState<Agendamento | null>(null);
   const [pagamentoInput, setPagamentoInput] = useState<string>("");
+  const [pagamentoForma, setPagamentoForma] = useState<string>("");
+
+  const [quitarAg, setQuitarAg] = useState<Agendamento | null>(null);
+  const [quitarForma, setQuitarForma] = useState<string>("");
 
   const [addValorAg, setAddValorAg] = useState<Agendamento | null>(null);
   const [addValorInput, setAddValorInput] = useState<string>("");
@@ -536,6 +548,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
 
   const confirmarRegistroPagamento = async () => {
     if (!pagamentoAg) return;
+    if (!pagamentoForma) { toast.error("Selecione a forma de pagamento"); return; }
     const valor = parseCurrencyStr(pagamentoInput);
     if (!Number.isFinite(valor) || valor <= 0) {
       toast.error("Informe um valor válido");
@@ -549,7 +562,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     const novoValorServico = novoTotalPago > valorServico ? novoTotalPago : valorServico;
     const totalAgora = Math.min(novoValorServico, novoTotalPago);
 
-    const updatePayload: any = { valor_pago: totalAgora };
+    const updatePayload: any = { valor_pago: totalAgora, forma_pagamento: pagamentoForma };
     if (novoValorServico > valorServico) updatePayload.valor = novoValorServico;
 
     await supabase.from("agendamentos").update(updatePayload).eq("id", pagamentoAg.id);
@@ -557,6 +570,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     onUpdate();
     setPagamentoAg(null);
     setPagamentoInput("");
+    setPagamentoForma("");
     if (totalAgora >= novoValorServico) {
       toast.success("Pagamento quitado integralmente ✅");
     } else {
@@ -1318,7 +1332,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
       </Sheet>
 
       {/* Modal: Registrar pagamento (sinal ou restante) */}
-      <Dialog open={!!pagamentoAg} onOpenChange={(open) => { if (!open) { setPagamentoAg(null); setPagamentoInput(""); } }}>
+      <Dialog open={!!pagamentoAg} onOpenChange={(open) => { if (!open) { setPagamentoAg(null); setPagamentoInput(""); setPagamentoForma(""); } }}>
         <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-[360px] mx-auto bg-charcoal border-primary-foreground/[0.08] rounded-2xl p-0 sm:p-0 shadow-2xl overflow-hidden">
           {pagamentoAg && (() => {
             const valorTotal = Number(pagamentoAg.valor);
@@ -1332,6 +1346,11 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
               { label: "50% (sinal)", valor: Math.round(valorTotal * 0.5 * 100) / 100 },
               { label: "30%", valor: Math.round(valorTotal * 0.3 * 100) / 100 },
               { label: `Restante (${formatCurrency(restante)})`, valor: restante },
+            ];
+            const formaOpts = [
+              { value: "pix", label: "Pix", emoji: "🔑" },
+              { value: "cartao", label: "Cartão", emoji: "💳" },
+              { value: "dinheiro", label: "Dinheiro", emoji: "💵" },
             ];
             return (
               <div className="p-4 space-y-3 mx-auto w-full">
@@ -1356,6 +1375,28 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                   <div>
                     <p className="text-amber-300/70 text-[8px] uppercase tracking-wider mb-0.5">A receber</p>
                     <p className="text-amber-300 font-semibold">{formatCurrency(restante)}</p>
+                  </div>
+                </div>
+
+                {/* Forma de pagamento */}
+                <div className="space-y-1.5">
+                  <label className="font-body text-[10px] font-bold text-gold uppercase tracking-[0.05em]">Forma de pagamento</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {formaOpts.map((f) => (
+                      <button
+                        key={f.value}
+                        type="button"
+                        onClick={() => setPagamentoForma(f.value)}
+                        className={`flex flex-col items-center gap-1 rounded-xl border py-2.5 font-body text-[11px] font-semibold transition-all ${
+                          pagamentoForma === f.value
+                            ? "border-gold bg-gold/15 text-gold shadow-[0_0_8px_hsl(var(--gold)/0.25)]"
+                            : "border-primary-foreground/[0.08] bg-primary-foreground/[0.03] text-primary-foreground/70 hover:border-gold/30 hover:bg-gold/[0.05] hover:text-gold/80"
+                        }`}
+                      >
+                        <span className="text-lg">{f.emoji}</span>
+                        {f.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -1410,8 +1451,64 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                 </div>
 
                 <div className="pt-2 flex gap-2">
-                  <button onClick={() => { setPagamentoAg(null); setPagamentoInput(""); }} className="flex-1 py-2.5 rounded-xl bg-primary-foreground/[0.04] text-primary-foreground/80 hover:bg-primary-foreground/[0.08] hover:text-primary-foreground font-heading text-[11px] font-bold uppercase tracking-wider transition-all">Cancelar</button>
-                  <button onClick={confirmarRegistroPagamento} disabled={valorAtual <= 0} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gold text-charcoal font-heading text-[11px] font-bold uppercase tracking-wider hover:bg-gold/90 transition-all shadow-[0_0_10px_hsl(var(--gold)/0.2)] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none">Confirmar</button>
+                  <button onClick={() => { setPagamentoAg(null); setPagamentoInput(""); setPagamentoForma(""); }} className="flex-1 py-2.5 rounded-xl bg-primary-foreground/[0.04] text-primary-foreground/80 hover:bg-primary-foreground/[0.08] hover:text-primary-foreground font-heading text-[11px] font-bold uppercase tracking-wider transition-all">Cancelar</button>
+                  <button onClick={confirmarRegistroPagamento} disabled={valorAtual <= 0 || !pagamentoForma} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gold text-charcoal font-heading text-[11px] font-bold uppercase tracking-wider hover:bg-gold/90 transition-all shadow-[0_0_10px_hsl(var(--gold)/0.2)] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none">Confirmar</button>
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Quitar tudo */}
+      <Dialog open={!!quitarAg} onOpenChange={(open) => { if (!open) { setQuitarAg(null); setQuitarForma(""); } }}>
+        <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-[340px] mx-auto bg-charcoal border-primary-foreground/[0.08] rounded-2xl p-0 shadow-2xl overflow-hidden">
+          {quitarAg && (() => {
+            const formaOpts = [
+              { value: "pix", label: "Pix", emoji: "🔑" },
+              { value: "cartao", label: "Cartão", emoji: "💳" },
+              { value: "dinheiro", label: "Dinheiro", emoji: "💵" },
+            ];
+            return (
+              <div className="p-4 space-y-4 mx-auto w-full">
+                <DialogHeader>
+                  <DialogTitle className="font-heading text-[16px] font-semibold text-primary-foreground flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-400" /> Quitar Pagamento
+                  </DialogTitle>
+                </DialogHeader>
+                <div>
+                  <p className="font-body text-[11px] text-primary-foreground/70 truncate">
+                    {getClientName(quitarAg.user_id, quitarAg.cliente_nome)} · {quitarAg.servico}
+                  </p>
+                  <p className="font-heading text-[15px] font-bold text-green-400 mt-1">
+                    Total: {formatCurrency(Number(quitarAg.valor))}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="font-body text-[10px] font-bold text-gold uppercase tracking-[0.05em]">Forma de pagamento</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {formaOpts.map((f) => (
+                      <button
+                        key={f.value}
+                        type="button"
+                        onClick={() => setQuitarForma(f.value)}
+                        className={`flex flex-col items-center gap-1 rounded-xl border py-2.5 font-body text-[11px] font-semibold transition-all ${
+                          quitarForma === f.value
+                            ? "border-green-500/60 bg-green-500/15 text-green-300 shadow-[0_0_8px_rgba(34,197,94,0.2)]"
+                            : "border-primary-foreground/[0.08] bg-primary-foreground/[0.03] text-primary-foreground/70 hover:border-green-500/30 hover:bg-green-500/[0.05] hover:text-green-400/80"
+                        }`}
+                      >
+                        <span className="text-lg">{f.emoji}</span>
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-1">
+                  <button onClick={() => { setQuitarAg(null); setQuitarForma(""); }} className="flex-1 py-2.5 rounded-xl bg-primary-foreground/[0.04] text-primary-foreground/80 hover:bg-primary-foreground/[0.08] hover:text-primary-foreground font-heading text-[11px] font-bold uppercase tracking-wider transition-all">Cancelar</button>
+                  <button onClick={confirmarQuitarTudo} disabled={!quitarForma} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-green-500 text-charcoal font-heading text-[11px] font-bold uppercase tracking-wider hover:bg-green-400 transition-all shadow-[0_0_10px_rgba(34,197,94,0.3)] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none">Quitar ✅</button>
                 </div>
               </div>
             );
