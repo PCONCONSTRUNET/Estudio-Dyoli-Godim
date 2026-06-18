@@ -563,8 +563,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [editAgData, setEditAgData] = useState("");
   const [editAgHorario, setEditAgHorario] = useState("");
   const [editAgServico, setEditAgServico] = useState("");
-  const [editAgValor, setEditAgValor] = useState(0);
-  const [editAgValorPago, setEditAgValorPago] = useState(0);
+  const [editAgValor, setEditAgValor] = useState<string | number>(0);
+  const [editAgValorPago, setEditAgValorPago] = useState<string | number>(0);
   const [editAgDuracao, setEditAgDuracao] = useState(60);
   const [editAgSaving, setEditAgSaving] = useState(false);
 
@@ -617,7 +617,9 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
   const handleSaveEditAgendamento = async () => {
     if (!editingAg) return;
-    if (!editAgData || !editAgHorario || !editAgServico || editAgValor < 0 || editAgValorPago < 0 || editAgDuracao <= 0) {
+    const finalValor = Number(editAgValor);
+    const finalValorPago = Number(editAgValorPago);
+    if (!editAgData || !editAgHorario || !editAgServico || finalValor < 0 || finalValorPago < 0 || editAgDuracao <= 0) {
       toast.error("Preencha todos os campos corretamente");
       return;
     }
@@ -627,8 +629,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         data_agendamento: editAgData,
         horario: editAgHorario,
         servico: editAgServico,
-        valor: editAgValor,
-        valor_pago: editAgValorPago,
+        valor: finalValor,
+        valor_pago: finalValorPago,
         duracao_minutos: editAgDuracao
       } as any).eq("id", editingAg.id);
 
@@ -644,11 +646,11 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         await supabase.from("pagamento_historico").insert({
           agendamento_id: editingAg.id,
           status_anterior: statusFromValor(Number(editingAg.valor_pago || 0), Number(editingAg.valor)),
-          status_novo: statusFromValor(editAgValorPago, editAgValor),
+          status_novo: statusFromValor(finalValorPago, finalValor),
           valor_anterior: Number(editingAg.valor_pago || 0),
-          valor_novo: editAgValorPago,
-          valor_delta: editAgValorPago - Number(editingAg.valor_pago || 0),
-          total: editAgValor,
+          valor_novo: finalValorPago,
+          valor_delta: finalValorPago - Number(editingAg.valor_pago || 0),
+          total: finalValor,
           acao: "ajuste_admin",
           autor_id: userRes?.user?.id || null,
           autor_nome: (userRes?.user?.user_metadata as any)?.nome || userRes?.user?.email || "Admin",
@@ -660,8 +662,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         data_agendamento: editAgData,
         horario: editAgHorario,
         servico: editAgServico,
-        valor: editAgValor,
-        valor_pago: editAgValorPago,
+        valor: finalValor,
+        valor_pago: finalValorPago,
         duracao_minutos: editAgDuracao
       } : a));
       toast.success("Agendamento atualizado!");
@@ -2015,7 +2017,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                           step="0.01"
                           min="0"
                           value={editAgValor}
-                          onChange={(e) => setEditAgValor(Number(e.target.value))}
+                          onChange={(e) => setEditAgValor(e.target.value)}
                           className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40"
                         />
                       </div>
@@ -2026,7 +2028,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                           step="0.01"
                           min="0"
                           value={editAgValorPago}
-                          onChange={(e) => setEditAgValorPago(Number(e.target.value))}
+                          onChange={(e) => setEditAgValorPago(e.target.value)}
                           className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40"
                         />
                       </div>
