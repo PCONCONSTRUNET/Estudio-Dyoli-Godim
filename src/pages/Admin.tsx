@@ -516,6 +516,12 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [showManualRegister, setShowManualRegister] = useState(false);
   const [detalheAgendamento, setDetalheAgendamento] = useState<Agendamento | null>(null);
   const [manualServicos, setManualServicos] = useState<{ id: string; nome: string; preco: number; duracao_minutos: number; categoria: string }[]>([]);
+
+  // Load services for manual registration
+  const loadManualServicos = async () => {
+    const { data } = await supabase.from("servicos").select("*").eq("ativo", true).order("ordem");
+    if (data) setManualServicos(data.map(s => ({ id: s.id, nome: s.nome, preco: Number(s.preco), duracao_minutos: s.duracao_minutos, categoria: s.categoria })));
+  };
   type ManualItem = { id: string; nome: string; valor: number; duracao: number };
   const [manualItens, setManualItens] = useState<ManualItem[]>([]);
   const [manualCliente, setManualCliente] = useState("");
@@ -571,6 +577,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [editAgSaving, setEditAgSaving] = useState(false);
 
   const openEditAgendamento = (ag: Agendamento) => {
+    loadManualServicos();
     setEditingAg(ag);
     setEditAgData(ag.data_agendamento);
     setEditAgHorario(ag.horario);
@@ -941,11 +948,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setAgendamentos((prev) => prev.map((item) => (item.id === id ? { ...item, valor_pago: newPago, valor_desconto_credito: novoDescontoCredito } : item)));
   };
 
-  // Load services for manual registration
-  const loadManualServicos = async () => {
-    const { data } = await supabase.from("servicos").select("*").eq("ativo", true).order("ordem");
-    if (data) setManualServicos(data.map(s => ({ id: s.id, nome: s.nome, preco: Number(s.preco), duracao_minutos: s.duracao_minutos, categoria: s.categoria })));
-  };
+
 
   // Helpers para converter horário <-> minutos
   const timeToMinutes = (t: string): number => {
