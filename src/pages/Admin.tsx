@@ -563,6 +563,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [editAgData, setEditAgData] = useState("");
   const [editAgHorario, setEditAgHorario] = useState("");
   const [editAgServico, setEditAgServico] = useState("");
+  const [editAgServicoSearch, setEditAgServicoSearch] = useState("");
+  const [editAgServicoOpen, setEditAgServicoOpen] = useState(false);
   const [editAgValor, setEditAgValor] = useState<string | number>(0);
   const [editAgValorPago, setEditAgValorPago] = useState<string | number>(0);
   const [editAgDuracao, setEditAgDuracao] = useState(60);
@@ -1980,8 +1982,64 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                     </DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4 mt-4">
-                    <div className="space-y-1.5">
-                      <label className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/50">Serviço(s)</label>
+                    <div className="space-y-1.5 relative z-20">
+                      <label className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/50">Buscar Serviço p/ Adicionar</label>
+                      <div className="relative group">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                          <Search className="h-4 w-4 text-primary-foreground/50" />
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Pesquisar e adicionar serviço..."
+                          value={editAgServicoSearch}
+                          onFocus={() => setEditAgServicoOpen(true)}
+                          onChange={(e) => { setEditAgServicoSearch(e.target.value); setEditAgServicoOpen(true); }}
+                          className="w-full pl-9 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40"
+                        />
+                      </div>
+                      
+                      {editAgServicoOpen && (
+                        <div className="absolute z-50 mt-1 left-0 right-0 rounded-2xl border border-gold/20 bg-charcoal/95 backdrop-blur-xl shadow-2xl overflow-hidden">
+                          <div className="max-h-52 overflow-y-auto">
+                            {manualServicos
+                              .filter(s => s.nome.toLowerCase().includes(editAgServicoSearch.toLowerCase()))
+                              .length === 0 ? (
+                              <p className="px-4 py-3 font-body text-[12px] text-primary-foreground/30 text-center">Nenhum serviço encontrado</p>
+                            ) : (
+                              manualServicos
+                                .filter(s => s.nome.toLowerCase().includes(editAgServicoSearch.toLowerCase()))
+                                .map(s => (
+                                  <button
+                                    key={s.id}
+                                    type="button"
+                                    onMouseDown={(e) => e.preventDefault()}
+                                    onClick={() => {
+                                      setEditAgServico(prev => {
+                                        if (!prev || prev === "A definir") return s.nome;
+                                        return prev + " + " + s.nome;
+                                      });
+                                      setEditAgValor(prev => Number(prev) + s.preco);
+                                      setEditAgDuracao(prev => prev + s.duracao_minutos);
+                                      setEditAgServicoSearch("");
+                                      setEditAgServicoOpen(false);
+                                    }}
+                                    className="w-full text-left px-4 py-3 font-body text-[13px] transition-all hover:bg-gold/10 text-primary-foreground flex items-center justify-between gap-3"
+                                  >
+                                    <span className="font-medium truncate">{s.nome}</span>
+                                    <span className="text-[11px] text-gold/70 tabular-nums flex-shrink-0">R$ {s.preco.toFixed(2).replace(".", ",")}</span>
+                                  </button>
+                                ))
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {editAgServicoOpen && (
+                        <div className="fixed inset-0 z-40" onClick={() => setEditAgServicoOpen(false)} />
+                      )}
+                    </div>
+
+                    <div className="space-y-1.5 relative z-10">
+                      <label className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/50">Serviço(s) Atual(is) / Editável</label>
                       <input
                         type="text"
                         value={editAgServico}
