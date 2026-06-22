@@ -16,7 +16,7 @@ const BOT_STATUS_URL = `${BOT_BASE_URL}/api/status`;
 const BOT_PAIRING_URL = `${BOT_BASE_URL}/api/pairing-code`;
 const BOT_LOGOUT_URL = `${BOT_BASE_URL}/api/logout`;
 const POLL_INTERVAL_MS = 15000;         // Intervalo padrão (desconectado)
-const POLL_INTERVAL_CONNECTED_MS = 60000; // Intervalo quando já conectado
+const POLL_INTERVAL_CONNECTED_MS = 2 * 60 * 60 * 1000; // 2 horas quando já conectado (evita requisições à VPS)
 
 // Headers padrão para chamadas ao backend do robô.
 const BOT_HEADERS = {} as const;
