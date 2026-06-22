@@ -86,10 +86,10 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const [vendas, setVendas] = useState<any[]>([]);
 
   useEffect(() => {
-    (supabase.from as any)("despesas").select("valor,pago,data_vencimento,categoria,descricao,data_pagamento,tipo").then(({ data }: any) => {
+    (supabase.from as any)("despesas").select("valor,pago,data_vencimento,categoria,descricao,data_pagamento,tipo").order("data_vencimento", { ascending: false }).limit(2000).then(({ data }: any) => {
       if (data) setDespesas(data);
     });
-    (supabase.from as any)("vendas").select("*").then(({ data }: any) => {
+    (supabase.from as any)("vendas").select("*").order("created_at", { ascending: false }).limit(2000).then(({ data }: any) => {
       if (data) setVendas(data);
     });
   }, []);

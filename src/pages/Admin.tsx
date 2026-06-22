@@ -500,6 +500,74 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("todos");
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [searchAgendamentos, setSearchAgendamentos] = useState<Agendamento[]>([]);
+  const [searchClientes, setSearchClientes] = useState<Profile[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 450);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    if (!debouncedSearch.trim()) {
+      setSearchAgendamentos([]);
+      setSearchClientes([]);
+      return;
+    }
+
+    const performSearch = async () => {
+      setIsSearching(true);
+      try {
+        // 1. Search profiles
+        const { data: matchedProfiles } = await supabase
+          .from("profiles")
+          .select("id, nome, whatsapp, cpf, created_at, credito_saldo")
+          .or(`nome.ilike.%${debouncedSearch}%,whatsapp.ilike.%${debouncedSearch}%`)
+          .order("created_at", { ascending: false })
+          .limit(200);
+
+        if (matchedProfiles) {
+          setSearchClientes(matchedProfiles as Profile[]);
+        }
+
+        // 2. Search agendamentos
+        let query = supabase.from("agendamentos").select("*").neq("status", "aguardando_pagamento");
+        
+        const isDate = /^\d{4}-\d{2}-\d{2}$/.test(debouncedSearch);
+        if (isDate) {
+          query = query.eq("data_agendamento", debouncedSearch);
+        } else {
+          const profileIds = (matchedProfiles || []).map(p => p.id);
+          if (profileIds.length > 0) {
+            // Note: Since Postgres IN clause with empty or sparse values can be fast, we build it properly:
+            const escapedIds = profileIds.map(id => `'${id}'`).join(",");
+            query = query.or(`servico.ilike.%${debouncedSearch}%,cliente_nome.ilike.%${debouncedSearch}%,user_id.in.(${escapedIds})`);
+          } else {
+            query = query.or(`servico.ilike.%${debouncedSearch}%,cliente_nome.ilike.%${debouncedSearch}%`);
+          }
+        }
+
+        const { data: searchAgs } = await query.order("data_agendamento", { ascending: false }).limit(200);
+        if (searchAgs) {
+          setSearchAgendamentos(searchAgs as Agendamento[]);
+        }
+      } catch (err) {
+        console.error("Erro na busca remota:", err);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    performSearch();
+  }, [debouncedSearch]);
+
+  const activeAgendamentos = searchTerm.trim() ? searchAgendamentos : agendamentos;
+  const activeClientes = searchTerm.trim() ? searchClientes : clientes;
+
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const [clienteParaExcluir, setClienteParaExcluir] = useState<Profile | null>(null);
   const [excluindoCliente, setExcluindoCliente] = useState(false);
@@ -730,6 +798,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
       .select("*")
       .neq("status", "aguardando_pagamento")
       .order("data_agendamento", { ascending: false })
+      .limit(5000)
       .then(({ data }) => {
         if (data) setAgendamentos(data as Agendamento[]);
       });
@@ -763,9 +832,10 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setLoading(true);
     try {
       const [agRes, clRes] = await Promise.all([
-        supabase.from("agendamentos").select("*").neq("status", "aguardando_pagamento").order("data_agendamento", { ascending: false }),
+        // Limite de 5000 para evitar sobrecarga no banco (plano gratuito Supabase)
+        supabase.from("agendamentos").select("*").neq("status", "aguardando_pagamento").order("data_agendamento", { ascending: false }).limit(5000),
         // Profiles: seleciona só as colunas necessárias para reduzir I/O
-        supabase.from("profiles").select("id, nome, whatsapp, cpf, created_at, credito_saldo").order("created_at", { ascending: false }),
+        supabase.from("profiles").select("id, nome, whatsapp, cpf, created_at, credito_saldo").order("created_at", { ascending: false }).limit(3000),
       ]);
       if (agRes.error) throw agRes.error;
       if (clRes.error) throw clRes.error;
@@ -875,7 +945,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     }
   };
 
-  const filteredAgendamentos = agendamentos.filter((a) => {
+  const filteredAgendamentos = activeAgendamentos.filter((a) => {
     if (a.servico === "Adição de Crédito" || a.servico === "Entrada Manual" || (a.servico && a.servico.startsWith("Pagamento de Dívida"))) return false;
     if (statusFilter !== "todos" && a.status !== statusFilter) return false;
     if (searchTerm) {
@@ -2796,7 +2866,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
               ).length;
 
               const clientSearch = searchTerm.toLowerCase();
-              const filteredClientes = clientes.filter((c) => {
+              const filteredClientes = activeClientes.filter((c) => {
                 if (!clientSearch) return true;
                 return c.nome.toLowerCase().includes(clientSearch) || c.whatsapp.includes(clientSearch);
               });

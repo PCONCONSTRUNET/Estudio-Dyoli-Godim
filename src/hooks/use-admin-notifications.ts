@@ -58,7 +58,8 @@ export function useAdminNotifications(
       const { data } = await supabase
         .from("agendamentos")
         .select("id,status")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(3000); // Limite para evitar sobrecarga no banco
       if (data) {
         data.forEach((a: any) => {
           if (a.status !== "aguardando_pagamento") {

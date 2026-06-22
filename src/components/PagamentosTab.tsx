@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Search, CreditCard, QrCode, Barcode, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, Filter, AlertCircle, Trash2, Wallet } from "lucide-react";
 import pixIcon from "@/assets/pix-icon.png";
 import { useConfirm } from "@/contexts/ConfirmContext";
+import { Button } from "@/components/ui/button";
 
 interface Agendamento {
   id: string;
@@ -131,34 +132,127 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
   const [despesas, setDespesas] = useState<any[]>([]);
   const [vendas, setVendas] = useState<any[]>([]);
 
+  const [despesasLimit, setDespesasLimit] = useState(1000);
+  const [vendasLimit, setVendasLimit] = useState(1000);
+  const [hasMoreDespesas, setHasMoreDespesas] = useState(false);
+  const [hasMoreVendas, setHasMoreVendas] = useState(false);
+
+  const [localAgendamentos, setLocalAgendamentos] = useState<any[]>(agendamentos);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 400);
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  useEffect(() => {
+    if (!debouncedSearch.trim()) {
+      setLocalAgendamentos(agendamentos);
+    }
+  }, [agendamentos, debouncedSearch]);
+
   useEffect(() => {
     const fetchHistoricoEDespesas = async () => {
-      // Buscar apenas despesas que foram pagas (gastos do caixa + despesas baixadas)
-      const { data: pagas } = await (supabase.from("despesas") as any).select("*").eq("pago", true).neq("tipo", "pessoal");
-      setDespesas(pagas || []);
+      let queryDespesas = (supabase.from("despesas") as any)
+        .select("*")
+        .eq("pago", true)
+        .neq("tipo", "pessoal")
+        .order("data_vencimento", { ascending: false });
 
-      const { data: vd } = await (supabase.from("vendas") as any).select("*");
-      setVendas(vd || []);
+      let queryVendas = (supabase.from("vendas") as any)
+        .select("*")
+        .order("created_at", { ascending: false });
 
-      const ids = agendamentos.map((a) => a.id);
-      if (ids.length === 0) return;
+      if (debouncedSearch.trim()) {
+        const term = `%${debouncedSearch.trim()}%`;
+        queryDespesas = queryDespesas.or(`descricao.ilike.${term},categoria.ilike.${term}`);
+        queryVendas = queryVendas.ilike("cliente_nome", term);
+      }
+
+      // Buscar apenas despesas que foram pagas (limite dinâmico + 1 para checar se há mais)
+      const [despesasRes, vendasRes] = await Promise.all([
+        queryDespesas.limit(despesasLimit + 1),
+        queryVendas.limit(vendasLimit + 1)
+      ]);
+
+      const pagas = despesasRes.data;
+      if (pagas) {
+        if (pagas.length > despesasLimit) {
+          setHasMoreDespesas(true);
+          setDespesas(pagas.slice(0, despesasLimit));
+        } else {
+          setHasMoreDespesas(false);
+          setDespesas(pagas);
+        }
+      } else {
+        setDespesas([]);
+      }
+
+      // Buscar vendas (limite dinâmico + 1 para checar se há mais)
+      const vd = vendasRes.data;
+      if (vd) {
+        if (vd.length > vendasLimit) {
+          setHasMoreVendas(true);
+          setVendas(vd.slice(0, vendasLimit));
+        } else {
+          setHasMoreVendas(false);
+          setVendas(vd);
+        }
+      } else {
+        setVendas([]);
+      }
+
+      let currentAgendamentos = agendamentos;
+      if (debouncedSearch.trim()) {
+        const term = `%${debouncedSearch.trim()}%`;
+        const { data: matchedAgs } = await supabase
+          .from("agendamentos")
+          .select("*")
+          .neq("status", "aguardando_pagamento")
+          .or(`cliente_nome.ilike.${term},servico.ilike.${term},id.ilike.${term},forma_pagamento.ilike.${term}`)
+          .order("data_agendamento", { ascending: false })
+          .limit(200);
+
+        if (matchedAgs) {
+          currentAgendamentos = matchedAgs as any[];
+        }
+      }
+
+      const ids = currentAgendamentos.map((a) => a.id);
+      if (ids.length === 0) {
+        setHistorico([]);
+        setLocalAgendamentos(currentAgendamentos);
+        return;
+      }
       
       const chunkSize = 200;
-      let allData: any[] = [];
+      const chunks = [];
       for (let i = 0; i < ids.length; i += chunkSize) {
-        const chunk = ids.slice(i, i + chunkSize);
-        const { data } = await supabase.from("pagamento_historico").select("*").in("agendamento_id", chunk);
-        if (data) allData = [...allData, ...data];
+        chunks.push(ids.slice(i, i + chunkSize));
       }
+
+      // Executa buscas do histórico em paralelo para evitar overhead de rede sequencial
+      const results = await Promise.all(
+        chunks.map((chunk) => supabase.from("pagamento_historico").select("*").in("agendamento_id", chunk))
+      );
+
+      let allData: any[] = [];
+      results.forEach(({ data }) => {
+        if (data) allData = [...allData, ...data];
+      });
+
       setHistorico(allData);
+      setLocalAgendamentos(currentAgendamentos);
     };
     fetchHistoricoEDespesas();
-  }, [agendamentos]);
+  }, [agendamentos, debouncedSearch, despesasLimit, vendasLimit]);
 
   const faturas = useMemo(() => {
     const list: any[] = [];
     
-    agendamentos.forEach((a) => {
+    localAgendamentos.forEach((a) => {
       if (["cancelado", "falta"].includes(a.status)) {
          list.push({ ...a, _faturaId: a.id, fatura_tipo: "pendente", valor_fatura: a.valor, data_fatura: a.data_agendamento });
          return;
@@ -279,7 +373,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     });
 
     return list;
-  }, [agendamentos, historico, despesas, vendas]);
+  }, [localAgendamentos, historico, despesas, vendas]);
 
   const dateFilteredFaturas = useMemo(() => {
     let list = [...faturas];
@@ -654,8 +748,23 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
         })}
       </div>
 
+      {(hasMoreVendas || hasMoreDespesas) && (
+        <div className="pt-2 pb-4 flex justify-center">
+          <Button
+            onClick={() => {
+              if (hasMoreVendas) setVendasLimit((prev) => prev + 1000);
+              if (hasMoreDespesas) setDespesasLimit((prev) => prev + 1000);
+            }}
+            variant="outline"
+            className="rounded-2xl border-gold/20 text-gold hover:bg-gold/10 hover:text-gold/90 px-6 font-body text-[13px] font-medium"
+          >
+            Carregar histórico anterior (Mais despesas/vendas)
+          </Button>
+        </div>
+      )}
+
       <p className="text-center font-body text-[11px] text-primary-foreground/85 pb-4">
-        Exibindo {filtered.length} faturas de {agendamentos.length} pedidos
+        Exibindo {filtered.length} faturas de {localAgendamentos.length} pedidos
       </p>
     </div>
   );

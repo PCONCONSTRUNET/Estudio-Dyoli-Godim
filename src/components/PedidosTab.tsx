@@ -103,6 +103,10 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
   const getClienteWhatsapp = (userId: string): string => clientes.find((c) => c.id === userId)?.whatsapp || "";
   const formatWhatsapp = (w: string) => (w ? `(${w.slice(0, 2)}) ${w.slice(2, 7)}-${w.slice(7)}` : "");
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [searchAgendamentos, setSearchAgendamentos] = useState<Agendamento[]>([]);
+  const [searchVendas, setSearchVendas] = useState<Agendamento[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [statusFilter, setStatusFilter] = useState("todos");
   const [pagamentoFilter, setPagamentoFilter] = useState<PagamentoFilter>("todos");
   const [dateFilter, setDateFilter] = useState<string>("");
@@ -114,18 +118,133 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
 
   const today = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0];
 
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 450);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    if (!debouncedSearch.trim()) {
+      setSearchAgendamentos([]);
+      setSearchVendas([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    const performSearch = async () => {
+      setIsSearching(true);
+      try {
+        // 1. Query matching profiles first to map names to user_id
+        const { data: matchedProfiles } = await supabase
+          .from("profiles")
+          .select("id, nome")
+          .or(`nome.ilike.%${debouncedSearch}%`);
+
+        if (cancelled) return;
+
+        const profileIds = (matchedProfiles || []).map(p => p.id);
+
+        // 2. Query agendamentos
+        let agsQuery = supabase.from("agendamentos").select("*").neq("status", "aguardando_pagamento");
+        
+        const isDate = /^\d{4}-\d{2}-\d{2}$/.test(debouncedSearch);
+        if (isDate) {
+          agsQuery = agsQuery.eq("data_agendamento", debouncedSearch);
+        } else {
+          if (profileIds.length > 0) {
+            const escapedIds = profileIds.map(id => `'${id}'`).join(",");
+            agsQuery = agsQuery.or(`servico.ilike.%${debouncedSearch}%,cliente_nome.ilike.%${debouncedSearch}%,user_id.in.(${escapedIds})`);
+          } else {
+            agsQuery = agsQuery.or(`servico.ilike.%${debouncedSearch}%,cliente_nome.ilike.%${debouncedSearch}%`);
+          }
+        }
+
+        const { data: searchAgs } = await agsQuery.order("data_agendamento", { ascending: false }).limit(200);
+
+        if (cancelled) return;
+        if (searchAgs) {
+          setSearchAgendamentos(searchAgs as Agendamento[]);
+        }
+
+        // 3. Query vendas (only unpaid ones, matching query)
+        let vendasQuery = (supabase.from as any)("vendas")
+          .select("*")
+          .or("pago.eq.false,pago.is.null");
+
+        if (profileIds.length > 0) {
+          const escapedIds = profileIds.map(id => `'${id}'`).join(",");
+          vendasQuery = vendasQuery.or(`cliente_nome.ilike.%${debouncedSearch}%,cliente_id.in.(${escapedIds})`);
+        } else {
+          vendasQuery = vendasQuery.ilike("cliente_nome", `%${debouncedSearch}%`);
+        }
+
+        const { data: searchVds } = await vendasQuery.order("created_at", { ascending: false }).limit(200);
+
+        if (cancelled) return;
+        if (searchVds) {
+          const mapped: Agendamento[] = (searchVds as any[]).map((v) => {
+            const rawDate: string = v.data_venda || (v.created_at ? String(v.created_at).split("T")[0] : today);
+            const safeDate = rawDate && rawDate.length >= 8 ? rawDate : today;
+            const rawHora: string = v.created_at ? String(v.created_at) : "";
+            let horario = "00:00";
+            try {
+              if (rawHora) {
+                const d = new Date(rawHora);
+                horario = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+              }
+            } catch {}
+            return {
+              id: String(v.id),
+              servico: "Venda de Produtos",
+              variacao: "Loja",
+              data_agendamento: safeDate,
+              horario,
+              valor: Number(v.valor_total) || 0,
+              valor_pago: 0,
+              status: "pendente",
+              user_id: v.cliente_id ? String(v.cliente_id) : "admin",
+              created_at: v.created_at || "",
+              cliente_nome: v.cliente_nome || null,
+              origem: "venda",
+              forma_pagamento: v.forma_pagamento || null,
+            } as Agendamento & { _is_venda: true };
+          });
+          setSearchVendas(mapped);
+        }
+      } catch (err) {
+        console.error("Erro na busca remota Pedidos:", err);
+      } finally {
+        if (!cancelled) {
+          setIsSearching(false);
+        }
+      }
+    };
+
+    performSearch();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedSearch]);
+
   // Vendas de produto não pagas aparecem como pedidos pendentes
   const [vendasPendentes, setVendasPendentes] = useState<Agendamento[]>([]);
   useEffect(() => {
     let cancelled = false;
     (supabase.from as any)("vendas")
       .select("*")
+      .or("pago.eq.false,pago.is.null")
+      .order("created_at", { ascending: false })
+      .limit(1000)
       .then(({ data, error }: any) => {
         if (cancelled) return;
         if (error) { console.error("[PedidosTab] erro ao buscar vendas:", error); return; }
         if (!data) return;
         console.log("[PedidosTab] vendas brutas:", data);
-        // Filtra no JS: pago == false, null ou undefined
+        // Filtra no JS por segurança adicional
         const naoPagas = (data as any[]).filter((v) => !v.pago);
         console.log("[PedidosTab] vendas não pagas:", naoPagas);
         const mapped: Agendamento[] = naoPagas.map((v) => {
@@ -162,8 +281,11 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
 
   // Combina agendamentos + vendas pendentes
   const allItems = useMemo<Agendamento[]>(() => {
+    if (searchTerm.trim()) {
+      return [...searchAgendamentos, ...searchVendas];
+    }
     return [...agendamentos, ...vendasPendentes];
-  }, [agendamentos, vendasPendentes]);
+  }, [agendamentos, vendasPendentes, searchAgendamentos, searchVendas, searchTerm]);
 
   // Notifications: today's appointments, pending payments, no-shows
   const notifications = useMemo(() => {
