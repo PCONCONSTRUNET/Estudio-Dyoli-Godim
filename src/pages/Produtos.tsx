@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, ShoppingBag, MessageCircle } from "lucide-react";
+import { ArrowLeft, ShoppingBag, MessageCircle, Search } from "lucide-react";
 
 interface Produto {
   id: string;
@@ -18,6 +18,11 @@ const Produtos = () => {
   const navigate = useNavigate();
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredProdutos = produtos.filter((p) =>
+    p.nome.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   useEffect(() => {
     supabase
@@ -54,6 +59,18 @@ const Produtos = () => {
             <h1 className="font-heading text-lg font-semibold text-primary-foreground">Produtos</h1>
           </div>
         </div>
+        <div className="mx-auto max-w-md lg:max-w-4xl px-4 pb-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/50" />
+            <input
+              type="text"
+              placeholder="Buscar produto..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-primary-foreground/[0.06] border border-primary-foreground/[0.06] rounded-xl py-2.5 pl-9 pr-4 font-body text-[14px] text-primary-foreground placeholder:text-primary-foreground/50 focus:outline-none focus:border-gold/30 focus:ring-1 focus:ring-gold/30 transition-all"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Content */}
@@ -62,14 +79,16 @@ const Produtos = () => {
           <div className="flex justify-center py-20">
             <div className="w-6 h-6 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
           </div>
-        ) : produtos.length === 0 ? (
+        ) : filteredProdutos.length === 0 ? (
           <div className="text-center py-20">
             <ShoppingBag className="w-10 h-10 text-primary-foreground/10 mx-auto mb-3" />
-            <p className="font-body text-[14px] text-primary-foreground/30">Nenhum produto disponível no momento</p>
+            <p className="font-body text-[14px] text-primary-foreground/30">
+              {produtos.length === 0 ? "Nenhum produto disponível no momento" : "Nenhum produto encontrado"}
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-5">
-            {produtos.map((p) => (
+            {filteredProdutos.map((p) => (
               <div
                 key={p.id}
                 className="group rounded-2xl border border-primary-foreground/[0.06] bg-primary-foreground/[0.02] overflow-hidden transition-all hover:border-gold/20"
