@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Edit2, Save, X, Upload, ShoppingBag, Image, Package } from "lucide-react";
+import { Edit2, Save, X, Upload, ShoppingBag, Image, Package, Search } from "lucide-react";
 import BinButton from "@/components/ui/bin-button";
 import PlusButton from "@/components/ui/plus-button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -26,6 +26,11 @@ const ProdutosTab = () => {
   const [editing, setEditing] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [showVendaModal, setShowVendaModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredProdutos = produtos.filter((p) =>
+    p.nome.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // New product fields
   const [newNome, setNewNome] = useState("");
@@ -224,6 +229,17 @@ const ProdutosTab = () => {
           <PlusButton size={28} title="Adicionar produto" onClick={() => setShowAdd(!showAdd)} />
         </div>
       </div>
+
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/50" />
+        <input
+          type="text"
+          placeholder="Buscar produto..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full bg-primary-foreground/[0.05] border border-primary-foreground/[0.06] rounded-xl py-2 pl-9 pr-4 font-body text-[13px] text-primary-foreground placeholder:text-primary-foreground/50 focus:outline-none focus:border-gold/30 focus:ring-1 focus:ring-gold/30 transition-all"
+        />
+      </div>
       
       <NovaVendaModal
         open={showVendaModal}
@@ -312,14 +328,16 @@ const ProdutosTab = () => {
       </Dialog>
 
       {/* Products list */}
-      {produtos.length === 0 ? (
+      {filteredProdutos.length === 0 ? (
         <div className="text-center py-12">
           <ShoppingBag className="w-8 h-8 text-primary-foreground/10 mx-auto mb-2" />
-          <p className="font-body text-[13px] text-primary-foreground/95">Nenhum produto cadastrado</p>
+          <p className="font-body text-[13px] text-primary-foreground/95">
+            {produtos.length === 0 ? "Nenhum produto cadastrado" : "Nenhum produto encontrado"}
+          </p>
         </div>
       ) : (
         <div className="space-y-2">
-          {produtos.map((p) => (
+          {filteredProdutos.map((p) => (
             <div
               key={p.id}
               className={`rounded-2xl border transition-all overflow-hidden ${
