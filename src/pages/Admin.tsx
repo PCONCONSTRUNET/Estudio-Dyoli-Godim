@@ -544,7 +544,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
           const profileIds = (matchedProfiles || []).map(p => p.id);
           if (profileIds.length > 0) {
             // Note: Since Postgres IN clause with empty or sparse values can be fast, we build it properly:
-            const escapedIds = profileIds.map(id => `'${id}'`).join(",");
+            const escapedIds = profileIds.join(",");
             query = query.or(`servico.ilike.%${debouncedSearch}%,cliente_nome.ilike.%${debouncedSearch}%,user_id.in.(${escapedIds})`);
           } else {
             query = query.or(`servico.ilike.%${debouncedSearch}%,cliente_nome.ilike.%${debouncedSearch}%`);

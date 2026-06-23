@@ -155,7 +155,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
           agsQuery = agsQuery.eq("data_agendamento", debouncedSearch);
         } else {
           if (profileIds.length > 0) {
-            const escapedIds = profileIds.map(id => `'${id}'`).join(",");
+            const escapedIds = profileIds.join(",");
             agsQuery = agsQuery.or(`servico.ilike.%${debouncedSearch}%,cliente_nome.ilike.%${debouncedSearch}%,user_id.in.(${escapedIds})`);
           } else {
             agsQuery = agsQuery.or(`servico.ilike.%${debouncedSearch}%,cliente_nome.ilike.%${debouncedSearch}%`);
@@ -175,7 +175,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
           .or("pago.eq.false,pago.is.null");
 
         if (profileIds.length > 0) {
-          const escapedIds = profileIds.map(id => `'${id}'`).join(",");
+          const escapedIds = profileIds.join(",");
           vendasQuery = vendasQuery.or(`cliente_nome.ilike.%${debouncedSearch}%,cliente_id.in.(${escapedIds})`);
         } else {
           vendasQuery = vendasQuery.ilike("cliente_nome", `%${debouncedSearch}%`);
