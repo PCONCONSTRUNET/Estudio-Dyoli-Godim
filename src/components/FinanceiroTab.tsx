@@ -33,6 +33,7 @@ const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
 
 const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const [modalConfig, setModalConfig] = useState<{open: boolean, tab: "entrada"|"saida"}>({open: false, tab: "entrada"});
+  const [refreshKey, setRefreshKey] = useState(0);
   const [period, setPeriod] = useState<FilterPeriod>("mes");
   const [analiseOpen, setAnaliseOpen] = useState(false);
   const [customStart, setCustomStart] = useState("");
@@ -85,14 +86,18 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string; categoria: string; descricao: string; data_pagamento: string | null; tipo?: string }[]>([]);
   const [vendas, setVendas] = useState<any[]>([]);
 
-  useEffect(() => {
+  const fetchExtraData = () => {
     (supabase.from as any)("despesas").select("valor,pago,data_vencimento,categoria,descricao,data_pagamento,tipo").order("data_vencimento", { ascending: false }).limit(2000).then(({ data }: any) => {
       if (data) setDespesas(data);
     });
     (supabase.from as any)("vendas").select("*").order("created_at", { ascending: false }).limit(2000).then(({ data }: any) => {
       if (data) setVendas(data);
     });
-  }, []);
+  };
+
+  useEffect(() => {
+    fetchExtraData();
+  }, [refreshKey]);
 
   const allAgendamentos = useMemo(() => {
     const vList = vendas.map(v => ({
@@ -920,7 +925,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
 
       {/* Modals */}
       <AnaliseCancelamentosModal open={analiseOpen} onOpenChange={setAnaliseOpen} />
-      <NovaTransacaoModal open={modalConfig.open} onOpenChange={(open) => setModalConfig(prev => ({...prev, open}))} initialTab={modalConfig.tab} onSuccess={() => window.location.reload()} />
+      <NovaTransacaoModal open={modalConfig.open} onOpenChange={(open) => setModalConfig(prev => ({...prev, open}))} initialTab={modalConfig.tab} onSuccess={() => setRefreshKey(k => k + 1)} />
     </div>
   );
 };

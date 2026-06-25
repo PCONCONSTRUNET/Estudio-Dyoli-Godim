@@ -271,7 +271,8 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
     
     localAgendamentos.forEach((a) => {
       if (["cancelado", "falta"].includes(a.status)) {
-         list.push({ ...a, _faturaId: a.id, fatura_tipo: "pendente", valor_fatura: a.valor, data_fatura: a.data_agendamento });
+         // fatura_tipo "cancelado_fatura" — não entra no totalPendente nem no count de pendentes
+         list.push({ ...a, _faturaId: a.id, fatura_tipo: "cancelado_fatura", valor_fatura: a.valor, data_fatura: a.data_agendamento });
          return;
       }
       

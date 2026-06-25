@@ -118,6 +118,32 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
 
   const today = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0];
 
+  // Mapa de pagamentos históricos por agendamento_id (soma dos valores positivos)
+  // Usado para corrigir notificações quando valor_pago está desatualizado no banco
+  const [allHistoricoMap, setAllHistoricoMap] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    const pendingIds = agendamentos
+      .filter(a => a.status !== "falta" && a.status !== "cancelado" && Number(a.valor_pago || 0) < Number(a.valor))
+      .map(a => a.id);
+    if (pendingIds.length === 0) { setAllHistoricoMap({}); return; }
+    const chunks: string[][] = [];
+    for (let i = 0; i < pendingIds.length; i += 50) chunks.push(pendingIds.slice(i, i + 50));
+    Promise.all(
+      chunks.map(chunk =>
+        supabase.from("pagamento_historico").select("agendamento_id,valor_delta").in("agendamento_id", chunk).gt("valor_delta", 0)
+      )
+    ).then(results => {
+      const map: Record<string, number> = {};
+      results.forEach(({ data }) => {
+        if (data) data.forEach((h: any) => {
+          map[h.agendamento_id] = (map[h.agendamento_id] || 0) + Number(h.valor_delta);
+        });
+      });
+      setAllHistoricoMap(map);
+    });
+  }, [agendamentos]);
+
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchTerm);
@@ -314,10 +340,13 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
         notifs.push({ tipo: "proximo", agendamento: a, label: "Amanhã" });
       }
 
-      // Quitado parcial ou não pago — apenas para atendimentos passados/hoje
-      if (a.status !== "falta" && (Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0)) < Number(a.valor) && diffDays <= 0) {
-        const restante = Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0);
-        if (isSinalPago(a)) {
+      // Quitado parcial ou não pago — usa Math.max(valor_pago, soma_historico) para não mostrar pendente quem já quitou
+      const valorPagoBanco = Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0);
+      const somaHistorico = allHistoricoMap[a.id] || 0;
+      const efetivamentePago = Math.max(valorPagoBanco, somaHistorico);
+      if (a.status !== "falta" && efetivamentePago < Number(a.valor) && diffDays <= 0) {
+        const restante = Number(a.valor) - efetivamentePago;
+        if (efetivamentePago > 0) {
           notifs.push({ tipo: "sinal", agendamento: a, label: `Quitado parcial · a receber ${formatCurrency(restante)}` });
         } else {
           notifs.push({ tipo: "pendente", agendamento: a, label: `Não pago · ${formatCurrency(restante)}` });
@@ -328,7 +357,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     const order = { falta: 0, hoje: 1, pendente: 2, sinal: 3, proximo: 4 };
     notifs.sort((a, b) => order[a.tipo] - order[b.tipo]);
     return notifs;
-  }, [agendamentos, today]);
+  }, [agendamentos, today, allHistoricoMap]);
 
   const activeNotifications = useMemo(
     () => notifications.filter((n) => !dismissedIds.has(n.agendamento.id + n.tipo)),
