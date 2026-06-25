@@ -61,6 +61,12 @@ const formatDateShort = (d: string) =>
 const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  const [modalConfig, setModalConfig] = useState<{open: boolean, tab: "entrada"|"saida"}>({open: false, tab: "entrada"});
  const [caixaDate, setCaixaDate] = useState(new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]);
+
+ // Saldo físico manual
+ const [saldoFisicoManual, setSaldoFisicoManual] = useState<number | null>(null);
+ const [editingSaldo, setEditingSaldo] = useState(false);
+ const [tempSaldo, setTempSaldo] = useState("");
+ const [savingSaldo, setSavingSaldo] = useState(false);
  const [period, setPeriod] = useState<FilterPeriod>("mes");
  const [customStart, setCustomStart] = useState("");
  const [customEnd, setCustomEnd] = useState("");
@@ -130,6 +136,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
    }
  };
 
+ // Carrega/salva saldo físico manual no Supabase — deve vir ANTES de usar ciclo
  const ciclo = useMemo(() => {
  const today = new Date();
  today.setHours(12, 0, 0, 0);
@@ -154,7 +161,32 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  return { startISO: toISO(start), endISO: toISO(end), startDate: start, endDate: end };
  }, [diaCorte, cicloOffset]);
 
- // Despesas e vendas
+ // Carrega saldo físico manual do Supabase ao trocar de ciclo
+ useEffect(() => {
+ const key = `${ciclo.startISO}_${ciclo.endISO}`;
+ (async () => {
+ const { data } = await (supabase.from as any)("caixa_config").select("saldo_fisico_manual").eq("id", key).maybeSingle();
+ setSaldoFisicoManual(data?.saldo_fisico_manual != null ? Number(data.saldo_fisico_manual) : null);
+ })();
+ }, [ciclo.startISO, ciclo.endISO]);
+
+ const handleSaveSaldo = async () => {
+ const val = parseCurrencyStr(tempSaldo);
+ if (isNaN(val) || val < 0) return toast.error("Informe um valor válido");
+ setSavingSaldo(true);
+ try {
+ const key = `${ciclo.startISO}_${ciclo.endISO}`;
+ await (supabase.from as any)("caixa_config").upsert({ id: key, saldo_fisico_manual: val, updated_at: new Date().toISOString() });
+ setSaldoFisicoManual(val);
+ setEditingSaldo(false);
+ toast.success("Saldo físico atualizado!");
+ } catch (e: any) {
+ toast.error("Erro ao salvar: " + e.message);
+ } finally {
+ setSavingSaldo(false);
+ }
+ };
+
   const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string; tipo?: string; observacao?: string; descricao?: string }[]>([]);
   const [vendas, setVendas] = useState<any[]>([]);
 
@@ -416,21 +448,84 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
 
  {/* Cards de métricas */}
  <div className="grid grid-cols-3 gap-2">
- <div className={`p-3 rounded-2xl ${cicloStats.saldoEmCaixa >= 0 ? "bg-green-500/[0.06] border-green-500/15 hover:border-green-500/25" : "bg-red-500/[0.05] border-red-500/15 hover:border-red-500/25"} transition-all`}>
- <p className="font-body text-[9px] text-primary-foreground/75 uppercase tracking-widest font-medium" title="Dinheiro físico restante na gaveta/conta após despesas e saques">Saldo Físico</p>
- <p className={`font-heading text-[15px] font-bold ${cicloStats.saldoEmCaixa >= 0 ? "text-green-400" : "text-red-400"} tabular-nums mt-1 leading-tight`}>{formatCurrency(cicloStats.saldoEmCaixa)}</p>
- <p className="font-body text-[9px] text-primary-foreground/95 mt-0.5">dinheiro em caixa</p>
+ {/* Card Saldo Físico — editável manualmente */}
+ <div className={`p-3 rounded-2xl border transition-all ${
+ saldoFisicoManual !== null
+ ? (saldoFisicoManual >= 0 ? "bg-green-500/[0.06] border-green-500/25" : "bg-red-500/[0.05] border-red-500/25")
+ : (cicloStats.saldoEmCaixa >= 0 ? "bg-green-500/[0.06] border-green-500/15" : "bg-red-500/[0.05] border-red-500/15")
+ }`}>
+ <div className="flex items-center justify-between">
+ <p className="font-body text-[9px] text-primary-foreground/75 uppercase tracking-widest font-medium" title="Clique no lápis para definir o valor real em caixa">Saldo Físico</p>
+ <button
+ type="button"
+ onClick={() => { setTempSaldo(saldoFisicoManual !== null ? String(saldoFisicoManual).replace(".",",") : String(cicloStats.saldoEmCaixa.toFixed(2)).replace(".",",")); setEditingSaldo(true); }}
+ className="w-4 h-4 flex items-center justify-center text-primary-foreground/40 hover:text-gold transition-colors"
+ aria-label="Editar saldo físico"
+ >
+ <Pencil className="w-2.5 h-2.5" />
+ </button>
  </div>
+ {editingSaldo ? (
+ <div className="mt-1 flex items-center gap-1">
+ <input
+ type="text"
+ inputMode="decimal"
+ value={tempSaldo}
+ onChange={(e) => setTempSaldo(e.target.value)}
+ onKeyDown={(e) => { if (e.key === "Enter") handleSaveSaldo(); if (e.key === "Escape") setEditingSaldo(false); }}
+ autoFocus
+ className="w-full bg-primary-foreground/[0.08] border border-gold/30 rounded-lg px-1.5 py-1 font-heading text-[13px] font-bold text-gold tabular-nums focus:outline-none focus:border-gold/60"
+ />
+ <button type="button" onClick={handleSaveSaldo} disabled={savingSaldo} className="w-5 h-5 rounded bg-green-500/20 hover:bg-green-500/40 flex items-center justify-center shrink-0" aria-label="Salvar">
+ <Check className="w-3 h-3 text-green-300" />
+ </button>
+ <button type="button" onClick={() => setEditingSaldo(false)} className="w-5 h-5 rounded bg-red-500/20 hover:bg-red-500/40 flex items-center justify-center shrink-0" aria-label="Cancelar">
+ <X className="w-3 h-3 text-red-300" />
+ </button>
+ </div>
+ ) : (
+ <>
+ <p className={`font-heading text-[15px] font-bold ${
+ (saldoFisicoManual ?? cicloStats.saldoEmCaixa) >= 0 ? "text-green-400" : "text-red-400"
+ } tabular-nums mt-1 leading-tight`}>
+ {formatCurrency(saldoFisicoManual ?? cicloStats.saldoEmCaixa)}
+ </p>
+ <p className="font-body text-[9px] text-primary-foreground/95 mt-0.5">
+ {saldoFisicoManual !== null ? "valor real contado ✏️" : "dinheiro em caixa"}
+ </p>
+ </>
+ )}
+ </div>
+
  <div className="p-3 rounded-2xl bg-gold/[0.06] border border-gold/15 hover:border-gold/25 transition-all">
  <p className="font-body text-[9px] text-primary-foreground/75 uppercase tracking-widest font-medium">Previsto</p>
  <p className="font-heading text-[15px] font-bold text-gold tabular-nums mt-1 leading-tight">{formatCurrency(cicloStats.total)}</p>
  <p className="font-body text-[9px] text-primary-foreground/95 mt-0.5">total bruto</p>
  </div>
- <div className={`p-3 rounded-2xl ${cicloStats.lucro >= 0 ? "bg-green-500/[0.06] border-green-500/15 hover:border-green-500/25" : "bg-red-500/[0.05] border-red-500/15 hover:border-red-500/25"} transition-all`}>
+
+ {/* Lucro do Ciclo — ajustado pela diferença do saldo físico manual */}
+ {(() => {
+ const diferencaSaldo = saldoFisicoManual !== null ? (saldoFisicoManual - cicloStats.saldoEmCaixa) : 0;
+ const lucroAjustado = cicloStats.lucro + diferencaSaldo;
+ const temAjuste = saldoFisicoManual !== null && Math.abs(diferencaSaldo) > 0.01;
+ return (
+ <div className={`p-3 rounded-2xl border transition-all ${
+ lucroAjustado >= 0 ? "bg-green-500/[0.06] border-green-500/15 hover:border-green-500/25" : "bg-red-500/[0.05] border-red-500/15 hover:border-red-500/25"
+ }`}>
  <p className="font-body text-[9px] text-primary-foreground/75 uppercase tracking-widest font-medium">Lucro do Ciclo</p>
- <p className={`font-heading text-[15px] font-bold ${cicloStats.lucro >= 0 ? "text-green-400" : "text-red-400"} tabular-nums mt-1 leading-tight`}>{formatCurrency(cicloStats.lucro)}</p>
- <p className="font-body text-[9px] text-primary-foreground/95 mt-0.5">resultado real</p>
+ <p className={`font-heading text-[15px] font-bold ${
+ lucroAjustado >= 0 ? "text-green-400" : "text-red-400"
+ } tabular-nums mt-1 leading-tight`}>{formatCurrency(lucroAjustado)}</p>
+ <p className="font-body text-[9px] text-primary-foreground/95 mt-0.5">
+ {temAjuste ? (
+ <span title={`Ajuste: ${diferencaSaldo >= 0 ? "+" : ""}${formatCurrency(diferencaSaldo)}`}>
+ {diferencaSaldo >= 0 ? "+" : ""}{formatCurrency(diferencaSaldo)} ajuste
+ </span>
+ ) : "resultado real"}
+ </p>
  </div>
+ );
+ })()}
  </div>
 
  {/* Config dia de corte */}
