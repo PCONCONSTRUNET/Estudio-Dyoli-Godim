@@ -176,16 +176,21 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  setSavingSaldo(true);
  try {
  const key = `${ciclo.startISO}_${ciclo.endISO}`;
- await (supabase.from as any)("caixa_config").upsert({ id: key, saldo_fisico_manual: val, updated_at: new Date().toISOString() });
+ const { error } = await (supabase.from as any)("caixa_config").upsert(
+   { id: key, saldo_fisico_manual: val, updated_at: new Date().toISOString() },
+   { onConflict: "id" }
+ );
+ if (error) throw new Error(error.message || "Erro ao salvar no banco");
  setSaldoFisicoManual(val);
  setEditingSaldo(false);
  toast.success("Saldo físico atualizado!");
  } catch (e: any) {
- toast.error("Erro ao salvar: " + e.message);
+ toast.error("Erro ao salvar: " + (e.message || "Tabela não encontrada. Crie a tabela no Supabase."));
  } finally {
  setSavingSaldo(false);
  }
  };
+
 
   const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string; tipo?: string; observacao?: string; descricao?: string }[]>([]);
   const [vendas, setVendas] = useState<any[]>([]);
