@@ -137,7 +137,11 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
   const [hasMoreDespesas, setHasMoreDespesas] = useState(false);
   const [hasMoreVendas, setHasMoreVendas] = useState(false);
 
-  const [localAgendamentos, setLocalAgendamentos] = useState<any[]>(agendamentos);
+  const [localAgendamentos, setLocalAgendamentos] = useState<any[]>(() => {
+    // Deduplication na inicialização
+    const seen = new Set<string>();
+    return agendamentos.filter(a => { if (seen.has(a.id)) return false; seen.add(a.id); return true; });
+  });
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
   useEffect(() => {
@@ -148,12 +152,8 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
   }, [search]);
 
   useEffect(() => {
-    if (!debouncedSearch.trim()) {
-      setLocalAgendamentos(agendamentos);
-    }
-  }, [agendamentos, debouncedSearch]);
+    let isCancelled = false;
 
-  useEffect(() => {
     const fetchHistoricoEDespesas = async () => {
       let queryDespesas = (supabase.from("despesas") as any)
         .select("*")
@@ -176,6 +176,8 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
         queryDespesas.limit(despesasLimit + 1),
         queryVendas.limit(vendasLimit + 1)
       ]);
+
+      if (isCancelled) return;
 
       const pagas = despesasRes.data;
       if (pagas) {
@@ -220,10 +222,20 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
         }
       }
 
+      if (isCancelled) return;
+
+      // Deduplication por id para evitar duplicatas no estado
+      const seenIds = new Set<string>();
+      currentAgendamentos = currentAgendamentos.filter(a => {
+        if (seenIds.has(a.id)) return false;
+        seenIds.add(a.id);
+        return true;
+      });
+
       const ids = currentAgendamentos.map((a) => a.id);
       if (ids.length === 0) {
         setHistorico([]);
-        setLocalAgendamentos(currentAgendamentos);
+        setLocalAgendamentos([]);
         return;
       }
       
@@ -238,6 +250,8 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
         chunks.map((chunk) => supabase.from("pagamento_historico").select("*").in("agendamento_id", chunk))
       );
 
+      if (isCancelled) return;
+
       let allData: any[] = [];
       results.forEach(({ data }) => {
         if (data) allData = [...allData, ...data];
@@ -246,7 +260,10 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
       setHistorico(allData);
       setLocalAgendamentos(currentAgendamentos);
     };
+
     fetchHistoricoEDespesas();
+
+    return () => { isCancelled = true; };
   }, [agendamentos, debouncedSearch, despesasLimit, vendasLimit]);
 
   const faturas = useMemo(() => {
