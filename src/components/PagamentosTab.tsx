@@ -307,8 +307,11 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
            });
         }
         
-        const restante = Number(a.valor) - valorPagoAtual;
-        if (restante > 0) {
+        // Usa o maior entre valor_pago do banco e soma do histórico
+        // Evita "Restante Pendente" quando o histórico já cobre o total
+        const efetivamentePago = Math.max(valorPagoAtual, totalPaidInHistory);
+        const restante = Number(a.valor) - efetivamentePago;
+        if (restante > 0.01) {
            list.push({
              ...a,
              _faturaId: `${a.id}-restante`,
