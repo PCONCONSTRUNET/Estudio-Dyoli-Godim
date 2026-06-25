@@ -628,8 +628,18 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                       {ag._is_saida ? ag.cliente_nome : getClientName(ag.user_id, ag.cliente_nome)}
                     </p>
                     {ag._is_despesa && (
-                      <span className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${ag._despesa_tipo === "comissao" ? "bg-purple-500/20 border-purple-500/40 text-purple-300" : "bg-rose/20 border-rose/40 text-rose"}`}>
-                        {ag._despesa_tipo === "comissao" ? "👤 Retirada (Comissão)" : "🏛 Pagamento de Despesa"}
+                      <span className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
+                        ag._despesa_tipo === "comissao"
+                          ? "bg-purple-500/20 border-purple-500/40 text-purple-300"
+                          : ag._despesa_tipo === "estudio"
+                          ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
+                          : "bg-rose/20 border-rose/40 text-rose"
+                      }`}>
+                        {ag._despesa_tipo === "comissao"
+                          ? "👤 Retirada (Comissão)"
+                          : ag._despesa_tipo === "estudio"
+                          ? "📦 Registro de Gasto"
+                          : "🏛 Pagamento de Despesa"}
                       </span>
                     )}
                     {ag._is_venda && (
