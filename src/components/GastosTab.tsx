@@ -30,27 +30,27 @@ interface Gasto {
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 const CATEGORIAS = [
-  "Material de Trabalho",
-  "Equipamento",
-  "Marketing",
-  "Higiene & Limpeza",
-  "Capacitação",
-  "Alimentação",
-  "Transporte",
-  "Tecnologia",
+  "Mercado",
+  "Gasolina",
+  "Padaria",
+  "Lanches",
+  "Cigarro",
+  "Farmácia",
+  "Crianças",
+  "Lojas",
   "Outros",
 ];
 
 const CATEGORIA_COLORS: Record<string, string> = {
-  "Material de Trabalho": "#f59e0b",
-  "Equipamento":          "#3b82f6",
-  "Marketing":            "#ec4899",
-  "Higiene & Limpeza":    "#10b981",
-  "Capacitação":          "#a855f7",
-  "Alimentação":          "#f97316",
-  "Transporte":           "#06b6d4",
-  "Tecnologia":           "#6366f1",
-  "Outros":               "#94a3b8",
+  "Mercado":  "#f59e0b",
+  "Gasolina": "#3b82f6",
+  "Padaria":  "#ec4899",
+  "Lanches":  "#10b981",
+  "Cigarro":  "#a855f7",
+  "Farmácia": "#f97316",
+  "Crianças": "#06b6d4",
+  "Lojas":    "#6366f1",
+  "Outros":   "#94a3b8",
 };
 
 const formatCurrency = (v: number) =>
@@ -173,6 +173,13 @@ const GastosTab = () => {
 
   const totalGeral = useMemo(() => gastos.filter(g => g.responsavel === responsavelFilter).reduce((s, g) => s + Number(g.valor), 0), [gastos, responsavelFilter]);
   const totalFiltrado = useMemo(() => gastosFiltrados.reduce((s, g) => s + Number(g.valor), 0), [gastosFiltrados]);
+
+  // Categorias disponíveis para filtro (inclui personalizadas)
+  const categoriasDisponiveis = useMemo(() => {
+    const unicas = new Set(CATEGORIAS);
+    gastos.forEach(g => unicas.add(g.categoria));
+    return Array.from(unicas);
+  }, [gastos]);
 
   // Dados para BarChart mensal (últimos 6 meses)
   const dadosMensais = useMemo(() => {
@@ -420,14 +427,14 @@ const GastosTab = () => {
             >
               Todas as Categorias
             </SelectItem>
-            {CATEGORIAS.map(cat => (
+            {categoriasDisponiveis.map(cat => (
               <SelectItem 
                 key={cat} 
                 value={cat}
                 className="font-body text-[13px] cursor-pointer"
               >
                 <span className="flex items-center gap-2.5">
-                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: CATEGORIA_COLORS[cat] }} />
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: CATEGORIA_COLORS[cat] ?? "#94a3b8" }} />
                   <span>{cat}</span>
                 </span>
               </SelectItem>
