@@ -999,11 +999,11 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
             return (
               <div key={a.id} className="rounded-xl border border-gold/15 bg-gradient-to-br from-gold/[0.05] via-primary-foreground/[0.02] to-nude/[0.03] overflow-hidden transition-all hover:border-gold/25 hover:shadow-[0_4px_16px_-8px_hsl(var(--gold)/0.25)]">
                 <button onClick={() => setExpandedId(isExpanded ? null : a.id)} className="flex w-full items-center gap-3 p-3 text-left">
-                  <div className="flex min-w-[52px] flex-col items-center rounded-xl border border-gold/25 bg-gradient-to-br from-gold/20 to-nude/10 px-2 py-1.5 shadow-[0_2px_10px_-4px_hsl(var(--gold)/0.3)]">
-                    <span className="font-body text-[10px] text-gold/70">
+                  <div className="flex min-w-[52px] flex-col items-center rounded-xl border border-gold/60 bg-gradient-to-br from-gold/30 to-nude/20 px-2 py-1.5 shadow-[0_2px_12px_-3px_hsl(var(--gold)/0.5)]">
+                    <span className="font-body text-[10px] font-semibold text-white/90 leading-tight">
                       {new Date(a.data_agendamento + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
                     </span>
-                    <span className="font-heading text-[14px] font-bold text-gold">{a.horario}</span>
+                    <span className="font-heading text-[15px] font-bold text-white">{a.horario}</span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">

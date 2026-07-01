@@ -204,9 +204,13 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
         if (data) setDespesas(data);
       });
       
-    (supabase.from as any)("vendas").select("*").then(({ data }: any) => {
-      if (data) setVendas(data);
-    });
+    // Busca vendas dentro do ciclo para não distorcer os totais com dados históricos
+    (supabase.from as any)("vendas").select("*")
+      .gte("created_at", ciclo.startISO + "T00:00:00")
+      .lte("created_at", ciclo.endISO + "T23:59:59")
+      .then(({ data }: any) => {
+        if (data) setVendas(data);
+      });
   }, [ciclo.startISO, ciclo.endISO]);
 
   const allAgendamentos = useMemo(() => {
@@ -214,7 +218,8 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
       id: v.id,
       servico: "Venda de Produtos",
       variacao: "Loja",
-      data_agendamento: v.data_venda || v.created_at?.split("T")[0],
+      // Usa data_venda se disponível; caso contrário, converte created_at para data LOCAL (evita bug UTC vs UTC-3)
+      data_agendamento: v.data_venda || (v.created_at ? new Date(new Date(v.created_at).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0] : undefined),
       horario: v.created_at ? `${String(new Date(v.created_at).getHours()).padStart(2, "0")}:${String(new Date(v.created_at).getMinutes()).padStart(2, "0")}` : "00:00",
       valor: Number(v.valor_total),
       valor_pago: v.pago ? Number(v.valor_total) : 0,
