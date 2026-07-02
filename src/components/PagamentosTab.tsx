@@ -276,7 +276,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
          return;
       }
       
-      const hists = historico.filter((h) => h.agendamento_id === a.id && h.valor_delta > 0);
+      const hists = historico.filter((h) => h.agendamento_id === a.id && h.valor_delta > 0 && h.acao !== "acrescimo");
       
       if (hists.length > 0) {
         let totalPaidInHistory = 0;

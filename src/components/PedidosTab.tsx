@@ -131,13 +131,15 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     for (let i = 0; i < pendingIds.length; i += 50) chunks.push(pendingIds.slice(i, i + 50));
     Promise.all(
       chunks.map(chunk =>
-        supabase.from("pagamento_historico").select("agendamento_id,valor_delta").in("agendamento_id", chunk).gt("valor_delta", 0)
+        supabase.from("pagamento_historico").select("agendamento_id,valor_delta,acao").in("agendamento_id", chunk).gt("valor_delta", 0)
       )
     ).then(results => {
       const map: Record<string, number> = {};
       results.forEach(({ data }) => {
         if (data) data.forEach((h: any) => {
-          map[h.agendamento_id] = (map[h.agendamento_id] || 0) + Number(h.valor_delta);
+          if (h.acao !== "acrescimo") {
+            map[h.agendamento_id] = (map[h.agendamento_id] || 0) + Number(h.valor_delta);
+          }
         });
       });
       setAllHistoricoMap(map);
