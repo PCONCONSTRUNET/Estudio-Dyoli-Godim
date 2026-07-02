@@ -45,6 +45,7 @@ interface Agendamento {
  user_id: string;
  cliente_nome: string | null;
  observacao?: string | null;
+ forma_pagamento?: string | null;
 }
 
 interface Props {
@@ -98,6 +99,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  const [retiradaValor, setRetiradaValor] = useState("");
  const [retiradaJustificativa, setRetiradaJustificativa] = useState("");
  const [salvandoRetirada, setSalvandoRetirada] = useState(false);
+ const [showPaymentMethodModal, setShowPaymentMethodModal] = useState(false);
 
  const handleRetirarComissao = async () => {
     const valNum = parseCurrencyStr(retiradaValor);
@@ -310,6 +312,30 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
   const qtd = cicloAgs.filter((a) => a.servico !== "Adição de Crédito").length;
   return { recebido, total, pagoComCredito, gorjetas, trocos, desp, despPessoal, lucro, comissao, comissaoGerada, baseComissao, totalDays, elapsedDays, progress, qtd, items: cicloAgs, saldoEmCaixa };
  }, [allAgendamentos, ciclo, despesas, comissaoPct, cicloOffset]);
+
+ // ── Breakdown por forma de pagamento (ciclo) ──
+ const paymentMethodStats = useMemo(() => {
+  const normalize = (f: string | null | undefined) => {
+   const v = (f || "").toLowerCase().trim();
+   if (v.includes("pix")) return "pix";
+   if (v.includes("cart") || v.includes("credito") || v.includes("crédito") || v.includes("debito") || v.includes("débito")) return "cartao";
+   if (v.includes("dinheiro") || v.includes("especie") || v.includes("espécie") || v.includes("cash")) return "dinheiro";
+   return "outro";
+  };
+  const totals: Record<string, number> = { pix: 0, cartao: 0, dinheiro: 0, outro: 0 };
+  const counts: Record<string, number> = { pix: 0, cartao: 0, dinheiro: 0, outro: 0 };
+  const items: Record<string, Agendamento[]> = { pix: [], cartao: [], dinheiro: [], outro: [] };
+  cicloStats.items.forEach((a) => {
+   const pago = Number(a.valor_pago || 0);
+   if (pago <= 0) return;
+   const key = normalize(a.forma_pagamento);
+   totals[key] += pago;
+   counts[key] += 1;
+   items[key].push(a);
+  });
+  const grandTotal = totals.pix + totals.cartao + totals.dinheiro + totals.outro;
+  return { totals, counts, items, grandTotal };
+ }, [cicloStats.items]);
 
  const comissaoBreakdown = useMemo(() => {
  const byDay: Record<string, { date: string; recebido: number; qtd: number }> = {};
@@ -568,6 +594,80 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  )}
  </div>
  </div>
+
+ {/* ═══════════ GRÁFICO: FORMAS DE PAGAMENTO DO CICLO ═══════════ */}
+ <button
+  type="button"
+  onClick={() => setShowPaymentMethodModal(true)}
+  className="w-full text-left relative overflow-hidden rounded-3xl border border-primary-foreground/[0.08] bg-gradient-to-br from-primary-foreground/[0.04] to-transparent hover:border-gold/20 transition-all group"
+  aria-label="Ver detalhes das formas de pagamento"
+ >
+  <div className="relative p-5">
+   {/* Header */}
+   <div className="flex items-center justify-between mb-4">
+    <div className="flex items-center gap-2">
+     <span className="w-8 h-8 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center">
+      <DollarSign className="w-3.5 h-3.5 text-gold" />
+     </span>
+     <div>
+      <p className="font-body text-[9px] text-primary-foreground/75 uppercase tracking-[0.2em] font-semibold">Formas de Pagamento</p>
+      <p className="font-heading text-[13px] font-bold text-primary-foreground">{formatCurrency(paymentMethodStats.grandTotal)}</p>
+     </div>
+    </div>
+    <span className="font-body text-[9px] text-gold/70 uppercase tracking-wider flex items-center gap-1 group-hover:text-gold transition-colors">
+     detalhes <ChevronRight className="w-3 h-3" />
+    </span>
+   </div>
+
+   {/* Barras horizontais */}
+   <div className="space-y-2.5">
+    {([
+     { key: "pix", label: "PIX", emoji: "⚡", color: "bg-emerald-400", glow: "shadow-[0_0_8px_hsl(160_70%_55%/0.6)]", textColor: "text-emerald-400" },
+     { key: "cartao", label: "Cartão", emoji: "💳", color: "bg-blue-400", glow: "shadow-[0_0_8px_hsl(215_80%_65%/0.6)]", textColor: "text-blue-400" },
+     { key: "dinheiro", label: "Dinheiro", emoji: "💵", color: "bg-gold", glow: "shadow-[0_0_8px_hsl(40_60%_60%/0.6)]", textColor: "text-gold" },
+    ] as const).map(({ key, label, emoji, color, glow, textColor }) => {
+     const val = paymentMethodStats.totals[key];
+     const pct = paymentMethodStats.grandTotal > 0 ? Math.round((val / paymentMethodStats.grandTotal) * 100) : 0;
+     const cnt = paymentMethodStats.counts[key];
+     return (
+      <div key={key}>
+       <div className="flex items-center justify-between mb-1">
+        <span className="font-body text-[10px] text-primary-foreground/85 flex items-center gap-1.5">
+         <span>{emoji}</span> {label}
+         <span className="text-primary-foreground/40 text-[9px]">({cnt} {cnt === 1 ? "pag." : "pag."})</span>
+        </span>
+        <span className={`font-heading text-[11px] font-bold tabular-nums ${textColor}`}>{formatCurrency(val)}</span>
+       </div>
+       <div className="h-1.5 rounded-full bg-primary-foreground/[0.06] overflow-hidden">
+        <div
+         className={`h-full rounded-full ${color} ${glow} transition-all duration-700 ease-out`}
+         style={{ width: `${pct}%` }}
+        />
+       </div>
+      </div>
+     );
+    })}
+   </div>
+
+   {/* Mini total por tipo */}
+   {paymentMethodStats.grandTotal > 0 && (
+    <div className="mt-3 pt-3 border-t border-primary-foreground/[0.06] grid grid-cols-3 gap-2 text-center">
+     {([
+      { key: "pix", label: "PIX", textColor: "text-emerald-400" },
+      { key: "cartao", label: "Cartão", textColor: "text-blue-400" },
+      { key: "dinheiro", label: "Dinheiro", textColor: "text-gold" },
+     ] as const).map(({ key, label, textColor }) => (
+      <div key={key}>
+       <p className={`font-heading text-[11px] font-bold tabular-nums ${textColor}`}>
+        {paymentMethodStats.grandTotal > 0 ? Math.round((paymentMethodStats.totals[key] / paymentMethodStats.grandTotal) * 100) : 0}%
+       </p>
+       <p className="font-body text-[8px] text-primary-foreground/50 uppercase tracking-wider">{label}</p>
+      </div>
+     ))}
+    </div>
+   )}
+  </div>
+ </button>
 
  {/* ═══════════ FECHAMENTO DE CAIXA (DIA) ═══════════ */}
  <div className="relative overflow-hidden rounded-3xl border border-primary-foreground/[0.08] bg-gradient-to-br from-primary-foreground/[0.03] to-transparent">
@@ -987,6 +1087,110 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  </div>
  </div>
  </DialogContent>
+ </Dialog>
+
+ {/* ═══════════ MODAL: FORMAS DE PAGAMENTO DO CICLO ═══════════ */}
+ <Dialog open={showPaymentMethodModal} onOpenChange={setShowPaymentMethodModal}>
+  <DialogContent className="max-w-md max-h-[85vh] overflow-hidden flex flex-col border-gold/20 p-0 [&>button]:text-primary-foreground/95 [&>button]:hover:text-primary-foreground">
+   <div className="relative overflow-hidden">
+    <div className="pointer-events-none absolute -top-16 -right-12 w-48 h-48 rounded-full bg-emerald-500/10 blur-3xl" />
+    <div className="pointer-events-none absolute -bottom-16 -left-12 w-40 h-40 rounded-full bg-blue-500/10 blur-3xl" />
+    <DialogHeader className="relative px-5 pt-5 pb-3 border-b border-primary-foreground/[0.06]">
+     <div className="flex items-center gap-3">
+      <span className="w-10 h-10 rounded-2xl bg-gold/10 border border-gold/20 flex items-center justify-center">
+       <DollarSign className="w-4 h-4 text-gold" />
+      </span>
+      <div>
+       <DialogTitle className="font-heading text-[16px] font-bold text-primary-foreground tracking-tight">
+        Formas de Pagamento
+       </DialogTitle>
+       <p className="font-body text-[10px] text-primary-foreground/60 uppercase tracking-wider mt-0.5">
+        {fmtShort(ciclo.startDate)} → {fmtShort(ciclo.endDate)}
+       </p>
+      </div>
+     </div>
+    </DialogHeader>
+
+    <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-4">
+     {/* Resumo hero */}
+     <div className="grid grid-cols-3 gap-2">
+      {([
+       { key: "pix", label: "PIX", emoji: "⚡", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/25", textColor: "text-emerald-400", glowColor: "drop-shadow-[0_0_8px_hsl(160_70%_55%/0.5)]" },
+       { key: "cartao", label: "Cartão", emoji: "💳", bgColor: "bg-blue-500/10", borderColor: "border-blue-500/25", textColor: "text-blue-400", glowColor: "drop-shadow-[0_0_8px_hsl(215_80%_65%/0.5)]" },
+       { key: "dinheiro", label: "Dinheiro", emoji: "💵", bgColor: "bg-gold/10", borderColor: "border-gold/25", textColor: "text-gold", glowColor: "drop-shadow-[0_0_8px_hsl(40_60%_60%/0.5)]" },
+      ] as const).map(({ key, label, emoji, bgColor, borderColor, textColor, glowColor }) => {
+       const val = paymentMethodStats.totals[key];
+       const cnt = paymentMethodStats.counts[key];
+       const pct = paymentMethodStats.grandTotal > 0 ? Math.round((val / paymentMethodStats.grandTotal) * 100) : 0;
+       return (
+        <div key={key} className={`p-3 rounded-2xl ${bgColor} border ${borderColor} flex flex-col items-center text-center gap-1`}>
+         <span className="text-xl">{emoji}</span>
+         <p className="font-body text-[9px] text-primary-foreground/60 uppercase tracking-wider">{label}</p>
+         <p className={`font-heading text-[13px] font-bold tabular-nums ${textColor} ${glowColor} leading-tight`}>{formatCurrency(val)}</p>
+         <p className="font-body text-[9px] text-primary-foreground/50">{pct}% · {cnt} pag.</p>
+        </div>
+       );
+      })}
+     </div>
+
+     {/* Barra visual comparativa */}
+     {paymentMethodStats.grandTotal > 0 && (
+      <div className="p-3 rounded-2xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06]">
+       <p className="font-body text-[9px] text-primary-foreground/60 uppercase tracking-wider mb-2 font-semibold">Distribuição do ciclo</p>
+       <div className="flex h-3 rounded-full overflow-hidden gap-0.5">
+        {([
+         { key: "pix", color: "bg-emerald-400" },
+         { key: "cartao", color: "bg-blue-400" },
+         { key: "dinheiro", color: "bg-gold" },
+         { key: "outro", color: "bg-primary-foreground/20" },
+        ] as const).map(({ key, color }) => {
+         const pct = paymentMethodStats.grandTotal > 0 ? (paymentMethodStats.totals[key] / paymentMethodStats.grandTotal) * 100 : 0;
+         if (pct <= 0) return null;
+         return <div key={key} className={`h-full rounded-sm ${color} transition-all`} style={{ width: `${pct}%` }} />;
+        })}
+       </div>
+      </div>
+     )}
+
+     {/* Lista detalhada por forma */}
+     {([
+      { key: "pix", label: "PIX", emoji: "⚡", textColor: "text-emerald-400", borderColor: "border-emerald-500/20", headerBg: "bg-emerald-500/[0.05]" },
+      { key: "cartao", label: "Cartão", emoji: "💳", textColor: "text-blue-400", borderColor: "border-blue-500/20", headerBg: "bg-blue-500/[0.05]" },
+      { key: "dinheiro", label: "Dinheiro", emoji: "💵", textColor: "text-gold", borderColor: "border-gold/20", headerBg: "bg-gold/[0.05]" },
+     ] as const).map(({ key, label, emoji, textColor, borderColor, headerBg }) => {
+      const list = paymentMethodStats.items[key];
+      if (!list || list.length === 0) return null;
+      return (
+       <div key={key} className={`rounded-2xl border ${borderColor} overflow-hidden`}>
+        <div className={`${headerBg} px-4 py-2.5 flex items-center justify-between`}>
+         <span className="font-body text-[10px] font-bold text-primary-foreground/85 uppercase tracking-wider flex items-center gap-1.5">
+          {emoji} {label}
+         </span>
+         <span className={`font-heading text-[12px] font-bold tabular-nums ${textColor}`}>{formatCurrency(paymentMethodStats.totals[key])}</span>
+        </div>
+        <div className="divide-y divide-primary-foreground/[0.05] max-h-[180px] overflow-y-auto">
+         {[...list].sort((a, b) => b.data_agendamento.localeCompare(a.data_agendamento)).map((a) => (
+          <div key={a.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-primary-foreground/[0.03] transition-colors">
+           <div className="min-w-0 flex-1">
+            <p className="font-body text-[12px] font-semibold text-primary-foreground truncate">{getClientName(a.user_id, a.cliente_nome)}</p>
+            <p className="font-body text-[10px] text-primary-foreground/55 truncate">{formatDateShort(a.data_agendamento)} · {a.servico}</p>
+           </div>
+           <p className={`font-heading text-[12px] font-bold tabular-nums ml-2 shrink-0 ${textColor}`}>{formatCurrency(Number(a.valor_pago || 0))}</p>
+          </div>
+         ))}
+        </div>
+       </div>
+      );
+     })}
+
+     {paymentMethodStats.grandTotal === 0 && (
+      <div className="text-center py-10 rounded-2xl bg-primary-foreground/[0.02] border border-dashed border-primary-foreground/[0.08]">
+       <p className="font-body text-[13px] text-primary-foreground/50">Nenhum pagamento registrado neste ciclo</p>
+      </div>
+     )}
+    </div>
+   </div>
+  </DialogContent>
  </Dialog>
 
   <Dialog open={showRetiradaModal} onOpenChange={setShowRetiradaModal}>
