@@ -19,8 +19,11 @@ import {
  ArrowUp,
  ArrowDown,
  DollarSign,
- FileText
+ FileText,
+ CreditCard,
+ Banknote
 } from "lucide-react";
+import pixIcon from "@/assets/pix-icon.png";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -622,10 +625,10 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
    {/* Barras horizontais */}
    <div className="space-y-2.5">
     {([
-     { key: "pix", label: "PIX", emoji: "⚡", color: "bg-emerald-400", glow: "shadow-[0_0_8px_hsl(160_70%_55%/0.6)]", textColor: "text-emerald-400" },
-     { key: "cartao", label: "Cartão", emoji: "💳", color: "bg-blue-400", glow: "shadow-[0_0_8px_hsl(215_80%_65%/0.6)]", textColor: "text-blue-400" },
-     { key: "dinheiro", label: "Dinheiro", emoji: "💵", color: "bg-gold", glow: "shadow-[0_0_8px_hsl(40_60%_60%/0.6)]", textColor: "text-gold" },
-    ] as const).map(({ key, label, emoji, color, glow, textColor }) => {
+     { key: "pix", label: "PIX", icon: <img src={pixIcon} alt="PIX" className="w-3.5 h-3.5 opacity-90" />, color: "bg-emerald-400", glow: "shadow-[0_0_8px_hsl(160_70%_55%/0.6)]", textColor: "text-emerald-400" },
+     { key: "cartao", label: "Cartão", icon: <CreditCard className="w-3.5 h-3.5 text-blue-400" />, color: "bg-blue-400", glow: "shadow-[0_0_8px_hsl(215_80%_65%/0.6)]", textColor: "text-blue-400" },
+     { key: "dinheiro", label: "Dinheiro", icon: <Banknote className="w-3.5 h-3.5 text-gold" />, color: "bg-gold", glow: "shadow-[0_0_8px_hsl(40_60%_60%/0.6)]", textColor: "text-gold" },
+    ] as const).map(({ key, label, icon, color, glow, textColor }) => {
      const val = paymentMethodStats.totals[key];
      const pct = paymentMethodStats.grandTotal > 0 ? Math.round((val / paymentMethodStats.grandTotal) * 100) : 0;
      const cnt = paymentMethodStats.counts[key];
@@ -633,7 +636,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
       <div key={key}>
        <div className="flex items-center justify-between mb-1">
         <span className="font-body text-[10px] text-primary-foreground/85 flex items-center gap-1.5">
-         <span>{emoji}</span> {label}
+         <span className="flex items-center justify-center w-4 h-4">{icon}</span> {label}
          <span className="text-primary-foreground/40 text-[9px]">({cnt} {cnt === 1 ? "pag." : "pag."})</span>
         </span>
         <span className={`font-heading text-[11px] font-bold tabular-nums ${textColor}`}>{formatCurrency(val)}</span>
@@ -1115,16 +1118,16 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
      {/* Resumo hero */}
      <div className="grid grid-cols-3 gap-2">
       {([
-       { key: "pix", label: "PIX", emoji: "⚡", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/25", textColor: "text-emerald-400", glowColor: "drop-shadow-[0_0_8px_hsl(160_70%_55%/0.5)]" },
-       { key: "cartao", label: "Cartão", emoji: "💳", bgColor: "bg-blue-500/10", borderColor: "border-blue-500/25", textColor: "text-blue-400", glowColor: "drop-shadow-[0_0_8px_hsl(215_80%_65%/0.5)]" },
-       { key: "dinheiro", label: "Dinheiro", emoji: "💵", bgColor: "bg-gold/10", borderColor: "border-gold/25", textColor: "text-gold", glowColor: "drop-shadow-[0_0_8px_hsl(40_60%_60%/0.5)]" },
-      ] as const).map(({ key, label, emoji, bgColor, borderColor, textColor, glowColor }) => {
+       { key: "pix", label: "PIX", icon: <img src={pixIcon} alt="PIX" className="w-6 h-6 opacity-90" />, bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/25", textColor: "text-emerald-400", glowColor: "drop-shadow-[0_0_8px_hsl(160_70%_55%/0.5)]" },
+       { key: "cartao", label: "Cartão", icon: <CreditCard className="w-6 h-6 text-blue-400" />, bgColor: "bg-blue-500/10", borderColor: "border-blue-500/25", textColor: "text-blue-400", glowColor: "drop-shadow-[0_0_8px_hsl(215_80%_65%/0.5)]" },
+       { key: "dinheiro", label: "Dinheiro", icon: <Banknote className="w-6 h-6 text-gold" />, bgColor: "bg-gold/10", borderColor: "border-gold/25", textColor: "text-gold", glowColor: "drop-shadow-[0_0_8px_hsl(40_60%_60%/0.5)]" },
+      ] as const).map(({ key, label, icon, bgColor, borderColor, textColor, glowColor }) => {
        const val = paymentMethodStats.totals[key];
        const cnt = paymentMethodStats.counts[key];
        const pct = paymentMethodStats.grandTotal > 0 ? Math.round((val / paymentMethodStats.grandTotal) * 100) : 0;
        return (
         <div key={key} className={`p-3 rounded-2xl ${bgColor} border ${borderColor} flex flex-col items-center text-center gap-1`}>
-         <span className="text-xl">{emoji}</span>
+         <span className="flex items-center justify-center w-8 h-8 mb-1">{icon}</span>
          <p className="font-body text-[9px] text-primary-foreground/60 uppercase tracking-wider">{label}</p>
          <p className={`font-heading text-[13px] font-bold tabular-nums ${textColor} ${glowColor} leading-tight`}>{formatCurrency(val)}</p>
          <p className="font-body text-[9px] text-primary-foreground/50">{pct}% · {cnt} pag.</p>
@@ -1154,17 +1157,17 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
 
      {/* Lista detalhada por forma */}
      {([
-      { key: "pix", label: "PIX", emoji: "⚡", textColor: "text-emerald-400", borderColor: "border-emerald-500/20", headerBg: "bg-emerald-500/[0.05]" },
-      { key: "cartao", label: "Cartão", emoji: "💳", textColor: "text-blue-400", borderColor: "border-blue-500/20", headerBg: "bg-blue-500/[0.05]" },
-      { key: "dinheiro", label: "Dinheiro", emoji: "💵", textColor: "text-gold", borderColor: "border-gold/20", headerBg: "bg-gold/[0.05]" },
-     ] as const).map(({ key, label, emoji, textColor, borderColor, headerBg }) => {
+      { key: "pix", label: "PIX", icon: <img src={pixIcon} alt="PIX" className="w-3.5 h-3.5 opacity-90" />, textColor: "text-emerald-400", borderColor: "border-emerald-500/20", headerBg: "bg-emerald-500/[0.05]" },
+      { key: "cartao", label: "Cartão", icon: <CreditCard className="w-3.5 h-3.5 text-blue-400" />, textColor: "text-blue-400", borderColor: "border-blue-500/20", headerBg: "bg-blue-500/[0.05]" },
+      { key: "dinheiro", label: "Dinheiro", icon: <Banknote className="w-3.5 h-3.5 text-gold" />, textColor: "text-gold", borderColor: "border-gold/20", headerBg: "bg-gold/[0.05]" },
+     ] as const).map(({ key, label, icon, textColor, borderColor, headerBg }) => {
       const list = paymentMethodStats.items[key];
       if (!list || list.length === 0) return null;
       return (
        <div key={key} className={`rounded-2xl border ${borderColor} overflow-hidden`}>
         <div className={`${headerBg} px-4 py-2.5 flex items-center justify-between`}>
          <span className="font-body text-[10px] font-bold text-primary-foreground/85 uppercase tracking-wider flex items-center gap-1.5">
-          {emoji} {label}
+          {icon} {label}
          </span>
          <span className={`font-heading text-[12px] font-bold tabular-nums ${textColor}`}>{formatCurrency(paymentMethodStats.totals[key])}</span>
         </div>
