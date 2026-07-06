@@ -12,6 +12,8 @@ import PlusButton from "@/components/ui/plus-button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarUI } from "@/components/ui/calendar";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 interface Gasto {
@@ -143,6 +145,16 @@ const GastosTab = () => {
       return true;
     });
   }, [gastos, catFilter, responsavelFilter, targetMonth, selectedDay]);
+
+  const daysWithRecords = useMemo(() => {
+    return gastos
+      .filter(g => {
+        if (g.responsavel !== responsavelFilter) return false;
+        if (catFilter !== "Todas" && g.categoria !== catFilter) return false;
+        return true;
+      })
+      .map(g => new Date(g.data_gasto + "T12:00:00"));
+  }, [gastos, responsavelFilter, catFilter]);
 
   useEffect(() => {
     setVisibleCount(10);
@@ -333,15 +345,24 @@ const GastosTab = () => {
             <p className="font-heading text-[15px] font-semibold text-white capitalize">
               {selectedDay ? formatDate(selectedDay) : `${MONTHS_PT[targetMonth.getMonth()]} ${targetMonth.getFullYear()}`}
             </p>
-            <div className="relative flex items-center justify-center w-6 h-6 rounded-md bg-white/[0.05] hover:bg-white/[0.1] border border-white/5 transition-colors cursor-pointer" title="Filtrar por dia específico">
-              <Calendar className="w-3.5 h-3.5 text-white/60 pointer-events-none" />
-              <input 
-                type="date" 
-                className="absolute inset-0 opacity-0 cursor-pointer"
-                onChange={(e) => setSelectedDay(e.target.value || null)}
-                value={selectedDay || ""}
-              />
-            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="flex items-center justify-center w-6 h-6 rounded-md bg-white/[0.05] hover:bg-white/[0.1] border border-white/5 transition-colors cursor-pointer" title="Filtrar por dia específico">
+                  <Calendar className="w-3.5 h-3.5 text-white/60" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 border border-white/10 bg-[#1c1c1e] shadow-2xl rounded-[16px] text-white" align="center">
+                <CalendarUI
+                  mode="single"
+                  selected={selectedDay ? new Date(selectedDay + "T12:00:00") : undefined}
+                  onSelect={(date) => setSelectedDay(date ? date.toISOString().split("T")[0] : null)}
+                  defaultMonth={targetMonth}
+                  modifiers={{ hasRecord: daysWithRecords }}
+                  modifiersClassNames={{ hasRecord: "relative after:absolute after:bottom-[3px] after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-orange-500 after:rounded-full" }}
+                  className="bg-[#1c1c1e] text-white rounded-[16px]"
+                />
+              </PopoverContent>
+            </Popover>
           </div>
           <p className="font-body text-[10px] text-white/50 uppercase tracking-widest mt-1">
             {selectedDay ? (
