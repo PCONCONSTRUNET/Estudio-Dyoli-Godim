@@ -58,6 +58,14 @@ const formatDate = (d: string) =>
     day: "2-digit", month: "short", year: "numeric",
   });
 
+const formatTime = (d: string) => {
+  try {
+    return new Date(d).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  } catch {
+    return "";
+  }
+};
+
 const MONTHS_PT = [
   "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
   "Jul", "Ago", "Set", "Out", "Nov", "Dez",
@@ -77,6 +85,8 @@ const GastosTab = () => {
   const [catFilter, setCatFilter] = useState("Todas");
   const [monthOffset, setMonthOffset] = useState(0);
   const [responsavelFilter, setResponsavelFilter] = useState<"Dona" | "Zelia">("Dona");
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(10);
 
   // Form
   const [descricao, setDescricao] = useState("");
@@ -123,12 +133,21 @@ const GastosTab = () => {
       if (g.responsavel !== responsavelFilter) return false;
       if (catFilter !== "Todas" && g.categoria !== catFilter) return false;
       
-      const gastoDate = new Date(g.data_gasto + "T12:00:00");
-      if (gastoDate.getMonth() !== targetMonth.getMonth() || gastoDate.getFullYear() !== targetMonth.getFullYear()) return false;
+      if (selectedDay) {
+        if (g.data_gasto !== selectedDay) return false;
+      } else {
+        const gastoDate = new Date(g.data_gasto + "T12:00:00");
+        if (gastoDate.getMonth() !== targetMonth.getMonth() || gastoDate.getFullYear() !== targetMonth.getFullYear()) return false;
+      }
       
       return true;
     });
-  }, [gastos, catFilter, responsavelFilter, targetMonth]);
+  }, [gastos, catFilter, responsavelFilter, targetMonth, selectedDay]);
+
+  useEffect(() => {
+    setVisibleCount(10);
+    setSelectedDay(null);
+  }, [monthOffset, catFilter, responsavelFilter]);
 
   const totalGeral = useMemo(() => gastos.filter(g => g.responsavel === responsavelFilter).reduce((s, g) => s + Number(g.valor), 0), [gastos, responsavelFilter]);
   const totalFiltrado = useMemo(() => gastosFiltrados.reduce((s, g) => s + Number(g.valor), 0), [gastosFiltrados]);
@@ -310,11 +329,26 @@ const GastosTab = () => {
         </button>
         
         <div className="text-center">
-          <p className="font-heading text-[15px] font-semibold text-white capitalize">
-            {MONTHS_PT[targetMonth.getMonth()]} {targetMonth.getFullYear()}
-          </p>
-          <p className="font-body text-[10px] text-white/50 uppercase tracking-widest mt-0.5">
-            {monthOffset === 0 ? "Mês Atual" : monthOffset < 0 ? `${Math.abs(monthOffset)} mês(es) atrás` : `Mês Futuro`}
+          <div className="flex items-center justify-center gap-1.5">
+            <p className="font-heading text-[15px] font-semibold text-white capitalize">
+              {selectedDay ? formatDate(selectedDay) : `${MONTHS_PT[targetMonth.getMonth()]} ${targetMonth.getFullYear()}`}
+            </p>
+            <div className="relative flex items-center justify-center w-6 h-6 rounded-md bg-white/[0.05] hover:bg-white/[0.1] border border-white/5 transition-colors cursor-pointer" title="Filtrar por dia específico">
+              <Calendar className="w-3.5 h-3.5 text-white/60 pointer-events-none" />
+              <input 
+                type="date" 
+                className="absolute inset-0 opacity-0 cursor-pointer"
+                onChange={(e) => setSelectedDay(e.target.value || null)}
+                value={selectedDay || ""}
+              />
+            </div>
+          </div>
+          <p className="font-body text-[10px] text-white/50 uppercase tracking-widest mt-1">
+            {selectedDay ? (
+               <button onClick={() => setSelectedDay(null)} className="text-orange-400 font-bold hover:underline">Limpar Filtro de Dia</button>
+            ) : (
+               <span>{monthOffset === 0 ? "Mês Atual" : monthOffset < 0 ? `${Math.abs(monthOffset)} mês(es) atrás` : `Mês Futuro`}</span>
+            )}
           </p>
         </div>
 
@@ -421,7 +455,7 @@ const GastosTab = () => {
           </div>
         ) : (
           <div className="space-y-2">
-            {gastosFiltrados.map(g => (
+            {gastosFiltrados.slice(0, visibleCount).map(g => (
               <div
                 key={g.id}
                 className="group flex items-center gap-3.5 px-4 py-3 rounded-[20px] border border-white/5 bg-[#1c1c1e] hover:bg-[#2c2c2e] hover:border-white/10 transition-all"
@@ -453,7 +487,7 @@ const GastosTab = () => {
                     </span>
                     <span className="text-white/20 text-[10px]">·</span>
                     <span className="text-[11px] font-body font-medium text-white/70">
-                      {formatDate(g.data_gasto)}
+                      {formatDate(g.data_gasto)} às {formatTime(g.created_at)}
                     </span>
                   </div>
                   {g.observacao && (
@@ -479,6 +513,14 @@ const GastosTab = () => {
                 </div>
               </div>
             ))}
+            {visibleCount < gastosFiltrados.length && (
+              <button
+                onClick={() => setVisibleCount(prev => prev + 10)}
+                className="w-full mt-2 py-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] text-white/50 hover:text-white/80 font-body text-[11px] uppercase tracking-widest font-semibold transition-all"
+              >
+                Carregar mais ({gastosFiltrados.length - visibleCount} restantes)
+              </button>
+            )}
           </div>
         )}
       </div>
