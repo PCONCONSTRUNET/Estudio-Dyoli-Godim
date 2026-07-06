@@ -2,12 +2,9 @@ import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend,
-} from "recharts";
-import {
   ShoppingCart, TrendingDown, Calendar, Save, Pencil,
   Sparkles, PackageOpen, Tag, AlertCircle,
+  ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import BinButton from "@/components/ui/bin-button";
@@ -66,33 +63,7 @@ const MONTHS_PT = [
   "Jul", "Ago", "Set", "Out", "Nov", "Dez",
 ];
 
-// ─── Tooltip personalizado para o BarChart ────────────────────────────────────
-const CustomBarTooltip = ({ active, payload, label }: any) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="rounded-xl border border-gold/20 bg-charcoal/95 backdrop-blur px-3 py-2 shadow-xl">
-      <p className="font-body text-[11px] text-primary-foreground/60 mb-0.5">{label}</p>
-      <p className="font-heading text-[14px] font-bold text-gold">
-        {formatCurrency(payload[0]?.value ?? 0)}
-      </p>
-    </div>
-  );
-};
 
-// ─── Tooltip personalizado para o PieChart ────────────────────────────────────
-const CustomPieTooltip = ({ active, payload }: any) => {
-  if (!active || !payload?.length) return null;
-  const d = payload[0];
-  return (
-    <div className="rounded-xl border border-primary-foreground/10 bg-charcoal/95 backdrop-blur px-3 py-2 shadow-xl">
-      <p className="font-body text-[11px] text-primary-foreground/60 mb-0.5">{d.name}</p>
-      <p className="font-heading text-[14px] font-bold" style={{ color: d.payload.fill }}>
-        {formatCurrency(d.value)}
-      </p>
-      <p className="font-body text-[10px] text-primary-foreground/70">{d.payload.pct}%</p>
-    </div>
-  );
-};
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 const GastosTab = () => {
@@ -104,11 +75,7 @@ const GastosTab = () => {
 
   // Filtros
   const [catFilter, setCatFilter] = useState("Todas");
-  const [periodoFilter, setPeriodoFilter] = useState<"total" | "semana" | "mes" | "personalizado">("mes");
-  const [dataInicioFilter, setDataInicioFilter] = useState(() => {
-    const d = new Date(); d.setDate(1); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split("T")[0];
-  });
-  const [dataFimFilter, setDataFimFilter] = useState(() => new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]);
+  const [monthOffset, setMonthOffset] = useState(0);
   const [responsavelFilter, setResponsavelFilter] = useState<"Dona" | "Zelia">("Dona");
 
   // Form
@@ -125,8 +92,7 @@ const GastosTab = () => {
     ? (categoriaPersonalizada.trim() || "Outros")
     : categoria;
 
-  // Gráfico ativo
-  const [chartView, setChartView] = useState<"mensal" | "categoria">("mensal");
+
 
   // ─── Carregar ─────────────────────────────────────────────────────────────
   useEffect(() => { loadGastos(); }, []);
@@ -145,31 +111,24 @@ const GastosTab = () => {
   };
 
   // ─── Computed ─────────────────────────────────────────────────────────────
+  const targetMonth = useMemo(() => {
+    const d = new Date();
+    d.setHours(12, 0, 0, 0);
+    d.setMonth(d.getMonth() + monthOffset);
+    return d;
+  }, [monthOffset]);
+
   const gastosFiltrados = useMemo(() => {
     return gastos.filter(g => {
       if (g.responsavel !== responsavelFilter) return false;
       if (catFilter !== "Todas" && g.categoria !== catFilter) return false;
       
-      const gastoDate = new Date(g.data_gasto + "T00:00:00");
-      const hj = new Date();
-      hj.setHours(23, 59, 59, 999);
-      
-      if (periodoFilter === "semana") {
-        const semanaPassada = new Date(hj);
-        semanaPassada.setDate(hj.getDate() - 7);
-        semanaPassada.setHours(0, 0, 0, 0);
-        if (gastoDate < semanaPassada || gastoDate > hj) return false;
-      } else if (periodoFilter === "mes") {
-        if (gastoDate.getMonth() !== hj.getMonth() || gastoDate.getFullYear() !== hj.getFullYear()) return false;
-      } else if (periodoFilter === "personalizado") {
-        const inicio = new Date(dataInicioFilter + "T00:00:00");
-        const fim = new Date(dataFimFilter + "T23:59:59");
-        if (gastoDate < inicio || gastoDate > fim) return false;
-      }
+      const gastoDate = new Date(g.data_gasto + "T12:00:00");
+      if (gastoDate.getMonth() !== targetMonth.getMonth() || gastoDate.getFullYear() !== targetMonth.getFullYear()) return false;
       
       return true;
     });
-  }, [gastos, catFilter, periodoFilter, responsavelFilter, dataInicioFilter, dataFimFilter]);
+  }, [gastos, catFilter, responsavelFilter, targetMonth]);
 
   const totalGeral = useMemo(() => gastos.filter(g => g.responsavel === responsavelFilter).reduce((s, g) => s + Number(g.valor), 0), [gastos, responsavelFilter]);
   const totalFiltrado = useMemo(() => gastosFiltrados.reduce((s, g) => s + Number(g.valor), 0), [gastosFiltrados]);
@@ -181,36 +140,20 @@ const GastosTab = () => {
     return Array.from(unicas);
   }, [gastos]);
 
-  // Dados para BarChart mensal (últimos 6 meses)
-  const dadosMensais = useMemo(() => {
-    const map: Record<string, number> = {};
-    gastos.filter(g => g.responsavel === responsavelFilter).forEach(g => {
-      const [y, m] = g.data_gasto.split("-");
-      const key = `${y}-${m}`;
-      map[key] = (map[key] ?? 0) + Number(g.valor);
-    });
-    const sorted = Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).slice(-6);
-    return sorted.map(([key, total]) => {
-      const [, m] = key.split("-");
-      return { mes: MONTHS_PT[Number(m) - 1], total };
-    });
-  }, [gastos, responsavelFilter]);
-
-  // Dados para PieChart por categoria
+  // Dados de categorias para exibir no mês selecionado
   const dadosCategoria = useMemo(() => {
     const map: Record<string, number> = {};
     gastosFiltrados.forEach(g => {
       map[g.categoria] = (map[g.categoria] ?? 0) + Number(g.valor);
     });
-    const sorted = Object.entries(map)
+    return Object.entries(map)
       .sort(([, a], [, b]) => b - a)
       .map(([name, value]) => ({
         name,
         value,
         fill: CATEGORIA_COLORS[name] ?? "#94a3b8",
-        pct: totalFiltrado > 0 ? ((value / totalFiltrado) * 100).toFixed(1) : "0",
+        pct: totalFiltrado > 0 ? Math.round((value / totalFiltrado) * 100) : 0,
       }));
-    return sorted;
   }, [gastosFiltrados, totalFiltrado]);
 
   // ─── Ações ────────────────────────────────────────────────────────────────
@@ -357,51 +300,40 @@ const GastosTab = () => {
         ))}
       </div>
 
-      {/* ── Filtro de Período ── */}
-      <div className="mb-4">
-        <p className="font-body text-[10px] uppercase tracking-widest text-white/50 mb-2 px-0.5">
-          Filtrar por Período
-        </p>
-        <div className="grid grid-cols-4 gap-1 p-1 bg-[#1c1c1e] rounded-[16px] border border-white/10">
-          {(["total", "semana", "mes", "personalizado"] as const).map((p) => {
-             const label = { total: "Total", semana: "Semana", mes: "Mês", personalizado: "Custom" }[p];
-             return (
-               <button
-                 key={p}
-                 onClick={() => setPeriodoFilter(p)}
-                 className={`py-2 rounded-xl text-[11px] font-body font-semibold transition-all ${
-                   periodoFilter === p
-                     ? "bg-[#2c2c2e] text-white shadow-sm border border-white/5"
-                     : "text-white/40 hover:text-white/80"
-                 }`}
-               >
-                 {label}
-               </button>
-             )
-          })}
-        </div>
+      {/* ── Navegação por Mês ── */}
+      <div className="mb-4 flex items-center justify-between p-2 rounded-[16px] bg-[#1c1c1e] border border-white/10">
+        <button
+          onClick={() => setMonthOffset(o => o - 1)}
+          className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/[0.03] hover:bg-white/[0.08] transition-colors border border-white/5"
+        >
+          <ChevronLeft className="w-5 h-5 text-white/70" />
+        </button>
         
-        {periodoFilter === "personalizado" && (
-          <div className="flex gap-2 mt-2.5 items-center bg-primary-foreground/[0.02] p-2 rounded-xl border border-primary-foreground/[0.05]">
-             <div className="flex-1">
-               <input 
-                 type="date" 
-                 value={dataInicioFilter} 
-                 onChange={e => setDataInicioFilter(e.target.value)} 
-                 className="w-full bg-transparent border-none p-0 text-primary-foreground font-body text-[12px] focus:ring-0 [&::-webkit-calendar-picker-indicator]:invert-[0.8]" 
-               />
-             </div>
-             <span className="text-primary-foreground/60 text-[10px] font-medium uppercase px-2">até</span>
-             <div className="flex-1">
-               <input 
-                 type="date" 
-                 value={dataFimFilter} 
-                 onChange={e => setDataFimFilter(e.target.value)} 
-                 className="w-full bg-transparent border-none p-0 text-primary-foreground font-body text-[12px] focus:ring-0 [&::-webkit-calendar-picker-indicator]:invert-[0.8]" 
-               />
-             </div>
-          </div>
-        )}
+        <div className="text-center">
+          <p className="font-heading text-[15px] font-semibold text-white capitalize">
+            {MONTHS_PT[targetMonth.getMonth()]} {targetMonth.getFullYear()}
+          </p>
+          <p className="font-body text-[10px] text-white/50 uppercase tracking-widest mt-0.5">
+            {monthOffset === 0 ? "Mês Atual" : monthOffset < 0 ? `${Math.abs(monthOffset)} mês(es) atrás` : `Mês Futuro`}
+          </p>
+        </div>
+
+        <div className="flex gap-1.5 items-center">
+          {monthOffset !== 0 && (
+            <button
+              onClick={() => setMonthOffset(0)}
+              className="px-3 py-1.5 rounded-xl bg-orange-500/15 text-orange-400 font-body text-[10px] font-bold uppercase tracking-wider hover:bg-orange-500/25 transition-all border border-orange-500/20"
+            >
+              Hoje
+            </button>
+          )}
+          <button
+            onClick={() => setMonthOffset(o => o + 1)}
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/[0.03] hover:bg-white/[0.08] transition-colors border border-white/5"
+          >
+            <ChevronRight className="w-5 h-5 text-white/70" />
+          </button>
+        </div>
       </div>
 
       {/* ── Filtro de Categoria ── */}
@@ -443,120 +375,36 @@ const GastosTab = () => {
         </Select>
       </div>
 
-      {/* ── Gráficos ── */}
-      {gastos.length > 0 && (
-        <div className="overflow-hidden">
-          <style>{`
-            .recharts-wrapper, .recharts-surface, .recharts-wrapper > svg {
-              background: transparent !important;
-            }
-          `}</style>
-          {/* Toggle gráfico */}
-          <div className="flex border-b border-primary-foreground/[0.06]">
-            {(["mensal", "categoria"] as const).map(v => (
-              <button
-                key={v}
-                onClick={() => setChartView(v)}
-                className={`flex-1 py-3 font-body text-[12px] font-medium transition-all ${
-                  chartView === v
-                    ? "text-gold border-b-2 border-gold bg-gold/[0.04]"
-                    : "text-primary-foreground/70 hover:text-primary-foreground/60"
-                }`}
-              >
-                {v === "mensal" ? "📅 Gastos por Mês" : "🏷️ Por Categoria"}
-              </button>
-            ))}
-          </div>
-
-          <div className="p-4">
-            {chartView === "mensal" ? (
-              dadosMensais.length > 0 ? (
-                <>
-                  <p className="font-body text-[11px] text-primary-foreground/70 mb-3">
-                    Últimos {dadosMensais.length} meses
-                  </p>
-                  <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={dadosMensais} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} style={{ background: "transparent" }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                      <XAxis
-                        dataKey="mes"
-                        tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 11, fontFamily: "var(--font-body)" }}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <YAxis
-                        tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 10, fontFamily: "var(--font-body)" }}
-                        axisLine={false}
-                        tickLine={false}
-                        tickFormatter={v => `R$${v >= 1000 ? (v / 1000).toFixed(1) + "k" : v}`}
-                      />
-                      <Tooltip content={<CustomBarTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
-                      <Bar dataKey="total" fill="#f97316" radius={[6, 6, 0, 0]} maxBarSize={48} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </>
-              ) : (
-                <div className="py-10 text-center">
-                  <p className="font-body text-[13px] text-primary-foreground/60">Nenhum dado para exibir</p>
-                </div>
-              )
-            ) : (
-              dadosCategoria.length > 0 ? (
-                <>
-                  <p className="font-body text-[11px] text-primary-foreground/70 mb-3">
-                    Total: {formatCurrency(totalFiltrado)}
-                  </p>
-                  <ResponsiveContainer width="100%" height={220}>
-                    <PieChart style={{ background: "transparent" }}>
-                      <Pie
-                        data={dadosCategoria}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={55}
-                        outerRadius={90}
-                        paddingAngle={2}
-                        dataKey="value"
-                      >
-                        {dadosCategoria.map((entry, index) => (
-                          <Cell key={index} fill={entry.fill} />
-                        ))}
-                      </Pie>
-                      <Tooltip content={<CustomPieTooltip />} />
-                      <Legend
-                        iconType="circle"
-                        iconSize={8}
-                        wrapperStyle={{
-                          fontFamily: "var(--font-body)",
-                          fontSize: "10px",
-                          color: "rgba(255,255,255,0.5)",
-                          paddingTop: "8px",
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-
-                  {/* Lista de categorias com barras */}
-                  <div className="mt-2 space-y-2">
-                    {dadosCategoria.map(cat => (
-                      <div key={cat.name} className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cat.fill }} />
-                        <p className="font-body text-[11px] text-primary-foreground/60 flex-1 truncate">{cat.name}</p>
-                        <p className="font-body text-[11px] font-semibold text-primary-foreground/80">
-                          {formatCurrency(cat.value)}
-                        </p>
-                        <p className="font-body text-[10px] text-primary-foreground/60 w-8 text-right">
-                          {cat.pct}%
-                        </p>
-                      </div>
-                    ))}
+      {/* ── Resumo de Gastos Simples ── */}
+      {gastosFiltrados.length > 0 && (
+        <div className="mb-6 rounded-[24px] border border-white/10 bg-[#1c1c1e] p-5">
+          <p className="font-body text-[11px] text-white/50 uppercase tracking-wider mb-1">
+            Total gasto em {MONTHS_PT[targetMonth.getMonth()]}
+          </p>
+          <p className="font-heading text-4xl font-bold text-orange-400 mb-6">
+            {formatCurrency(totalFiltrado)}
+          </p>
+          
+          <div className="space-y-4">
+            {dadosCategoria.map(cat => (
+              <div key={cat.name}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cat.fill }} />
+                    <span className="font-body text-[13px] font-medium text-white/80">{cat.name}</span>
                   </div>
-                </>
-              ) : (
-                <div className="py-10 text-center">
-                  <p className="font-body text-[13px] text-primary-foreground/60">Nenhum dado para exibir</p>
+                  <span className="font-heading text-[13px] font-bold text-white">
+                    {formatCurrency(cat.value)} <span className="text-white/40 text-[11px] ml-1">({cat.pct}%)</span>
+                  </span>
                 </div>
-              )
-            )}
+                <div className="h-2 rounded-full bg-white/5 overflow-hidden border border-white/5">
+                  <div 
+                    className="h-full rounded-full transition-all duration-700" 
+                    style={{ backgroundColor: cat.fill, width: `${cat.pct}%` }} 
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
