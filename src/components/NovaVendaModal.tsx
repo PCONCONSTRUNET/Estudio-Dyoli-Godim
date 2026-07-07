@@ -35,7 +35,7 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
   const [novoClienteNome, setNovoClienteNome] = useState("");
   const [novoClienteTelefone, setNovoClienteTelefone] = useState("");
   
-  const [clientesSugeridos, setClientesSugeridos] = useState<{ id: string; nome: string; telefone?: string }[]>([]);
+  const [clientesSugeridos, setClientesSugeridos] = useState<{ id: string; nome: string; telefone?: string; isProfileOnly?: boolean }[]>([]);
   const [valorSugerido, setValorSugerido] = useState(0);
   const [valorFinal, setValorFinal] = useState("");
   const [pago, setPago] = useState(true);
@@ -99,13 +99,13 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
       .select("id, nome")
       .order("nome");
 
-    const map = new Map<string, { id: string; nome: string; telefone?: string }>();
+    const map = new Map<string, { id: string; nome: string; telefone?: string; isProfileOnly?: boolean }>();
     (fromClientes || []).forEach(c => {
-      if (c.nome) map.set(c.nome.trim().toLowerCase(), { id: c.id, nome: c.nome.trim(), telefone: c.telefone });
+      if (c.nome) map.set(c.nome.trim().toLowerCase(), { id: c.id, nome: c.nome.trim(), telefone: c.telefone, isProfileOnly: false });
     });
     (fromProfiles || []).forEach(p => {
       if (p.nome && !map.has(p.nome.trim().toLowerCase())) {
-        map.set(p.nome.trim().toLowerCase(), { id: p.id, nome: p.nome.trim() });
+        map.set(p.nome.trim().toLowerCase(), { id: p.id, nome: p.nome.trim(), isProfileOnly: true });
       }
     });
 
@@ -158,6 +158,7 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
     let finalClienteId = clienteId;
     let finalNomeCliente = "";
     let finalTelCliente = "";
+    let isProfileOnly = false;
 
     if (clienteId === "novo") {
       finalNomeCliente = novoClienteNome.trim();
@@ -168,6 +169,7 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
       if (clienteEncontrado) {
         finalNomeCliente = clienteEncontrado.nome;
         finalTelCliente = clienteEncontrado.telefone || "";
+        isProfileOnly = !!clienteEncontrado.isProfileOnly;
       } else {
         return toast.error("Cliente inválido selecionado");
       }
@@ -180,15 +182,25 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
 
     setSaving(true);
     try {
-      // 1. Auto-registrar cliente se for "novo"
-      if (clienteId === "novo") {
-        const novoCliente = await adminFetch("clientes", "POST", {
+      // 1. Auto-registrar cliente se for "novo" ou se for apenas profile
+      if (clienteId === "novo" || isProfileOnly) {
+        const body: any = {
           nome: finalNomeCliente,
           telefone: finalTelCliente,
-        });
-        finalClienteId = novoCliente?.[0]?.id || null;
-        if (finalClienteId) {
-          setClientesSugeridos(prev => [...prev, { id: finalClienteId!, nome: finalNomeCliente, telefone: finalTelCliente }]);
+        };
+        // Se for profile only, tenta manter o mesmo ID
+        if (isProfileOnly && clienteId) {
+          body.id = clienteId;
+        }
+
+        const novoCliente = await adminFetch("clientes", "POST", body);
+        
+        // adminFetch POST com Prefer: return=representation retorna array
+        const createdId = novoCliente?.[0]?.id || body.id;
+        finalClienteId = createdId;
+        
+        if (clienteId === "novo" && finalClienteId) {
+          setClientesSugeridos(prev => [...prev, { id: finalClienteId!, nome: finalNomeCliente, telefone: finalTelCliente, isProfileOnly: false }]);
         }
       }
       // 2. Registrar venda na tabela vendas
