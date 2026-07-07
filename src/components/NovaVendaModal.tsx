@@ -281,7 +281,7 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
                   return (
                     <div
                       key={p.id}
-                      className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
+                      className={`w-full min-w-0 flex items-center justify-between p-3 rounded-xl border transition-all ${
                         isSelected
                           ? "bg-gold/5 border-gold/30"
                           : "bg-primary-foreground/[0.02] border-primary-foreground/[0.06]"
