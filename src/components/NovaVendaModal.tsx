@@ -294,8 +294,8 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
                         <div className={`w-4 h-4 rounded-full border flex flex-shrink-0 items-center justify-center ${isSelected ? "border-gold bg-gold text-[#0a0a0a]" : "border-primary-foreground/30"}`}>
                           {isSelected && <Check className="w-3 h-3" />}
                         </div>
-                        <div className="min-w-0">
-                          <p className="font-body text-[13px] font-semibold text-primary-foreground truncate">{p.nome}</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-body text-[13px] font-semibold text-primary-foreground truncate" title={p.nome}>{p.nome}</p>
                           <p className="font-body text-[11px] text-primary-foreground/60">{formatCurrency(p.preco)} • {p.estoque} em estoque</p>
                         </div>
                       </div>
