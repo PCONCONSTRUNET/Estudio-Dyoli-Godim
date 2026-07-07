@@ -272,7 +272,7 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-thin">
+            <div className="flex-1 overflow-x-hidden overflow-y-auto p-4 space-y-2 scrollbar-thin">
               {filteredProducts.length === 0 ? (
                 <p className="text-center text-[12px] text-primary-foreground/50 py-4">Nenhum produto em estoque encontrado.</p>
               ) : (
@@ -281,27 +281,27 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
                   return (
                     <div
                       key={p.id}
-                      className={`w-full min-w-0 flex items-center justify-between p-3 rounded-xl border transition-all ${
+                      className={`w-full max-w-full flex items-center justify-between p-3 rounded-xl border transition-all overflow-hidden ${
                         isSelected
                           ? "bg-gold/5 border-gold/30"
                           : "bg-primary-foreground/[0.02] border-primary-foreground/[0.06]"
                       }`}
                     >
                       <div
-                        className="flex-1 min-w-0 flex items-center gap-3 cursor-pointer"
+                        className="flex-1 min-w-0 flex items-center gap-3 cursor-pointer overflow-hidden"
                         onClick={() => handleToggleProduct(p)}
                       >
                         <div className={`w-4 h-4 rounded-full border flex flex-shrink-0 items-center justify-center ${isSelected ? "border-gold bg-gold text-[#0a0a0a]" : "border-primary-foreground/30"}`}>
                           {isSelected && <Check className="w-3 h-3" />}
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="font-body text-[13px] font-semibold text-primary-foreground truncate" title={p.nome}>{p.nome}</p>
-                          <p className="font-body text-[11px] text-primary-foreground/60">{formatCurrency(p.preco)} • {p.estoque} em estoque</p>
+                        <div className="min-w-0 flex-1 overflow-hidden">
+                          <p className="font-body text-[13px] font-semibold text-primary-foreground truncate block w-full" title={p.nome}>{p.nome}</p>
+                          <p className="font-body text-[11px] text-primary-foreground/60 truncate block w-full">{formatCurrency(p.preco)} • {p.estoque} em estoque</p>
                         </div>
                       </div>
 
                       {isSelected && (
-                        <div className="flex items-center gap-1.5 ml-3">
+                        <div className="flex items-center gap-1.5 ml-3 flex-shrink-0">
                           <button
                             onClick={() => handleUpdateQtd(p.id, -1)}
                             className="w-7 h-7 rounded-lg bg-rose/20 border border-rose/40 flex items-center justify-center hover:bg-rose/30 transition-all text-rose"
