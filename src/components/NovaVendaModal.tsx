@@ -258,7 +258,7 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
         </div>
 
         {step === "produtos" ? (
-          <div className="flex flex-col max-h-[70vh]">
+          <div className="flex flex-col max-h-[70vh] w-full overflow-hidden">
             <div className="p-4 border-b border-primary-foreground/[0.06]">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/50" />
@@ -281,7 +281,7 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
                   return (
                     <div
                       key={p.id}
-                      className={`w-full max-w-full flex items-center justify-between p-3 rounded-xl border transition-all overflow-hidden ${
+                      className={`w-full min-w-0 flex items-center justify-between p-3 rounded-xl border transition-all overflow-hidden ${
                         isSelected
                           ? "bg-gold/5 border-gold/30"
                           : "bg-primary-foreground/[0.02] border-primary-foreground/[0.06]"
@@ -338,7 +338,7 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
             </div>
           </div>
         ) : (
-          <div className="flex flex-col p-4 space-y-4 max-h-[70vh] overflow-y-auto scrollbar-thin">
+          <div className="flex flex-col p-4 space-y-4 max-h-[70vh] w-full overflow-hidden overflow-y-auto scrollbar-thin">
             <div className="space-y-1 relative">
               <label className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-wider">Cliente <span className="text-red-400">*</span></label>
               <div className="relative">
