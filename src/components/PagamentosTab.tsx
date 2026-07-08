@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Search, CreditCard, QrCode, Barcode, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, Filter, AlertCircle, Trash2, Wallet } from "lucide-react";
+import { Search, CreditCard, QrCode, Barcode, Clock, CheckCircle, XCircle, ChevronDown, ChevronUp, Filter, AlertCircle, Trash2, Wallet, Edit3 } from "lucide-react";
 import pixIcon from "@/assets/pix-icon.png";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ interface Props {
   agendamentos: Agendamento[];
   getClientName: (userId: string, clienteNome?: string | null) => string;
   onUpdate?: () => void;
+  onEdit?: (ag: any) => void;
 }
 
 const formatCurrency = (v: number | string | null | undefined) => {
@@ -51,7 +52,7 @@ type StatusFilter = "todos" | "confirmado" | "pendente" | "cancelado" | "conclui
 type SortField = "data" | "valor" | "cliente" | "status";
 type SortDir = "asc" | "desc";
 
-const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
+const PagamentosTab = ({ agendamentos, getClientName, onUpdate, onEdit }: Props) => {
   const { confirm } = useConfirm();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("todos");
@@ -760,7 +761,18 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate }: Props) => {
                       <Detail label="Crédito Concedido" value={<span className="text-green-400">{formatCurrency(Number(ag.valor_credito))}</span>} />
                     )}
                   </div>
-                  <div className="pt-2 border-t border-primary-foreground/[0.05] flex justify-end">
+                  <div className="pt-2 border-t border-primary-foreground/[0.05] flex justify-end gap-2">
+                    {onEdit && !ag._is_saida && !ag._is_venda && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEdit(ag);
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 font-body text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" /> Editar
+                      </button>
+                    )}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();

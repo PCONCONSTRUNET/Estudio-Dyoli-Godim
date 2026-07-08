@@ -3271,7 +3271,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
           {tab === "financeiro" && <FinanceiroTab agendamentos={agendamentos} getClientName={getClientName} />}
           {tab === "caixa" && <CaixaTab agendamentos={agendamentos} getClientName={getClientName} />}
           {tab === "dividas" && <DividasTab />}
-          {tab === "pagamentos" && <PagamentosTab agendamentos={agendamentos} getClientName={getClientName} onUpdate={loadData} />}
+          {tab === "pagamentos" && <PagamentosTab agendamentos={agendamentos} getClientName={getClientName} onUpdate={loadData} onEdit={openEditAgendamento} />}
           {tab === "pedidos" && <PedidosTab agendamentos={agendamentos.filter(a => !(a.servico === "Adição de Crédito" || a.servico === "Entrada Manual" || (a.servico && a.servico.startsWith("Pagamento de Dívida"))))} getClientName={getClientName} clientes={clientes} onUpdate={loadData} />}
           {tab === "despesas" && <DespesasTab />}
           {tab === "gastos" && <GastosTab />}
