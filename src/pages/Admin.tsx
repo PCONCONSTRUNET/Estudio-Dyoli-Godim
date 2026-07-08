@@ -2048,6 +2048,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                   })()}
                 </DialogContent>
               </Dialog>
+            </div>
+          )}
 
               {/* Edit Agendamento Dialog */}
               <Dialog open={showEditAgendamento} onOpenChange={setShowEditAgendamento}>
@@ -2867,8 +2869,6 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                   })()}
                 </DialogContent>
               </Dialog>
-            </div>
-          )}
 
           {tab === "clientes" &&
             (() => {
