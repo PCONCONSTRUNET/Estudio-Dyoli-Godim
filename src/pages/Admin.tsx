@@ -642,6 +642,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [editAgValor, setEditAgValor] = useState<string | number>(0);
   const [editAgValorPago, setEditAgValorPago] = useState<string | number>(0);
   const [editAgDuracao, setEditAgDuracao] = useState(60);
+  const [editAgFormaPagamento, setEditAgFormaPagamento] = useState("");
   const [editAgSaving, setEditAgSaving] = useState(false);
 
   const openEditAgendamento = (ag: Agendamento) => {
@@ -653,6 +654,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setEditAgValor(ag.valor);
     setEditAgValorPago(Number(ag.valor_pago || 0));
     setEditAgDuracao(ag.duracao_minutos || 60);
+    setEditAgFormaPagamento(ag.forma_pagamento || "");
     setShowEditAgendamento(true);
     setDetalheAgendamento(null);
   };
@@ -708,7 +710,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         servico: editAgServico,
         valor: finalValor,
         valor_pago: finalValorPago,
-        duracao_minutos: editAgDuracao
+        duracao_minutos: editAgDuracao,
+        forma_pagamento: editAgFormaPagamento
       } as any).eq("id", editingAg.id);
 
       if (error) throw error;
@@ -741,7 +744,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         servico: editAgServico,
         valor: finalValor,
         valor_pago: finalValorPago,
-        duracao_minutos: editAgDuracao
+        duracao_minutos: editAgDuracao,
+        forma_pagamento: editAgFormaPagamento
       } : a));
       toast.success("Agendamento atualizado!");
       setShowEditAgendamento(false);
@@ -2164,16 +2168,34 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                         />
                       </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/50">Duração (min)</label>
-                      <input
-                        type="number"
-                        step="5"
-                        min="5"
-                        value={editAgDuracao}
-                        onChange={(e) => setEditAgDuracao(Number(e.target.value))}
-                        className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40"
-                      />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <label className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/50">Duração (min)</label>
+                        <input
+                          type="number"
+                          step="5"
+                          min="5"
+                          value={editAgDuracao}
+                          onChange={(e) => setEditAgDuracao(Number(e.target.value))}
+                          className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="font-body text-[10px] uppercase tracking-wider text-primary-foreground/50">Forma de Pagamento</label>
+                        <select
+                          value={editAgFormaPagamento}
+                          onChange={(e) => setEditAgFormaPagamento(e.target.value)}
+                          className="w-full px-3 py-2.5 rounded-xl bg-[#1a1a1a] border border-white/[0.08] text-primary-foreground font-body text-[13px] focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40"
+                        >
+                          <option value="">Nenhuma (Pendente)</option>
+                          <option value="PIX">PIX</option>
+                          <option value="Cartão de Crédito">Cartão de Crédito</option>
+                          <option value="Cartão de Débito">Cartão de Débito</option>
+                          <option value="Dinheiro">Dinheiro</option>
+                          <option value="Permuta">Permuta</option>
+                          <option value="Cortesia">Cortesia</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 mt-6">

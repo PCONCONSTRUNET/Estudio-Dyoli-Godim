@@ -232,6 +232,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
       valor_gorjeta: 0,
       valor_credito: 0,
       status: v.pago ? "concluido" : "pendente",
+      forma_pagamento: v.forma_pagamento,
       created_at: v.created_at,
       user_id: v.cliente_id || "admin",
       cliente_nome: v.cliente_nome,
@@ -1098,7 +1099,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
     <div className="relative overflow-hidden flex flex-col h-full flex-1">
      <div className="pointer-events-none absolute -top-16 -right-12 w-48 h-48 rounded-full bg-emerald-500/10 blur-3xl" />
      <div className="pointer-events-none absolute -bottom-16 -left-12 w-40 h-40 rounded-full bg-blue-500/10 blur-3xl" />
-    <DialogHeader className="relative px-5 pt-5 pb-3 border-b border-primary-foreground/[0.06]">
+    <DialogHeader className="relative px-5 pt-5 pb-3 border-b border-primary-foreground/[0.06] shrink-0">
      <div className="flex items-center gap-3">
       <span className="w-10 h-10 rounded-2xl bg-gold/10 border border-gold/20 flex items-center justify-center">
        <DollarSign className="w-4 h-4 text-gold" />
@@ -1114,7 +1115,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
      </div>
     </DialogHeader>
 
-    <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-4">
+    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-12">
      {/* Resumo hero */}
      <div className="grid grid-cols-3 gap-2">
       {([

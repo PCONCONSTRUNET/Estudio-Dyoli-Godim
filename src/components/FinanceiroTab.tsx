@@ -112,6 +112,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
       valor_gorjeta: 0,
       valor_credito: 0,
       status: v.pago ? "concluido" : "pendente",
+      forma_pagamento: v.forma_pagamento,
       created_at: v.created_at,
       user_id: v.cliente_id || "admin",
       cliente_nome: v.cliente_nome,
