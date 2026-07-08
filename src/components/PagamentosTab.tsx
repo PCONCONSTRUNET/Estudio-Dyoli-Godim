@@ -718,8 +718,25 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate, onEdit }: Props)
                     )}
                     <Detail label="Método de Pagamento" value={
                       <span className="flex items-center gap-1.5">
-                        {paymentIcon(ag.forma_pagamento)}
-                        {paymentLabel(ag.forma_pagamento)}
+                        {(() => {
+                           const getMethod = () => {
+                             if (ag.forma_pagamento && ag.forma_pagamento.includes("|")) {
+                               const parts = ag.forma_pagamento.split("|");
+                               for (const p of parts) {
+                                 const [m, v] = p.split(":");
+                                 if (Number(v) === ag.valor_fatura) return m;
+                               }
+                             }
+                             return ag.forma_pagamento;
+                           };
+                           const method = getMethod();
+                           return (
+                             <>
+                               {paymentIcon(method)}
+                               {paymentLabel(method)}
+                             </>
+                           );
+                        })()}
                       </span>
                     } />
                     {!ag._is_saida && !ag._is_venda && <Detail label="Duração" value={`${ag.duracao_minutos} min`} />}

@@ -705,9 +705,9 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setEditAgSaving(true);
     try {
       let newForma = editAgFormaPagamento;
-      if (editingAg._faturaId && (editingAg as any).valor_fatura && editingAg.forma_pagamento) {
+      if (editingAg._faturaId && (editingAg as any).valor_fatura) {
         const faturaValor = Number((editingAg as any).valor_fatura);
-        const oldForma = editingAg.forma_pagamento;
+        const oldForma = editingAg.forma_pagamento || "Outro";
         if (!oldForma.includes("|") && oldForma !== editAgFormaPagamento) {
            const remainingVal = Math.max(0, finalValorPago - faturaValor);
            if (remainingVal > 0) {
