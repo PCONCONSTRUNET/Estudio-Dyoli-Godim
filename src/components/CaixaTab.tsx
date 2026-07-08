@@ -329,14 +329,31 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
   const totals: Record<string, number> = { pix: 0, cartao: 0, dinheiro: 0, outro: 0 };
   const counts: Record<string, number> = { pix: 0, cartao: 0, dinheiro: 0, outro: 0 };
   const items: Record<string, Agendamento[]> = { pix: [], cartao: [], dinheiro: [], outro: [] };
-  cicloStats.items.forEach((a) => {
-   const pago = Number(a.valor_pago || 0);
-   if (pago <= 0) return;
-   const key = normalize(a.forma_pagamento);
-   totals[key] += pago;
-   counts[key] += 1;
-   items[key].push(a);
-  });
+   cicloStats.items.forEach((a) => {
+    const pago = Number(a.valor_pago || 0);
+    if (pago <= 0) return;
+    
+    if (a.forma_pagamento && a.forma_pagamento.includes("|")) {
+      const parts = a.forma_pagamento.split("|");
+      let addedToCounts = false;
+      parts.forEach(p => {
+        const [method, valStr] = p.split(":");
+        const val = Number(valStr || 0);
+        if (val > 0) {
+          const key = normalize(method);
+          totals[key] += val;
+          if (!addedToCounts) { counts[key] += 1; addedToCounts = true; }
+          items[key].push({...a, valor_pago: val}); 
+        }
+      });
+      return;
+    }
+
+    const key = normalize(a.forma_pagamento);
+    totals[key] += pago;
+    counts[key] += 1;
+    items[key].push(a);
+   });
   const grandTotal = totals.pix + totals.cartao + totals.dinheiro + totals.outro;
   return { totals, counts, items, grandTotal };
  }, [cicloStats.items]);

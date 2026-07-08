@@ -645,16 +645,16 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [editAgFormaPagamento, setEditAgFormaPagamento] = useState("");
   const [editAgSaving, setEditAgSaving] = useState(false);
 
-  const openEditAgendamento = (ag: Agendamento) => {
+  const openEditAgendamento = (ag: Agendamento & { _faturaId?: string, valor_fatura?: number }) => {
     loadManualServicos();
-    setEditingAg(ag);
+    setEditingAg(ag as any);
     setEditAgData(ag.data_agendamento);
     setEditAgHorario(ag.horario);
     setEditAgServico(ag.servico);
     setEditAgValor(ag.valor);
     setEditAgValorPago(Number(ag.valor_pago || 0));
     setEditAgDuracao(ag.duracao_minutos || 60);
-    setEditAgFormaPagamento(ag.forma_pagamento || "");
+    setEditAgFormaPagamento((ag.forma_pagamento && ag.forma_pagamento.includes("|")) ? "" : (ag.forma_pagamento || ""));
     setShowEditAgendamento(true);
     setDetalheAgendamento(null);
   };
@@ -704,6 +704,18 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     }
     setEditAgSaving(true);
     try {
+      let newForma = editAgFormaPagamento;
+      if (editingAg._faturaId && (editingAg as any).valor_fatura && editingAg.forma_pagamento) {
+        const faturaValor = Number((editingAg as any).valor_fatura);
+        const oldForma = editingAg.forma_pagamento;
+        if (!oldForma.includes("|") && oldForma !== editAgFormaPagamento) {
+           const remainingVal = Math.max(0, finalValorPago - faturaValor);
+           if (remainingVal > 0) {
+              newForma = `${oldForma}:${remainingVal}|${editAgFormaPagamento}:${faturaValor}`;
+           }
+        }
+      }
+
       const { error } = await supabase.from("agendamentos").update({
         data_agendamento: editAgData,
         horario: editAgHorario,
@@ -711,7 +723,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         valor: finalValor,
         valor_pago: finalValorPago,
         duracao_minutos: editAgDuracao,
-        forma_pagamento: editAgFormaPagamento
+        forma_pagamento: newForma
       } as any).eq("id", editingAg.id);
 
       if (error) throw error;
@@ -745,7 +757,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         valor: finalValor,
         valor_pago: finalValorPago,
         duracao_minutos: editAgDuracao,
-        forma_pagamento: editAgFormaPagamento
+        forma_pagamento: newForma
       } : a));
       toast.success("Agendamento atualizado!");
       setShowEditAgendamento(false);
