@@ -59,7 +59,7 @@ export function useAdminNotifications(
         .from("agendamentos")
         .select("id,status")
         .order("created_at", { ascending: false })
-        .limit(3000); // Limite para evitar sobrecarga no banco
+        .limit(500); // Limite reduzido — só precisamos de IDs recentes para detectar novos
       if (data) {
         data.forEach((a: any) => {
           if (a.status !== "aguardando_pagamento") {

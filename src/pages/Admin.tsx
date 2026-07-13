@@ -809,12 +809,13 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
   const handleAgendamentoChange = useCallback(() => {
     // Recarrega apenas agendamentos (não recarrega profiles — esses mudam raramente)
+    // Limite reduzido para 1500 para não sobrecarregar o plano Nano
     supabase
       .from("agendamentos")
       .select("*")
       .neq("status", "aguardando_pagamento")
       .order("data_agendamento", { ascending: false })
-      .limit(5000)
+      .limit(1500)
       .then(({ data }) => {
         if (data) setAgendamentos(data as Agendamento[]);
       });
@@ -848,10 +849,10 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setLoading(true);
     try {
       const [agRes, clRes] = await Promise.all([
-        // Limite de 5000 para evitar sobrecarga no banco (plano gratuito Supabase)
-        supabase.from("agendamentos").select("*").neq("status", "aguardando_pagamento").order("data_agendamento", { ascending: false }).limit(5000),
+        // Limite reduzido para 1500 para evitar sobrecarga no banco (plano Nano Supabase)
+        supabase.from("agendamentos").select("*").neq("status", "aguardando_pagamento").order("data_agendamento", { ascending: false }).limit(1500),
         // Profiles: seleciona só as colunas necessárias para reduzir I/O
-        supabase.from("profiles").select("id, nome, whatsapp, cpf, created_at, credito_saldo").order("created_at", { ascending: false }).limit(3000),
+        supabase.from("profiles").select("id, nome, whatsapp, cpf, created_at, credito_saldo").order("created_at", { ascending: false }).limit(1000),
       ]);
       if (agRes.error) throw agRes.error;
       if (clRes.error) throw clRes.error;
