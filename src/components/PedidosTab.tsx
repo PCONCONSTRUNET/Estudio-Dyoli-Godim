@@ -118,32 +118,16 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
 
   const today = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0];
 
-  // Mapa de pagamentos históricos por agendamento_id (soma dos valores positivos)
-  // Usado para corrigir notificações quando valor_pago está desatualizado no banco
-  const [allHistoricoMap, setAllHistoricoMap] = useState<Record<string, number>>({});
-
-  useEffect(() => {
-    const pendingIds = agendamentos
-      .filter(a => a.status !== "falta" && a.status !== "cancelado" && Number(a.valor_pago || 0) < Number(a.valor))
-      .map(a => a.id);
-    if (pendingIds.length === 0) { setAllHistoricoMap({}); return; }
-    const chunks: string[][] = [];
-    for (let i = 0; i < pendingIds.length; i += 50) chunks.push(pendingIds.slice(i, i + 50));
-    Promise.all(
-      chunks.map(chunk =>
-        supabase.from("pagamento_historico").select("agendamento_id,valor_delta,acao").in("agendamento_id", chunk).gt("valor_delta", 0)
-      )
-    ).then(results => {
-      const map: Record<string, number> = {};
-      results.forEach(({ data }) => {
-        if (data) data.forEach((h: any) => {
-          if (h.acao !== "acrescimo") {
-            map[h.agendamento_id] = (map[h.agendamento_id] || 0) + Number(h.valor_delta);
-          }
-        });
-      });
-      setAllHistoricoMap(map);
+  // Mapa de pagamento efetivo por agendamento_id — calculado localmente sem query ao banco.
+  // valor_pago já está sincronizado com o historico real pela migration sync_valor_pago_historico.
+  // Isso elimina as N+1 queries em chunks que sobrecargavam o banco Nano.
+  const allHistoricoMap = useMemo<Record<string, number>>(() => {
+    const map: Record<string, number> = {};
+    agendamentos.forEach(a => {
+      const pago = Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0);
+      if (pago > 0) map[a.id] = pago;
     });
+    return map;
   }, [agendamentos]);
 
   useEffect(() => {

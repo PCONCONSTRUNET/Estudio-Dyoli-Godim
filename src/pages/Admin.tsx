@@ -808,8 +808,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   }, []);
 
   const handleAgendamentoChange = useCallback(() => {
-    // Recarrega apenas agendamentos (não recarrega profiles — esses mudam raramente)
-    // Limite reduzido para 1500 para não sobrecarregar o plano Nano
+    // Reload completo — usado apenas em DELETEs onde o item precisa ser removido
+    // Limite 1500 para não sobrecarregar o plano Nano
     supabase
       .from("agendamentos")
       .select("*")
@@ -821,10 +821,18 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
       });
   }, []);
 
+  // Atualização pontual via realtime — zero queries ao banco
+  // Chamado em todo UPDATE de agendamento, substituindo o reload completo
+  const handleAgendamentoPontualUpdate = useCallback((updated: Agendamento) => {
+    setAgendamentos((prev) =>
+      prev.map((a) => (a.id === updated.id ? { ...a, ...updated } : a))
+    );
+  }, []);
+
   const {
     notificationsEnabled,
     toggleNotifications,
-  } = useAdminNotifications(true, handleNewAgendamento, handleAgendamentoChange);
+  } = useAdminNotifications(true, handleNewAgendamento, handleAgendamentoChange, handleAgendamentoPontualUpdate);
 
   useEffect(() => {
     loadData();

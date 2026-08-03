@@ -203,60 +203,60 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
   const [historicoGlobal, setHistoricoGlobal] = useState<any[]>([]);
   const [missingAgendamentos, setMissingAgendamentos] = useState<any[]>([]);
 
+  // ── Busca despesas + vendas + historico APENAS quando o ciclo muda ──────────
+  // NUNCA inclua `agendamentos` aqui: isso causava re-fetch de pagamento_historico
+  // toda vez que qualquer agendamento era atualizado no realtime.
   useEffect(() => {
+    let cancelled = false;
+
+    // 1. Despesas do ciclo
     (supabase.from as any)("despesas")
       .select("valor,pago,data_vencimento,tipo,observacao,descricao")
       .gte("data_vencimento", ciclo.startISO)
       .lte("data_vencimento", ciclo.endISO)
       .then(({ data }: any) => {
-        if (data) setDespesas(data);
+        if (!cancelled && data) setDespesas(data);
       });
-      
+
+    // 2. Vendas do ciclo
     (supabase.from as any)("vendas").select("*")
       .gte("created_at", ciclo.startISO + "T00:00:00")
       .lte("created_at", ciclo.endISO + "T23:59:59")
       .then(({ data }: any) => {
-        if (data) setVendas(data);
+        if (!cancelled && data) setVendas(data);
       });
 
-    // Buscar histórico para regime de caixa
+    // 3. Histórico de pagamentos do ciclo — UMA query por período, sem chunks
+    // Usa filtro de data em created_at (coberto pelo índice idx_pagamento_historico_created_at_desc)
     (async () => {
-       const cycleAgs = agendamentos.filter(a => a.data_agendamento >= ciclo.startISO && a.data_agendamento <= ciclo.endISO);
-       const cycleAgIds = cycleAgs.map(a => a.id);
+      const { data: histByDate } = await supabase
+        .from("pagamento_historico")
+        .select("*")
+        .gte("created_at", ciclo.startISO + "T00:00:00")
+        .lte("created_at", ciclo.endISO + "T23:59:59");
 
-       const { data: histByDate } = await supabase.from("pagamento_historico")
-           .select("*")
-           .gte("created_at", ciclo.startISO + "T00:00:00")
-           .lte("created_at", ciclo.endISO + "T23:59:59");
-           
-       const histByDateIds = histByDate ? histByDate.map((h: any) => h.agendamento_id) : [];
-       
-       const allNeededAgIds = Array.from(new Set([...cycleAgIds, ...histByDateIds]));
-       
-       if (allNeededAgIds.length > 0) {
-           const chunkSize = 200;
-           let allHist: any[] = [];
-           for (let i = 0; i < allNeededAgIds.length; i += chunkSize) {
-               const chunk = allNeededAgIds.slice(i, i + chunkSize);
-               const { data } = await supabase.from("pagamento_historico").select("*").in("agendamento_id", chunk);
-               if (data) allHist = [...allHist, ...data];
-           }
-           setHistoricoGlobal(allHist);
-           
-           const existingIds = new Set(agendamentos.map(a => a.id));
-           const missingIds = allNeededAgIds.filter(id => !existingIds.has(id));
-           if (missingIds.length > 0) {
-               const { data: missingAgs } = await supabase.from("agendamentos").select("*").in("id", missingIds);
-               if (missingAgs) setMissingAgendamentos(missingAgs);
-           } else {
-               setMissingAgendamentos([]);
-           }
-       } else {
-           setHistoricoGlobal([]);
-           setMissingAgendamentos([]);
-       }
+      if (cancelled) return;
+      setHistoricoGlobal(histByDate || []);
     })();
-  }, [ciclo.startISO, ciclo.endISO, agendamentos]);
+
+    return () => { cancelled = true; };
+  }, [ciclo.startISO, ciclo.endISO]); // ← SEM agendamentos na dependency
+
+  // ── Busca agendamentos faltantes (que têm pagamento no ciclo mas não estão no array principal) ──
+  // Roda em separado para não bloquear o fetch do histórico
+  useEffect(() => {
+    if (historicoGlobal.length === 0) { setMissingAgendamentos([]); return; }
+
+    const histIds = new Set(historicoGlobal.map((h: any) => h.agendamento_id));
+    const existingIds = new Set(agendamentos.map(a => a.id));
+    const missingIds = [...histIds].filter(id => !existingIds.has(id));
+
+    if (missingIds.length === 0) { setMissingAgendamentos([]); return; }
+
+    // Limite conservador: agendamentos muito antigos não precisam ser trazidos todos
+    supabase.from("agendamentos").select("*").in("id", missingIds.slice(0, 200))
+      .then(({ data }) => { if (data) setMissingAgendamentos(data); });
+  }, [historicoGlobal, agendamentos]);
 
   const allAgendamentos = useMemo(() => {
     const vList = vendas.map(v => ({

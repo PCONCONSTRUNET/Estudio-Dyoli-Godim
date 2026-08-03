@@ -140,7 +140,8 @@ const DespesasTab = () => {
  const { data } = await (supabase.from as any)("despesas")
  .select("*")
  .neq("tipo", "comissao")
- .order("data_vencimento", { ascending: true });
+ .order("data_vencimento", { ascending: true })
+ .limit(500);
  if (data) setDespesas(data as Despesa[]);
  setLoading(false);
  };

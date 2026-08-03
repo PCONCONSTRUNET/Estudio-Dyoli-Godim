@@ -87,10 +87,13 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const [vendas, setVendas] = useState<any[]>([]);
 
   const fetchExtraData = () => {
-    (supabase.from as any)("despesas").select("valor,pago,data_vencimento,categoria,descricao,data_pagamento,tipo").order("data_vencimento", { ascending: false }).limit(2000).then(({ data }: any) => {
+    // Limite 500: suficiente para qualquer ciclo de um estúdio
+    // despesas: sem filtro de período para permitir histórico completo no financeiro
+    (supabase.from as any)("despesas").select("valor,pago,data_vencimento,categoria,descricao,data_pagamento,tipo").order("data_vencimento", { ascending: false }).limit(500).then(({ data }: any) => {
       if (data) setDespesas(data);
     });
-    (supabase.from as any)("vendas").select("*").order("created_at", { ascending: false }).limit(2000).then(({ data }: any) => {
+    // vendas: idem, sem filtro pois o usuário pode navegar em ciclos anteriores
+    (supabase.from as any)("vendas").select("*").order("created_at", { ascending: false }).limit(500).then(({ data }: any) => {
       if (data) setVendas(data);
     });
   };

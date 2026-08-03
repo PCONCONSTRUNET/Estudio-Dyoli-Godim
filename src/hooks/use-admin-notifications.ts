@@ -17,7 +17,8 @@ interface Agendamento {
 export function useAdminNotifications(
   enabled: boolean,
   onNewAgendamento?: (agendamento: Agendamento) => void,
-  onAgendamentoChange?: () => void
+  onAgendamentoChange?: () => void,
+  onAgendamentoUpdate?: (updated: Agendamento) => void
 ) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
     const stored = localStorage.getItem("admin-notifications");
@@ -32,6 +33,8 @@ export function useAdminNotifications(
   useEffect(() => { enabledRef.current = notificationsEnabled; }, [notificationsEnabled]);
   useEffect(() => { onNewRef.current = onNewAgendamento; }, [onNewAgendamento]);
   useEffect(() => { onChangeRef.current = onAgendamentoChange; }, [onAgendamentoChange]);
+  const onUpdateRef = useRef(onAgendamentoUpdate);
+  useEffect(() => { onUpdateRef.current = onAgendamentoUpdate; }, [onAgendamentoUpdate]);
 
   const toggleNotifications = useCallback((val: boolean) => {
     setNotificationsEnabled(val);
@@ -105,9 +108,14 @@ export function useAdminNotifications(
           if (status !== "aguardando_pagamento" && (becameVisible || isNew)) {
             knownIdsRef.current.add(newRecord.id);
             notifyNew(newRecord);
-          } else {
-            // Apenas atualização (status manual, valor_pago, etc.) — refresh silencioso
-            onChangeRef.current?.();
+          } else if (status !== "aguardando_pagamento") {
+            // Atualização pontual — usa payload.new diretamente sem recarregar tudo
+            // Isso elimina o reload de 1500 agendamentos a cada mudança de status/valor_pago
+            if (onUpdateRef.current) {
+              onUpdateRef.current(newRecord);
+            } else {
+              onChangeRef.current?.();
+            }
           }
         }
       )
@@ -117,6 +125,7 @@ export function useAdminNotifications(
         (payload) => {
           const oldRecord = payload.old as Partial<Agendamento>;
           if (oldRecord?.id) knownIdsRef.current.delete(oldRecord.id);
+          // DELETE requer reload pois precisamos remover do array
           onChangeRef.current?.();
         }
       )
