@@ -492,6 +492,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     total: number;
     acao: string;
     autor_nome: string;
+    observacao?: string;
     created_at: string;
   }
   const [historicoMap, setHistoricoMap] = useState<Record<string, HistoricoEntry[]>>({});
@@ -517,7 +518,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     setHistoricoMap((prev) => ({ ...prev, [agendamentoId]: (data || []) as HistoricoEntry[] }));
   };
 
-  const logPagamento = async (a: Agendamento, valor_novo: number, acao: "registro" | "quitar" | "estorno") => {
+  const logPagamento = async (a: Agendamento, valor_novo: number, acao: "registro" | "quitar" | "estorno", observacao?: string) => {
     const valor_anterior = Number(a.valor_pago || 0);
     const total = Number(a.valor);
     try {
@@ -538,6 +539,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
         acao,
         autor_id,
         autor_nome,
+        observacao: observacao || "",
       });
       // refresh if already loaded
       if (historicoMap[a.id]) await loadHistorico(a.id);
@@ -571,6 +573,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
   const [pagamentoAg, setPagamentoAg] = useState<Agendamento | null>(null);
   const [pagamentoInput, setPagamentoInput] = useState<string>("");
   const [pagamentoForma, setPagamentoForma] = useState<string>("");
+  const [pagamentoObs, setPagamentoObs] = useState<string>("");
 
   const [quitarAg, setQuitarAg] = useState<Agendamento | null>(null);
   const [quitarForma, setQuitarForma] = useState<string>("");
@@ -681,6 +684,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     if (sugestao === "sinal") sugestaoValor = Math.round(valorTotal * 0.5 * 100) / 100;
     setPagamentoAg(a);
     setPagamentoInput(sugestaoValor.toFixed(2).replace(".", ","));
+    setPagamentoObs("");
   };
 
   const confirmarRegistroPagamento = async () => {
@@ -703,11 +707,12 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     if (novoValorServico > valorServico) updatePayload.valor = novoValorServico;
 
     await supabase.from("agendamentos").update(updatePayload).eq("id", pagamentoAg.id);
-    await logPagamento(pagamentoAg, totalAgora, totalAgora >= novoValorServico ? "quitar" : "registro");
+    await logPagamento(pagamentoAg, totalAgora, totalAgora >= novoValorServico ? "quitar" : "registro", pagamentoObs.trim());
     onUpdate();
     setPagamentoAg(null);
     setPagamentoInput("");
     setPagamentoForma("");
+    setPagamentoObs("");
     if (totalAgora >= novoValorServico) {
       toast.success("Pagamento quitado integralmente ✅");
     } else {
@@ -1454,6 +1459,12 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                                   <span>por <span className="text-primary-foreground/80">{h.autor_nome}</span></span>
                                   <span>{new Date(h.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })}</span>
                                 </div>
+                                {h.observacao && h.observacao.trim() && (
+                                  <div className="mt-1.5 flex items-start gap-1.5 rounded-lg bg-gold/[0.06] border border-gold/20 px-2 py-1.5">
+                                    <span className="text-[11px] shrink-0">📝</span>
+                                    <p className="font-body text-[11px] text-primary-foreground/80 leading-snug">{h.observacao}</p>
+                                  </div>
+                                )}
                               </li>
                             ))}
                           </ul>
@@ -1469,7 +1480,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
       </Sheet>
 
       {/* Modal: Registrar pagamento (sinal ou restante) */}
-      <Dialog open={!!pagamentoAg} onOpenChange={(open) => { if (!open) { setPagamentoAg(null); setPagamentoInput(""); setPagamentoForma(""); } }}>
+      <Dialog open={!!pagamentoAg} onOpenChange={(open) => { if (!open) { setPagamentoAg(null); setPagamentoInput(""); setPagamentoForma(""); setPagamentoObs(""); } }}>
         <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-[360px] mx-auto bg-charcoal border-primary-foreground/[0.08] rounded-2xl p-0 sm:p-0 shadow-2xl overflow-hidden">
           {pagamentoAg && (() => {
             const valorTotal = Number(pagamentoAg.valor);
@@ -1587,8 +1598,22 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                   </div>
                 </div>
 
-                <div className="pt-2 flex gap-2">
-                  <button onClick={() => { setPagamentoAg(null); setPagamentoInput(""); setPagamentoForma(""); }} className="flex-1 py-2.5 rounded-xl bg-primary-foreground/[0.04] text-primary-foreground/80 hover:bg-primary-foreground/[0.08] hover:text-primary-foreground font-heading text-[11px] font-bold uppercase tracking-wider transition-all">Cancelar</button>
+                {/* Observação do pagamento */}
+                <div className="space-y-1.5">
+                  <label className="font-body text-[10px] font-bold text-gold/80 uppercase tracking-[0.05em] flex items-center gap-1.5">
+                    📝 Observação <span className="text-primary-foreground/40 font-normal normal-case tracking-normal">(opcional)</span>
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="Ex: Sinal da sessão de tatuagem, cliente pagou via pix pessoal…"
+                    value={pagamentoObs}
+                    onChange={(e) => setPagamentoObs(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-primary-foreground/[0.02] border border-primary-foreground/[0.08] text-primary-foreground font-body text-[12px] placeholder:text-primary-foreground/30 focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20 transition-all resize-none leading-relaxed"
+                  />
+                </div>
+
+                <div className="pt-1 flex gap-2">
+                  <button onClick={() => { setPagamentoAg(null); setPagamentoInput(""); setPagamentoForma(""); setPagamentoObs(""); }} className="flex-1 py-2.5 rounded-xl bg-primary-foreground/[0.04] text-primary-foreground/80 hover:bg-primary-foreground/[0.08] hover:text-primary-foreground font-heading text-[11px] font-bold uppercase tracking-wider transition-all">Cancelar</button>
                   <button onClick={confirmarRegistroPagamento} disabled={valorAtual <= 0 || !pagamentoForma} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gold text-charcoal font-heading text-[11px] font-bold uppercase tracking-wider hover:bg-gold/90 transition-all shadow-[0_0_10px_hsl(var(--gold)/0.2)] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none">Confirmar</button>
                 </div>
               </div>
