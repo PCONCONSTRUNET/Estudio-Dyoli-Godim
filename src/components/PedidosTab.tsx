@@ -586,6 +586,25 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
   const [editValorPagoInput, setEditValorPagoInput] = useState<string>("");
   const [savingEdit, setSavingEdit] = useState(false);
 
+  const [obsModalAg, setObsModalAg] = useState<Agendamento | null>(null);
+  const [obsModalText, setObsModalText] = useState<string>("");
+  const [savingObs, setSavingObs] = useState(false);
+
+  const abrirObsModal = (a: Agendamento) => {
+    setObsModalAg(a);
+    setObsModalText(a.observacao || "");
+  };
+
+  const salvarObservacaoPedido = async () => {
+    if (!obsModalAg) return;
+    setSavingObs(true);
+    await supabase.from("agendamentos").update({ observacao: obsModalText.trim() || null }).eq("id", obsModalAg.id);
+    onUpdate();
+    setObsModalAg(null);
+    setSavingObs(false);
+    toast.success(obsModalText.trim() ? "Observação salva ✅" : "Observação removida");
+  };
+
   const abrirEdicaoValores = (a: Agendamento) => {
     setEditAg(a);
     setEditValorInput(Number(a.valor).toFixed(2).replace(".", ","));
@@ -1170,12 +1189,32 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                           </div>
                         </div>
                       )}
-                      {a.observacao && (
-                        <div className="col-span-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-2">
-                          <p className="font-body text-[10px] text-amber-400/70 uppercase tracking-wider mb-0.5">Observações do cliente</p>
-                          <p className="font-body text-[12px] text-amber-200/95 leading-snug whitespace-pre-wrap break-words">📝 {a.observacao}</p>
-                        </div>
-                      )}
+                      {/* Observação do pedido */}
+                      <div className="col-span-2">
+                        {a.observacao ? (
+                          <div className="rounded-xl border border-gold/25 bg-gold/[0.06] px-3 py-2.5 flex items-start gap-2">
+                            <span className="text-[13px] shrink-0 mt-0.5">📝</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-body text-[9px] text-gold/70 uppercase tracking-wider mb-0.5">Observação do Pedido</p>
+                              <p className="font-body text-[12px] text-primary-foreground/85 leading-snug whitespace-pre-wrap break-words">{a.observacao}</p>
+                            </div>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); abrirObsModal(a); }}
+                              className="shrink-0 h-6 w-6 flex items-center justify-center rounded-lg bg-gold/10 border border-gold/20 text-gold/70 hover:bg-gold/20 hover:text-gold transition-all"
+                              title="Editar observação"
+                            >
+                              <Edit2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); abrirObsModal(a); }}
+                            className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-primary-foreground/20 bg-transparent px-3 py-2 font-body text-[11px] text-primary-foreground/50 hover:border-gold/30 hover:text-gold/70 hover:bg-gold/[0.04] transition-all"
+                          >
+                            <span className="text-[13px]">📝</span> Adicionar observação ao pedido
+                          </button>
+                        )}
+                      </div>
                       {a.payment_id && (
                         <div className="col-span-2 rounded-lg border border-green-500/30 bg-gradient-to-br from-green-500/10 to-green-500/[0.03] px-3 py-2.5 space-y-1.5">
                           <div className="flex items-center gap-1.5">
@@ -1775,6 +1814,58 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
               <button onClick={confirmarEdicaoValores} disabled={savingEdit} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gold text-charcoal font-heading text-[11px] font-bold uppercase tracking-wider hover:bg-gold/90 transition-all shadow-[0_0_10px_hsl(var(--gold)/0.2)] disabled:opacity-40">Salvar</button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Observação do Pedido */}
+      <Dialog open={!!obsModalAg} onOpenChange={(open) => { if (!open) { setObsModalAg(null); setObsModalText(""); } }}>
+        <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-[400px] mx-auto bg-charcoal border-primary-foreground/[0.08] rounded-2xl p-0 shadow-2xl overflow-hidden">
+          {obsModalAg && (
+            <div className="p-5 space-y-4">
+              <DialogHeader>
+                <DialogTitle className="font-heading text-[16px] font-semibold text-primary-foreground flex items-center gap-2">
+                  📝 Observação do Pedido
+                </DialogTitle>
+              </DialogHeader>
+              <p className="font-body text-[11px] text-primary-foreground/60 -mt-2 truncate">
+                {getClientName(obsModalAg.user_id, obsModalAg.cliente_nome)} · {obsModalAg.servico}
+              </p>
+              <div className="space-y-1.5">
+                <label className="font-body text-[10px] font-bold text-gold/80 uppercase tracking-[0.05em]">Nota interna <span className="text-primary-foreground/40 font-normal normal-case tracking-normal">(visível apenas para o estúdio)</span></label>
+                <textarea
+                  rows={4}
+                  autoFocus
+                  placeholder="Ex: cliente prefere sessões após as 14h, tem alergia a tinta X, sinal pago por transferência…"
+                  value={obsModalText}
+                  onChange={(e) => setObsModalText(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.08] text-primary-foreground font-body text-[13px] placeholder:text-primary-foreground/25 focus:outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20 transition-all resize-none leading-relaxed"
+                />
+                {obsModalText.trim() && (
+                  <button
+                    onClick={() => setObsModalText("")}
+                    className="font-body text-[10px] text-red-400/70 hover:text-red-400 transition-colors"
+                  >
+                    ✕ Limpar observação
+                  </button>
+                )}
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={() => { setObsModalAg(null); setObsModalText(""); }}
+                  className="flex-1 py-2.5 rounded-xl bg-primary-foreground/[0.04] text-primary-foreground/80 hover:bg-primary-foreground/[0.08] font-heading text-[11px] font-bold uppercase tracking-wider transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={salvarObservacaoPedido}
+                  disabled={savingObs}
+                  className="flex-1 py-2.5 rounded-xl bg-gold text-charcoal font-heading text-[11px] font-bold uppercase tracking-wider hover:bg-gold/90 transition-all shadow-[0_0_10px_hsl(var(--gold)/0.2)] disabled:opacity-40"
+                >
+                  {savingObs ? "Salvando…" : "Salvar"}
+                </button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
