@@ -290,6 +290,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate, onEdit }: Props)
             data_fatura: h.created_at.split("T")[0],
             _is_partial: true,
             _desc_pagamento: "Fatura Paga",
+            _historico_obs: h.observacao || "",
           });
           totalPaidInHistory += h.valor_delta;
         });
@@ -778,6 +779,15 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate, onEdit }: Props)
                       <Detail label="Crédito Concedido" value={<span className="text-green-400">{formatCurrency(Number(ag.valor_credito))}</span>} />
                     )}
                   </div>
+                  {ag._historico_obs && ag._historico_obs.trim() && (
+                    <div className="flex items-start gap-2 rounded-xl border border-gold/25 bg-gold/[0.06] px-3 py-2.5">
+                      <span className="text-[13px] shrink-0">📝</span>
+                      <div>
+                        <p className="font-body text-[9px] text-gold/70 uppercase tracking-wider mb-0.5">Observação do Pagamento</p>
+                        <p className="font-body text-[12px] text-primary-foreground/85 leading-snug">{ag._historico_obs}</p>
+                      </div>
+                    </div>
+                  )}
                   <div className="pt-2 border-t border-primary-foreground/[0.05] flex justify-end gap-2">
                     {onEdit && !ag._is_saida && !ag._is_venda && (
                       <button
