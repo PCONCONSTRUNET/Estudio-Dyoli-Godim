@@ -260,6 +260,21 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     return Object.entries(map).map(([nome, v]) => ({ nome, ...v })).sort((a, b) => b.recebido - a.recebido);
   }, [filtered]);
 
+  // Extrato por Cliente (DRE)
+  const receitaPorCliente = useMemo(() => {
+    const map: Record<string, { faturado: number; recebido: number; pagoCredito: number; qtd: number }> = {};
+    filtered.forEach(a => {
+      if (a.servico === "Adição de Crédito") return; 
+      const clientName = getClientName(a.user_id, a.cliente_nome) || "Cliente Não Identificado";
+      if (!map[clientName]) map[clientName] = { faturado: 0, recebido: 0, pagoCredito: 0, qtd: 0 };
+      map[clientName].faturado += Number(a.valor);
+      map[clientName].recebido += Number(a.valor_pago || 0);
+      map[clientName].pagoCredito += Number(a.valor_credito || 0);
+      map[clientName].qtd += 1;
+    });
+    return Object.entries(map).map(([nome, v]) => ({ nome, ...v })).sort((a, b) => b.recebido - a.recebido);
+  }, [filtered, getClientName]);
+
   // Agrupa por categoria (helper reutilizável)
   const groupByCategoria = (lista: typeof despesas) => {
     const map: Record<string, { total: number; pago: number; pendente: number; qtd: number }> = {};
@@ -343,6 +358,11 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
       `<tr><td>${s.nome}</td><td style="text-align:center">${s.qtd > 0 ? s.qtd : "-"}</td><td style="text-align:right">${formatCurrency(s.faturado)}</td><td style="text-align:right" class="green">${formatCurrency(s.recebido)}${s.pagoCredito > 0 ? `<br><span style="font-size:9px;color:#888">+${formatCurrency(s.pagoCredito)} créd</span>` : ""}</td></tr>`
     ).join("");
 
+    const linhasExtratoCliente = receitaPorCliente.map(c => {
+      const pendente = Math.max(0, c.faturado - (c.recebido + c.pagoCredito));
+      return `<tr><td>${c.nome}</td><td style="text-align:center">${c.qtd > 0 ? c.qtd : "-"}</td><td style="text-align:right">${formatCurrency(c.faturado)}</td><td style="text-align:right" class="green">${formatCurrency(c.recebido + c.pagoCredito)}</td><td style="text-align:right" class="rose">${formatCurrency(pendente)}</td></tr>`;
+    }).join("");
+
     const linhasDespesa = despesasPorCategoria.map(c =>
       `<tr><td>${c.categoria}</td><td style="text-align:center">${c.qtd}</td><td style="text-align:right" class="green">${formatCurrency(c.pago)}</td><td style="text-align:right" class="rose">${formatCurrency(c.pendente)}</td><td style="text-align:right" class="red">${formatCurrency(c.total)}</td></tr>`
     ).join("");
@@ -395,6 +415,14 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
         ${linhasReceita || '<tr><td colspan="4" style="text-align:center;color:#999;padding:16px">Sem receitas no período</td></tr>'}
         <tr class="total"><td>(=) Receita Bruta Total</td><td style="text-align:center">${qtdAtendimentos}</td><td style="text-align:right" class="gold">${formatCurrency(totalReceita)}</td><td style="text-align:right" class="green">${formatCurrency(totalRecebido)}</td></tr>
         <tr><td colspan="3" style="text-align:right;color:#888">(–) Receita Pendente (a receber)</td><td style="text-align:right" class="rose">${formatCurrency(totalPendente)}</td></tr>
+      </tbody>
+    </table>
+
+    <h2>1.1 Extrato por Cliente</h2>
+    <table>
+      <thead><tr><th>Cliente</th><th style="text-align:center">Atendimentos</th><th style="text-align:right">Faturado</th><th style="text-align:right">Pago</th><th style="text-align:right">Devendo</th></tr></thead>
+      <tbody>
+        ${linhasExtratoCliente || '<tr><td colspan="5" style="text-align:center;color:#999;padding:16px">Sem clientes no período</td></tr>'}
       </tbody>
     </table>
 
@@ -474,6 +502,13 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     receitaPorServico.forEach(s => lines.push(`"${s.nome}";${s.qtd};${fmtNum(s.faturado)};${fmtNum(s.recebido)}`));
     lines.push(`TOTAL RECEITA BRUTA;${qtdAtendimentos};${fmtNum(totalReceita)};${fmtNum(totalRecebido)}`);
     lines.push(`RECEITA PENDENTE;;;${fmtNum(totalPendente)}`);
+    lines.push("");
+    lines.push("EXTRATO POR CLIENTE");
+    lines.push("Cliente;Atendimentos;Faturado;Pago;Devendo");
+    receitaPorCliente.forEach(c => {
+      const pendente = Math.max(0, c.faturado - (c.recebido + c.pagoCredito));
+      lines.push(`"${c.nome}";${c.qtd};${fmtNum(c.faturado)};${fmtNum(c.recebido + c.pagoCredito)};${fmtNum(pendente)}`);
+    });
     lines.push("");
     lines.push("DESPESAS DO ESTÚDIO POR CATEGORIA");
     lines.push("Categoria;Qtd;Pago;Pendente;Total");
