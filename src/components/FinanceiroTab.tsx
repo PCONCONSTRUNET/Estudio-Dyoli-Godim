@@ -351,7 +351,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     filtered.forEach(a => {
       if (a.servico === "Adição de Crédito") return; 
       const clientName = getClientName(a.user_id, a.cliente_nome) || "Cliente Não Identificado";
-      if (!map[clientName]) map[clientName] = { faturado: 0, recebido: 0, pagoCredito: 0, qtd: 0 };
+      if (!map[clientName]) map[clientName] = { faturado: 0, recebido: 0, pagoCredito: 0, qtd: 0, faturas: [] };
       map[clientName].faturado += Number(a.valor);
       map[clientName].pagoCredito += Number(a.valor_credito || 0);
       map[clientName].qtd += 1;
@@ -361,8 +361,11 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     faturasPeriodo.forEach(f => {
       if (f.servico === "Adição de Crédito") return;
       const clientName = getClientName(f.user_id, f.cliente_nome) || "Cliente Não Identificado";
-      if (!map[clientName]) map[clientName] = { faturado: 0, recebido: 0, pagoCredito: 0, qtd: 0 };
+      if (!map[clientName]) map[clientName] = { faturado: 0, recebido: 0, pagoCredito: 0, qtd: 0, faturas: [] };
       map[clientName].recebido += Number(f.valor_fatura || 0);
+      if (f.fatura_tipo === "pagamento" && Number(f.valor_fatura || 0) > 0) {
+        map[clientName].faturas.push(f);
+      }
     });
 
     return Object.entries(map).map(([nome, v]) => ({ nome, ...v })).sort((a, b) => b.recebido - a.recebido);
@@ -452,8 +455,19 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     ).join("");
 
     const linhasExtratoCliente = receitaPorCliente.map(c => {
-      const pendente = Math.max(0, c.faturado - (c.recebido + c.pagoCredito));
-      return `<tr><td>${c.nome}</td><td style="text-align:center">${c.qtd > 0 ? c.qtd : "-"}</td><td style="text-align:right">${formatCurrency(c.faturado)}</td><td style="text-align:right" class="green">${formatCurrency(c.recebido + c.pagoCredito)}</td><td style="text-align:right" class="rose">${formatCurrency(pendente)}</td></tr>`;
+      let subFaturas = "";
+      if (c.faturas && c.faturas.length > 0) {
+        const fatList = [...c.faturas].sort((a,b) => a.data_fatura.localeCompare(b.data_fatura));
+        const listStr = fatList.map(f => `<div style="font-size: 10px; color: #666; margin-top: 2px;">↳ ${fmtDateShort(f.data_fatura)}: pago ${formatCurrency(f.valor_fatura)}</div>`).join("");
+        subFaturas = `<div style="margin-top: 6px;">${listStr}</div>`;
+      }
+      return `<tr>
+        <td style="vertical-align: top;">${c.nome}${subFaturas}</td>
+        <td style="text-align:center; vertical-align: top;">${c.qtd > 0 ? c.qtd : '-'}</td>
+        <td style="text-align:right; vertical-align: top;">${formatCurrency(c.faturado)}</td>
+        <td style="text-align:right; vertical-align: top;" class="green">${formatCurrency(c.recebido + c.pagoCredito)}</td>
+        <td style="text-align:right; vertical-align: top;" class="rose">${formatCurrency(Math.max(0, c.faturado - c.recebido - c.pagoCredito))}</td>
+      </tr>`;
     }).join("");
 
     const linhasDespesa = despesasPorCategoria.map(c =>
