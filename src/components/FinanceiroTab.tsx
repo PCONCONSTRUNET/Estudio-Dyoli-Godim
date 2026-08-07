@@ -454,6 +454,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
       `<tr><td>${s.nome}</td><td style="text-align:center">${s.qtd > 0 ? s.qtd : "-"}</td><td style="text-align:right">${formatCurrency(s.faturado)}</td><td style="text-align:right" class="green">${formatCurrency(s.recebido)}${s.pagoCredito > 0 ? `<br><span style="font-size:9px;color:#888">+${formatCurrency(s.pagoCredito)} créd</span>` : ""}</td></tr>`
     ).join("");
 
+    const fmtDateShort = (iso: string) => new Date(iso + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
     const linhasExtratoCliente = receitaPorCliente.map(c => {
       let subFaturas = "";
       if (c.faturas && c.faturas.length > 0) {
