@@ -85,6 +85,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   // Load despesas e vendas
   const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string; categoria: string; descricao: string; data_pagamento: string | null; tipo?: string }[]>([]);
   const [vendas, setVendas] = useState<any[]>([]);
+  const [historico, setHistorico] = useState<any[]>([]);
 
   const fetchExtraData = () => {
     // Limite 500: suficiente para qualquer ciclo de um estúdio
@@ -95,6 +96,10 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     // vendas: idem, sem filtro pois o usuário pode navegar em ciclos anteriores
     (supabase.from as any)("vendas").select("*").order("created_at", { ascending: false }).limit(500).then(({ data }: any) => {
       if (data) setVendas(data);
+    });
+    // pagamento_historico para regime de caixa
+    (supabase.from as any)("pagamento_historico").select("*").order("created_at", { ascending: false }).limit(2000).then(({ data }: any) => {
+      if (data) setHistorico(data);
     });
   };
 
@@ -164,11 +169,72 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     return { start: "0000-01-01", end: "9999-12-31" };
   }, [period, ciclo, customStart, customEnd]);
 
+  const faturas = useMemo(() => {
+    const list: any[] = [];
+    allAgendamentos.forEach((a) => {
+      if (a.status === "cancelado" || a.status === "falta") return;
+
+      // Se for venda de produto que já foi paga, a data de faturamento é a data da venda ou created_at
+      if (a.servico === "Venda de Produtos") {
+        if (a.status === "concluido") {
+           list.push({ ...a, fatura_tipo: "pagamento", valor_fatura: a.valor_pago, data_fatura: a.data_agendamento });
+        }
+        return;
+      }
+
+      const hists = historico.filter((h) => h.agendamento_id === a.id && h.valor_delta > 0 && h.acao !== "acrescimo");
+      
+      if (hists.length > 0) {
+        let totalPaidInHistory = 0;
+        hists.forEach((h) => {
+          list.push({
+            ...a,
+            fatura_tipo: "pagamento",
+            valor_fatura: h.valor_delta,
+            data_fatura: h.created_at.split("T")[0],
+          });
+          totalPaidInHistory += h.valor_delta;
+        });
+        
+        const valorPagoAtual = Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0);
+        const initialPayment = valorPagoAtual - totalPaidInHistory;
+        
+        if (initialPayment > 0) {
+           list.push({
+             ...a,
+             fatura_tipo: "pagamento",
+             valor_fatura: initialPayment,
+             data_fatura: a.data_agendamento, // Pagamento inicial fica com a data do agendamento
+           });
+        }
+      } else {
+        const valorPago = Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0);
+        if (valorPago > 0) {
+           list.push({
+             ...a, 
+             fatura_tipo: "pagamento", 
+             valor_fatura: valorPago, 
+             data_fatura: a.data_agendamento
+           });
+        }
+      }
+      
+      if (Number(a.valor_gorjeta) > 0) {
+        list.push({ ...a, fatura_tipo: "pagamento", valor_fatura: Number(a.valor_gorjeta), data_fatura: a.data_agendamento, is_gorjeta: true });
+      }
+    });
+    return list;
+  }, [allAgendamentos, historico]);
+
+  const faturasPeriodo = useMemo(() => {
+    return faturas.filter(f => f.data_fatura >= periodRange.start && f.data_fatura <= periodRange.end);
+  }, [faturas, periodRange]);
+
   // Metrics
   const validServices = filtered.filter(a => a.servico !== "Adição de Crédito");
   
   const totalReceita = validServices.reduce((s, a) => s + Number(a.valor) + Number(a.valor_gorjeta || 0), 0);
-  const totalRecebido = filtered.reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0), 0);
+  const totalRecebido = faturasPeriodo.reduce((s, f) => s + Number(f.valor_fatura || 0), 0);
   
   const totalPendente = validServices.reduce((s, a) => {
     const devido = Number(a.valor) + Number(a.valor_gorjeta || 0);
@@ -178,11 +244,13 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   
   const qtdAtendimentos = validServices.length;
   
-  const baseComissao = filtered.reduce((s, a) => {
-    if (a.observacao === "SEM_COMISSAO") return s;
-    return s + Number(a.valor_pago || 0);
+  const baseComissao = faturasPeriodo.reduce((s, f) => {
+    if (f.observacao === "SEM_COMISSAO" || f.is_gorjeta) return s;
+    return s + Number(f.valor_fatura || 0);
   }, 0);
-  const totalGorjetas = filtered.reduce((s, a) => s + Number(a.valor_gorjeta || 0), 0);
+  const totalGorjetas = faturasPeriodo.reduce((s, f) => {
+    return f.is_gorjeta ? s + Number(f.valor_fatura || 0) : s;
+  }, 0);
   const comissaoValor = baseComissao * (comissaoPct / 100) + totalGorjetas;
 
   const totalDespesas = despesas
@@ -197,27 +265,33 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   // Chart: receita por dia
   const dailyData = useMemo(() => {
     const map: Record<string, { dia: string; receita: number; recebido: number }> = {};
+    // Receita (Faturamento de serviços realizados no dia)
     filtered.forEach(a => {
       const d = a.data_agendamento;
       if (!map[d]) map[d] = { dia: d, receita: 0, recebido: 0 };
       map[d].receita += Number(a.valor) + Number(a.valor_gorjeta || 0);
-      map[d].recebido += Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0);
+    });
+    // Recebido (Dinheiro que entrou no dia)
+    faturasPeriodo.forEach(f => {
+      const d = f.data_fatura;
+      if (!map[d]) map[d] = { dia: d, receita: 0, recebido: 0 };
+      map[d].recebido += Number(f.valor_fatura || 0);
     });
     return Object.values(map).sort((a, b) => a.dia.localeCompare(b.dia)).map(d => ({
       ...d,
       diaLabel: new Date(d.dia + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
     }));
-  }, [filtered]);
+  }, [filtered, faturasPeriodo]);
 
   // Chart: receita por serviço
   const serviceData = useMemo(() => {
     const map: Record<string, number> = {};
-    filtered.forEach(a => {
-      const key = a.servico;
-      map[key] = (map[key] || 0) + Number(a.valor_pago || 0);
+    faturasPeriodo.forEach(f => {
+      const key = f.servico;
+      map[key] = (map[key] || 0) + Number(f.valor_fatura || 0);
     });
     return Object.entries(map).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
-  }, [filtered]);
+  }, [faturasPeriodo]);
 
   // Chart: status pagamento
   const paymentStatus = useMemo(() => {
@@ -249,31 +323,50 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   // Receita por serviço (DRE - faturamento bruto)
   const receitaPorServico = useMemo(() => {
     const map: Record<string, { faturado: number; recebido: number; pagoCredito: number; qtd: number }> = {};
+    
+    // Faturado e Qtd
     filtered.forEach(a => {
       if (a.servico === "Adição de Crédito") return; // Nao mostra no DRE de servicos
       if (!map[a.servico]) map[a.servico] = { faturado: 0, recebido: 0, pagoCredito: 0, qtd: 0 };
       map[a.servico].faturado += Number(a.valor);
-      map[a.servico].recebido += Number(a.valor_pago || 0);
       map[a.servico].pagoCredito += Number(a.valor_credito || 0);
       map[a.servico].qtd += 1;
     });
+
+    // Recebido
+    faturasPeriodo.forEach(f => {
+      if (f.servico === "Adição de Crédito") return;
+      if (!map[f.servico]) map[f.servico] = { faturado: 0, recebido: 0, pagoCredito: 0, qtd: 0 };
+      map[f.servico].recebido += Number(f.valor_fatura || 0);
+    });
+
     return Object.entries(map).map(([nome, v]) => ({ nome, ...v })).sort((a, b) => b.recebido - a.recebido);
-  }, [filtered]);
+  }, [filtered, faturasPeriodo]);
 
   // Extrato por Cliente (DRE)
   const receitaPorCliente = useMemo(() => {
     const map: Record<string, { faturado: number; recebido: number; pagoCredito: number; qtd: number }> = {};
+    
+    // Faturado e Qtd
     filtered.forEach(a => {
       if (a.servico === "Adição de Crédito") return; 
       const clientName = getClientName(a.user_id, a.cliente_nome) || "Cliente Não Identificado";
       if (!map[clientName]) map[clientName] = { faturado: 0, recebido: 0, pagoCredito: 0, qtd: 0 };
       map[clientName].faturado += Number(a.valor);
-      map[clientName].recebido += Number(a.valor_pago || 0);
       map[clientName].pagoCredito += Number(a.valor_credito || 0);
       map[clientName].qtd += 1;
     });
+
+    // Recebido
+    faturasPeriodo.forEach(f => {
+      if (f.servico === "Adição de Crédito") return;
+      const clientName = getClientName(f.user_id, f.cliente_nome) || "Cliente Não Identificado";
+      if (!map[clientName]) map[clientName] = { faturado: 0, recebido: 0, pagoCredito: 0, qtd: 0 };
+      map[clientName].recebido += Number(f.valor_fatura || 0);
+    });
+
     return Object.entries(map).map(([nome, v]) => ({ nome, ...v })).sort((a, b) => b.recebido - a.recebido);
-  }, [filtered, getClientName]);
+  }, [filtered, faturasPeriodo, getClientName]);
 
   // Agrupa por categoria (helper reutilizável)
   const groupByCategoria = (lista: typeof despesas) => {
