@@ -7,7 +7,7 @@ import { notifyAgendamentoConfirmadoById, notifyLembreteById } from "@/lib/notif
 import { sendPush } from "@/lib/push-notify";
 import {
   BarChart3, Calendar, Users, Clock, Settings, LogOut, Search,
-  X, Edit2, Trash2, Plus, Save, CheckCircle, Bell, MessageSquare,
+  X, Edit2, Trash2, Plus, Minus, Save, CheckCircle, Bell, MessageSquare,
   UserX, DollarSign, CreditCard, ShoppingBag, Download, ChevronLeft, ChevronRight, Receipt, ClipboardList, Wallet, Timer, PlusCircle, Menu,
   Sparkles, Folder, Filter, TrendingUp, Power, Eye, EyeOff, ChevronUp, ChevronDown, FileText
 } from "lucide-react";
@@ -584,13 +584,17 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [showManualRegister, setShowManualRegister] = useState(false);
   const [detalheAgendamento, setDetalheAgendamento] = useState<Agendamento | null>(null);
   const [manualServicos, setManualServicos] = useState<{ id: string; nome: string; preco: number; duracao_minutos: number; categoria: string }[]>([]);
+  const [manualProdutos, setManualProdutos] = useState<{ id: string; nome: string; preco: number; estoque: number; imagens: string[] }[]>([]);
 
-  // Load services for manual registration
+  // Load services and products for manual registration
   const loadManualServicos = async () => {
-    const { data } = await supabase.from("servicos").select("*").eq("ativo", true).order("ordem");
-    if (data) setManualServicos(data.map(s => ({ id: s.id, nome: s.nome, preco: Number(s.preco), duracao_minutos: s.duracao_minutos, categoria: s.categoria })));
+    const { data: servs } = await supabase.from("servicos").select("*").eq("ativo", true).order("ordem");
+    if (servs) setManualServicos(servs.map(s => ({ id: s.id, nome: s.nome, preco: Number(s.preco), duracao_minutos: s.duracao_minutos, categoria: s.categoria })));
+    
+    const { data: prods } = await supabase.from("produtos").select("*").eq("ativo", true).gt("estoque", 0).order("nome");
+    if (prods) setManualProdutos(prods.map(p => ({ id: p.id, nome: p.nome, preco: Number(p.preco), estoque: Number(p.estoque), imagens: p.imagens || [] })));
   };
-  type ManualItem = { id: string; nome: string; valor: number; duracao: number };
+  type ManualItem = { id: string; nome: string; valor: number; duracao: number; isProduct?: boolean; estoque?: number; qtd?: number };
   const [manualItens, setManualItens] = useState<ManualItem[]>([]);
   const [manualCliente, setManualCliente] = useState("");
   const [manualClienteNome, setManualClienteNome] = useState("");
@@ -1066,7 +1070,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   };
 
   const manualDuracaoTotal = manualItens.reduce((s, it) => s + (Number(it.duracao) || 0), 0);
-  const manualValorTotal = manualItens.reduce((s, it) => s + (Number(it.valor) || 0), 0);
+  const manualValorTotal = manualItens.reduce((s, it) => s + ((Number(it.valor) || 0) * (it.isProduct ? (it.qtd || 1) : 1)), 0);
 
   const handleManualHorarioChange = (novoInicio: string) => {
     setManualHorario(novoInicio);
@@ -1086,11 +1090,26 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setManualHorarioFim(calcFim(manualHorario, manualDuracaoTotal));
   }, [manualDuracaoTotal, manualHorario]);
 
-  const addManualItem = (servicoNome: string) => {
-    const svc = manualServicos.find(s => s.nome === servicoNome);
+  const addManualItem = (itemName: string) => {
+    const prod = manualProdutos.find(p => p.nome === itemName);
+    if (prod) {
+      const novo: ManualItem = {
+        id: (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`),
+        nome: itemName,
+        valor: prod.preco,
+        duracao: 0,
+        isProduct: true,
+        estoque: prod.estoque,
+        qtd: 1,
+      };
+      setManualItens(prev => [...prev, novo]);
+      return;
+    }
+    
+    const svc = manualServicos.find(s => s.nome === itemName);
     const novo: ManualItem = {
       id: (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`),
-      nome: servicoNome,
+      nome: itemName,
       valor: svc ? Number(svc.preco) : 0,
       duracao: svc ? Number(svc.duracao_minutos) : 60,
     };
@@ -1133,8 +1152,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
       toast.error("Preencha data e horário");
       return;
     }
-    if (manualItens.some(it => Number(it.valor) <= 0 || Number(it.duracao) <= 0)) {
-      toast.error("Cada serviço precisa ter valor e duração maiores que zero");
+    if (manualItens.some(it => Number(it.valor) < 0 || (!it.isProduct && Number(it.duracao) <= 0))) {
+      toast.error("Serviços precisam ter duração, e o valor não pode ser negativo.");
       return;
     }
     setManualSaving(true);
@@ -1147,7 +1166,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
       // Agrupa duplicados: "Perfuração (×3), Troca de joia"
       const counts = new Map<string, number>();
-      manualItens.forEach(it => counts.set(it.nome, (counts.get(it.nome) || 0) + 1));
+      manualItens.forEach(it => counts.set(it.nome, (counts.get(it.nome) || 0) + (it.isProduct ? (it.qtd || 1) : 1)));
       const servicoLabel = manualItens.length > 0
         ? Array.from(counts.entries())
           .map(([nome, qtd]) => qtd > 1 ? `${nome} (×${qtd})` : nome)
@@ -1281,6 +1300,21 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
       if (error) throw error;
       if (data) {
         setAgendamentos(prev => [data as Agendamento, ...prev]);
+        
+        // Baixa de estoque para os produtos vendidos
+        const produtosAdicionados = manualItens.filter(it => it.isProduct);
+        if (produtosAdicionados.length > 0) {
+          for (const p of produtosAdicionados) {
+            const { data: pDb } = await supabase.from("produtos").select("estoque").eq("id", p.id).single();
+            if (pDb) {
+              const novoEstoque = Math.max(0, Number(pDb.estoque) - (p.qtd || 1));
+              await supabase.from("produtos").update({ estoque: novoEstoque }).eq("id", p.id);
+            }
+          }
+          // Recarrega serviços e produtos para atualizar estoque atual
+          loadManualServicos();
+        }
+
         toast.success("Atendimento registrado com sucesso!");
         setShowManualRegister(false);
         notifyAgendamentoConfirmadoById((data as Agendamento).id);
@@ -2288,21 +2322,27 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                           {manualItens.map((it, idx) => (
                             <div key={it.id} className="rounded-2xl border border-gold/20 bg-gold/[0.05] backdrop-blur-sm p-3">
                               <div className="flex items-start justify-between gap-2 mb-2">
-                                <p className="font-body text-[13px] font-medium text-primary-foreground flex-1 min-w-0 break-words">
-                                  <span className="text-gold/60 mr-1.5 tabular-nums">{idx + 1}.</span>{it.nome}
+                                <p className="font-body text-[13px] font-medium text-primary-foreground flex-1 min-w-0 break-words flex items-center gap-1.5">
+                                  <span className="text-gold/60 tabular-nums">{idx + 1}.</span>
+                                  {it.nome}
+                                  {it.isProduct && (
+                                    <span className="text-[9px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded uppercase tracking-wider font-bold">Produto</span>
+                                  )}
                                 </p>
                                 <button
                                   type="button"
                                   onClick={() => removeManualItem(it.id)}
                                   className="flex-shrink-0 w-8 h-8 rounded-xl bg-rose/10 hover:bg-rose/20 text-rose flex items-center justify-center transition-colors"
-                                  aria-label="Remover serviço"
+                                  aria-label="Remover item"
                                 >
                                   <X className="h-4 w-4" />
                                 </button>
                               </div>
                               <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                  <label className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/40 mb-1 block">Valor (R$)</label>
+                                  <label className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/40 mb-1 block">
+                                    {it.isProduct ? "Valor Unitário (R$)" : "Valor (R$)"}
+                                  </label>
                                   <input
                                     type="number"
                                     inputMode="decimal"
@@ -2315,16 +2355,46 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                                   />
                                 </div>
                                 <div>
-                                  <label className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/40 mb-1 block">Duração (min)</label>
-                                  <input
-                                    type="number"
-                                    inputMode="numeric"
-                                    min={5}
-                                    step={5}
-                                    value={it.duracao || ""}
-                                    onChange={(e) => updateManualItem(it.id, { duracao: Number(e.target.value) || 0 })}
-                                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] tabular-nums focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 transition-all"
-                                  />
+                                  {it.isProduct ? (
+                                    <>
+                                      <label className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/40 mb-1 block flex justify-between">
+                                        <span>Quantidade</span>
+                                        <span className="text-blue-400/70">Estoque: {it.estoque}</span>
+                                      </label>
+                                      <div className="flex items-center gap-2">
+                                        <button
+                                          type="button"
+                                          onClick={() => updateManualItem(it.id, { qtd: Math.max(1, (it.qtd || 1) - 1) })}
+                                          className="w-9 h-[38px] rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center hover:bg-white/[0.08] transition-colors"
+                                        >
+                                          <Minus className="h-3 w-3" />
+                                        </button>
+                                        <div className="flex-1 h-[38px] rounded-xl bg-white/[0.02] border border-white/[0.04] flex items-center justify-center font-body text-[13px] tabular-nums">
+                                          {it.qtd || 1}
+                                        </div>
+                                        <button
+                                          type="button"
+                                          onClick={() => updateManualItem(it.id, { qtd: Math.min(it.estoque || 999, (it.qtd || 1) + 1) })}
+                                          className="w-9 h-[38px] rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center hover:bg-white/[0.08] transition-colors"
+                                        >
+                                          <Plus className="h-3 w-3" />
+                                        </button>
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <label className="font-body text-[9px] uppercase tracking-wider text-primary-foreground/40 mb-1 block">Duração (min)</label>
+                                      <input
+                                        type="number"
+                                        inputMode="numeric"
+                                        min={5}
+                                        step={5}
+                                        value={it.duracao || ""}
+                                        onChange={(e) => updateManualItem(it.id, { duracao: Number(e.target.value) || 0 })}
+                                        className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-primary-foreground font-body text-[13px] tabular-nums focus:outline-none focus:border-gold/60 focus:ring-1 focus:ring-gold/40 transition-all"
+                                      />
+                                    </>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -2418,7 +2488,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                         </div>
                         <input
                           type="text"
-                          placeholder={manualItens.length === 0 ? "Buscar serviço..." : "+ Adicionar outro serviço..."}
+                          placeholder={manualItens.length === 0 ? "Buscar serviço ou produto..." : "+ Adicionar outro..."}
                           value={manualServicoSearch}
                           onFocus={() => setManualServicoOpen(true)}
                           onChange={(e) => { setManualServicoSearch(e.target.value); setManualServicoOpen(true); }}
@@ -2429,29 +2499,37 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                       {manualServicoOpen && (
                         <div className="absolute z-50 mt-1 left-0 right-0 rounded-2xl border border-gold/20 bg-charcoal/95 backdrop-blur-xl shadow-2xl overflow-hidden">
                           <div className="max-h-52 overflow-y-auto">
-                            {manualServicos
-                              .filter(s => s.nome.toLowerCase().includes(manualServicoSearch.toLowerCase()))
-                              .length === 0 ? (
-                              <p className="px-4 py-3 font-body text-[12px] text-primary-foreground/30 text-center">Nenhum serviço encontrado</p>
-                            ) : (
-                              manualServicos
-                                .filter(s => s.nome.toLowerCase().includes(manualServicoSearch.toLowerCase()))
-                                .map(s => (
-                                  <button
-                                    key={s.id}
-                                    onMouseDown={(e) => e.preventDefault()}
-                                    onClick={() => {
-                                      addManualItem(s.nome);
-                                      setManualServicoSearch("");
-                                      setManualServicoOpen(false);
-                                    }}
-                                    className="w-full text-left px-4 py-3 font-body text-[13px] transition-all hover:bg-gold/10 text-primary-foreground flex items-center justify-between gap-3"
-                                  >
-                                    <span className="font-medium truncate">{s.nome}</span>
-                                    <span className="text-[11px] text-gold/70 tabular-nums flex-shrink-0">R$ {s.preco.toFixed(2).replace(".", ",")}</span>
-                                  </button>
-                                ))
-                            )}
+                            {(() => {
+                              const results = [
+                                ...manualServicos.map(s => ({ ...s, isProduct: false })),
+                                ...manualProdutos.map(p => ({ ...p, isProduct: true, preco: Number(p.preco) }))
+                              ].filter(item => item.nome.toLowerCase().includes(manualServicoSearch.toLowerCase()));
+
+                              if (results.length === 0) {
+                                return <p className="px-4 py-3 font-body text-[12px] text-primary-foreground/30 text-center">Nenhum resultado encontrado</p>;
+                              }
+
+                              return results.map(s => (
+                                <button
+                                  key={s.id + (s.isProduct ? "_p" : "_s")}
+                                  onMouseDown={(e) => e.preventDefault()}
+                                  onClick={() => {
+                                    addManualItem(s.nome);
+                                    setManualServicoSearch("");
+                                    setManualServicoOpen(false);
+                                  }}
+                                  className="w-full text-left px-4 py-3 font-body text-[13px] transition-all hover:bg-gold/10 text-primary-foreground flex items-center justify-between gap-3"
+                                >
+                                  <span className="font-medium truncate flex items-center gap-2">
+                                    {s.nome}
+                                    {s.isProduct && (
+                                      <span className="text-[9px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded uppercase tracking-wider font-bold">Produto</span>
+                                    )}
+                                  </span>
+                                  <span className="text-[11px] text-gold/70 tabular-nums flex-shrink-0">R$ {s.preco.toFixed(2).replace(".", ",")}</span>
+                                </button>
+                              ));
+                            })()}
                           </div>
                         </div>
                       )}
