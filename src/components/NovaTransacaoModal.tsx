@@ -79,6 +79,15 @@ export default function NovaTransacaoModal({ open, onOpenChange, onSuccess, init
 
         const now = new Date();
         const horario = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+        const [year, month, day] = data.split("-").map(Number);
+        const paidAt = new Date(
+          year,
+          month - 1,
+          day,
+          now.getHours(),
+          now.getMinutes(),
+          now.getSeconds(),
+        ).toISOString();
 
         const payload = {
           user_id: userId,
@@ -87,6 +96,7 @@ export default function NovaTransacaoModal({ open, onOpenChange, onSuccess, init
           variacao: descricao.trim(),
           valor: valNum,
           valor_pago: valNum,
+          paid_at: paidAt,
           data_agendamento: data,
           horario: horario,
           status: "concluido",

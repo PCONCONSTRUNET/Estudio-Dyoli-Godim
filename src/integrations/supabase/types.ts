@@ -95,6 +95,60 @@ export type Database = {
         }
         Relationships: []
       }
+      caixa_movimentacoes: {
+        Row: {
+          cliente_nome: string | null
+          contabiliza_comissao: boolean
+          created_at: string
+          data_pagamento: string
+          descricao: string | null
+          external_id: string | null
+          forma_pagamento: string | null
+          id: string
+          inferido: boolean
+          ocorrido_em: string
+          origem: string
+          referencia_id: string
+          referencia_tipo: string
+          tipo: string
+          valor: number
+        }
+        Insert: {
+          cliente_nome?: string | null
+          contabiliza_comissao?: boolean
+          created_at?: string
+          data_pagamento: string
+          descricao?: string | null
+          external_id?: string | null
+          forma_pagamento?: string | null
+          id?: string
+          inferido?: boolean
+          ocorrido_em: string
+          origem?: string
+          referencia_id: string
+          referencia_tipo: string
+          tipo: string
+          valor: number
+        }
+        Update: {
+          cliente_nome?: string | null
+          contabiliza_comissao?: boolean
+          created_at?: string
+          data_pagamento?: string
+          descricao?: string | null
+          external_id?: string | null
+          forma_pagamento?: string | null
+          id?: string
+          inferido?: boolean
+          ocorrido_em?: string
+          origem?: string
+          referencia_id?: string
+          referencia_tipo?: string
+          tipo?: string
+          valor?: number
+        }
+        Relationships: []
+      }
       anamneses: {
         Row: {
           cliente_nome: string
@@ -754,6 +808,54 @@ export type Database = {
           ordem?: number
           preco?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      vendas: {
+        Row: {
+          cliente_id: string | null
+          cliente_nome: string
+          created_at: string
+          data_venda: string
+          forma_pagamento: string | null
+          id: string
+          itens: Json
+          observacao: string
+          pago: boolean
+          paid_at: string | null
+          telefone: string
+          valor_pago: number
+          valor_total: number
+        }
+        Insert: {
+          cliente_id?: string | null
+          cliente_nome: string
+          created_at?: string
+          data_venda?: string
+          forma_pagamento?: string | null
+          id?: string
+          itens?: Json
+          observacao?: string
+          pago?: boolean
+          paid_at?: string | null
+          telefone?: string
+          valor_pago?: number
+          valor_total?: number
+        }
+        Update: {
+          cliente_id?: string | null
+          cliente_nome?: string
+          created_at?: string
+          data_venda?: string
+          forma_pagamento?: string | null
+          id?: string
+          itens?: Json
+          observacao?: string
+          pago?: boolean
+          paid_at?: string | null
+          telefone?: string
+          valor_pago?: number
+          valor_total?: number
         }
         Relationships: []
       }

@@ -219,6 +219,7 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
         itens,
         valor_total: valNum,
         valor_pago: pago ? valNum : 0,
+        paid_at: pago ? new Date(`${data}T12:00:00`).toISOString() : null,
         forma_pagamento: formaPagamento,
         pago,
         data_venda: data,

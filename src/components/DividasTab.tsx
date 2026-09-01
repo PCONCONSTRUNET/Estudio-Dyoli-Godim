@@ -204,6 +204,7 @@ const DividasTab = () => {
  // 2. Lançar o pagamento como serviço no Caixa (Agendamentos)
  const now = new Date();
  const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+ const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split("T")[0];
  
  const { error: errorAgendamento } = await supabase.from("agendamentos").insert({
  user_id: selectedDivida.user_id, // Pode ser nulo se for cliente sem cadastro
@@ -211,8 +212,9 @@ const DividasTab = () => {
  servico: `Pagamento de Dívida - ${selectedDivida.descricao}`,
  valor: valorPagar, // O valor cobrado é o que ele tá pagando
  valor_pago: valorPagar, // O valor pago é o que ele tá pagando
- data_agendamento: now.toISOString().split('T')[0],
+ data_agendamento: localDate,
  horario: timeStr,
+ paid_at: now.toISOString(),
  status: "concluido",
  observacao: `divida_id:${selectedDivida.id} | Baixa de dívida no valor de ${formatCurrency(valorPagar)}`
  });

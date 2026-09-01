@@ -879,7 +879,11 @@ const BookingFlow = ({ service, variation, onBack, onConfirm }: BookingFlowProps
             <button onClick={async () => {
               // Mark local PIX agendamento as confirmado
               if (agendamentoId) {
-                await supabase.from("agendamentos").update({ status: "confirmado", valor_pago: paymentAmount }).eq("id", agendamentoId);
+                await supabase.from("agendamentos").update({
+                  status: "confirmado",
+                  valor_pago: paymentAmount,
+                  paid_at: new Date().toISOString(),
+                }).eq("id", agendamentoId);
               }
               onConfirm({ date: selectedDate, time: selectedTime, price: numericPrice, paidAmount: paymentAmount, durationMinutes: serviceDuration });
             }}

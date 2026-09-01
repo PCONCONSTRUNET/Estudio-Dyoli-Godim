@@ -31,6 +31,12 @@ import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ptBR } from "date-fns/locale";
 import NovaTransacaoModal from "@/components/NovaTransacaoModal";
+import {
+ calculateCommission,
+ calculateDailyClosing,
+ CaixaMovimentacao,
+ normalizePaymentMethod,
+} from "@/lib/caixa";
 
 interface Agendamento {
  id: string;
@@ -43,6 +49,7 @@ interface Agendamento {
  valor_troco: number | null;
  valor_gorjeta: number | null;
  valor_credito: number | null;
+ valor_desconto_credito?: number | null;
  status: string;
  created_at: string;
  user_id: string;
@@ -200,12 +207,10 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
   const [despesas, setDespesas] = useState<{ valor: number; pago: boolean; data_vencimento: string; tipo?: string; observacao?: string; descricao?: string }[]>([]);
   const [vendas, setVendas] = useState<any[]>([]);
 
-  const [historicoGlobal, setHistoricoGlobal] = useState<any[]>([]);
+  const [movimentacoes, setMovimentacoes] = useState<CaixaMovimentacao[]>([]);
   const [missingAgendamentos, setMissingAgendamentos] = useState<any[]>([]);
 
-  // ── Busca despesas + vendas + historico APENAS quando o ciclo muda ──────────
-  // NUNCA inclua `agendamentos` aqui: isso causava re-fetch de pagamento_historico
-  // toda vez que qualquer agendamento era atualizado no realtime.
+  // ── Busca despesas e vendas previstas do ciclo ──────────────────────────────
   useEffect(() => {
     let cancelled = false;
 
@@ -218,45 +223,76 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
         if (!cancelled && data) setDespesas(data);
       });
 
-    // 2. Vendas do ciclo
+    // 2. Vendas agendadas/realizadas no ciclo (usadas apenas no previsto)
     (supabase.from as any)("vendas").select("*")
-      .gte("created_at", ciclo.startISO + "T00:00:00")
-      .lte("created_at", ciclo.endISO + "T23:59:59")
+      .gte("data_venda", ciclo.startISO)
+      .lte("data_venda", ciclo.endISO)
       .then(({ data }: any) => {
         if (!cancelled && data) setVendas(data);
       });
 
-    // 3. Histórico de pagamentos do ciclo — UMA query por período, sem chunks
-    // Usa filtro de data em created_at (coberto pelo índice idx_pagamento_historico_created_at_desc)
-    (async () => {
-      const { data: histByDate } = await supabase
-        .from("pagamento_historico")
+    return () => { cancelled = true; };
+  }, [ciclo.startISO, ciclo.endISO]);
+
+  // Livro-caixa canônico. Inclui também o dia selecionado quando o usuário
+  // navega para fora do ciclo exibido no fechamento diário.
+  useEffect(() => {
+    let cancelled = false;
+    const rangeStart = caixaDate < ciclo.startISO ? caixaDate : ciclo.startISO;
+    const rangeEnd = caixaDate > ciclo.endISO ? caixaDate : ciclo.endISO;
+
+    const loadMovimentos = async () => {
+      const { data, error } = await (supabase.from as any)("caixa_movimentacoes")
         .select("*")
-        .gte("created_at", ciclo.startISO + "T00:00:00")
-        .lte("created_at", ciclo.endISO + "T23:59:59");
+        .gte("data_pagamento", rangeStart)
+        .lte("data_pagamento", rangeEnd)
+        .order("ocorrido_em", { ascending: false });
 
       if (cancelled) return;
-      setHistoricoGlobal(histByDate || []);
-    })();
+      if (error) {
+        console.error("Erro ao carregar movimentos do caixa:", error);
+        setMovimentacoes([]);
+        return;
+      }
+      setMovimentacoes((data || []).map((m: any) => ({ ...m, valor: Number(m.valor) })));
+    };
 
-    return () => { cancelled = true; };
-  }, [ciclo.startISO, ciclo.endISO]); // ← SEM agendamentos na dependency
+    loadMovimentos();
 
-  // ── Busca agendamentos faltantes (que têm pagamento no ciclo mas não estão no array principal) ──
-  // Roda em separado para não bloquear o fetch do histórico
+    const channel = supabase
+      .channel(`caixa-movimentos-${rangeStart}-${rangeEnd}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "caixa_movimentacoes" },
+        () => { loadMovimentos(); },
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [ciclo.startISO, ciclo.endISO, caixaDate]);
+
+  // ── Busca agendamentos faltantes ligados a movimentos do ciclo ──────────────
+  // Roda em separado para não bloquear o fetch dos movimentos
   useEffect(() => {
-    if (historicoGlobal.length === 0) { setMissingAgendamentos([]); return; }
+    if (movimentacoes.length === 0) { setMissingAgendamentos([]); return; }
 
-    const histIds = new Set(historicoGlobal.map((h: any) => h.agendamento_id));
+    const movimentoIds = new Set(
+      movimentacoes
+        .filter((m) => m.referencia_tipo === "agendamento")
+        .map((m) => m.referencia_id),
+    );
     const existingIds = new Set(agendamentos.map(a => a.id));
-    const missingIds = [...histIds].filter(id => !existingIds.has(id));
+    const missingIds = [...movimentoIds].filter(id => !existingIds.has(id));
 
     if (missingIds.length === 0) { setMissingAgendamentos([]); return; }
 
     // Limite conservador: agendamentos muito antigos não precisam ser trazidos todos
     supabase.from("agendamentos").select("*").in("id", missingIds.slice(0, 200))
       .then(({ data }) => { if (data) setMissingAgendamentos(data); });
-  }, [historicoGlobal, agendamentos]);
+  }, [movimentacoes, agendamentos]);
 
   const allAgendamentos = useMemo(() => {
     const vList = vendas.map(v => ({
@@ -281,82 +317,47 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
   }, [agendamentos, missingAgendamentos, vendas]);
 
   const faturasFinanceiras = useMemo(() => {
-    const list: any[] = [];
-    allAgendamentos.forEach((a) => {
-      if (["cancelado", "falta"].includes(a.status)) return;
-      
-      const hists = historicoGlobal.filter((h) => h.agendamento_id === a.id && h.valor_delta > 0 && h.acao !== "acrescimo");
-      
-      const getMethod = (val: number) => {
-        if (a.forma_pagamento && a.forma_pagamento.includes("|")) {
-          const parts = a.forma_pagamento.split("|");
-          for (const p of parts) {
-            const [m, v] = p.split(":");
-            if (Number(v) === val) return m;
-          }
-        }
-        return a.forma_pagamento;
+    const byId = new Map(allAgendamentos.map((a) => [a.id, a]));
+    return movimentacoes
+    .filter((movimento) =>
+      movimento.data_pagamento >= ciclo.startISO && movimento.data_pagamento <= ciclo.endISO,
+    )
+    .map((movimento) => {
+      const linked = byId.get(movimento.referencia_id);
+      const dataAgendamento = linked?.data_agendamento || movimento.data_pagamento;
+      return {
+        ...(linked || {}),
+        id: linked?.id || movimento.referencia_id,
+        _movimentoId: movimento.id,
+        _referenciaId: movimento.referencia_id,
+        _referenciaTipo: movimento.referencia_tipo,
+        valor: Number(linked?.valor || Math.abs(movimento.valor)),
+        valor_pago: Number(movimento.valor),
+        data_agendamento: dataAgendamento,
+        data_fatura: movimento.data_pagamento,
+        horario: linked?.horario || new Date(movimento.ocorrido_em).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+        forma_pagamento: movimento.forma_pagamento || linked?.forma_pagamento,
+        cliente_nome: movimento.cliente_nome || linked?.cliente_nome,
+        servico: movimento.tipo === "gorjeta" ? "Gorjeta" : (movimento.descricao || linked?.servico || "Pagamento"),
+        status: linked?.status || "concluido",
+        user_id: linked?.user_id || "admin",
+        observacao: movimento.contabiliza_comissao ? linked?.observacao : "SEM_COMISSAO",
+        is_extra: movimento.tipo === "gorjeta",
+        tipo_movimento: movimento.tipo,
+        inferido: movimento.inferido,
       };
-      
-      if (hists.length > 0) {
-        let totalPaidInHistory = 0;
-        hists.forEach((h) => {
-          list.push({
-            ...a,
-            valor_pago: h.valor_delta,
-            data_fatura: h.created_at.split("T")[0],
-            forma_pagamento: getMethod(h.valor_delta),
-          });
-          totalPaidInHistory += h.valor_delta;
-        });
-        
-        const valorPagoAtual = Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0);
-        const initialPayment = valorPagoAtual - totalPaidInHistory;
-        
-        if (initialPayment > 0) {
-           list.push({
-             ...a,
-             valor_pago: initialPayment,
-             data_fatura: a.data_agendamento,
-             forma_pagamento: getMethod(initialPayment),
-           });
-        }
-      } else {
-        const valorPago = Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0);
-        if (valorPago > 0) {
-           list.push({
-             ...a, 
-             valor_pago: valorPago, 
-             data_fatura: a.data_agendamento,
-             forma_pagamento: getMethod(valorPago),
-           });
-        }
-      }
-      
-      if (Number(a.valor_gorjeta) > 0) {
-        list.push({ ...a, valor_pago: Number(a.valor_gorjeta), data_fatura: a.data_agendamento, is_extra: true, servico: "Gorjeta" });
-      }
     });
-
-    return list.filter(f => f.data_fatura >= ciclo.startISO && f.data_fatura <= ciclo.endISO);
-  }, [allAgendamentos, historicoGlobal, ciclo]);
+  }, [allAgendamentos, movimentacoes, ciclo.startISO, ciclo.endISO]);
 
  // Fechamento do dia
  const caixaData = useMemo(() => {
- const dayAgs = allAgendamentos.filter((a) => a.data_agendamento === caixaDate && a.status !== "cancelado");
- 
- const total = dayAgs.reduce((s, a) => s + Math.max(0, Number(a.valor) - Number(a.valor_desconto_credito || 0)) + Number(a.valor_gorjeta || 0), 0);
- const recebido = dayAgs.reduce((s, a) => s + Number(a.valor_pago || 0) + Number(a.valor_gorjeta || 0), 0);
- const pagoComCredito = dayAgs.reduce((s, a) => s + Number(a.valor_desconto_credito || 0), 0);
- const faltas = allAgendamentos.filter((a) => a.data_agendamento === caixaDate && a.status === "falta").length;
- const qtd = dayAgs.filter(a => !(a.servico === "Adição de Crédito" || a.servico === "Entrada Manual" || (a.servico && a.servico.startsWith("Pagamento de Dívida")))).length;
- 
- const pendente = dayAgs.reduce((s, a) => s + Math.max(0, Number(a.valor) - Number(a.valor_pago || 0) - Number(a.valor_desconto_credito || 0)), 0);
- 
- const progressPercent = total > 0 ? Math.round((recebido / total) * 100) : (recebido > 0 ? 100 : 0);
- 
- return { items: dayAgs, total, recebido, pagoComCredito, pendente, qtd, faltas, progressPercent };
- }, [allAgendamentos, caixaDate]);
+   return calculateDailyClosing(allAgendamentos, movimentacoes, caixaDate);
+ }, [allAgendamentos, movimentacoes, caixaDate]);
+
+ const comissaoDia = useMemo(
+   () => calculateCommission(caixaData.pagamentos, comissaoPct),
+   [caixaData.pagamentos, comissaoPct],
+ );
 
  // Lista de pagamentos por período
  const periodRange = useMemo(() => {
@@ -374,12 +375,10 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  }, [period, ciclo, customStart, customEnd]);
 
  const filtered = useMemo(() => {
- return allAgendamentos.filter((a) => {
- if (a.status === "cancelado" || a.status === "falta") return false;
- const d = a.data_agendamento;
- return d >= periodRange.start && d <= periodRange.end;
- });
- }, [allAgendamentos, periodRange]);
+ return faturasFinanceiras.filter((f) =>
+   f.data_fatura >= periodRange.start && f.data_fatura <= periodRange.end,
+ );
+ }, [faturasFinanceiras, periodRange]);
 
  // Cálculos do ciclo (compartilhados)
  const cicloStats = useMemo(() => {
@@ -420,39 +419,44 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
 
  // ── Breakdown por forma de pagamento (ciclo) ──
  const paymentMethodStats = useMemo(() => {
-  const normalize = (f: string | null | undefined) => {
-   const v = (f || "").toLowerCase().trim();
-   if (v.includes("pix")) return "pix";
-   if (v.includes("cart") || v.includes("credito") || v.includes("crédito") || v.includes("debito") || v.includes("débito")) return "cartao";
-   if (v.includes("dinheiro") || v.includes("especie") || v.includes("espécie") || v.includes("cash")) return "dinheiro";
-   return "outro";
-  };
   const totals: Record<string, number> = { pix: 0, cartao: 0, dinheiro: 0, outro: 0 };
   const counts: Record<string, number> = { pix: 0, cartao: 0, dinheiro: 0, outro: 0 };
   const items: Record<string, Agendamento[]> = { pix: [], cartao: [], dinheiro: [], outro: [] };
    faturasFinanceiras.forEach((a) => {
     const pago = Number(a.valor_pago || 0);
-    if (pago <= 0) return;
+    if (pago === 0) return;
     
     if (a.forma_pagamento && a.forma_pagamento.includes("|")) {
       const parts = a.forma_pagamento.split("|");
-      let addedToCounts = false;
-      parts.forEach(p => {
-        const [method, valStr] = p.split(":");
-        const val = Number(valStr || 0);
-        if (val > 0) {
-          const key = normalize(method);
-          totals[key] += val;
-          if (!addedToCounts) { counts[key] += 1; addedToCounts = true; }
-          items[key].push({...a, valor_pago: val}); 
-        }
-      });
-      return;
+      const parsed = parts.map((part) => {
+        const [method, valStr] = part.split(":");
+        return { method, value: Number(valStr || 0) };
+      }).filter((part) => part.value > 0);
+      const partTotal = parsed.reduce((sum, part) => sum + part.value, 0);
+      const exactPart = parsed.find((part) => Math.abs(part.value - Math.abs(pago)) < 0.01);
+
+      if (Math.abs(partTotal - Math.abs(pago)) < 0.01) {
+        parsed.forEach(({ method, value }) => {
+          const key = normalizePaymentMethod(method);
+          const signedValue = pago < 0 ? -value : value;
+          totals[key] += signedValue;
+          if (pago > 0) counts[key] += 1;
+          items[key].push({ ...a, valor_pago: signedValue });
+        });
+        return;
+      }
+      if (exactPart) {
+        const key = normalizePaymentMethod(exactPart.method);
+        totals[key] += pago;
+        if (pago > 0) counts[key] += 1;
+        items[key].push(a);
+        return;
+      }
     }
 
-    const key = normalize(a.forma_pagamento);
+    const key = normalizePaymentMethod(a.forma_pagamento);
     totals[key] += pago;
-    counts[key] += 1;
+    if (pago > 0) counts[key] += 1;
     items[key].push(a);
    });
   const grandTotal = totals.pix + totals.cartao + totals.dinheiro + totals.outro;
@@ -867,21 +871,26 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  </div>
  </div>
 
- {/* Hero number — recebido do dia */}
+ {/* Hero number — recebido pela data financeira */}
  <div className="text-center py-4">
- <p className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-[0.3em] mb-2">Recebido hoje</p>
+ <p className="font-body text-[10px] text-primary-foreground/75 uppercase tracking-[0.3em] mb-2">Recebido no dia</p>
  <p className="font-heading text-5xl font-bold bg-gradient-to-br from-gold via-gold to-gold/60 bg-clip-text text-transparent leading-none">
  {formatCurrency(caixaData.recebido)}
  </p>
  <p className="font-body text-[11px] text-primary-foreground/95 mt-2">
  de <span className="text-primary-foreground/95 font-medium">{formatCurrency(caixaData.total)}</span> previstos
  </p>
+ {caixaData.recebidoAnteriormente > 0 && (
+ <p className="font-body text-[10px] text-blue-300/90 mt-1">
+ {formatCurrency(caixaData.recebidoAnteriormente)} dos atendimentos foram recebidos anteriormente
+ </p>
+ )}
  <div className="mt-4 max-w-[240px] mx-auto">
  <div className="h-1 rounded-full bg-primary-foreground/[0.06] overflow-hidden">
  <div className="h-full rounded-full bg-gradient-to-r from-gold/80 to-green-500/80 transition-all duration-700" style={{ width: `${Math.min(100, caixaData.progressPercent)}%` }} />
  </div>
  <p className="font-body text-[9px] text-primary-foreground/95 uppercase tracking-[0.2em] mt-2">
- {caixaData.progressPercent}% do dia recebido
+ {caixaData.progressPercent}% dos atendimentos já pagos
  </p>
  </div>
  </div>
@@ -911,13 +920,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  <Sparkles className="w-3 h-3" /> Sua comissão · {comissaoPct}%
  </p>
  <p className="font-heading text-2xl font-bold text-purple-300 mt-1">
- {formatCurrency(
-  caixaData.items.reduce((s, a) => {
-    if (a.observacao === "SEM_COMISSAO") return s;
-    return s + Number(a.valor_pago || 0);
-  }, 0) * (comissaoPct / 100) +
-  caixaData.items.reduce((s,a) => s + Number(a.valor_gorjeta||0), 0)
- )}
+ {formatCurrency(comissaoDia.total)}
  </p>
  </div>
  <div className="text-right">
@@ -1042,15 +1045,15 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  style={{ scrollbarWidth: "thin", scrollbarColor: "hsl(var(--primary-foreground) / 0.15) transparent" }}
  >
  {filtered.map((a) => (
- <div key={a.id} className="flex items-center justify-between p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06] hover:border-gold/20 transition-all">
+ <div key={a._movimentoId} className="flex items-center justify-between p-3 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.06] hover:border-gold/20 transition-all">
  <div className="min-w-0 flex-1">
  <p className="font-body text-[14px] font-semibold text-primary-foreground truncate">{getClientName(a.user_id, a.cliente_nome)}</p>
- <p className="font-body text-[11px] text-primary-foreground/75">{formatDateShort(a.data_agendamento)} · {a.servico}</p>
+ <p className="font-body text-[11px] text-primary-foreground/75">{formatDateShort(a.data_fatura)} · {a.servico}</p>
  </div>
  <div className="text-right ml-2">
- <p className="font-heading text-[14px] text-gold font-bold tabular-nums">{formatCurrency(Number(a.valor))}</p>
- <p className={`font-body text-[11px] font-medium ${(Number(a.valor_pago || 0) + Number(a.valor_credito || 0)) >= Number(a.valor) ? "text-green-400" : Number(a.valor_pago || 0) > 0 ? "text-gold" : "text-primary-foreground/75"}`}>
- {(Number(a.valor_pago || 0) + Number(a.valor_credito || 0)) >= Number(a.valor) ? "Pago" : Number(a.valor_pago || 0) > 0 ? `Sinal: ${formatCurrency(Number(a.valor_pago))}` : "Pendente"}
+ <p className={`font-heading text-[14px] font-bold tabular-nums ${Number(a.valor_pago) >= 0 ? "text-green-400" : "text-rose"}`}>{formatCurrency(Number(a.valor_pago))}</p>
+ <p className="font-body text-[10px] font-medium text-primary-foreground/60">
+ {Number(a.valor_pago) >= 0 ? "Recebido" : "Estorno"}{a.inferido ? " · data inferida" : ""}
  </p>
  </div>
  </div>
@@ -1179,8 +1182,13 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  ) : (
  <div className="space-y-1.5 max-h-[260px] overflow-y-auto pr-1 custom-scrollbar">
  {comissaoBreakdown.map((d) => {
- const dayBase = cicloStats.items.filter(a => a.data_agendamento === d.date && a.observacao !== "SEM_COMISSAO").reduce((s,a) => s + Number(a.valor_pago || 0), 0);
- const dayGorjetas = cicloStats.items.filter(a => a.data_agendamento === d.date).reduce((s,a) => s + Number(a.valor_gorjeta || 0), 0);
+ const movimentosDoDia = faturasFinanceiras.filter((f) => f.data_fatura === d.date);
+ const dayBase = movimentosDoDia
+   .filter((f) => f.observacao !== "SEM_COMISSAO" && f.servico !== "Gorjeta")
+   .reduce((s, f) => s + Number(f.valor_pago || 0), 0);
+ const dayGorjetas = movimentosDoDia
+   .filter((f) => f.servico === "Gorjeta")
+   .reduce((s, f) => s + Number(f.valor_pago || 0), 0);
  const dayComm = dayBase * (comissaoPct / 100) + dayGorjetas;
  return (
  <div key={d.date} className="flex items-center justify-between p-2.5 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.05] hover:border-purple-500/20 transition-all">
@@ -1294,11 +1302,11 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
          <span className={`font-heading text-[12px] font-bold tabular-nums ${textColor}`}>{formatCurrency(paymentMethodStats.totals[key])}</span>
         </div>
         <div className="divide-y divide-primary-foreground/[0.05] max-h-[180px] overflow-y-auto">
-         {[...list].sort((a, b) => b.data_agendamento.localeCompare(a.data_agendamento)).map((a) => (
-          <div key={a.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-primary-foreground/[0.03] transition-colors">
+         {[...list].sort((a: any, b: any) => b.data_fatura.localeCompare(a.data_fatura)).map((a: any) => (
+          <div key={a._movimentoId} className="flex items-center justify-between px-4 py-2.5 hover:bg-primary-foreground/[0.03] transition-colors">
            <div className="min-w-0 flex-1">
             <p className="font-body text-[12px] font-semibold text-primary-foreground truncate">{getClientName(a.user_id, a.cliente_nome)}</p>
-            <p className="font-body text-[10px] text-primary-foreground/55 truncate">{formatDateShort(a.data_agendamento)} · {a.servico}</p>
+            <p className="font-body text-[10px] text-primary-foreground/55 truncate">{formatDateShort(a.data_fatura)} · {a.servico}</p>
            </div>
            <p className={`font-heading text-[12px] font-bold tabular-nums ml-2 shrink-0 ${textColor}`}>{formatCurrency(Number(a.valor_pago || 0))}</p>
           </div>

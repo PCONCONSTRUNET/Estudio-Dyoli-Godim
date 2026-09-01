@@ -557,9 +557,10 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     if (!quitarAg) return;
     if (!quitarForma) { toast.error("Selecione a forma de pagamento"); return; }
     const total = Number(quitarAg.valor);
-    const updatePayload: any = { valor_pago: total, forma_pagamento: quitarForma };
+    const paidAt = new Date().toISOString();
+    const updatePayload: any = { valor_pago: total, forma_pagamento: quitarForma, paid_at: paidAt };
     if (quitarAg.origem === "venda") {
-      await supabase.from("vendas").update({ pago: true, forma_pagamento: quitarForma }).eq("id", quitarAg.id);
+      await (supabase.from as any)("vendas").update({ pago: true, forma_pagamento: quitarForma, paid_at: paidAt }).eq("id", quitarAg.id);
     } else {
       await supabase.from("agendamentos").update(updatePayload).eq("id", quitarAg.id);
     }
@@ -628,9 +629,19 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     if (novoValorPago > novoValor) novoValor = novoValorPago;
 
     const table = editAg.origem === "venda" ? "vendas" : "agendamentos";
-    const updatePayload: any = editAg.origem === "venda" 
-      ? { valor_total: novoValor, pago: novoValorPago >= novoValor } 
-      : { valor: novoValor, valor_pago: novoValorPago };
+    const paymentChanged = novoValorPago !== Number(editAg.valor_pago || 0);
+    const updatePayload: any = editAg.origem === "venda"
+      ? {
+          valor_total: novoValor,
+          valor_pago: novoValorPago,
+          pago: novoValorPago >= novoValor,
+          ...(paymentChanged ? { paid_at: new Date().toISOString() } : {}),
+        }
+      : {
+          valor: novoValor,
+          valor_pago: novoValorPago,
+          ...(paymentChanged ? { paid_at: new Date().toISOString() } : {}),
+        };
 
     await supabase.from(table).update(updatePayload).eq("id", editAg.id);
 
@@ -722,7 +733,11 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
     const novoValorServico = novoTotalPago > valorServico ? novoTotalPago : valorServico;
     const totalAgora = Math.min(novoValorServico, novoTotalPago);
 
-    const updatePayload: any = { valor_pago: totalAgora, forma_pagamento: pagamentoForma };
+    const updatePayload: any = {
+      valor_pago: totalAgora,
+      forma_pagamento: pagamentoForma,
+      paid_at: new Date().toISOString(),
+    };
     if (novoValorServico > valorServico) updatePayload.valor = novoValorServico;
 
     await supabase.from("agendamentos").update(updatePayload).eq("id", pagamentoAg.id);

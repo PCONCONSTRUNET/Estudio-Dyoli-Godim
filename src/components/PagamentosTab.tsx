@@ -597,7 +597,11 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate, onEdit }: Props)
           const novoValorPago = fatura.valorPago + valorPagar;
           const novoStatus = novoValorPago >= fatura.valor ? "concluido" : undefined;
           
-          const updateData: any = { valor_pago: novoValorPago, forma_pagamento: payForma };
+          const updateData: any = {
+            valor_pago: novoValorPago,
+            forma_pagamento: payForma,
+            paid_at: new Date().toISOString(),
+          };
           if (novoStatus) updateData.status = novoStatus;
 
           const { error: err1 } = await supabase.from("agendamentos").update(updateData).eq("id", fatura.id);
@@ -633,7 +637,11 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate, onEdit }: Props)
           const novoValorPago = fatura.valorPago + aPagar;
           const novoStatus = novoValorPago >= fatura.valor ? "concluido" : undefined;
           
-          const updateData: any = { valor_pago: novoValorPago, forma_pagamento: payForma };
+          const updateData: any = {
+            valor_pago: novoValorPago,
+            forma_pagamento: payForma,
+            paid_at: new Date().toISOString(),
+          };
           if (novoStatus) updateData.status = novoStatus;
 
           const { error: err1 } = await supabase.from("agendamentos").update(updateData).eq("id", fatura.id);

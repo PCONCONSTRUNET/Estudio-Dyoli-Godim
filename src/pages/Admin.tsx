@@ -686,7 +686,10 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     const pagoAnterior = Number(a.valor_pago || 0);
     const totalAgora = Math.min(valorTotal, pagoAnterior + valorDigitado);
 
-    await (supabase as any).from("agendamentos").update({ valor_pago: totalAgora }).eq("id", a.id);
+    await (supabase as any).from("agendamentos").update({
+      valor_pago: totalAgora,
+      paid_at: new Date().toISOString(),
+    }).eq("id", a.id);
     setAgendamentos((prev) => prev.map((item) => (item.id === a.id ? { ...item, valor_pago: totalAgora } : item)));
     setPagamentoAg(null);
     setPagamentoInput("");
@@ -720,6 +723,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         }
       }
 
+      const paymentChanged = finalValorPago !== Number(editingAg.valor_pago || 0);
       const { error } = await supabase.from("agendamentos").update({
         data_agendamento: editAgData,
         horario: editAgHorario,
@@ -727,7 +731,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         valor: finalValor,
         valor_pago: finalValorPago,
         duracao_minutos: editAgDuracao,
-        forma_pagamento: newForma
+        forma_pagamento: newForma,
+        ...(paymentChanged ? { paid_at: new Date().toISOString() } : {}),
       } as any).eq("id", editingAg.id);
 
       if (error) throw error;
@@ -1043,7 +1048,11 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
       newPago = Math.max(0, valor - novoDescontoCredito);
     }
 
-    await supabase.from("agendamentos").update({ valor_pago: newPago, valor_desconto_credito: novoDescontoCredito }).eq("id", id);
+    await supabase.from("agendamentos").update({
+      valor_pago: newPago,
+      valor_desconto_credito: novoDescontoCredito,
+      paid_at: new Date().toISOString(),
+    }).eq("id", id);
     setAgendamentos((prev) => prev.map((item) => (item.id === id ? { ...item, valor_pago: newPago, valor_desconto_credito: novoDescontoCredito } : item)));
   };
 
@@ -1279,12 +1288,20 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         }
       }
 
+      const valorPagoInicial = isApenasCredito
+        ? valor
+        : (manualPago
+          ? (manualValorPago
+            ? parseCurrencyStr(manualValorPago)
+            : Math.max(0, valor - (descontoAplicado > 0 ? descontoAplicado : 0)))
+          : 0);
       const { data, error } = await supabase.from("agendamentos").insert({
         servico: servicoLabel,
         data_agendamento: manualData,
         horario: manualHorario,
         valor: valor,
-        valor_pago: isApenasCredito ? valor : (manualPago ? (manualValorPago ? parseCurrencyStr(manualValorPago) : Math.max(0, valor - (descontoAplicado > 0 ? descontoAplicado : 0))) : 0),
+        valor_pago: valorPagoInicial,
+        paid_at: valorPagoInicial > 0 ? new Date().toISOString() : null,
         valor_troco: manualTroco,
         valor_gorjeta: manualGorjeta,
         valor_credito: isApenasCredito ? 0 : manualCredito,
