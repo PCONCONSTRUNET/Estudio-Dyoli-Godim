@@ -4,13 +4,17 @@ import { Calendar, Download, FileText, Table2, TrendingUp, Wallet, X, Percent, S
 import { supabase } from "@/integrations/supabase/client";
 import AnaliseCancelamentosModal from "@/components/AnaliseCancelamentosModal";
 import NovaTransacaoModal from "@/components/NovaTransacaoModal";
+import { getPaymentDate } from "@/lib/utils";
 
 interface Agendamento {
   id: string; servico: string; variacao: string | null; data_agendamento: string;
   horario: string; valor: number; valor_pago: number | null;
   valor_troco: number | null; valor_gorjeta: number | null; valor_credito: number | null;
+  valor_desconto_credito?: number | null;
   status: string;
   created_at: string; user_id: string; cliente_nome: string | null; observacao?: string | null;
+  paid_at?: string | null;
+  data_venda?: string | null;
 }
 
 interface Props {
@@ -112,16 +116,19 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
       id: v.id,
       servico: "Venda de Produtos",
       variacao: "Loja",
-      data_agendamento: v.data_venda || v.created_at?.split("T")[0],
+      data_agendamento: v.data_venda || (v.created_at ? new Date(new Date(v.created_at).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0] : "0000-00-00"),
+      data_venda: v.data_venda,
       horario: v.created_at ? `${String(new Date(v.created_at).getHours()).padStart(2, "0")}:${String(new Date(v.created_at).getMinutes()).padStart(2, "0")}` : "00:00",
       valor: Number(v.valor_total),
       valor_pago: v.pago ? Number(v.valor_total) : 0,
       valor_troco: 0,
       valor_gorjeta: 0,
       valor_credito: 0,
+      valor_desconto_credito: 0,
       status: v.pago ? "concluido" : "pendente",
       forma_pagamento: v.forma_pagamento,
       created_at: v.created_at,
+      paid_at: v.paid_at || (v.data_venda ? `${v.data_venda}T12:00:00.000Z` : v.created_at),
       user_id: v.cliente_id || "admin",
       cliente_nome: v.cliente_nome,
     }));
@@ -174,10 +181,10 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
     allAgendamentos.forEach((a) => {
       if (a.status === "cancelado" || a.status === "falta") return;
 
-      // Se for venda de produto que já foi paga, a data de faturamento é a data da venda ou created_at
+      // Se for venda de produto que já foi paga, a data de faturamento é a data real do pagamento ou da venda
       if (a.servico === "Venda de Produtos") {
         if (a.status === "concluido") {
-           list.push({ ...a, fatura_tipo: "pagamento", valor_fatura: a.valor_pago, data_fatura: a.data_agendamento });
+           list.push({ ...a, fatura_tipo: "pagamento", valor_fatura: a.valor_pago, data_fatura: getPaymentDate(a) });
         }
         return;
       }
@@ -191,7 +198,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
             ...a,
             fatura_tipo: "pagamento",
             valor_fatura: h.valor_delta,
-            data_fatura: h.created_at.split("T")[0],
+            data_fatura: getPaymentDate({ paid_at: h.created_at, data_agendamento: a.data_agendamento }),
           });
           totalPaidInHistory += h.valor_delta;
         });
@@ -204,7 +211,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
              ...a,
              fatura_tipo: "pagamento",
              valor_fatura: initialPayment,
-             data_fatura: a.data_agendamento, // Pagamento inicial fica com a data do agendamento
+             data_fatura: getPaymentDate(a), // Pagamento inicial fica com a data real da transação
            });
         }
       } else {
@@ -214,13 +221,13 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
              ...a, 
              fatura_tipo: "pagamento", 
              valor_fatura: valorPago, 
-             data_fatura: a.data_agendamento
+             data_fatura: getPaymentDate(a) // Data real da transação (paid_at || created_at)
            });
         }
       }
       
       if (Number(a.valor_gorjeta) > 0) {
-        list.push({ ...a, fatura_tipo: "pagamento", valor_fatura: Number(a.valor_gorjeta), data_fatura: a.data_agendamento, is_gorjeta: true });
+        list.push({ ...a, fatura_tipo: "pagamento", valor_fatura: Number(a.valor_gorjeta), data_fatura: getPaymentDate(a), is_gorjeta: true });
       }
     });
     return list;

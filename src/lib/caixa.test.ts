@@ -7,6 +7,8 @@ import {
   normalizePaymentMethod,
   sumMovementsForPeriod,
 } from "./caixa";
+import { getPaymentDate } from "./utils";
+
 
 const movement = (
   id: string,
@@ -75,3 +77,42 @@ describe("caixa por data real de pagamento", () => {
     expect(normalizePaymentMethod("dinheiro")).toBe("dinheiro");
   });
 });
+
+describe("getPaymentDate - resolução da data real de pagamento", () => {
+  it("prioriza paid_at quando presente e ajusta timezone local", () => {
+    const ag = {
+      data_agendamento: "2026-09-05",
+      paid_at: "2026-08-25T15:30:00.000Z",
+      created_at: "2026-08-25T15:20:00.000Z",
+    };
+    expect(getPaymentDate(ag)).toBe("2026-08-25");
+  });
+
+  it("usa created_at quando paid_at não estiver definido", () => {
+    const ag = {
+      data_agendamento: "2026-09-05",
+      paid_at: null,
+      created_at: "2026-08-25T10:00:00.000Z",
+    };
+    expect(getPaymentDate(ag)).toBe("2026-08-25");
+  });
+
+  it("prioriza data_venda para vendas de produtos", () => {
+    const venda = {
+      data_agendamento: "2026-09-01",
+      data_venda: "2026-08-20",
+      created_at: "2026-08-25T10:00:00.000Z",
+    };
+    expect(getPaymentDate(venda)).toBe("2026-08-20");
+  });
+
+  it("cai em data_agendamento apenas se não houver paid_at nem created_at", () => {
+    const ag = {
+      data_agendamento: "2026-09-05",
+      paid_at: null,
+      created_at: null,
+    };
+    expect(getPaymentDate(ag)).toBe("2026-09-05");
+  });
+});
+

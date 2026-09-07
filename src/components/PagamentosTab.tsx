@@ -9,6 +9,7 @@ import {
 import pixIcon from "@/assets/pix-icon.png";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { Button } from "@/components/ui/button";
+import { getPaymentDate } from "@/lib/utils";
 
 interface Agendamento {
   id: string;
@@ -28,6 +29,8 @@ interface Agendamento {
   valor_troco?: number | null;
   valor_credito?: number | null;
   valor_desconto_credito?: number | null;
+  paid_at?: string | null;
+  data_venda?: string | null;
 }
 
 interface Props {
@@ -341,13 +344,14 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate, onEdit }: Props)
       if (hists.length > 0) {
         let totalPaidInHistory = 0;
         hists.forEach((h) => {
-          list.push({ ...a, _faturaId: `${a.id}-hist-${h.id}`, fatura_tipo: "pagamento", valor_fatura: h.valor_delta, data_fatura: h.created_at.split("T")[0], _is_partial: true, _desc_pagamento: "Fatura Paga", _historico_obs: h.observacao || "", _historico_date: h.created_at.split("T")[0] });
+          const histDate = getPaymentDate({ paid_at: h.created_at, data_agendamento: a.data_agendamento });
+          list.push({ ...a, _faturaId: `${a.id}-hist-${h.id}`, fatura_tipo: "pagamento", valor_fatura: h.valor_delta, data_fatura: histDate, _is_partial: true, _desc_pagamento: "Fatura Paga", _historico_obs: h.observacao || "", _historico_date: histDate });
           totalPaidInHistory += h.valor_delta;
         });
         const valorPagoAtual = Number(a.valor_pago || 0) + Number(a.valor_desconto_credito || 0);
         const initialPayment = valorPagoAtual - totalPaidInHistory;
         if (initialPayment > 0) {
-          list.push({ ...a, _faturaId: `${a.id}-initial`, fatura_tipo: "pagamento", valor_fatura: initialPayment, data_fatura: a.data_agendamento, _is_partial: true, _desc_pagamento: "Pagamento Inicial" });
+          list.push({ ...a, _faturaId: `${a.id}-initial`, fatura_tipo: "pagamento", valor_fatura: initialPayment, data_fatura: getPaymentDate(a), _is_partial: true, _desc_pagamento: "Pagamento Inicial" });
         }
         const efetivamentePago = Math.max(valorPagoAtual, totalPaidInHistory);
         const restante = Number(a.valor) - efetivamentePago;
@@ -359,16 +363,16 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate, onEdit }: Props)
         if (valorPago === 0) {
           if (Number(a.valor) > 0) list.push({ ...a, _faturaId: a.id, fatura_tipo: "pendente", valor_fatura: a.valor, data_fatura: a.data_agendamento });
         } else if (valorPago < a.valor) {
-          list.push({ ...a, _faturaId: `${a.id}-pago`, fatura_tipo: "pagamento", valor_fatura: valorPago, data_fatura: a.data_agendamento, _is_partial: true, _desc_pagamento: "Fatura Paga" });
+          list.push({ ...a, _faturaId: `${a.id}-pago`, fatura_tipo: "pagamento", valor_fatura: valorPago, data_fatura: getPaymentDate(a), _is_partial: true, _desc_pagamento: "Fatura Paga" });
           list.push({ ...a, _faturaId: `${a.id}-restante`, fatura_tipo: "pendente", valor_fatura: a.valor - valorPago, data_fatura: a.data_agendamento, _is_partial: true, _desc_pagamento: "Restante Pendente" });
         } else {
-          list.push({ ...a, _faturaId: a.id, fatura_tipo: "pagamento", valor_fatura: a.valor, data_fatura: a.data_agendamento });
+          list.push({ ...a, _faturaId: a.id, fatura_tipo: "pagamento", valor_fatura: a.valor, data_fatura: getPaymentDate(a) });
         }
       }
 
-      if (Number(a.valor_gorjeta) > 0) list.push({ ...a, _faturaId: `${a.id}-gorjeta`, fatura_tipo: "pagamento", valor_fatura: Number(a.valor_gorjeta), data_fatura: a.data_agendamento, _is_partial: true, _desc_pagamento: "Gorjeta (extra)", is_extra: true });
-      if (Number(a.valor_troco) > 0) list.push({ ...a, _faturaId: `${a.id}-troco`, fatura_tipo: "pagamento", valor_fatura: Number(a.valor_troco), data_fatura: a.data_agendamento, _is_partial: true, _desc_pagamento: "Troco pago", is_extra: true });
-      if (Number(a.valor_credito) > 0) list.push({ ...a, _faturaId: `${a.id}-credito`, fatura_tipo: "pagamento", valor_fatura: Number(a.valor_credito), data_fatura: a.data_agendamento, _is_partial: true, _desc_pagamento: "Crédito concedido", is_extra: true });
+      if (Number(a.valor_gorjeta) > 0) list.push({ ...a, _faturaId: `${a.id}-gorjeta`, fatura_tipo: "pagamento", valor_fatura: Number(a.valor_gorjeta), data_fatura: getPaymentDate(a), _is_partial: true, _desc_pagamento: "Gorjeta (extra)", is_extra: true });
+      if (Number(a.valor_troco) > 0) list.push({ ...a, _faturaId: `${a.id}-troco`, fatura_tipo: "pagamento", valor_fatura: Number(a.valor_troco), data_fatura: getPaymentDate(a), _is_partial: true, _desc_pagamento: "Troco pago", is_extra: true });
+      if (Number(a.valor_credito) > 0) list.push({ ...a, _faturaId: `${a.id}-credito`, fatura_tipo: "pagamento", valor_fatura: Number(a.valor_credito), data_fatura: getPaymentDate(a), _is_partial: true, _desc_pagamento: "Crédito concedido", is_extra: true });
     });
 
     despesas.forEach((d) => {
@@ -392,7 +396,7 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate, onEdit }: Props)
         id: v.id, _faturaId: `venda-${v.id}`,
         fatura_tipo: v.pago ? "pagamento" : "pendente",
         valor_fatura: v.valor_total,
-        data_fatura: v.data_venda || v.created_at?.split("T")[0],
+        data_fatura: getPaymentDate(v),
         status: v.pago ? "concluido" : "pendente",
         cliente_nome: v.cliente_nome, servico: "Venda de Produtos", variacao: "Loja",
         horario: v.created_at ? `${String(new Date(v.created_at).getHours()).padStart(2, "0")}:${String(new Date(v.created_at).getMinutes()).padStart(2, "0")}` : "00:00",
