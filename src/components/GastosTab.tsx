@@ -13,7 +13,6 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarUI } from "@/components/ui/calendar";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 interface Gasto {
@@ -73,6 +72,11 @@ const MONTHS_PT = [
   "Jul", "Ago", "Set", "Out", "Nov", "Dez",
 ];
 
+const MONTHS_FULL = [
+  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+];
+
 
 
 // ─── Componente principal ─────────────────────────────────────────────────────
@@ -87,8 +91,8 @@ const GastosTab = () => {
   const [catFilter, setCatFilter] = useState("Todas");
   const [monthOffset, setMonthOffset] = useState(0);
   const [responsavelFilter, setResponsavelFilter] = useState<"Dona" | "Zelia">("Dona");
-  const [selectedDay, setSelectedDay] = useState<string | null>(null);
-  const [visibleCount, setVisibleCount] = useState(10);
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(100);
 
   // Form
   const [descricao, setDescricao] = useState("");
@@ -103,8 +107,6 @@ const GastosTab = () => {
   const categoriaFinal = categoria === "__personalizada__"
     ? (categoriaPersonalizada.trim() || "Outros")
     : categoria;
-
-
 
   // ─── Carregar ─────────────────────────────────────────────────────────────
   useEffect(() => { loadGastos(); }, []);
@@ -126,39 +128,65 @@ const GastosTab = () => {
   const targetMonth = useMemo(() => {
     const d = new Date();
     d.setHours(12, 0, 0, 0);
+    d.setDate(1); // Garante que a transição de mês nunca vaze de dia (ex: 31 de ago -> set)
     d.setMonth(d.getMonth() + monthOffset);
     return d;
   }, [monthOffset]);
 
   const gastosFiltrados = useMemo(() => {
+    const targetY = targetMonth.getFullYear();
+    const targetM = targetMonth.getMonth() + 1;
+
     return gastos.filter(g => {
       if (g.responsavel !== responsavelFilter) return false;
       if (catFilter !== "Todas" && g.categoria !== catFilter) return false;
       
-      if (selectedDay) {
-        if (g.data_gasto !== selectedDay) return false;
-      } else {
-        const gastoDate = new Date(g.data_gasto + "T12:00:00");
-        if (gastoDate.getMonth() !== targetMonth.getMonth() || gastoDate.getFullYear() !== targetMonth.getFullYear()) return false;
-      }
+      const [yStr, mStr] = (g.data_gasto || "").split("-");
+      if (Number(yStr) !== targetY || Number(mStr) !== targetM) return false;
       
       return true;
     });
-  }, [gastos, catFilter, responsavelFilter, targetMonth, selectedDay]);
+  }, [gastos, catFilter, responsavelFilter, targetMonth]);
 
-  const daysWithRecords = useMemo(() => {
-    return gastos
-      .filter(g => {
-        if (g.responsavel !== responsavelFilter) return false;
-        if (catFilter !== "Todas" && g.categoria !== catFilter) return false;
-        return true;
-      })
-      .map(g => new Date(g.data_gasto + "T12:00:00"));
-  }, [gastos, responsavelFilter, catFilter]);
+  // Agrupamento detalhado por dia
+  const gastosPorDia = useMemo(() => {
+    const map = new Map<string, Gasto[]>();
+
+    // Ordena do dia mais recente para o mais antigo, e por horário de criação
+    const sorted = [...gastosFiltrados].sort((a, b) => {
+      const dateCmp = b.data_gasto.localeCompare(a.data_gasto);
+      if (dateCmp !== 0) return dateCmp;
+      return (b.created_at || "").localeCompare(a.created_at || "");
+    });
+
+    sorted.forEach(g => {
+      const list = map.get(g.data_gasto) || [];
+      list.push(g);
+      map.set(g.data_gasto, list);
+    });
+
+    const now = new Date();
+    const todayISO = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split("T")[0];
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayISO = new Date(yesterday.getTime() - yesterday.getTimezoneOffset() * 60000).toISOString().split("T")[0];
+
+    const groups: { data: string; label: string; totalDia: number; itens: Gasto[] }[] = [];
+
+    map.forEach((itens, data) => {
+      const totalDia = itens.reduce((s, it) => s + Number(it.valor), 0);
+      let label = formatDate(data);
+      if (data === todayISO) label = `Hoje · ${label}`;
+      else if (data === yesterdayISO) label = `Ontem · ${label}`;
+
+      groups.push({ data, label, totalDia, itens });
+    });
+
+    return groups;
+  }, [gastosFiltrados]);
 
   useEffect(() => {
-    setVisibleCount(10);
-    setSelectedDay(null);
+    setVisibleCount(100);
   }, [monthOffset, catFilter, responsavelFilter]);
 
   const totalGeral = useMemo(() => gastos.filter(g => g.responsavel === responsavelFilter).reduce((s, g) => s + Number(g.valor), 0), [gastos, responsavelFilter]);
@@ -307,8 +335,8 @@ const GastosTab = () => {
             <p className="font-heading text-[17px] font-bold text-gold tabular-nums leading-tight">
               {formatCurrency(totalFiltrado)}
             </p>
-            <p className="font-body text-[10px] font-medium text-white/50 uppercase tracking-wider mt-1">
-              Período Selecionado
+            <p className="font-body text-[10px] font-medium text-white/50 uppercase tracking-wider mt-1 truncate">
+              Total em {MONTHS_PT[targetMonth.getMonth()]}/{targetMonth.getFullYear()}
             </p>
           </div>
         </div>
@@ -336,40 +364,73 @@ const GastosTab = () => {
         <button
           onClick={() => setMonthOffset(o => o - 1)}
           className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/[0.03] hover:bg-white/[0.08] transition-colors border border-white/5"
+          title="Mês anterior"
         >
           <ChevronLeft className="w-5 h-5 text-white/70" />
         </button>
         
         <div className="text-center">
-          <div className="flex items-center justify-center gap-1.5">
-            <p className="font-heading text-[15px] font-semibold text-white capitalize">
-              {selectedDay ? formatDate(selectedDay) : `${MONTHS_PT[targetMonth.getMonth()]} ${targetMonth.getFullYear()}`}
+          <div className="flex items-center justify-center gap-2">
+            <p className="font-heading text-[16px] font-semibold text-white capitalize">
+              {MONTHS_FULL[targetMonth.getMonth()]} de {targetMonth.getFullYear()}
             </p>
-            <Popover>
+            <Popover open={monthPickerOpen} onOpenChange={setMonthPickerOpen}>
               <PopoverTrigger asChild>
-                <button className="flex items-center justify-center w-6 h-6 rounded-md bg-white/[0.05] hover:bg-white/[0.1] border border-white/5 transition-colors cursor-pointer" title="Filtrar por dia específico">
-                  <Calendar className="w-3.5 h-3.5 text-white/60" />
+                <button
+                  className="flex items-center justify-center w-7 h-7 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] border border-white/5 transition-colors cursor-pointer"
+                  title="Selecionar mês"
+                >
+                  <Calendar className="w-3.5 h-3.5 text-gold" />
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 border border-white/10 bg-[#1c1c1e] shadow-2xl rounded-[16px] text-white" align="center">
-                <CalendarUI
-                  mode="single"
-                  selected={selectedDay ? new Date(selectedDay + "T12:00:00") : undefined}
-                  onSelect={(date) => setSelectedDay(date ? date.toISOString().split("T")[0] : null)}
-                  defaultMonth={targetMonth}
-                  modifiers={{ hasRecord: daysWithRecords }}
-                  modifiersClassNames={{ hasRecord: "relative after:absolute after:bottom-[3px] after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-orange-500 after:rounded-full" }}
-                  className="bg-[#1c1c1e] text-white rounded-[16px]"
-                />
+              <PopoverContent className="w-64 p-3 border border-white/10 bg-[#1c1c1e] shadow-2xl rounded-[20px] text-white" align="center">
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <button
+                    onClick={() => setMonthOffset(o => o - 12)}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-white/70 transition-colors"
+                    title="Ano anterior"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <span className="font-heading text-[13px] font-bold text-white">
+                    {targetMonth.getFullYear()}
+                  </span>
+                  <button
+                    onClick={() => setMonthOffset(o => o + 12)}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-white/70 transition-colors"
+                    title="Próximo ano"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {MONTHS_PT.map((m, idx) => {
+                    const isSelected = targetMonth.getMonth() === idx;
+                    return (
+                      <button
+                        key={m}
+                        onClick={() => {
+                          const now = new Date();
+                          const diff = (targetMonth.getFullYear() - now.getFullYear()) * 12 + (idx - now.getMonth());
+                          setMonthOffset(diff);
+                          setMonthPickerOpen(false);
+                        }}
+                        className={`py-2 rounded-xl font-body text-[12px] font-medium transition-all ${
+                          isSelected
+                            ? "bg-gold text-charcoal font-bold shadow-md"
+                            : "bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:text-white"
+                        }`}
+                      >
+                        {m}
+                      </button>
+                    );
+                  })}
+                </div>
               </PopoverContent>
             </Popover>
           </div>
-          <p className="font-body text-[10px] text-white/50 uppercase tracking-widest mt-1">
-            {selectedDay ? (
-               <button onClick={() => setSelectedDay(null)} className="text-orange-400 font-bold hover:underline">Limpar Filtro de Dia</button>
-            ) : (
-               <span>{monthOffset === 0 ? "Mês Atual" : monthOffset < 0 ? `${Math.abs(monthOffset)} mês(es) atrás` : `Mês Futuro`}</span>
-            )}
+          <p className="font-body text-[10px] text-white/50 uppercase tracking-widest mt-0.5">
+            {monthOffset === 0 ? "Mês Atual" : monthOffset < 0 ? `${Math.abs(monthOffset)} mês(es) atrás` : `Mês Futuro`}
           </p>
         </div>
 
@@ -379,12 +440,13 @@ const GastosTab = () => {
               onClick={() => setMonthOffset(0)}
               className="px-3 py-1.5 rounded-xl bg-orange-500/15 text-orange-400 font-body text-[10px] font-bold uppercase tracking-wider hover:bg-orange-500/25 transition-all border border-orange-500/20"
             >
-              Hoje
+              Mês Atual
             </button>
           )}
           <button
             onClick={() => setMonthOffset(o => o + 1)}
             className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/[0.03] hover:bg-white/[0.08] transition-colors border border-white/5"
+            title="Próximo mês"
           >
             <ChevronRight className="w-5 h-5 text-white/70" />
           </button>
@@ -464,97 +526,130 @@ const GastosTab = () => {
         </div>
       )}
 
-      {/* ── Lista de Gastos ── */}
+      {/* ── Lista de Gastos Agrupados por Dia ── */}
       <div>
-        <p className="font-body text-[10px] uppercase tracking-widest text-white/50 mb-3 px-0.5">
-          Registros ({gastosFiltrados.length})
-        </p>
+        <div className="flex items-center justify-between mb-3 px-0.5">
+          <p className="font-body text-[10px] uppercase tracking-widest text-white/50">
+            Gastos do Mês ({gastosFiltrados.length} {gastosFiltrados.length === 1 ? "registro" : "registros"})
+          </p>
+          {gastosFiltrados.length > 0 && (
+            <span className="font-heading text-[12px] font-bold text-gold tabular-nums">
+              Total: {formatCurrency(totalFiltrado)}
+            </span>
+          )}
+        </div>
 
         {gastosFiltrados.length === 0 ? (
-          <div className="py-10 text-center rounded-[20px] border border-white/5 bg-[#1c1c1e]">
-            <p className="font-body text-[13px] text-white/50">Nenhum gasto encontrado</p>
+          <div className="py-12 text-center rounded-[20px] border border-white/5 bg-[#1c1c1e]">
+            <ShoppingCart className="w-8 h-8 text-white/20 mx-auto mb-2" />
+            <p className="font-body text-[13px] text-white/50 font-medium">
+              Nenhum gasto registrado em {MONTHS_FULL[targetMonth.getMonth()]} de {targetMonth.getFullYear()}
+            </p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {gastosFiltrados.slice(0, visibleCount).map(g => (
-              <div
-                key={g.id}
-                className="group flex items-center gap-3.5 px-4 py-3 rounded-[20px] border border-white/5 bg-[#1c1c1e] hover:bg-[#2c2c2e] hover:border-white/10 transition-all"
-              >
-                {/* Ícone redondo estilo app bancário */}
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                  style={{
-                    backgroundColor: `${CATEGORIA_COLORS[g.categoria] ?? "#94a3b8"}20`,
-                  }}
-                >
-                  <Tag
-                    className="w-4.5 h-4.5"
-                    style={{ color: CATEGORIA_COLORS[g.categoria] ?? "#94a3b8" }}
-                  />
-                </div>
-
-                {/* Conteúdo central */}
-                <div className="flex-1 min-w-0">
-                  <p className="font-body text-[14px] font-semibold text-white leading-snug truncate">
-                    {g.descricao}
-                  </p>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span
-                      className="text-[10px] font-medium font-body"
-                      style={{ color: CATEGORIA_COLORS[g.categoria] ?? "#94a3b8" }}
-                    >
-                      {g.categoria}
+          <div className="space-y-4">
+            {gastosPorDia.map((grupo) => (
+              <div key={grupo.data} className="space-y-2">
+                {/* Header do dia detalhado */}
+                <div className="flex items-center justify-between px-2 pt-1">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-3.5 h-3.5 text-gold/70" />
+                    <span className="font-body text-[12px] font-semibold text-white/90">
+                      {grupo.label}
                     </span>
-                    <span className="text-white/20 text-[10px]">·</span>
-                    <span className="text-[11px] font-body font-medium text-white/70">
-                      {formatDate(g.data_gasto)} às {formatTime(g.created_at)}
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.06] text-white/50 font-body font-medium">
+                      {grupo.itens.length} {grupo.itens.length === 1 ? "gasto" : "gastos"}
                     </span>
                   </div>
-                  {g.observacao && (
-                    <p className="text-[11px] font-body text-white/40 mt-0.5 truncate">{g.observacao}</p>
-                  )}
+                  <span className="font-heading text-[13px] font-bold text-orange-400 tabular-nums">
+                    {formatCurrency(grupo.totalDia)}
+                  </span>
                 </div>
 
-                {/* Valor + ações */}
-                <div className="flex flex-col items-end gap-1.5 shrink-0">
-                  <p className="font-heading text-[15px] font-bold text-orange-400 tabular-nums">
-                    − {formatCurrency(Number(g.valor))}
-                  </p>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => handleEdit(g)}
-                      className="flex h-6 w-6 items-center justify-center rounded-full text-white/40 hover:text-white/80 transition-colors"
-                      title="Editar"
+                {/* Itens do dia */}
+                <div className="space-y-2">
+                  {grupo.itens.map((g) => (
+                    <div
+                      key={g.id}
+                      className="group flex items-center gap-3.5 px-4 py-3 rounded-[20px] border border-white/5 bg-[#1c1c1e] hover:bg-[#2c2c2e] hover:border-white/10 transition-all"
                     >
-                      <Pencil className="h-3 w-3" />
-                    </button>
-                    <BinButton size="sm" onClick={() => handleDelete(g.id)} />
-                  </div>
+                      {/* Ícone redondo */}
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                        style={{
+                          backgroundColor: `${CATEGORIA_COLORS[g.categoria] ?? "#94a3b8"}20`,
+                        }}
+                      >
+                        <Tag
+                          className="w-4.5 h-4.5"
+                          style={{ color: CATEGORIA_COLORS[g.categoria] ?? "#94a3b8" }}
+                        />
+                      </div>
+
+                      {/* Conteúdo central */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-body text-[14px] font-semibold text-white leading-snug truncate">
+                          {g.descricao}
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span
+                            className="text-[10px] font-medium font-body"
+                            style={{ color: CATEGORIA_COLORS[g.categoria] ?? "#94a3b8" }}
+                          >
+                            {g.categoria}
+                          </span>
+                          <span className="text-white/20 text-[10px]">·</span>
+                          <span className="text-[11px] font-body font-medium text-white/60">
+                            {formatTime(g.created_at || g.data_gasto)}
+                          </span>
+                        </div>
+                        {g.observacao && (
+                          <p className="text-[11px] font-body text-white/40 mt-0.5 truncate">{g.observacao}</p>
+                        )}
+                      </div>
+
+                      {/* Valor + ações */}
+                      <div className="flex flex-col items-end gap-1.5 shrink-0">
+                        <p className="font-heading text-[15px] font-bold text-orange-400 tabular-nums">
+                          − {formatCurrency(Number(g.valor))}
+                        </p>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => handleEdit(g)}
+                            className="flex h-6 w-6 items-center justify-center rounded-full text-white/40 hover:text-white/80 transition-colors"
+                            title="Editar"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </button>
+                          <BinButton size="sm" onClick={() => handleDelete(g.id)} />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
-            {visibleCount < gastosFiltrados.length && (
-              <button
-                onClick={() => setVisibleCount(prev => prev + 10)}
-                className="w-full mt-2 py-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] text-white/50 hover:text-white/80 font-body text-[11px] uppercase tracking-widest font-semibold transition-all"
-              >
-                Carregar mais ({gastosFiltrados.length - visibleCount} restantes)
-              </button>
-            )}
           </div>
         )}
       </div>
 
-      {/* ── Resumo total filtrado ── */}
+      {/* ── Resumo total do mês ── */}
       {gastosFiltrados.length > 0 && (
         <div className="rounded-[20px] border border-white/5 bg-[#1c1c1e] p-4 mt-4 flex items-center justify-between">
           <div>
             <p className="font-body text-[11px] text-white/50 uppercase tracking-wider">
-              Total listado
+              Total gasto em {MONTHS_FULL[targetMonth.getMonth()]}
             </p>
-            <p className="font-heading text-[20px] font-bold text-white mt-0.5">
+            <p className="font-heading text-[20px] font-bold text-orange-400 mt-0.5">
               {formatCurrency(totalFiltrado)}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="font-body text-[11px] text-white/50 uppercase tracking-wider">
+              Total de registros
+            </p>
+            <p className="font-heading text-[18px] font-bold text-white mt-0.5">
+              {gastosFiltrados.length}
             </p>
           </div>
         </div>
