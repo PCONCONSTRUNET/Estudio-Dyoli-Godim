@@ -149,7 +149,21 @@ export const notifyLembreteById = async (agendamentoId: string, tipo: LembreteTi
       .select("nome, whatsapp")
       .eq("id", ag.user_id)
       .maybeSingle();
-    const numero = prof?.whatsapp || "";
+    let numero = prof?.whatsapp || "";
+    let nome = ag.cliente_nome || prof?.nome || "";
+
+    if (!numero && ag.user_id) {
+      const { data: cli } = await supabase
+        .from("clientes")
+        .select("nome, telefone")
+        .eq("id", ag.user_id)
+        .maybeSingle();
+      if (cli?.telefone) {
+        numero = cli.telefone;
+        if (!nome) nome = cli.nome || "";
+      }
+    }
+
     if (!numero) return;
     await notifyLembrete(tipo, {
       numero,

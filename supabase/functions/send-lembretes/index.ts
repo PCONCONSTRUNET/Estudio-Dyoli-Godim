@@ -1,6 +1,6 @@
-// Envia lembretes pré-atendimento (X horas antes) via webhook do WhatsApp.
+﻿// Envia lembretes pré-atendimento (X horas antes) via webhook do WhatsApp.
 // - Lê configuracoes_lembretes WHERE tipo='lembrete' AND ativo=true
-// - Busca agendamentos confirmados com origem='app' que caem na janela
+// - Busca agendamentos confirmados que caem na janela
 //   [horas_antes, horas_antes + 15min] a partir de agora (Brasília)
 // - Envia o webhook e marca o agendamento para não reenviar (usando
 //   horarios_bloqueados como flag idempotente — motivo='lembrete-enviado:<id>').
@@ -14,7 +14,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const WEBHOOK_URL = "http://178.105.54.230:3001/webhook/notificacao";
+const WEBHOOK_URL = "http://217.76.50.145:3001/webhook/notificacao";
 const WEBHOOK_TOKEN = "dyoli123";
 
 const fallbackTemplate =
@@ -87,11 +87,6 @@ Deno.serve(async (req) => {
     const template = (cfg.mensagem && cfg.mensagem.trim()) || fallbackTemplate;
 
     // 2) Janela: do "agora" até "agora + horasAntes".
-    // Qualquer agendamento confirmado nessa janela é elegível para lembrete.
-    // Isso cobre dois casos:
-    //   a) agendamento marcado pra daqui a 24h → entra na janela quando faltarem ≤24h
-    //   b) agendamento criado em cima da hora (ex: pra daqui a 2h) → entra na próxima
-    //      execução do cron (≤10 min depois) e o lembrete dispara quase imediatamente.
     const agora = nowBrasilia();
     const limite = new Date(agora.getTime() + horasAntes * 60 * 60 * 1000);
 
@@ -107,12 +102,11 @@ Deno.serve(async (req) => {
       return dt >= agora && dt <= limite;
     };
 
-    // 3) Busca agendamentos elegíveis (somente origem='app')
+    // 3) Busca agendamentos elegíveis (app e manual)
     const { data: ags, error } = await supabase
       .from("agendamentos")
       .select("id, user_id, cliente_nome, data_agendamento, horario, servico, valor, status, origem")
       .eq("status", "confirmado")
-      .eq("origem", "app")
       .in("data_agendamento", Array.from(datesToCheck));
 
     if (error) throw error;
@@ -141,17 +135,39 @@ Deno.serve(async (req) => {
     const erros: string[] = [];
 
     for (const a of pendentes) {
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("nome, whatsapp")
-        .eq("id", a.user_id)
-        .maybeSingle();
+      let numero = "";
+      let nomeFinal = a.cliente_nome || "";
 
-      const numero = prof?.whatsapp || "";
+      if (a.user_id) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("nome, whatsapp")
+          .eq("id", a.user_id)
+          .maybeSingle();
+
+        if (prof?.whatsapp) {
+          numero = prof.whatsapp.replace(/\D/g, "");
+          if (!nomeFinal) nomeFinal = prof.nome || "";
+        }
+
+        if (!numero) {
+          const { data: cli } = await supabase
+            .from("clientes")
+            .select("nome, telefone")
+            .eq("id", a.user_id)
+            .maybeSingle();
+
+          if (cli?.telefone) {
+            numero = cli.telefone.replace(/\D/g, "");
+            if (!nomeFinal) nomeFinal = cli.nome || "";
+          }
+        }
+      }
+
       if (!numero) continue;
 
       const mensagem = interpolate(template, {
-        nome: a.cliente_nome || prof?.nome || "",
+        nome: nomeFinal,
         data: a.data_agendamento,
         horario: a.horario,
         servico: a.servico || undefined,

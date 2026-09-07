@@ -18,7 +18,8 @@ export function useAdminNotifications(
   enabled: boolean,
   onNewAgendamento?: (agendamento: Agendamento) => void,
   onAgendamentoChange?: () => void,
-  onAgendamentoUpdate?: (updated: Agendamento) => void
+  onAgendamentoUpdate?: (updated: Agendamento) => void,
+  onAgendamentoDelete?: (id: string) => void
 ) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
     const stored = localStorage.getItem("admin-notifications");
@@ -35,6 +36,8 @@ export function useAdminNotifications(
   useEffect(() => { onChangeRef.current = onAgendamentoChange; }, [onAgendamentoChange]);
   const onUpdateRef = useRef(onAgendamentoUpdate);
   useEffect(() => { onUpdateRef.current = onAgendamentoUpdate; }, [onAgendamentoUpdate]);
+  const onDeleteRef = useRef(onAgendamentoDelete);
+  useEffect(() => { onDeleteRef.current = onAgendamentoDelete; }, [onAgendamentoDelete]);
 
   const toggleNotifications = useCallback((val: boolean) => {
     setNotificationsEnabled(val);
@@ -124,8 +127,14 @@ export function useAdminNotifications(
         { event: "DELETE", schema: "public", table: "agendamentos" },
         (payload) => {
           const oldRecord = payload.old as Partial<Agendamento>;
-          if (oldRecord?.id) knownIdsRef.current.delete(oldRecord.id);
-          // DELETE requer reload pois precisamos remover do array
+          if (oldRecord?.id) {
+            knownIdsRef.current.delete(oldRecord.id);
+            if (onDeleteRef.current) {
+              onDeleteRef.current(oldRecord.id);
+              return;
+            }
+          }
+          // Fallback caso não tenha handler pontual
           onChangeRef.current?.();
         }
       )

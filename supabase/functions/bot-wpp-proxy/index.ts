@@ -1,6 +1,6 @@
 // Proxy HTTPS -> HTTP para o robô WhatsApp na VPS fixa.
 // Necessário porque o frontend roda em HTTPS e o navegador bloqueia
-// chamadas diretas a http://178.105.54.230:3001 (Mixed Content).
+// chamadas diretas a http://217.76.50.145:3001 (Mixed Content).
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,7 +8,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
-const BOT_BASE_URL = "http://178.105.54.230:3001";
+const BOT_BASE_URL = "http://217.76.50.145:3001";
 
 // Rotas permitidas no proxy (whitelist por segurança)
 const ALLOWED_PATHS = new Set([

@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const WEBHOOK_URL = "http://178.105.54.230:3001/webhook/notificacao";
+const WEBHOOK_URL = "http://217.76.50.145:3001/webhook/notificacao";
 const WEBHOOK_TOKEN = "dyoli123";
 const SITE_URL = Deno.env.get("PUBLIC_SITE_URL") || "https://www.estudiodyoligodim.com.br";
 

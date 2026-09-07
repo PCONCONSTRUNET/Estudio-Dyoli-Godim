@@ -282,14 +282,14 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate, onEdit }: Props)
           .order("data_agendamento", { ascending: false })
           .limit(200);
         if (matchedAgs) currentAgendamentos = matchedAgs as any[];
-      } else {
-        // Sem pesquisa: busca frescos do banco para garantir valor_pago atualizado
+      } else if (!currentAgendamentos || currentAgendamentos.length === 0) {
+        // Fallback rápido apenas se o componente pai ainda não carregou os agendamentos
         const { data: freshAgs } = await supabase
           .from("agendamentos")
           .select("*")
           .neq("status", "aguardando_pagamento")
           .order("data_agendamento", { ascending: false })
-          .limit(1500);
+          .limit(500);
         if (freshAgs) currentAgendamentos = freshAgs as any[];
       }
 
@@ -302,29 +302,30 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate, onEdit }: Props)
         return true;
       });
 
-      const ids = currentAgendamentos.map((a) => a.id);
-      if (ids.length === 0) { setHistorico([]); setLocalAgendamentos([]); return; }
-
-      const chunkSize = 200;
-      const chunks: string[][] = [];
-      for (let i = 0; i < ids.length; i += chunkSize) chunks.push(ids.slice(i, i + chunkSize));
-
-      const results = await Promise.all(
-        chunks.map((chunk) => supabase.from("pagamento_historico").select("*").in("agendamento_id", chunk))
-      );
+      // Busca o histórico diretamente com limite ordenado por created_at (usa índice idx_pagamento_historico_created_at_desc)
+      // Substitui as rajadas de N requisições paralelas concorrentes por uma única consulta leve
+      const { data: histData } = await supabase
+        .from("pagamento_historico")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(1000);
 
       if (isCancelled) return;
 
-      let allData: any[] = [];
-      results.forEach(({ data }) => { if (data) allData = [...allData, ...data]; });
-
-      setHistorico(allData);
+      setHistorico(histData || []);
       setLocalAgendamentos(currentAgendamentos);
     };
 
     fetchHistoricoEDespesas();
     return () => { isCancelled = true; };
   }, [debouncedSearch, despesasLimit, vendasLimit, refetchKey]);
+
+  // Sincroniza localAgendamentos instantaneamente quando o Admin atualizar agendamentos via Realtime
+  useEffect(() => {
+    if (!debouncedSearch.trim() && agendamentos && agendamentos.length > 0) {
+      setLocalAgendamentos(agendamentos);
+    }
+  }, [agendamentos, debouncedSearch]);
 
   const faturas = useMemo(() => {
     const list: any[] = [];

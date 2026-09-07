@@ -817,14 +817,13 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   }, []);
 
   const handleAgendamentoChange = useCallback(() => {
-    // Reload completo — usado apenas em DELETEs onde o item precisa ser removido
-    // Limite 1500 para não sobrecarregar o plano Nano
+    // Reload completo como fallback de segurança
     supabase
       .from("agendamentos")
       .select("*")
       .neq("status", "aguardando_pagamento")
       .order("data_agendamento", { ascending: false })
-      .limit(1500)
+      .limit(1000)
       .then(({ data }) => {
         if (data) setAgendamentos(data as Agendamento[]);
       });
@@ -838,15 +837,26 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     );
   }, []);
 
+  // Remoção pontual via realtime — zero queries ao banco
+  // Chamado em todo DELETE de agendamento, eliminando o reload massivo de 1500 registros
+  const handleAgendamentoPontualDelete = useCallback((deletedId: string) => {
+    setAgendamentos((prev) => prev.filter((a) => a.id !== deletedId));
+  }, []);
+
   const {
     notificationsEnabled,
     toggleNotifications,
-  } = useAdminNotifications(true, handleNewAgendamento, handleAgendamentoChange, handleAgendamentoPontualUpdate);
+  } = useAdminNotifications(
+    true,
+    handleNewAgendamento,
+    handleAgendamentoChange,
+    handleAgendamentoPontualUpdate,
+    handleAgendamentoPontualDelete
+  );
 
   useEffect(() => {
     loadData();
   }, []);
-
   // Desbloqueia o áudio de notificação no primeiro toque/clique (iOS/Safari)
   useEffect(() => {
     const unlock = () => {

@@ -75,7 +75,7 @@ const DividasTab = () => {
  if (profilesRes.data) setProfiles(profilesRes.data);
 
  // Limpar agendamentos órfãos de dívidas excluídas
- await cleanupOrphanedDividaPayments(dividasRes.data || []);
+ // await cleanupOrphanedDividaPayments(dividasRes.data || []); // Desativado no mount para evitar cascata de deletes
  } catch (error) {
  console.error(error);
  toast.error("Erro ao carregar dados.");
