@@ -282,3 +282,4 @@ async function handleMercadoPago(
     status: 400,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
