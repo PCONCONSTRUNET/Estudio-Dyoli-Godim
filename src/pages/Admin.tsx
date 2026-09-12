@@ -1015,7 +1015,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     const map: Record<string, string> = {
       pix: "PIX",
       pix_mp: "PIX (online)",
-      pix_woovi: "PIX (online)",
+
       cartao: "Cartão",
       boleto: "Boleto",
       dinheiro: "Dinheiro",

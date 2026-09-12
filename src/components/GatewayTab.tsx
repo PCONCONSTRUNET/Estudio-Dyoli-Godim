@@ -56,27 +56,8 @@ const GATEWAYS: GatewayMeta[] = [
     supportsCartao: true,
     supportsBoleto: true,
   },
-  {
-    key: "woovi",
-    label: "Woovi (OpenPix)",
-    color: "#03d69d",
-    icon: PixIcon,
-    tokenPlaceholder: "Q2xpZW50X0lk...",
-    publicKeyPlaceholder: "(opcional)",
-    publicKeyLabel: "App ID",
-    helpSteps: [
-      'Acesse app.woovi.com e faça login',
-      'Vá em API/Plugins → Criar nova API',
-      'Copie o App ID e o Token de acesso',
-      'Cole a URL do Webhook nas configurações da API',
-      'Ative o gateway — Woovi suporta apenas PIX',
-    ],
-    helpLink: "https://app.woovi.com",
-    helpLinkLabel: "Abrir painel Woovi",
-    supportsCartao: false,
-    supportsBoleto: false,
-  },
 ];
+
 
 const GatewayTab = () => {
   const [configs, setConfigs] = useState<Record<string, GatewayConfig>>({});
@@ -84,7 +65,7 @@ const GatewayTab = () => {
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [showToken, setShowToken] = useState<Record<string, boolean>>({});
   const [copied, setCopied] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({ mercadopago: true, woovi: true });
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({ mercadopago: true });
 
   // Form state per gateway
   const [forms, setForms] = useState<Record<string, {
@@ -105,7 +86,7 @@ const GatewayTab = () => {
       for (const d of data as GatewayConfig[]) {
         // Auto-generate webhook URL if empty or not public HTTPS
         if (!d.webhook_url || !d.webhook_url.startsWith("https://")) {
-          const webhookFn = d.gateway === "mercadopago" ? "mercadopago-webhook" : "woovi-webhook";
+        const webhookFn = "mercadopago-webhook";
           const generatedUrl = `${supabaseUrl}/functions/v1/${webhookFn}`;
           await (supabase.from as any)("gateway_configs")
             .update({ webhook_url: generatedUrl })

@@ -57,24 +57,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check Woovi charge status
-    if (gateway === "woovi" && agendamento_id) {
-      const res = await fetch(`https://api.openpix.com.br/api/v1/charge/${agendamento_id}`, {
-        headers: { Authorization: config.access_token },
-      });
-      const data = await res.json();
 
-      const charge = data.charge;
-      return new Response(JSON.stringify({
-        status: charge?.status,
-        correlation_id: charge?.correlationID,
-        paid: charge?.status === "COMPLETED",
-        amount: charge?.value ? charge.value / 100 : 0,
-      }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
     return new Response(JSON.stringify({ error: "Gateway não suportado" }), {
       status: 400,

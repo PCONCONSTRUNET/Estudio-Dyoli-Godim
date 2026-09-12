@@ -72,13 +72,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (activeGateway.gateway === "woovi") {
-      return await handleWoovi(activeGateway, {
-        amount, description, agendamento_id,
-        customer_name, customer_cpf,
-      });
-    }
-
     return new Response(JSON.stringify({ gateway: "local", method: "pix" }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -289,76 +282,3 @@ async function handleMercadoPago(
     status: 400,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
-}
-
-// ─── Woovi (OpenPix) ─────────────────────────────────────────────────────────
-
-async function handleWoovi(
-  config: any,
-  params: { amount: number; description: string; agendamento_id: string; customer_name?: string; customer_cpf?: string }
-) {
-  const { amount, description, agendamento_id, customer_name, customer_cpf } = params;
-  const token = config.access_token;
-
-  if (!token) {
-    return new Response(JSON.stringify({ error: "Token da Woovi não configurado" }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
-  try {
-    const body: any = {
-      correlationID: agendamento_id,
-      value: Math.round(amount * 100), // Woovi uses cents
-      comment: description || "Agendamento",
-      expiresIn: 300, // 5 minutes in seconds
-    };
-
-    if (customer_name) {
-      body.customer = {
-        name: customer_name,
-        ...(customer_cpf ? { taxID: customer_cpf } : {}),
-      };
-    }
-
-    const res = await fetch("https://api.openpix.com.br/api/v1/charge", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: token,
-      },
-      body: JSON.stringify(body),
-    });
-
-    const data = await res.json();
-    console.log("Woovi response:", JSON.stringify(data));
-
-    if (data.charge) {
-      return new Response(JSON.stringify({
-        gateway: "woovi",
-        method: "pix",
-        charge_id: data.charge.identifier,
-        correlation_id: data.charge.correlationID,
-        qr_code: data.charge.brCode,
-        qr_code_image: data.charge.qrCodeImage,
-        status: data.charge.status,
-        expiration: data.charge.expiresDate,
-      }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    return new Response(JSON.stringify({ error: "Erro ao criar cobrança Woovi", details: data }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (err) {
-    console.error("Woovi API error:", err);
-    return new Response(JSON.stringify({ error: "Erro na API da Woovi" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-}
