@@ -38,7 +38,8 @@ const GuidedFlow = ({ onSelectService, onBack, onProfile }: GuidedFlowProps) => 
     load();
 
     const channel = supabase
-      .channel("servicos_app-realtime-agendar")
+      // Nome compartilhado com Agendamento.tsx — Supabase reutiliza a mesma conexão WebSocket
+      .channel("servicos_app-realtime-shared")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "servicos_app" },

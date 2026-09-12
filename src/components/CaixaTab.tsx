@@ -259,8 +259,10 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
 
     loadMovimentos();
 
+    // CRÍTICO: nome fixo evita criar nova conexão a cada mudança de período.
+    // O filtro de data é feito na query, não no canal Realtime.
     const channel = supabase
-      .channel(`caixa-movimentos-${rangeStart}-${rangeEnd}`)
+      .channel('caixa-movimentos-realtime')
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "caixa_movimentacoes" },

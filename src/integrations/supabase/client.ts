@@ -16,10 +16,23 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
   },
   realtime: {
-    // Reduz heartbeat de 25s → 45s para diminuir tráfego de keep-alive
-    heartbeatIntervalMs: 45000,
-    // Limita eventos processados por segundo (evita picos de I/O)
+    // Heartbeat reduzido ao máximo para minimizar tráfego keep-alive no NANO
+    heartbeatIntervalMs: 60000,
+    // Limita eventos processados por segundo (evita picos de I/O no NANO)
     eventsPerSecond: 2,
+    // Timeout maior para reconexão — evita loop de reconnect que abre novas conexões
+    reconnectAfterMs: (tries: number) => Math.min(tries * 2000, 30000),
+  },
+  db: {
+    // Usa o connection pooler (Supavisor) via REST para todas as queries HTTP
+    // Isso NÃO afeta o Realtime (que usa WebSocket), mas reduz conexões de queries
+    schema: 'public',
+  },
+  global: {
+    headers: {
+      // Força o uso do pooler no lado do PostgREST
+      'x-connection-encrypted': 'true',
+    },
   },
 });
 

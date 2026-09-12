@@ -109,7 +109,8 @@ const Agendamento = () => {
     };
 
     const channel = supabase
-      .channel("servicos_app-realtime-cliente")
+      // Nome compartilhado com GuidedFlow — Supabase reutiliza a mesma conexão WebSocket
+      .channel("servicos_app-realtime-shared")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "servicos_app" },
