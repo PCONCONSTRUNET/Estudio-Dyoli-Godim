@@ -230,7 +230,7 @@ Deno.serve(async (req) => {
         const [y, mo, d] = data.split("-");
         const dataFmt = `${d}/${mo}/${y}`;
         const mensagem = `✅ *Agendamento Confirmado no Estudio Dyoli Godim!* 🌸\n\nOlá ${nome}, recebemos a confirmação do seu agendamento para o dia ${dataFmt} às ${horario}. Te esperamos!`;
-        fetch("http://localhost:3000/webhook/notificacao", {
+        fetch("http://217.76.50.145:3001/webhook/notificacao", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ numero: wa, mensagem, token: "dyoli123" }),
