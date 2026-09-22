@@ -1,11 +1,11 @@
-﻿// Envia lembretes pré-atendimento (X horas antes) via webhook do WhatsApp.
-// - Lê configuracoes_lembretes WHERE tipo='lembrete' AND ativo=true
+﻿// Envia lembretes pre-atendimento (X horas antes) via webhook do WhatsApp.
+// - Le configuracoes_lembretes WHERE tipo='lembrete' AND ativo=true
 // - Busca agendamentos confirmados que caem na janela
-//   [horas_antes, horas_antes + 15min] a partir de agora (Brasília)
-// - Envia o webhook e marca o agendamento para não reenviar (usando
-//   horarios_bloqueados como flag idempotente — motivo='lembrete-enviado:<id>').
+//   [horas_antes - 30min, horas_antes + 30min] a partir de agora (Brasilia)
+// - Envia o webhook e marca o agendamento para nao reenviar (usando
+//   lembretes_enviados como flag idempotente - UNIQUE(agendamento_id)).
 //
-// Pensado para rodar a cada ~10–15 minutos via pg_cron.
+// Pensado para rodar a cada ~10-15 minutos via pg_cron.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -18,7 +18,7 @@ const WEBHOOK_URL = "http://217.76.50.145:3001/webhook/notificacao";
 const WEBHOOK_TOKEN = "dyoli123";
 
 const fallbackTemplate =
-  "⏰ Olá {nome}, lembrete: seu atendimento no Estúdio Dyoli Godim é em {data} às {horario}.";
+  "Ola {nome}, lembrete: seu atendimento no Estudio Dyoli Godim e em {data} as {horario}.";
 
 const formatDate = (iso: string) => {
   try {
@@ -54,10 +54,19 @@ const interpolate = (
   return out;
 };
 
-// Retorna a data/hora atual em Brasília (UTC-3, sem horário de verão).
+// Retorna a data/hora atual em Brasilia (UTC-3, sem horario de verao).
 const nowBrasilia = () => {
   const now = new Date();
   return new Date(now.getTime() + (-3 * 60 + now.getTimezoneOffset()) * 60000);
+};
+
+// Constroi um Date a partir de data (YYYY-MM-DD) e horario (HH:MM) tratados
+// como horario de Brasilia (UTC-3).
+const parseBrasilia = (data: string, horario: string): Date => {
+  const [y, mo, d] = data.split("-").map(Number);
+  const [h, mi] = horario.split(":").map(Number);
+  // Brasilia = UTC-3 -> adiciona 3h para converter para UTC
+  return new Date(Date.UTC(y, mo - 1, d, h + 3, mi));
 };
 
 Deno.serve(async (req) => {
@@ -69,7 +78,7 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // 1) Carrega configuração do lembrete pré-atendimento
+    // 1) Carrega configuracao do lembrete pre-atendimento
     const { data: cfg } = await supabase
       .from("configuracoes_lembretes")
       .select("ativo, mensagem, horas_antes")
@@ -78,7 +87,7 @@ Deno.serve(async (req) => {
 
     if (!cfg || cfg.ativo === false) {
       return new Response(
-        JSON.stringify({ skipped: true, reason: "lembrete desativado ou não configurado" }),
+        JSON.stringify({ skipped: true, reason: "lembrete desativado ou nao configurado" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
       );
     }
@@ -86,23 +95,26 @@ Deno.serve(async (req) => {
     const horasAntes = cfg.horas_antes ?? 24;
     const template = (cfg.mensagem && cfg.mensagem.trim()) || fallbackTemplate;
 
-    // 2) Janela: do "agora" até "agora + horasAntes".
+    // 2) Janela estreita: agendamentos que estao a exatamente ~horasAntes
+    //    de distancia (+-30 min). Evita capturar todos os agendamentos do dia.
     const agora = nowBrasilia();
-    const limite = new Date(agora.getTime() + horasAntes * 60 * 60 * 1000);
+    const MARGEM_MS = 30 * 60 * 1000; // 30 minutos
+    const alvoMs = horasAntes * 60 * 60 * 1000;
+    const limiteMin = new Date(agora.getTime() + alvoMs - MARGEM_MS);
+    const limiteMax = new Date(agora.getTime() + alvoMs + MARGEM_MS);
 
+    // Coleta as datas (YYYY-MM-DD) que podem estar na janela
     const datesToCheck = new Set<string>([
-      agora.toISOString().split("T")[0],
-      limite.toISOString().split("T")[0],
+      limiteMin.toISOString().split("T")[0],
+      limiteMax.toISOString().split("T")[0],
     ]);
 
     const inWindow = (data: string, horario: string) => {
-      const [y, mo, d] = data.split("-").map(Number);
-      const [h, mi] = horario.split(":").map(Number);
-      const dt = new Date(Date.UTC(y, mo - 1, d, h, mi));
-      return dt >= agora && dt <= limite;
+      const dt = parseBrasilia(data, horario);
+      return dt >= limiteMin && dt <= limiteMax;
     };
 
-    // 3) Busca agendamentos elegíveis (app e manual)
+    // 3) Busca agendamentos elegiveis (app e manual)
     const { data: ags, error } = await supabase
       .from("agendamentos")
       .select("id, user_id, cliente_nome, data_agendamento, horario, servico, valor, status, origem")
@@ -120,16 +132,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 4) Filtra os que ainda não receberam (flag em horarios_bloqueados)
+    // 4) Filtra os que ainda nao receberam (flag em lembretes_enviados)
     const ids = elegiveis.map((a) => a.id);
-    const motivos = ids.map((id) => `lembrete-enviado:${id}`);
     const { data: jaEnviados } = await supabase
-      .from("horarios_bloqueados")
-      .select("motivo")
-      .in("motivo", motivos);
-    const enviadosSet = new Set((jaEnviados || []).map((r) => r.motivo));
+      .from("lembretes_enviados")
+      .select("agendamento_id")
+      .in("agendamento_id", ids);
+    const enviadosSet = new Set((jaEnviados || []).map((r) => r.agendamento_id));
 
-    const pendentes = elegiveis.filter((a) => !enviadosSet.has(`lembrete-enviado:${a.id}`));
+    const pendentes = elegiveis.filter((a) => !enviadosSet.has(a.id));
 
     let enviados = 0;
     const erros: string[] = [];
@@ -175,6 +186,17 @@ Deno.serve(async (req) => {
       });
 
       try {
+        // Grava o flag de idempotencia ANTES de enviar.
+        // Se o INSERT falhar (UNIQUE - ja enviado), pula sem enviar.
+        const { error: flagError } = await supabase
+          .from("lembretes_enviados")
+          .insert({ agendamento_id: a.id });
+
+        if (flagError) {
+          // Ja enviado anteriormente (duplicate key) ou erro real - pula.
+          continue;
+        }
+
         const resp = await fetch(WEBHOOK_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -182,18 +204,22 @@ Deno.serve(async (req) => {
         });
 
         if (!resp.ok) {
+          // Falhou no envio - remove o flag para tentar de novo na proxima rodada
+          await supabase
+            .from("lembretes_enviados")
+            .delete()
+            .eq("agendamento_id", a.id);
           erros.push(`${a.id}: HTTP ${resp.status}`);
           continue;
         }
 
-        // Marca como enviado (idempotência)
-        await supabase.from("horarios_bloqueados").insert({
-          data: a.data_agendamento,
-          horario: a.horario,
-          motivo: `lembrete-enviado:${a.id}`,
-        });
         enviados += 1;
       } catch (e) {
+        // Erro inesperado - remove o flag para tentar de novo
+        await supabase
+          .from("lembretes_enviados")
+          .delete()
+          .eq("agendamento_id", a.id);
         erros.push(`${a.id}: ${(e as Error).message}`);
       }
     }
