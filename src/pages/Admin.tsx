@@ -3416,7 +3416,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
       <nav className="fixed bottom-0 inset-x-0 z-30 border-t border-primary-foreground/[0.06] bg-charcoal/95 backdrop-blur-xl lg:hidden">
         <div className="mx-auto flex w-full max-w-md items-stretch justify-around px-1 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))]">
           {tabs
-            .filter((t) => ["dashboard", "agendamentos", "pedidos", "pagamentos"].includes(t.id))
+            .filter((t) => ["dashboard", "agendamentos", "gastos", "pagamentos"].includes(t.id))
             .map((t) => {
               const active = tab === t.id;
               return (
