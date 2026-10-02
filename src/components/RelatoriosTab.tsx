@@ -150,10 +150,10 @@ export default function RelatoriosTab({ agendamentos }: RelatoriosTabProps) {
               const pctTotal = (s.total / maxTotal) * 100;
               const pctCount = (s.count / totalCount) * 100;
               return (
-                <div key={s.name} className="group/row">
-                  <div className="flex items-center justify-between gap-2 mb-2">
+                <div key={s.name} className="group/row flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="font-body text-[11px] font-bold tabular-nums w-5 text-center text-primary-foreground/60">
+                      <span className="font-body text-[11px] font-bold tabular-nums w-5 text-center text-primary-foreground/60 shrink-0">
                         {i + 1}
                       </span>
                       <span className="font-body text-[13px] font-medium text-primary-foreground/95 truncate">
@@ -169,14 +169,17 @@ export default function RelatoriosTab({ agendamentos }: RelatoriosTabProps) {
                       </span>
                     </div>
                   </div>
-                  <div className="h-1.5 w-full rounded-full bg-primary-foreground/[0.04] overflow-hidden ml-7 w-[calc(100%-1.75rem)]">
-                    <div
-                      className="h-full rounded-full transition-all duration-700 ease-out"
-                      style={{ 
-                        width: `${pctTotal}%`, 
-                        backgroundColor: COLORS[i % COLORS.length] 
-                      }}
-                    />
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 shrink-0" />
+                    <div className="h-1.5 flex-1 rounded-full bg-primary-foreground/[0.04] overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-700 ease-out"
+                        style={{ 
+                          width: `${pctTotal}%`, 
+                          backgroundColor: COLORS[i % COLORS.length] 
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               );
