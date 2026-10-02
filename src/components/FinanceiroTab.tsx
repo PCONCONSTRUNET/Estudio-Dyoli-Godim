@@ -1003,40 +1003,7 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
         )}
       </div>
 
-      {/* Bar Chart - Receita por serviço */}
-      <div className="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-rose/[0.05] via-primary-foreground/[0.02] to-transparent border border-rose/15">
-        <div className="pointer-events-none absolute -top-16 -right-16 w-44 h-44 rounded-full bg-rose/8 blur-3xl" />
-        <p className="relative font-body text-[12px] font-medium text-primary-foreground/65 uppercase tracking-[0.2em] mb-3">Por serviço</p>
-        {serviceData.length > 0 ? (
-          <div className="h-[200px] [&_.recharts-wrapper]:!bg-transparent [&_.recharts-surface]:!bg-transparent [&_svg]:!bg-transparent">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={serviceData} layout="vertical" margin={{ left: 0 }}>
-                <defs>
-                  {serviceData.map((_, i) => (
-                    <linearGradient key={i} id={`barGrad${i}`} x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor={COLORS[i % COLORS.length]} stopOpacity={0.8} />
-                      <stop offset="100%" stopColor={COLORS[i % COLORS.length]} stopOpacity={0.4} />
-                    </linearGradient>
-                  ))}
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsla(0 0% 100% / 0.04)" horizontal={false} />
-                <XAxis type="number" tick={{ fill: "hsla(0 0% 100% / 0.3)", fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis dataKey="name" type="category" tick={{ fill: "hsla(0 0% 100% / 0.5)", fontSize: 10 }} axisLine={false} tickLine={false} width={80} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsla(0 0% 100% / 0.03)' }} />
-                <Bar dataKey="value" name="Recebido" radius={[0, 8, 8, 0]} barSize={20}>
-                  {serviceData.map((_, i) => (
-                    <Cell key={i} fill={`url(#barGrad${i})`} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        ) : (
-          <div className="h-[120px] flex items-center justify-center">
-            <p className="font-body text-[12px] text-primary-foreground/85">Sem dados no período</p>
-          </div>
-        )}
-      </div>
+
 
       {/* Pie Chart - Status pagamento */}
       <div className="relative overflow-hidden p-5 rounded-2xl bg-gradient-to-br from-purple-500/[0.05] via-primary-foreground/[0.02] to-transparent border border-purple-500/15">

@@ -38,6 +38,7 @@ import ProdutosTab from "@/components/ProdutosTab";
 import PagamentosTab from "@/components/PagamentosTab";
 import AnamneseTab from "@/components/AnamneseTab";
 import AvaliacoesTab from "@/components/AvaliacoesTab";
+import RelatoriosTab from "@/components/RelatoriosTab";
 import { Star } from "lucide-react";
 import AdminDashboard from "@/components/AdminDashboard";
 import { useAdminNotifications } from "@/hooks/use-admin-notifications";
@@ -59,7 +60,7 @@ interface Agendamento {
 interface Profile { id: string; nome: string; whatsapp: string; cpf?: string | null; created_at: string; credito_saldo?: number | null; }
 interface LembreteConfig { id: string; tipo: string; ativo: boolean; mensagem: string; horas_antes: number; }
 
-type Tab = "dashboard" | "agendamentos" | "pedidos" | "clientes" | "horarios" | "servicos" | "servicos_app" | "financeiro" | "caixa" | "dividas" | "pagamentos" | "produtos" | "despesas" | "gastos" | "gateway" | "chatbot" | "anamnese" | "avaliacoes";
+type Tab = "dashboard" | "agendamentos" | "pedidos" | "clientes" | "horarios" | "servicos" | "servicos_app" | "financeiro" | "caixa" | "dividas" | "pagamentos" | "produtos" | "despesas" | "gastos" | "gateway" | "chatbot" | "anamnese" | "avaliacoes" | "relatorios";
 
 const ADMIN_PASSWORD = "dyoliadmin";
 const ADMIN_EMAIL = "dyoli@proton.me";
@@ -940,6 +941,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     { id: "financeiro", label: "Financeiro", icon: DollarSign, anim: "tab-icon-spin", color: "#10b981" },
     { id: "caixa", label: "Caixa", icon: Wallet, anim: "tab-icon-spin", color: "#14b8a6" },
     { id: "dividas", label: "Dívidas", icon: CreditCard, anim: "tab-icon-bounce", color: "#f43f5e" },
+    { id: "relatorios", label: "Relatórios", icon: FileText, anim: "tab-icon-bounce", color: "#6366f1" },
     { id: "clientes", label: "Clientes", icon: Users, anim: "tab-icon-wave", color: "#a855f7" },
     { id: "anamnese", label: "Anamnese", icon: FileText, anim: "tab-icon-bounce", color: "#ec4899" },
     { id: "avaliacoes", label: "Avaliações", icon: Star, anim: "tab-icon-bounce", color: "#fbbf24" },
@@ -3401,6 +3403,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
           {tab === "pedidos" && <PedidosTab agendamentos={agendamentos.filter(a => !(a.servico === "Adição de Crédito" || a.servico === "Entrada Manual" || (a.servico && a.servico.startsWith("Pagamento de Dívida"))))} getClientName={getClientName} clientes={clientes} onUpdate={loadData} />}
           {tab === "despesas" && <DespesasTab />}
           {tab === "gastos" && <GastosTab />}
+          {tab === "relatorios" && <RelatoriosTab agendamentos={agendamentos} />}
           {tab === "anamnese" && <AnamneseTab />}
           {tab === "avaliacoes" && <AvaliacoesTab />}
           {tab === "produtos" && <ProdutosTab />}
