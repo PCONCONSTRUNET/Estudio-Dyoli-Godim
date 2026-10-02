@@ -14,7 +14,9 @@ interface RelatoriosTabProps {
 }
 
 export default function RelatoriosTab({ agendamentos }: RelatoriosTabProps) {
-  const [period, setPeriod] = useState<"hoje" | "semana" | "mes">("mes");
+  const [period, setPeriod] = useState<"hoje" | "semana" | "mes" | "mes_custom" | "dia_custom">("mes");
+  const [customMonth, setCustomMonth] = useState("");
+  const [customDate, setCustomDate] = useState("");
 
   const { filteredAgendamentos, periodLabel } = useMemo(() => {
     const now = new Date();
@@ -42,10 +44,18 @@ export default function RelatoriosTab({ agendamentos }: RelatoriosTabProps) {
       const thisMonth = todayISO.slice(0, 7);
       filtered = filtered.filter(a => a.data_agendamento.startsWith(thisMonth));
       label = "Este Mês";
+    } else if (period === "mes_custom" && customMonth) {
+      filtered = filtered.filter(a => a.data_agendamento.startsWith(customMonth));
+      const [y, m] = customMonth.split("-");
+      label = `Mês ${m}/${y}`;
+    } else if (period === "dia_custom" && customDate) {
+      filtered = filtered.filter(a => a.data_agendamento === customDate);
+      const [y, m, d] = customDate.split("-");
+      label = `Dia ${d}/${m}/${y}`;
     }
 
     return { filteredAgendamentos: filtered, periodLabel: label };
-  }, [agendamentos, period]);
+  }, [agendamentos, period, customMonth, customDate]);
 
   const serviceData = useMemo(() => {
     const map: Record<string, { count: number, total: number }> = {};
@@ -73,18 +83,46 @@ export default function RelatoriosTab({ agendamentos }: RelatoriosTabProps) {
       </div>
 
       {/* Filtro de Período */}
-      <div className="flex gap-2 p-1 bg-primary-foreground/[0.04] rounded-2xl w-max border border-primary-foreground/[0.08]">
-        {(["hoje", "semana", "mes"] as const).map(p => (
-          <button
-            key={p}
-            onClick={() => setPeriod(p)}
-            className={`px-4 py-1.5 rounded-xl font-body text-[12px] font-medium transition-all capitalize ${
-              period === p ? "bg-gold text-charcoal shadow-lg" : "text-primary-foreground/65 hover:text-primary-foreground"
-            }`}
-          >
-            {p === "mes" ? "Mês" : p}
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex gap-2 p-1 bg-primary-foreground/[0.04] rounded-2xl w-max border border-primary-foreground/[0.08]">
+          {(["hoje", "semana", "mes"] as const).map(p => (
+            <button
+              key={p}
+              onClick={() => setPeriod(p)}
+              className={`px-4 py-1.5 rounded-xl font-body text-[12px] font-medium transition-all capitalize ${
+                period === p ? "bg-gold text-charcoal shadow-lg" : "text-primary-foreground/65 hover:text-primary-foreground"
+              }`}
+            >
+              {p === "mes" ? "Este Mês" : p}
+            </button>
+          ))}
+        </div>
+
+        <input 
+          type="month" 
+          value={customMonth}
+          onChange={(e) => {
+            setCustomMonth(e.target.value);
+            setPeriod("mes_custom");
+          }}
+          className={`px-3 py-1 rounded-xl font-body text-[12px] font-medium bg-transparent border outline-none transition-all ${
+            period === "mes_custom" ? "border-gold text-gold" : "border-primary-foreground/[0.1] text-primary-foreground/65 hover:border-primary-foreground/[0.2]"
+          }`}
+          title="Selecionar Mês Específico"
+        />
+
+        <input 
+          type="date" 
+          value={customDate}
+          onChange={(e) => {
+            setCustomDate(e.target.value);
+            setPeriod("dia_custom");
+          }}
+          className={`px-3 py-1 rounded-xl font-body text-[12px] font-medium bg-transparent border outline-none transition-all ${
+            period === "dia_custom" ? "border-gold text-gold" : "border-primary-foreground/[0.1] text-primary-foreground/65 hover:border-primary-foreground/[0.2]"
+          }`}
+          title="Selecionar Dia Específico"
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
