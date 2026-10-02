@@ -118,7 +118,7 @@ const AdminDashboard = ({
       .map(([name, count]) => ({ name: name.length > 18 ? name.slice(0, 16) + "…" : name, count }));
   }, [agendamentos, today]);
 
-  const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
+  const formatCurrency = (v: number) => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;

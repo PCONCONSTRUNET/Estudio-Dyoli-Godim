@@ -145,7 +145,7 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
     });
   };
 
-  const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
+  const formatCurrency = (v: number) => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const handleAvancar = () => {
     if (selectedItems.length === 0) {

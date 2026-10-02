@@ -33,7 +33,7 @@ const COLORS = [
   "hsl(199 89% 48%)",   // blue
 ];
 
-const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
+const formatCurrency = (v: number) => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const [modalConfig, setModalConfig] = useState<{open: boolean, tab: "entrada"|"saida"}>({open: false, tab: "entrada"});

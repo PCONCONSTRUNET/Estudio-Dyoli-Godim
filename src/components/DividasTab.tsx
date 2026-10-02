@@ -34,7 +34,7 @@ interface Profile {
  whatsapp: string | null;
 }
 
-const formatCurrency = (v: number) => `R$ ${v.toFixed(2).replace(".", ",")}`;
+const formatCurrency = (v: number) => `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const formatDateShort = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 
 const DividasTab = () => {
