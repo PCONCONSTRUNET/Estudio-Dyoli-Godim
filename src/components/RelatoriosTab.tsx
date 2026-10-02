@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Search } from "lucide-react";
 
 const COLORS = [
   "hsl(346, 65%, 45%)", "hsl(38, 92%, 50%)", "hsl(142, 71%, 45%)", "hsl(217, 91%, 60%)",
@@ -17,6 +17,7 @@ export default function RelatoriosTab({ agendamentos }: RelatoriosTabProps) {
   const [period, setPeriod] = useState<"hoje" | "semana" | "mes" | "mes_custom" | "dia_custom">("mes");
   const [customMonth, setCustomMonth] = useState("");
   const [customDate, setCustomDate] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { filteredAgendamentos, periodLabel } = useMemo(() => {
     const now = new Date();
@@ -66,10 +67,16 @@ export default function RelatoriosTab({ agendamentos }: RelatoriosTabProps) {
       map[key].total += Number(a.valor);
     });
 
-    return Object.entries(map)
+    let entries = Object.entries(map)
       .map(([name, data]) => ({ name, count: data.count, total: data.total }))
       .sort((a, b) => b.total - a.total);
-  }, [filteredAgendamentos]);
+      
+    if (searchTerm) {
+      entries = entries.filter(e => e.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }
+    
+    return entries;
+  }, [filteredAgendamentos, searchTerm]);
 
   const maxTotal = Math.max(1, ...serviceData.map(s => s.total));
   const maxCount = Math.max(1, ...serviceData.map(s => s.count));
@@ -140,9 +147,21 @@ export default function RelatoriosTab({ agendamentos }: RelatoriosTabProps) {
 
       {/* Lista / Gráfico */}
       <div className="rounded-2xl border border-primary-foreground/[0.08] bg-charcoal/50 p-4 sm:p-5">
-        <h3 className="font-body text-[12px] font-medium text-primary-foreground/65 uppercase tracking-[0.2em] mb-4">
-          Detalhamento por Serviço ({periodLabel})
-        </h3>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+          <h3 className="font-body text-[12px] font-medium text-primary-foreground/65 uppercase tracking-[0.2em]">
+            Detalhamento ({periodLabel})
+          </h3>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-primary-foreground/40" />
+            <input 
+              type="text" 
+              placeholder="Buscar serviço..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="w-full sm:w-48 pl-9 pr-3 py-1.5 bg-primary-foreground/[0.04] border border-primary-foreground/[0.08] rounded-xl font-body text-[12px] text-primary-foreground placeholder:text-primary-foreground/40 outline-none focus:border-gold/50 transition-all"
+            />
+          </div>
+        </div>
         
         {serviceData.length > 0 ? (
           <div className="space-y-5">
