@@ -1,4 +1,4 @@
-import { parseCurrencyStr } from "@/lib/utils";
+﻿import { parseCurrencyStr } from "@/lib/utils";
 import { useState, useMemo, useEffect } from "react";
 import {
  Calendar,
@@ -210,6 +210,10 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
   const [movimentacoes, setMovimentacoes] = useState<CaixaMovimentacao[]>([]);
   const [missingAgendamentos, setMissingAgendamentos] = useState<any[]>([]);
 
+  // ── Dados ALL-TIME para comissão acumulada (sem filtro de ciclo) ──────────
+  const [allTimeMovimentacoes, setAllTimeMovimentacoes] = useState<CaixaMovimentacao[]>([]);
+  const [allTimeDespesasComissao, setAllTimeDespesasComissao] = useState<{ valor: number; pago: boolean }[]>([]);
+
   // ── Busca despesas e vendas previstas do ciclo ──────────────────────────────
   useEffect(() => {
     let cancelled = false;
@@ -233,6 +237,26 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
 
     return () => { cancelled = true; };
   }, [ciclo.startISO, ciclo.endISO]);
+
+  // Busca ALL-TIME para comissão acumulada — roda uma vez na montagem
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: movs } = await (supabase.from as any)("caixa_movimentacoes")
+        .select("valor,tipo,contabiliza_comissao,forma_pagamento,referencia_tipo,referencia_id,data_pagamento,ocorrido_em,origem,cliente_nome,inferido")
+        .order("ocorrido_em", { ascending: false });
+      if (!cancelled && movs) {
+        setAllTimeMovimentacoes(movs.map((m: any) => ({ ...m, valor: Number(m.valor) })));
+      }
+
+      const { data: desp } = await (supabase.from as any)("despesas")
+        .select("valor,pago")
+        .eq("tipo", "comissao")
+        .eq("pago", true);
+      if (!cancelled && desp) setAllTimeDespesasComissao(desp);
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   // Livro-caixa canônico. Inclui também o dia selecionado quando o usuário
   // navega para fora do ciclo exibido no fechamento diário.
@@ -419,6 +443,20 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
   return { recebido, total, pagoComCredito, gorjetas, trocos, desp, despPessoal, lucro, comissao, comissaoGerada, baseComissao, totalDays, elapsedDays, progress, qtd, items: cicloAgs, saldoEmCaixa };
  }, [allAgendamentos, ciclo, despesas, comissaoPct, cicloOffset]);
 
+ // ── Comissão ACUMULADA (all-time, nunca zera) ─────────────────────────────
+ const comissaoAcumulada = useMemo(() => {
+   const baseTotal = allTimeMovimentacoes
+     .filter((m) => m.tipo !== "gorjeta" && m.contabiliza_comissao)
+     .reduce((s, m) => s + Number(m.valor), 0);
+   const gorjetasTotal = allTimeMovimentacoes
+     .filter((m) => m.tipo === "gorjeta")
+     .reduce((s, m) => s + Number(m.valor), 0);
+   const retiradaTotal = allTimeDespesasComissao
+     .reduce((s, d) => s + Number(d.valor), 0);
+   const gerada = baseTotal * (comissaoPct / 100) + gorjetasTotal;
+   return { gerada, retirada: retiradaTotal, disponivel: gerada - retiradaTotal };
+ }, [allTimeMovimentacoes, allTimeDespesasComissao, comissaoPct]);
+
  // ── Breakdown por forma de pagamento (ciclo) ──
  const paymentMethodStats = useMemo(() => {
   const totals: Record<string, number> = { pix: 0, cartao: 0, dinheiro: 0, outro: 0 };
@@ -554,14 +592,14 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  type="button"
  onClick={() => setShowComissaoDetail(true)}
  className="inline-flex items-center gap-2 mt-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 hover:border-purple-400/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer group"
- aria-label="Ver detalhes do cálculo da comissão"
+ aria-label="Ver detalhes da comissão acumulada"
  >
  <Sparkles className="w-3 h-3 text-purple-300 group-hover:animate-pulse" />
  <span className="font-body text-[10px] text-purple-300/80 uppercase tracking-wider font-medium">
- Comissão {comissaoPct}%
+ Comissão acumulada
  </span>
  <span className="font-heading text-[12px] font-bold text-purple-200 tabular-nums">
- {formatCurrency(cicloStats.comissao)}
+ {formatCurrency(comissaoAcumulada.disponivel)}
  </span>
  <Info className="w-3 h-3 text-purple-300/60 group-hover:text-purple-200 transition-colors" />
  </button>
@@ -1077,7 +1115,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  </span>
  <div>
  <DialogTitle className="font-heading text-[16px] font-bold text-primary-foreground tracking-tight">
- Cálculo da Comissão
+ Comissão Acumulada
  </DialogTitle>
  </div>
  </div>
@@ -1088,15 +1126,16 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
       <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl -mr-16 -mt-16 transition-all group-hover:bg-purple-500/10" />
       <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl -ml-12 -mb-12" />
       <div className="text-center relative z-10">
-        <p className="font-body text-[9px] md:text-[10px] font-bold text-purple-300/70 uppercase tracking-[0.2em] mb-1.5">Comissão Disponível</p>
-        <p className="font-heading text-3xl md:text-4xl font-bold text-purple-300 tracking-tight drop-shadow-[0_0_15px_rgba(216,180,254,0.4)]">{formatCurrency(cicloStats.comissao)}</p>
+        <p className="font-body text-[9px] md:text-[10px] font-bold text-purple-300/70 uppercase tracking-[0.2em] mb-1.5">Acumulado disponível</p>
+        <p className="font-heading text-3xl md:text-4xl font-bold text-purple-300 tracking-tight drop-shadow-[0_0_15px_rgba(216,180,254,0.4)]">{formatCurrency(comissaoAcumulada.disponivel)}</p>
+        <p className="font-body text-[9px] text-purple-400/60 mt-1.5">{formatCurrency(comissaoAcumulada.gerada)} gerada &middot; {formatCurrency(comissaoAcumulada.retirada)} retirado</p>
       </div>
     </div>
 
     {/* Retiradas */}
     <div className="space-y-2">
       <div className="flex items-center justify-between mb-1">
-        <p className="font-body text-[10px] text-primary-foreground/90 uppercase tracking-wider px-1 font-semibold">Retiradas do ciclo</p>
+        <p className="font-body text-[10px] text-primary-foreground/90 uppercase tracking-wider px-1 font-semibold">Retiradas (todos os ciclos)</p>
         <button 
           onClick={() => setShowRetiradaModal(true)}
           className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 transition-all group"
@@ -1351,7 +1390,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
             />
           </div>
           <p className="font-body text-[11px] text-primary-foreground/70 text-right mt-1 font-medium">
-            Disponível: <span className="text-purple-300 font-bold drop-shadow-sm">{formatCurrency(cicloStats.comissao)}</span>
+            Disponível (acumulado): <span className="text-purple-300 font-bold drop-shadow-sm">{formatCurrency(comissaoAcumulada.disponivel)}</span>
           </p>
         </div>
         <div className="space-y-2">
