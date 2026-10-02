@@ -83,13 +83,13 @@ export default function RelatoriosTab({ agendamentos }: RelatoriosTabProps) {
       </div>
 
       {/* Filtro de Período */}
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="flex gap-2 p-1 bg-primary-foreground/[0.04] rounded-2xl w-max border border-primary-foreground/[0.08]">
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex gap-1 p-1 bg-primary-foreground/[0.04] rounded-2xl w-full sm:w-max border border-primary-foreground/[0.08] overflow-x-auto no-scrollbar">
           {(["hoje", "semana", "mes"] as const).map(p => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`px-4 py-1.5 rounded-xl font-body text-[12px] font-medium transition-all capitalize ${
+              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 sm:py-1.5 rounded-xl font-body text-[11px] sm:text-[12px] font-medium transition-all capitalize whitespace-nowrap ${
                 period === p ? "bg-gold text-charcoal shadow-lg" : "text-primary-foreground/65 hover:text-primary-foreground"
               }`}
             >
@@ -98,46 +98,48 @@ export default function RelatoriosTab({ agendamentos }: RelatoriosTabProps) {
           ))}
         </div>
 
-        <input 
-          type="month" 
-          value={customMonth}
-          onChange={(e) => {
-            setCustomMonth(e.target.value);
-            setPeriod("mes_custom");
-          }}
-          className={`px-3 py-1 rounded-xl font-body text-[12px] font-medium bg-transparent border outline-none transition-all ${
-            period === "mes_custom" ? "border-gold text-gold" : "border-primary-foreground/[0.1] text-primary-foreground/65 hover:border-primary-foreground/[0.2]"
-          }`}
-          title="Selecionar Mês Específico"
-        />
+        <div className="flex flex-row gap-2">
+          <input 
+            type="month" 
+            value={customMonth}
+            onChange={(e) => {
+              setCustomMonth(e.target.value);
+              setPeriod("mes_custom");
+            }}
+            className={`flex-1 min-w-0 px-3 py-2 sm:py-1.5 rounded-xl font-body text-[11px] sm:text-[12px] font-medium bg-transparent border outline-none transition-all ${
+              period === "mes_custom" ? "border-gold text-gold bg-gold/[0.05]" : "border-primary-foreground/[0.1] text-primary-foreground/65 hover:border-primary-foreground/[0.2]"
+            }`}
+            title="Selecionar Mês Específico"
+          />
 
-        <input 
-          type="date" 
-          value={customDate}
-          onChange={(e) => {
-            setCustomDate(e.target.value);
-            setPeriod("dia_custom");
-          }}
-          className={`px-3 py-1 rounded-xl font-body text-[12px] font-medium bg-transparent border outline-none transition-all ${
-            period === "dia_custom" ? "border-gold text-gold" : "border-primary-foreground/[0.1] text-primary-foreground/65 hover:border-primary-foreground/[0.2]"
-          }`}
-          title="Selecionar Dia Específico"
-        />
+          <input 
+            type="date" 
+            value={customDate}
+            onChange={(e) => {
+              setCustomDate(e.target.value);
+              setPeriod("dia_custom");
+            }}
+            className={`flex-1 min-w-0 px-3 py-2 sm:py-1.5 rounded-xl font-body text-[11px] sm:text-[12px] font-medium bg-transparent border outline-none transition-all ${
+              period === "dia_custom" ? "border-gold text-gold bg-gold/[0.05]" : "border-primary-foreground/[0.1] text-primary-foreground/65 hover:border-primary-foreground/[0.2]"
+            }`}
+            title="Selecionar Dia Específico"
+          />
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-2xl border border-primary-foreground/[0.08] bg-charcoal/50 p-4">
-           <p className="font-body text-[11px] text-primary-foreground/65 uppercase tracking-wider mb-1">Total de Serviços</p>
-           <p className="font-heading text-2xl font-bold text-primary-foreground">{totalCount}</p>
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+        <div className="rounded-2xl border border-primary-foreground/[0.08] bg-charcoal/50 p-3 sm:p-4">
+           <p className="font-body text-[10px] sm:text-[11px] text-primary-foreground/65 uppercase tracking-wider mb-1 line-clamp-1">Total Serviços</p>
+           <p className="font-heading text-xl sm:text-2xl font-bold text-primary-foreground break-words">{totalCount}</p>
         </div>
-        <div className="rounded-2xl border border-gold/20 bg-gold/[0.05] p-4">
-           <p className="font-body text-[11px] text-gold/80 uppercase tracking-wider mb-1">Total Gerado</p>
-           <p className="font-heading text-2xl font-bold text-gold">{formatCurrency(totalRendeu)}</p>
+        <div className="rounded-2xl border border-gold/20 bg-gold/[0.05] p-3 sm:p-4">
+           <p className="font-body text-[10px] sm:text-[11px] text-gold/80 uppercase tracking-wider mb-1 line-clamp-1">Total Gerado</p>
+           <p className="font-heading text-xl sm:text-2xl font-bold text-gold break-words">{formatCurrency(totalRendeu)}</p>
         </div>
       </div>
 
       {/* Lista / Gráfico */}
-      <div className="rounded-2xl border border-primary-foreground/[0.08] bg-charcoal/50 p-5">
+      <div className="rounded-2xl border border-primary-foreground/[0.08] bg-charcoal/50 p-4 sm:p-5">
         <h3 className="font-body text-[12px] font-medium text-primary-foreground/65 uppercase tracking-[0.2em] mb-4">
           Detalhamento por Serviço ({periodLabel})
         </h3>
