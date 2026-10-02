@@ -98,7 +98,10 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate, onEdit }: Props)
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<SortField>("data");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
-  const [dateFilter, setDateFilter] = useState<string>("");
+  const [dateFilter, setDateFilter] = useState<string>(() => {
+    const now = new Date();
+    return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split("T")[0];
+  });
 
   // Smart payment modal state
   const [smartPayModal, setSmartPayModal] = useState<SmartPayModalState | null>(null);
