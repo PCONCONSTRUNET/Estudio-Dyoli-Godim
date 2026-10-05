@@ -10,6 +10,7 @@ import pixIcon from "@/assets/pix-icon.png";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { Button } from "@/components/ui/button";
 import { getPaymentDate } from "@/lib/utils";
+import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 
 interface Agendamento {
   id: string;
@@ -33,11 +34,18 @@ interface Agendamento {
   data_venda?: string | null;
 }
 
+interface ClienteWpp {
+  id: string;
+  nome: string;
+  whatsapp: string;
+}
+
 interface Props {
   agendamentos: Agendamento[];
   getClientName: (userId: string, clienteNome?: string | null) => string;
   onUpdate?: () => void;
   onEdit?: (ag: any) => void;
+  clientes?: ClienteWpp[];
 }
 
 const formatCurrency = (v: number | string | null | undefined) => {
@@ -90,7 +98,7 @@ interface GroupedFaturasResult {
   saidas: any[];
 }
 
-const PagamentosTab = ({ agendamentos, getClientName, onUpdate, onEdit }: Props) => {
+const PagamentosTab = ({ agendamentos, getClientName, onUpdate, onEdit, clientes = [] }: Props) => {
   const { confirm } = useConfirm();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("todos");
@@ -98,6 +106,58 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate, onEdit }: Props)
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<SortField>("data");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [wppLoadingKey, setWppLoadingKey] = useState<string | null>(null);
+
+  const handleEnviarCobrancaWpp = async (group: ClienteGroup) => {
+    // Busca o whatsapp do cliente pelo userId
+    const clienteData = clientes.find(c => c.id === group.userId);
+    const numero = clienteData?.whatsapp?.replace(/\D/g, "") || "";
+    if (!numero || numero.length < 10) {
+      toast.error("Cliente não tem WhatsApp cadastrado");
+      return;
+    }
+
+    const pendentes = group.faturas.filter(
+      f => f.fatura_tipo === "pendente" && !["cancelado", "falta"].includes(f.status)
+    );
+    if (pendentes.length === 0) {
+      toast.error("Nenhuma fatura pendente para este cliente");
+      return;
+    }
+
+    const totalOriginal = group.totalPendente + group.totalPago;
+    const linhasFaturas = pendentes
+      .map(f => `  • ${f.servico}${f.variacao ? ` · ${f.variacao}` : ""} — ${formatCurrency(Number(f.valor_fatura))}  (${formatDate(f.data_fatura)})`)
+      .join("\n");
+
+    const mensagem =
+`Olá, ${group.clienteNome}! 👋
+
+Passando para informar sobre sua fatura no *Estúdio Dyoli Godim*:
+
+💰 *Valor total:* ${formatCurrency(totalOriginal)}
+✅ *Valor já pago:* ${formatCurrency(group.totalPago)}
+⚠️ *Saldo pendente:* ${formatCurrency(group.totalPendente)}
+
+📋 *Faturas em aberto:*
+${linhasFaturas}
+
+Qualquer dúvida, estamos à disposição! 🙏`;
+
+    setWppLoadingKey(group.key);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-whatsapp-notification", {
+        body: { numero, mensagem },
+      });
+      if (error) throw error;
+      if (data?.ok === false && !data?.fallback) throw new Error(data?.error || "Erro ao enviar");
+      toast.success(`✅ Cobrança enviada para ${group.clienteNome} via WhatsApp!`);
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao enviar WhatsApp");
+    } finally {
+      setWppLoadingKey(null);
+    }
+  };
   const [dateFilter, setDateFilter] = useState<string>(() => {
     const now = new Date();
     return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split("T")[0];
@@ -816,6 +876,15 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate, onEdit }: Props)
                   </div>
                 ) : formatCurrency(ag.valor || ag.valor_fatura)
               } />}
+              {!ag._is_saida && !ag._is_venda && (() => {
+                const totalPagoVal = Number(ag.valor_pago || 0) + Number(ag.valor_desconto_credito || 0);
+                if (totalPagoVal <= 0) return null;
+                return (
+                  <Detail label="Total Pago" value={
+                    <span className="text-emerald-400 font-bold">✓ {formatCurrency(totalPagoVal)}</span>
+                  } />
+                );
+              })()}
               <Detail label={ag._is_saida ? "Status" : "Status da Fatura"} value={
                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-body text-[9px] font-bold uppercase tracking-wider border relative ${
                   isPendingAmount ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
@@ -1010,12 +1079,23 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate, onEdit }: Props)
             <div className="mt-3 pt-3 border-t border-gold/[0.12] space-y-1.5">
               <p className="font-body text-[9px] text-gold/50 uppercase tracking-wider mb-2">⚠ Faturas pendentes</p>
               {clienteSummary.pendentes.map(p => (
-                <div key={p.id} className="flex items-center justify-between rounded-xl bg-amber-500/[0.07] border border-amber-500/20 px-3 py-2">
-                  <div className="min-w-0">
-                    <p className="font-body text-[12px] text-primary-foreground/90 truncate font-medium">{p.servico}{p.variacao ? ` · ${p.variacao}` : ""}</p>
-                    <p className="font-body text-[10px] text-primary-foreground/45">{formatDate(p.data)}</p>
+                <div key={p.id} className="rounded-xl bg-amber-500/[0.07] border border-amber-500/20 px-3 py-2">
+                  <div className="flex items-center justify-between">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-body text-[12px] text-primary-foreground/90 truncate font-medium">{p.servico}{p.variacao ? ` · ${p.variacao}` : ""}</p>
+                      <p className="font-body text-[10px] text-primary-foreground/45">{formatDate(p.data)}</p>
+                    </div>
+                    <div className="text-right shrink-0 ml-3">
+                      <p className="font-body text-[8px] text-primary-foreground/40 uppercase tracking-wider leading-none mb-0.5">Restante</p>
+                      <span className="font-heading text-[13px] font-bold text-amber-300">{formatCurrency(p.restante)}</span>
+                    </div>
                   </div>
-                  <span className="font-heading text-[13px] font-bold text-amber-300 shrink-0 ml-3">{formatCurrency(p.restante)}</span>
+                  {p.valorPago > 0 && (
+                    <div className="flex items-center gap-3 mt-1.5 pt-1.5 border-t border-amber-500/15">
+                      <span className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-wider">Total: {formatCurrency(p.valor)}</span>
+                      <span className="font-body text-[9px] text-emerald-400/80">✓ Já pago: {formatCurrency(p.valorPago)}</span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -1046,6 +1126,9 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate, onEdit }: Props)
                       </div>
                       <span className="font-body text-[13px] font-semibold text-primary-foreground flex-1 text-left truncate">{group.clienteNome}</span>
                       <div className="flex items-center gap-2 shrink-0">
+                        {group.totalPago > 0 && (
+                          <span className="font-heading text-[11px] font-bold text-emerald-400/80" title="Já pago">✓ {formatCurrency(group.totalPago)}</span>
+                        )}
                         {group.totalPendente > 0 && (
                           <span className="font-heading text-[12px] font-bold text-amber-300">{formatCurrency(group.totalPendente)}</span>
                         )}
@@ -1083,6 +1166,28 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate, onEdit }: Props)
                       >
                         <Wallet className="h-4 w-4 text-amber-400/70 group-hover:text-amber-300 transition-colors" />
                         <span className="font-body text-[9px] font-bold text-amber-400/70 group-hover:text-amber-300 uppercase tracking-wider transition-colors hidden sm:block">Pagar</span>
+                      </button>
+                    )}
+
+                    {/* Botão WhatsApp — cobrar via mensagem */}
+                    {group.countPendente > 0 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEnviarCobrancaWpp(group);
+                        }}
+                        disabled={wppLoadingKey === group.key}
+                        className="shrink-0 flex items-center gap-1.5 border-l border-primary-foreground/[0.07] px-3 py-2.5 hover:bg-green-500/10 transition-all group disabled:opacity-50"
+                        title="Enviar cobrança via WhatsApp"
+                      >
+                        {wppLoadingKey === group.key ? (
+                          <div className="h-4 w-4 border-2 border-green-400/40 border-t-green-400 rounded-full animate-spin" />
+                        ) : (
+                          <WhatsAppIcon className="h-4 w-4 text-green-500/70 group-hover:text-green-400 transition-colors" />
+                        )}
+                        <span className="font-body text-[9px] font-bold text-green-500/70 group-hover:text-green-400 uppercase tracking-wider transition-colors hidden sm:block">
+                          {wppLoadingKey === group.key ? "Enviando..." : "Cobrar"}
+                        </span>
                       </button>
                     )}
                   </div>
@@ -1255,9 +1360,18 @@ const PagamentosTab = ({ agendamentos, getClientName, onUpdate, onEdit }: Props)
                           <p className={`font-body text-[10px] ${
                             isSelected ? "text-amber-300/70" : "text-primary-foreground/65"
                           }`}>{formatDate(p.data)}</p>
+                          {p.valorPago > 0 && (
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="font-body text-[9px] text-primary-foreground/40 uppercase tracking-wider">Total: {formatCurrency(p.valor)}</span>
+                              <span className="font-body text-[9px] text-emerald-400/80">✓ Pago: {formatCurrency(p.valorPago)}</span>
+                            </div>
+                          )}
                         </div>
                         <div className="flex items-center gap-2 shrink-0 ml-3">
-                          <span className="font-heading text-[14px] font-bold text-amber-300">{formatCurrency(p.restante)}</span>
+                          <div className="text-right">
+                            <p className="font-body text-[8px] text-primary-foreground/40 uppercase tracking-wider leading-none mb-0.5">Restante</p>
+                            <span className="font-heading text-[14px] font-bold text-amber-300">{formatCurrency(p.restante)}</span>
+                          </div>
                           <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
                             isSelected
                               ? "bg-emerald-500 border-emerald-400"
