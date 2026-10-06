@@ -1134,23 +1134,25 @@ Qualquer dúvida, estamos à disposição! 🙏`;
                       <div className="w-7 h-7 rounded-full bg-gold/12 border border-gold/25 flex items-center justify-center shrink-0">
                         <Users className="h-3.5 w-3.5 text-gold/80" />
                       </div>
-                      <span className="font-body text-[13px] font-semibold text-primary-foreground flex-1 text-left truncate">{group.clienteNome}</span>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {group.totalPago > 0 && (
-                          <span className="font-heading text-[11px] font-bold text-emerald-400/80" title="Já pago">✓ {formatCurrency(group.totalPago)}</span>
-                        )}
-                        {group.totalPendente > 0 && (
-                          <span className="font-heading text-[12px] font-bold text-amber-300">{formatCurrency(group.totalPendente)}</span>
-                        )}
-                        {group.countPendente > 0 ? (
-                          <span className="rounded-full bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 font-body text-[9px] font-bold text-amber-300">
-                            {group.countPendente} pendente{group.countPendente > 1 ? "s" : ""}
-                          </span>
-                        ) : (
-                          <span className="rounded-full bg-emerald-500/15 border border-emerald-500/25 px-2 py-0.5 font-body text-[9px] font-bold text-emerald-400">Em dia ✓</span>
-                        )}
-                        <ChevronDown className={`h-4 w-4 text-primary-foreground/50 transition-transform duration-200 ${!isExpandedGroup ? "" : "rotate-180"}`} />
+                      <div className="flex-1 min-w-0">
+                        <span className="font-body text-[13px] font-semibold text-primary-foreground text-left break-words">{group.clienteNome}</span>
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                          {group.totalPago > 0 && (
+                            <span className="font-heading text-[11px] font-bold text-emerald-400/80" title="Já pago">✓ {formatCurrency(group.totalPago)}</span>
+                          )}
+                          {group.totalPendente > 0 && (
+                            <span className="font-heading text-[12px] font-bold text-amber-300">{formatCurrency(group.totalPendente)}</span>
+                          )}
+                          {group.countPendente > 0 ? (
+                            <span className="rounded-full bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 font-body text-[9px] font-bold text-amber-300">
+                              {group.countPendente} pendente{group.countPendente > 1 ? "s" : ""}
+                            </span>
+                          ) : (
+                            <span className="rounded-full bg-emerald-500/15 border border-emerald-500/25 px-2 py-0.5 font-body text-[9px] font-bold text-emerald-400">Em dia ✓</span>
+                          )}
+                        </div>
                       </div>
+                      <ChevronDown className={`h-4 w-4 shrink-0 text-primary-foreground/50 transition-transform duration-200 ${!isExpandedGroup ? "" : "rotate-180"}`} />
                     </button>
 
                     {group.countPendente > 0 && (
