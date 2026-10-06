@@ -1031,8 +1031,8 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                     <span className="font-heading text-[15px] font-bold text-white">{a.horario}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <p className="font-body text-[14px] font-medium text-primary-foreground truncate">{getClientName(a.user_id, a.cliente_nome)}</p>
+                    <p className="font-body text-[14px] font-medium text-primary-foreground break-words">{getClientName(a.user_id, a.cliente_nome)}</p>
+                    <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
                       {a.origem === "whatsapp_bot" && (
                         <span title="Via WhatsApp" className="inline-flex shrink-0 items-center gap-0.5 rounded-full border border-green-500/30 bg-green-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-green-400">
                           <WhatsAppIcon className="h-2.5 w-2.5" />
@@ -1041,7 +1041,7 @@ const PedidosTab = ({ agendamentos, getClientName, clientes = [], onUpdate }: Pr
                       )}
                       {paymentBadge(a)}
                     </div>
-                    <p className="font-body text-[11px] text-primary-foreground/75 truncate">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""}</p>
+                    <p className="font-body text-[11px] text-primary-foreground/75 truncate mt-0.5">{a.servico}{a.variacao ? ` · ${a.variacao}` : ""}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     {Number(a.valor_desconto_credito) > 0 ? (

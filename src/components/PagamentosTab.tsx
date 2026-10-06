@@ -566,13 +566,23 @@ Qualquer dúvida, estamos à disposição! 🙏`;
     };
   }, [filtered, debouncedSearch, getClientName]);
 
-  // ── Grouped view (no search, not saidas-only) ─────────────────────────
+  // ── Grouped view (always, not saidas-only) ───────────────────────────
   const groupedFaturas = useMemo((): GroupedFaturasResult | null => {
-    if (debouncedSearch.trim() || statusFilter === "saidas") return null;
+    if (statusFilter === "saidas") return null;
+
+    // When searching, use the search-sorted list as the source
+    const sourceList = debouncedSearch.trim()
+      ? [...filtered].sort((a, b) => {
+          const aPend = (a.fatura_tipo === "pendente" && !["cancelado", "falta"].includes(a.status)) ? 0 : 1;
+          const bPend = (b.fatura_tipo === "pendente" && !["cancelado", "falta"].includes(b.status)) ? 0 : 1;
+          if (aPend !== bPend) return aPend - bPend;
+          return b.data_fatura.localeCompare(a.data_fatura);
+        })
+      : filtered;
 
     const groupsMap = new Map<string, ClienteGroup>();
 
-    filtered.forEach(f => {
+    sourceList.forEach(f => {
       if (f._is_saida) return;
       const clienteNome = getClientName(f.user_id, f.cliente_nome);
       const key = `${f.user_id}|${f.cliente_nome || ""}`;
@@ -608,11 +618,11 @@ Qualquer dúvida, estamos à disposição! 🙏`;
       return b.totalPendente - a.totalPendente;
     });
 
-    const saidas = filtered.filter(f => f._is_saida);
+    const saidas = sourceList.filter(f => f._is_saida);
     return { groups, saidas };
   }, [filtered, debouncedSearch, statusFilter, getClientName]);
 
-  // ── Search flat view: pending first ───────────────────────────────────
+  // ── Search flat view (kept for saidas-only fallback) ──────────────────
   const searchSortedFaturas = useMemo(() => {
     if (!debouncedSearch.trim()) return filtered;
     return [...filtered].sort((a, b) => {
@@ -1106,13 +1116,13 @@ Qualquer dúvida, estamos à disposição! 🙏`;
       {/* ── PAYMENT LIST ──────────────────────────────────────────────────── */}
       <div className="space-y-2">
 
-        {/* GROUPED VIEW (no search, no saidas-only) */}
+        {/* GROUPED VIEW (always, auto-expanded when searching) */}
         {groupedFaturas && (
           <>
             {groupedFaturas.groups.length === 0 && groupedFaturas.saidas.length === 0 && <EmptyState />}
 
             {groupedFaturas.groups.map(group => {
-              const isExpandedGroup = expandedGroups.has(group.key);
+              const isExpandedGroup = !!debouncedSearch.trim() || expandedGroups.has(group.key);
               return (
                 <div key={group.key} className="space-y-1.5">
                   {/* Group header */}
