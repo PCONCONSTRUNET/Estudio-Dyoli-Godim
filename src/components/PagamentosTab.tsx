@@ -172,6 +172,17 @@ Qualquer dúvida, estamos à disposição! 🙏`;
   const [paySelectedIds, setPaySelectedIds] = useState<string[]>([]);
   const [payLoading, setPayLoading] = useState(false);
 
+  useEffect(() => {
+    if (smartPayModal) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [smartPayModal]);
+
   const toggleSort = (field: SortField) => {
     if (sortField === field) setSortDir(sortDir === "asc" ? "desc" : "asc");
     else { setSortField(field); setSortDir("desc"); }
@@ -1289,7 +1300,7 @@ Qualquer dúvida, estamos à disposição! 🙏`;
 
       {/* ── SMART PAYMENT MODAL ───────────────────────────────────────────── */}
       {smartPayModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" onClick={() => !payLoading && setSmartPayModal(null)} />
           <div className="relative w-full max-w-md rounded-2xl border border-gold/25 bg-[hsl(var(--primary))] shadow-[0_24px_64px_-12px_hsl(var(--gold)/0.45)] overflow-hidden max-h-[92vh] flex flex-col">
 
