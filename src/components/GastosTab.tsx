@@ -421,9 +421,10 @@ const GastosTab = () => {
                   const val = parseFloat(normalized);
                   if (!isNaN(val) && val > 0) {
                     const current = parseFloat(verbaMarceloStr) || 0;
-                    // Se estiver adicionando do zero, marca a data de início da carteira
-                    if (current === 0) {
-                      setWalletStartDate(todayISO_);
+                    // Se a carteira não tinha uma data de início, marca para o dia 1º do mês que está sendo visualizado
+                    if (walletStartDate === "9999-12-31") {
+                      const firstDay = new Date(targetMonth.getFullYear(), targetMonth.getMonth(), 1).toISOString().split("T")[0];
+                      setWalletStartDate(firstDay);
                     }
                     setVerbaMarceloStr((current + val).toString());
                   }
