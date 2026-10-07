@@ -94,6 +94,15 @@ const GastosTab = () => {
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(100);
 
+  // Verba do Marcelo
+  const [verbaMarceloStr, setVerbaMarceloStr] = useState(() => localStorage.getItem("verba_marcelo") || "0");
+  const [isAddingVerba, setIsAddingVerba] = useState(false);
+  const [valorAdicionar, setValorAdicionar] = useState("");
+
+  useEffect(() => {
+    localStorage.setItem("verba_marcelo", verbaMarceloStr);
+  }, [verbaMarceloStr]);
+
   // Form
   const [descricao, setDescricao] = useState("");
   const [valor, setValor] = useState("");
@@ -358,6 +367,74 @@ const GastosTab = () => {
           </button>
         ))}
       </div>
+
+      {/* ── Verba do Marcelo ── */}
+      {responsavelFilter === "Zelia" && (
+        <div className="rounded-[20px] border border-white/10 bg-[#1c1c1e] p-4 flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <p className="font-body text-[12px] text-white/50 uppercase tracking-wider font-semibold">Carteira do Marcelo</p>
+            {!isAddingVerba && (
+              <button onClick={() => { setIsAddingVerba(true); setValorAdicionar(""); }} className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/80 transition-colors font-medium">
+                <PlusButton size={16} title="" onClick={(e) => { e.stopPropagation(); setIsAddingVerba(true); setValorAdicionar(""); }} />
+                Adicionar Saldo
+              </button>
+            )}
+          </div>
+          {isAddingVerba ? (
+            <div className="flex gap-2">
+              <input 
+                type="number"
+                value={valorAdicionar}
+                onChange={e => setValorAdicionar(e.target.value)}
+                placeholder="Ex: 1000"
+                className="flex-1 rounded-xl bg-[#2c2c2e] border border-white/5 py-2 px-3 text-white font-body text-[13px] focus:outline-none focus:border-white/20"
+              />
+              <button 
+                onClick={() => {
+                  const val = parseFloat(valorAdicionar);
+                  if (!isNaN(val) && val > 0) {
+                    const current = parseFloat(verbaMarceloStr) || 0;
+                    setVerbaMarceloStr((current + val).toString());
+                  }
+                  setIsAddingVerba(false);
+                }} 
+                className="text-[12px] text-orange-400 font-bold px-3 py-1 bg-orange-400/10 rounded-xl hover:bg-orange-400/20 transition-colors"
+              >
+                Confirmar
+              </button>
+              <button onClick={() => setIsAddingVerba(false)} className="text-[12px] text-white/40 px-2">Cancelar</button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-[#2c2c2e] p-3 rounded-[12px] border border-white/5">
+                <p className="text-[10px] text-white/40 font-body uppercase tracking-wider mb-1">Total Recebido (Geral)</p>
+                <div className="flex items-center justify-between group">
+                  <p className="font-heading text-[16px] font-bold text-white tabular-nums">
+                    {formatCurrency(parseFloat(verbaMarceloStr) || 0)}
+                  </p>
+                  <button 
+                    onClick={() => {
+                      if (window.confirm("Deseja zerar o histórico de recebimentos? (isso não apaga os gastos)")) {
+                        setVerbaMarceloStr("0");
+                      }
+                    }}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Zerar valor recebido"
+                  >
+                    <BinButton size="sm" onClick={() => {}} />
+                  </button>
+                </div>
+              </div>
+              <div className="bg-[#2c2c2e] p-3 rounded-[12px] border border-white/5">
+                <p className="text-[10px] text-white/40 font-body uppercase tracking-wider mb-1">Saldo Atual</p>
+                <p className={`font-heading text-[16px] font-bold tabular-nums ${(parseFloat(verbaMarceloStr) || 0) - totalGeral < 0 ? "text-red-400" : "text-green-400"}`}>
+                  {formatCurrency((parseFloat(verbaMarceloStr) || 0) - totalGeral)}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Navegação por Mês ── */}
       <div className="mb-4 flex items-center justify-between p-2 rounded-[16px] bg-[#1c1c1e] border border-white/10">
