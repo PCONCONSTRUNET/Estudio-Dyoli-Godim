@@ -208,8 +208,10 @@ const GastosTab = () => {
   const totalGeral = useMemo(() => gastos.filter(g => g.responsavel === responsavelFilter).reduce((s, g) => s + Number(g.valor), 0), [gastos, responsavelFilter]);
   const totalFiltrado = useMemo(() => gastosFiltrados.reduce((s, g) => s + Number(g.valor), 0), [gastosFiltrados]);
 
-  // Gastos do Marcelo a partir da data de início da carteira (ignora gastos antigos)
+  // Gastos do Marcelo a partir da data de início da carteira
+  // Se walletStartDate está vazio (carteira zerada), nenhum gasto é contado ainda
   const gastosAposInicio = useMemo(() => {
+    if (!walletStartDate) return 0;
     return gastos
       .filter(g => g.responsavel === "Zelia" && g.data_gasto >= walletStartDate)
       .reduce((s, g) => s + Number(g.valor), 0);
@@ -440,7 +442,7 @@ const GastosTab = () => {
                   <p className="text-[10px] text-white/40 font-body uppercase tracking-wider">Total Recebido</p>
                   <button 
                     onClick={() => {
-                      if (window.confirm("Zerar a carteira? O Total Recebido volta para R$ 0 e os gastos antigos serão ignorados ao adicionar novo saldo.")) {
+                      if (window.confirm("Zerar a carteira? Total Recebido e Saldo vão para R$ 0,00. Os gastos registrados não são apagados.")) {
                         setVerbaMarceloStr("0");
                         setWalletStartDate("");
                       }
