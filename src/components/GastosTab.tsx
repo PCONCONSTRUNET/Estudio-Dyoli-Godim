@@ -94,20 +94,14 @@ const GastosTab = () => {
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(100);
 
-  // Verba do Marcelo
-  const [verbaMarceloStr, setVerbaMarceloStr] = useState(() => localStorage.getItem("verba_marcelo") || "0");
+  // Verba do Marcelo (agora sincronizada via Supabase)
+  const [verbaMarceloStr, setVerbaMarceloStr] = useState("0");
   const todayISO_ = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0];
-  const [walletStartDate, setWalletStartDate] = useState(() => localStorage.getItem("wallet_start_date") || "9999-12-31");
+  const [walletStartDate, setWalletStartDate] = useState("9999-12-31");
+  const [configId, setConfigId] = useState<string | null>(null);
+  
   const [isAddingVerba, setIsAddingVerba] = useState(false);
   const [valorAdicionar, setValorAdicionar] = useState("");
-
-  useEffect(() => {
-    localStorage.setItem("verba_marcelo", verbaMarceloStr);
-  }, [verbaMarceloStr]);
-
-  useEffect(() => {
-    localStorage.setItem("wallet_start_date", walletStartDate);
-  }, [walletStartDate]);
 
 
   // Form
@@ -136,7 +130,21 @@ const GastosTab = () => {
       console.error("Erro gastos:", error);
       toast.error("Erro ao carregar gastos");
     }
-    if (data) setGastos(data as Gasto[]);
+    if (data) {
+      const allData = data as Gasto[];
+      const configRow = allData.find(g => g.descricao === "CONFIG_CARTEIRA_MARCELO" && g.responsavel === "Zelia");
+      if (configRow) {
+        setVerbaMarceloStr(configRow.valor.toString());
+        setWalletStartDate(configRow.data_gasto);
+        setConfigId(configRow.id);
+      } else {
+        setVerbaMarceloStr("0");
+        setWalletStartDate("9999-12-31");
+        setConfigId(null);
+      }
+      // Oculta a linha de configuração da lista principal
+      setGastos(allData.filter(g => g.descricao !== "CONFIG_CARTEIRA_MARCELO"));
+    }
     setLoading(false);
   };
 
@@ -421,12 +429,32 @@ const GastosTab = () => {
                   const val = parseFloat(normalized);
                   if (!isNaN(val) && val > 0) {
                     const current = parseFloat(verbaMarceloStr) || 0;
+                    let newStartDate = walletStartDate;
                     // Se a carteira não tinha uma data de início, marca para o dia 1º do mês que está sendo visualizado
                     if (walletStartDate === "9999-12-31") {
-                      const firstDay = new Date(targetMonth.getFullYear(), targetMonth.getMonth(), 1).toISOString().split("T")[0];
-                      setWalletStartDate(firstDay);
+                      newStartDate = new Date(targetMonth.getFullYear(), targetMonth.getMonth(), 1).toISOString().split("T")[0];
                     }
-                    setVerbaMarceloStr((current + val).toString());
+                    const newVal = current + val;
+                    
+                    const payload = {
+                      descricao: "CONFIG_CARTEIRA_MARCELO",
+                      valor: newVal,
+                      categoria: "Outros",
+                      responsavel: "Zelia" as const,
+                      data_gasto: newStartDate,
+                      observacao: "Configuração do saldo da carteira do Marcelo (Não apague)"
+                    };
+                    
+                    if (configId) {
+                      (supabase.from as any)("gastos").update(payload).eq("id", configId).then();
+                    } else {
+                      (supabase.from as any)("gastos").insert([payload]).select().then(({ data }: any) => {
+                         if (data && data[0]) setConfigId(data[0].id);
+                      });
+                    }
+
+                    setWalletStartDate(newStartDate);
+                    setVerbaMarceloStr(newVal.toString());
                   }
                   setIsAddingVerba(false);
                 }} 
@@ -446,6 +474,10 @@ const GastosTab = () => {
                       if (window.confirm("Zerar a carteira? Total Recebido e Saldo vão para R$ 0,00. Os gastos registrados não são apagados.")) {
                         setVerbaMarceloStr("0");
                         setWalletStartDate("9999-12-31");
+                        if (configId) {
+                          (supabase.from as any)("gastos").delete().eq("id", configId).then();
+                          setConfigId(null);
+                        }
                       }
                     }}
                     title="Zerar Total Recebido"
@@ -465,6 +497,10 @@ const GastosTab = () => {
                       if (window.confirm("Zerar a carteira? Total Recebido e Saldo vão para R$ 0,00. Os gastos registrados não são apagados.")) {
                         setVerbaMarceloStr("0");
                         setWalletStartDate("9999-12-31");
+                        if (configId) {
+                          (supabase.from as any)("gastos").delete().eq("id", configId).then();
+                          setConfigId(null);
+                        }
                       }
                     }}
                     title="Zerar Total Recebido"
