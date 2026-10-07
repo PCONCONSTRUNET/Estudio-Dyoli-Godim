@@ -96,12 +96,21 @@ const GastosTab = () => {
 
   // Verba do Marcelo
   const [verbaMarceloStr, setVerbaMarceloStr] = useState(() => localStorage.getItem("verba_marcelo") || "0");
+  // Offset: total de gastos no momento do último reset, para que o saldo comece em 0 após resetar
+  const [gastosOffsetStr, setGastosOffsetStr] = useState(() => localStorage.getItem("gastos_offset_marcelo") || "0");
   const [isAddingVerba, setIsAddingVerba] = useState(false);
   const [valorAdicionar, setValorAdicionar] = useState("");
 
   useEffect(() => {
     localStorage.setItem("verba_marcelo", verbaMarceloStr);
   }, [verbaMarceloStr]);
+
+  useEffect(() => {
+    localStorage.setItem("gastos_offset_marcelo", gastosOffsetStr);
+  }, [gastosOffsetStr]);
+
+  // Gastos do Marcelo descontando o offset do último reset
+  const saldoMarcelo = (parseFloat(verbaMarceloStr) || 0) - (totalGeral - (parseFloat(gastosOffsetStr) || 0));
 
   // Form
   const [descricao, setDescricao] = useState("");
@@ -411,11 +420,12 @@ const GastosTab = () => {
                   <p className="text-[10px] text-white/40 font-body uppercase tracking-wider">Total Recebido</p>
                   <button 
                     onClick={() => {
-                      if (window.confirm("Zerar valor recebido? (Isso não apaga os gastos, então seu saldo ficará negativo até você adicionar novo saldo)")) {
+                      if (window.confirm("Resetar carteira? O Total Recebido e o Saldo voltarão para R$ 0,00. Os gastos registrados não são apagados.")) {
                         setVerbaMarceloStr("0");
+                        setGastosOffsetStr(totalGeral.toString());
                       }
                     }}
-                    title="Zerar valor recebido"
+                    title="Resetar carteira"
                   >
                     <BinButton size="sm" onClick={() => {}} />
                   </button>
@@ -429,17 +439,18 @@ const GastosTab = () => {
                   <p className="text-[10px] text-white/40 font-body uppercase tracking-wider">Saldo Atual</p>
                   <button 
                     onClick={() => {
-                      if (window.confirm("Zerar o Saldo Atual? O Total Recebido será ajustado para igualar os gastos (saldo = R$ 0,00).")) {
-                        setVerbaMarceloStr(totalGeral.toString());
+                      if (window.confirm("Resetar carteira? O Total Recebido e o Saldo voltarão para R$ 0,00. Os gastos registrados não são apagados.")) {
+                        setVerbaMarceloStr("0");
+                        setGastosOffsetStr(totalGeral.toString());
                       }
                     }}
-                    title="Zerar Saldo Atual"
+                    title="Resetar carteira"
                   >
                     <BinButton size="sm" onClick={() => {}} />
                   </button>
                 </div>
-                <p className={`font-heading text-[16px] font-bold tabular-nums ${(parseFloat(verbaMarceloStr) || 0) - totalGeral < 0 ? "text-red-400" : "text-green-400"}`}>
-                  {formatCurrency((parseFloat(verbaMarceloStr) || 0) - totalGeral)}
+                <p className={`font-heading text-[16px] font-bold tabular-nums ${saldoMarcelo < 0 ? "text-red-400" : "text-green-400"}`}>
+                  {formatCurrency(saldoMarcelo)}
                 </p>
               </div>
             </div>
