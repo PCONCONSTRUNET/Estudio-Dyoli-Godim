@@ -97,7 +97,7 @@ const GastosTab = () => {
   // Verba do Marcelo
   const [verbaMarceloStr, setVerbaMarceloStr] = useState(() => localStorage.getItem("verba_marcelo") || "0");
   const todayISO_ = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0];
-  const [walletStartDate, setWalletStartDate] = useState(() => localStorage.getItem("wallet_start_date") || todayISO_);
+  const [walletStartDate, setWalletStartDate] = useState(() => localStorage.getItem("wallet_start_date") || "9999-12-31");
   const [isAddingVerba, setIsAddingVerba] = useState(false);
   const [valorAdicionar, setValorAdicionar] = useState("");
 
@@ -209,9 +209,9 @@ const GastosTab = () => {
   const totalFiltrado = useMemo(() => gastosFiltrados.reduce((s, g) => s + Number(g.valor), 0), [gastosFiltrados]);
 
   // Gastos do Marcelo a partir da data de início da carteira
-  // Se walletStartDate está vazio (carteira zerada), nenhum gasto é contado ainda
+  // '9999-12-31' = carteira zerada, nenhum gasto contado (saldo = 0)
   const gastosAposInicio = useMemo(() => {
-    if (!walletStartDate) return 0;
+    if (walletStartDate === "9999-12-31") return 0;
     return gastos
       .filter(g => g.responsavel === "Zelia" && g.data_gasto >= walletStartDate)
       .reduce((s, g) => s + Number(g.valor), 0);
@@ -444,7 +444,7 @@ const GastosTab = () => {
                     onClick={() => {
                       if (window.confirm("Zerar a carteira? Total Recebido e Saldo vão para R$ 0,00. Os gastos registrados não são apagados.")) {
                         setVerbaMarceloStr("0");
-                        setWalletStartDate("");
+                        setWalletStartDate("9999-12-31");
                       }
                     }}
                     title="Zerar Total Recebido"
@@ -461,8 +461,9 @@ const GastosTab = () => {
                   <p className="text-[10px] text-white/40 font-body uppercase tracking-wider">Saldo Atual</p>
                   <button 
                     onClick={() => {
-                      if (window.confirm("Zerar Total Recebido para R$ 0?")) {
+                      if (window.confirm("Zerar a carteira? Total Recebido e Saldo vão para R$ 0,00. Os gastos registrados não são apagados.")) {
                         setVerbaMarceloStr("0");
+                        setWalletStartDate("9999-12-31");
                       }
                     }}
                     title="Zerar Total Recebido"
