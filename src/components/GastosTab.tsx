@@ -407,26 +407,37 @@ const GastosTab = () => {
           ) : (
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-[#2c2c2e] p-3 rounded-[12px] border border-white/5">
-                <p className="text-[10px] text-white/40 font-body uppercase tracking-wider mb-1">Total Recebido (Geral)</p>
-                <div className="flex items-center justify-between group">
-                  <p className="font-heading text-[16px] font-bold text-white tabular-nums">
-                    {formatCurrency(parseFloat(verbaMarceloStr) || 0)}
-                  </p>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-[10px] text-white/40 font-body uppercase tracking-wider">Total Recebido</p>
                   <button 
                     onClick={() => {
                       if (window.confirm("Zerar valor recebido? (Isso não apaga os gastos, então seu saldo ficará negativo até você adicionar novo saldo)")) {
                         setVerbaMarceloStr("0");
                       }
                     }}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
                     title="Zerar valor recebido"
                   >
                     <BinButton size="sm" onClick={() => {}} />
                   </button>
                 </div>
+                <p className="font-heading text-[16px] font-bold text-white tabular-nums">
+                  {formatCurrency(parseFloat(verbaMarceloStr) || 0)}
+                </p>
               </div>
               <div className="bg-[#2c2c2e] p-3 rounded-[12px] border border-white/5">
-                <p className="text-[10px] text-white/40 font-body uppercase tracking-wider mb-1">Saldo Atual</p>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-[10px] text-white/40 font-body uppercase tracking-wider">Saldo Atual</p>
+                  <button 
+                    onClick={() => {
+                      if (window.confirm("Zerar o Saldo Atual? O Total Recebido será ajustado para igualar os gastos (saldo = R$ 0,00).")) {
+                        setVerbaMarceloStr(totalGeral.toString());
+                      }
+                    }}
+                    title="Zerar Saldo Atual"
+                  >
+                    <BinButton size="sm" onClick={() => {}} />
+                  </button>
+                </div>
                 <p className={`font-heading text-[16px] font-bold tabular-nums ${(parseFloat(verbaMarceloStr) || 0) - totalGeral < 0 ? "text-red-400" : "text-green-400"}`}>
                   {formatCurrency((parseFloat(verbaMarceloStr) || 0) - totalGeral)}
                 </p>
