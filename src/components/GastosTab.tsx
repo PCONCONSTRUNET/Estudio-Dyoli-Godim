@@ -96,18 +96,12 @@ const GastosTab = () => {
 
   // Verba do Marcelo
   const [verbaMarceloStr, setVerbaMarceloStr] = useState(() => localStorage.getItem("verba_marcelo") || "0");
-  // Offset: total de gastos no momento do último reset, para que o saldo comece em 0 após resetar
-  const [gastosOffsetStr, setGastosOffsetStr] = useState(() => localStorage.getItem("gastos_offset_marcelo") || "0");
   const [isAddingVerba, setIsAddingVerba] = useState(false);
   const [valorAdicionar, setValorAdicionar] = useState("");
 
   useEffect(() => {
     localStorage.setItem("verba_marcelo", verbaMarceloStr);
   }, [verbaMarceloStr]);
-
-  useEffect(() => {
-    localStorage.setItem("gastos_offset_marcelo", gastosOffsetStr);
-  }, [gastosOffsetStr]);
 
 
   // Form
@@ -208,8 +202,8 @@ const GastosTab = () => {
   const totalGeral = useMemo(() => gastos.filter(g => g.responsavel === responsavelFilter).reduce((s, g) => s + Number(g.valor), 0), [gastos, responsavelFilter]);
   const totalFiltrado = useMemo(() => gastosFiltrados.reduce((s, g) => s + Number(g.valor), 0), [gastosFiltrados]);
 
-  // Saldo do Marcelo descontando o offset do último reset
-  const saldoMarcelo = (parseFloat(verbaMarceloStr) || 0) - (totalGeral - (parseFloat(gastosOffsetStr) || 0));
+  // Saldo = total recebido - total gasto (simples)
+  const saldoMarcelo = (parseFloat(verbaMarceloStr) || 0) - totalGeral;
 
   // Categorias disponíveis para filtro (inclui personalizadas)
   const categoriasDisponiveis = useMemo(() => {
@@ -421,12 +415,11 @@ const GastosTab = () => {
                   <p className="text-[10px] text-white/40 font-body uppercase tracking-wider">Total Recebido</p>
                   <button 
                     onClick={() => {
-                      if (window.confirm("Resetar carteira? O Total Recebido e o Saldo voltarão para R$ 0,00. Os gastos registrados não são apagados.")) {
+                      if (window.confirm("Zerar Total Recebido para R$ 0? O Saldo Atual irá refletir apenas os gastos registrados.")) {
                         setVerbaMarceloStr("0");
-                        setGastosOffsetStr(totalGeral.toString());
                       }
                     }}
-                    title="Resetar carteira"
+                    title="Zerar Total Recebido"
                   >
                     <BinButton size="sm" onClick={() => {}} />
                   </button>
@@ -440,12 +433,11 @@ const GastosTab = () => {
                   <p className="text-[10px] text-white/40 font-body uppercase tracking-wider">Saldo Atual</p>
                   <button 
                     onClick={() => {
-                      if (window.confirm("Resetar carteira? O Total Recebido e o Saldo voltarão para R$ 0,00. Os gastos registrados não são apagados.")) {
+                      if (window.confirm("Zerar Total Recebido para R$ 0?")) {
                         setVerbaMarceloStr("0");
-                        setGastosOffsetStr(totalGeral.toString());
                       }
                     }}
-                    title="Resetar carteira"
+                    title="Zerar Total Recebido"
                   >
                     <BinButton size="sm" onClick={() => {}} />
                   </button>
