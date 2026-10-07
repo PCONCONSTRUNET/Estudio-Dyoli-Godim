@@ -96,12 +96,19 @@ const GastosTab = () => {
 
   // Verba do Marcelo
   const [verbaMarceloStr, setVerbaMarceloStr] = useState(() => localStorage.getItem("verba_marcelo") || "0");
+  const [walletStartDate, setWalletStartDate] = useState(() => localStorage.getItem("wallet_start_date") || "");
   const [isAddingVerba, setIsAddingVerba] = useState(false);
   const [valorAdicionar, setValorAdicionar] = useState("");
+
+  const todayISO_ = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0];
 
   useEffect(() => {
     localStorage.setItem("verba_marcelo", verbaMarceloStr);
   }, [verbaMarceloStr]);
+
+  useEffect(() => {
+    localStorage.setItem("wallet_start_date", walletStartDate);
+  }, [walletStartDate]);
 
 
   // Form
@@ -202,8 +209,16 @@ const GastosTab = () => {
   const totalGeral = useMemo(() => gastos.filter(g => g.responsavel === responsavelFilter).reduce((s, g) => s + Number(g.valor), 0), [gastos, responsavelFilter]);
   const totalFiltrado = useMemo(() => gastosFiltrados.reduce((s, g) => s + Number(g.valor), 0), [gastosFiltrados]);
 
-  // Saldo = total recebido - total gasto (simples)
-  const saldoMarcelo = (parseFloat(verbaMarceloStr) || 0) - totalGeral;
+  // Gastos do Marcelo a partir da data de início da carteira (ignora gastos antigos)
+  const gastosAposInicio = useMemo(() => {
+    if (!walletStartDate) return totalGeral;
+    return gastos
+      .filter(g => g.responsavel === "Zelia" && g.data_gasto >= walletStartDate)
+      .reduce((s, g) => s + Number(g.valor), 0);
+  }, [gastos, walletStartDate, totalGeral]);
+
+  // Saldo = total recebido - gastos desde o início da carteira
+  const saldoMarcelo = (parseFloat(verbaMarceloStr) || 0) - gastosAposInicio;
 
   // Categorias disponíveis para filtro (inclui personalizadas)
   const categoriasDisponiveis = useMemo(() => {
@@ -398,6 +413,10 @@ const GastosTab = () => {
                   const val = parseFloat(valorAdicionar);
                   if (!isNaN(val) && val > 0) {
                     const current = parseFloat(verbaMarceloStr) || 0;
+                    // Se estiver adicionando do zero, marca a data de início da carteira
+                    if (current === 0) {
+                      setWalletStartDate(todayISO_);
+                    }
                     setVerbaMarceloStr((current + val).toString());
                   }
                   setIsAddingVerba(false);
@@ -415,8 +434,9 @@ const GastosTab = () => {
                   <p className="text-[10px] text-white/40 font-body uppercase tracking-wider">Total Recebido</p>
                   <button 
                     onClick={() => {
-                      if (window.confirm("Zerar Total Recebido para R$ 0? O Saldo Atual irá refletir apenas os gastos registrados.")) {
+                      if (window.confirm("Zerar a carteira? O Total Recebido volta para R$ 0 e os gastos antigos serão ignorados ao adicionar novo saldo.")) {
                         setVerbaMarceloStr("0");
+                        setWalletStartDate("");
                       }
                     }}
                     title="Zerar Total Recebido"
