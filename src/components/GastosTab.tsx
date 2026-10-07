@@ -400,15 +400,23 @@ const GastosTab = () => {
           {isAddingVerba ? (
             <div className="flex gap-2">
               <input 
-                type="number"
+                type="text"
+                inputMode="decimal"
                 value={valorAdicionar}
-                onChange={e => setValorAdicionar(e.target.value)}
-                placeholder="Ex: 1000"
+                onChange={e => {
+                  // Aceita apenas números, vírgula e ponto
+                  const raw = e.target.value.replace(/[^0-9.,]/g, "");
+                  setValorAdicionar(raw);
+                }}
+                placeholder="Ex: 1974 ou 1974,50"
+                autoFocus
                 className="flex-1 rounded-xl bg-[#2c2c2e] border border-white/5 py-2 px-3 text-white font-body text-[13px] focus:outline-none focus:border-white/20"
               />
               <button 
                 onClick={() => {
-                  const val = parseFloat(valorAdicionar);
+                  // Remove pontos de milhar (1.974 → 1974) e troca vírgula decimal por ponto (1974,50 → 1974.50)
+                  const normalized = valorAdicionar.replace(/\./g, "").replace(",", ".");
+                  const val = parseFloat(normalized);
                   if (!isNaN(val) && val > 0) {
                     const current = parseFloat(verbaMarceloStr) || 0;
                     // Se estiver adicionando do zero, marca a data de início da carteira
