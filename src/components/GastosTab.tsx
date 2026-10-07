@@ -96,11 +96,10 @@ const GastosTab = () => {
 
   // Verba do Marcelo
   const [verbaMarceloStr, setVerbaMarceloStr] = useState(() => localStorage.getItem("verba_marcelo") || "0");
-  const [walletStartDate, setWalletStartDate] = useState(() => localStorage.getItem("wallet_start_date") || "");
+  const todayISO_ = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0];
+  const [walletStartDate, setWalletStartDate] = useState(() => localStorage.getItem("wallet_start_date") || todayISO_);
   const [isAddingVerba, setIsAddingVerba] = useState(false);
   const [valorAdicionar, setValorAdicionar] = useState("");
-
-  const todayISO_ = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0];
 
   useEffect(() => {
     localStorage.setItem("verba_marcelo", verbaMarceloStr);
@@ -211,11 +210,10 @@ const GastosTab = () => {
 
   // Gastos do Marcelo a partir da data de início da carteira (ignora gastos antigos)
   const gastosAposInicio = useMemo(() => {
-    if (!walletStartDate) return totalGeral;
     return gastos
       .filter(g => g.responsavel === "Zelia" && g.data_gasto >= walletStartDate)
       .reduce((s, g) => s + Number(g.valor), 0);
-  }, [gastos, walletStartDate, totalGeral]);
+  }, [gastos, walletStartDate]);
 
   // Saldo = total recebido - gastos desde o início da carteira
   const saldoMarcelo = (parseFloat(verbaMarceloStr) || 0) - gastosAposInicio;
