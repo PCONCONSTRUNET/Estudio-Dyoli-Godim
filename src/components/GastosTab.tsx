@@ -109,8 +109,6 @@ const GastosTab = () => {
     localStorage.setItem("gastos_offset_marcelo", gastosOffsetStr);
   }, [gastosOffsetStr]);
 
-  // Gastos do Marcelo descontando o offset do último reset
-  const saldoMarcelo = (parseFloat(verbaMarceloStr) || 0) - (totalGeral - (parseFloat(gastosOffsetStr) || 0));
 
   // Form
   const [descricao, setDescricao] = useState("");
@@ -209,6 +207,9 @@ const GastosTab = () => {
 
   const totalGeral = useMemo(() => gastos.filter(g => g.responsavel === responsavelFilter).reduce((s, g) => s + Number(g.valor), 0), [gastos, responsavelFilter]);
   const totalFiltrado = useMemo(() => gastosFiltrados.reduce((s, g) => s + Number(g.valor), 0), [gastosFiltrados]);
+
+  // Saldo do Marcelo descontando o offset do último reset
+  const saldoMarcelo = (parseFloat(verbaMarceloStr) || 0) - (totalGeral - (parseFloat(gastosOffsetStr) || 0));
 
   // Categorias disponíveis para filtro (inclui personalizadas)
   const categoriasDisponiveis = useMemo(() => {
