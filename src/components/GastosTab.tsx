@@ -427,9 +427,22 @@ const GastosTab = () => {
               </div>
               <div className="bg-[#2c2c2e] p-3 rounded-[12px] border border-white/5">
                 <p className="text-[10px] text-white/40 font-body uppercase tracking-wider mb-1">Saldo Atual</p>
-                <p className={`font-heading text-[16px] font-bold tabular-nums ${(parseFloat(verbaMarceloStr) || 0) - totalGeral < 0 ? "text-red-400" : "text-green-400"}`}>
-                  {formatCurrency((parseFloat(verbaMarceloStr) || 0) - totalGeral)}
-                </p>
+                <div className="flex items-center justify-between group">
+                  <p className={`font-heading text-[16px] font-bold tabular-nums ${(parseFloat(verbaMarceloStr) || 0) - totalGeral < 0 ? "text-red-400" : "text-green-400"}`}>
+                    {formatCurrency((parseFloat(verbaMarceloStr) || 0) - totalGeral)}
+                  </p>
+                  <button 
+                    onClick={() => {
+                      if (window.confirm("Deseja zerar o Saldo Atual? Isso fará com que o Total Recebido seja igualado aos gastos até agora.")) {
+                        setVerbaMarceloStr(totalGeral.toString());
+                      }
+                    }}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Zerar Saldo Atual"
+                  >
+                    <BinButton size="sm" onClick={() => {}} />
+                  </button>
+                </div>
               </div>
             </div>
           )}
