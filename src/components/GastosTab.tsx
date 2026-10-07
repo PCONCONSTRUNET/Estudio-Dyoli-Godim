@@ -96,17 +96,12 @@ const GastosTab = () => {
 
   // Verba do Marcelo
   const [verbaMarceloStr, setVerbaMarceloStr] = useState(() => localStorage.getItem("verba_marcelo") || "0");
-  const [gastosOffsetStr, setGastosOffsetStr] = useState(() => localStorage.getItem("gastos_offset_marcelo") || "0");
   const [isAddingVerba, setIsAddingVerba] = useState(false);
   const [valorAdicionar, setValorAdicionar] = useState("");
 
   useEffect(() => {
     localStorage.setItem("verba_marcelo", verbaMarceloStr);
   }, [verbaMarceloStr]);
-
-  useEffect(() => {
-    localStorage.setItem("gastos_offset_marcelo", gastosOffsetStr);
-  }, [gastosOffsetStr]);
 
   // Form
   const [descricao, setDescricao] = useState("");
@@ -419,13 +414,12 @@ const GastosTab = () => {
                   </p>
                   <button 
                     onClick={() => {
-                      if (window.confirm("Zerar TODA A CARTEIRA? Isso fará com que o Saldo Atual e o Total Recebido voltem para R$ 0, ignorando os gastos antigos.")) {
+                      if (window.confirm("Zerar valor recebido? (Isso não apaga os gastos, então seu saldo ficará negativo até você adicionar novo saldo)")) {
                         setVerbaMarceloStr("0");
-                        setGastosOffsetStr(totalGeral.toString());
                       }
                     }}
                     className="opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Zerar Carteira"
+                    title="Zerar valor recebido"
                   >
                     <BinButton size="sm" onClick={() => {}} />
                   </button>
@@ -433,23 +427,9 @@ const GastosTab = () => {
               </div>
               <div className="bg-[#2c2c2e] p-3 rounded-[12px] border border-white/5">
                 <p className="text-[10px] text-white/40 font-body uppercase tracking-wider mb-1">Saldo Atual</p>
-                <div className="flex items-center justify-between group">
-                  <p className={`font-heading text-[16px] font-bold tabular-nums ${(parseFloat(verbaMarceloStr) || 0) - (totalGeral - (parseFloat(gastosOffsetStr) || 0)) < 0 ? "text-red-400" : "text-green-400"}`}>
-                    {formatCurrency((parseFloat(verbaMarceloStr) || 0) - (totalGeral - (parseFloat(gastosOffsetStr) || 0)))}
-                  </p>
-                  <button 
-                    onClick={() => {
-                      if (window.confirm("Zerar TODA A CARTEIRA? Isso fará com que o Saldo Atual e o Total Recebido voltem para R$ 0, ignorando os gastos antigos.")) {
-                        setVerbaMarceloStr("0");
-                        setGastosOffsetStr(totalGeral.toString());
-                      }
-                    }}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Zerar Carteira"
-                  >
-                    <BinButton size="sm" onClick={() => {}} />
-                  </button>
-                </div>
+                <p className={`font-heading text-[16px] font-bold tabular-nums ${(parseFloat(verbaMarceloStr) || 0) - totalGeral < 0 ? "text-red-400" : "text-green-400"}`}>
+                  {formatCurrency((parseFloat(verbaMarceloStr) || 0) - totalGeral)}
+                </p>
               </div>
             </div>
           )}
