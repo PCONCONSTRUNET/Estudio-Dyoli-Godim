@@ -34,15 +34,23 @@ export function getPaymentDate(item: {
   data_agendamento?: string | null;
   data_venda?: string | null;
 }): string {
+  if (item.paid_at) {
+    try {
+      const d = new Date(item.paid_at);
+      if (!isNaN(d.getTime())) return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split("T")[0];
+      return String(item.paid_at).split("T")[0];
+    } catch {
+      return String(item.paid_at).split("T")[0];
+    }
+  }
   if (item.data_venda) return item.data_venda;
-  const iso = item.paid_at || item.created_at;
+  const iso = item.created_at;
   if (!iso) return item.data_agendamento || "";
   try {
     const d = new Date(iso);
-    if (isNaN(d.getTime())) return String(iso).split("T")[0] || item.data_agendamento || "";
-    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split("T")[0];
+    if (!isNaN(d.getTime())) return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split("T")[0];
+    return String(iso).split("T")[0] || item.data_agendamento || "";
   } catch {
     return String(iso).split("T")[0] || item.data_agendamento || "";
   }
 }
-
