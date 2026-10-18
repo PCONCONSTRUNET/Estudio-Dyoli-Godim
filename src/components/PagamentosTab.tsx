@@ -76,6 +76,8 @@ interface FaturaPendente {
   valorPago: number;
   restante: number;
   data: string;
+  isVenda?: boolean;
+  userId?: string;
 }
 
 interface SmartPayModalState {
@@ -212,9 +214,23 @@ Qualquer dúvida, estamos à disposição! 🙏`;
           const { error: e1 } = await supabase.from("pagamento_historico").delete().eq("id", histId);
           if (e1) throw e1;
 
-          // Reverte o valor_pago no agendamento
-          const novoValorPago = Math.max(0, Number(ag.valor_pago || 0) - Number(ag.valor_fatura));
-          const { error: e2 } = await supabase.from("agendamentos").update({ valor_pago: novoValorPago } as any).eq("id", ag.id);
+          // Busca dados frescos do agendamento para recalcular com segurança
+          const { data: freshAg, error: eFetch } = await supabase
+            .from("agendamentos")
+            .select("valor, valor_pago")
+            .eq("id", ag.id)
+            .single();
+
+          if (eFetch) throw eFetch;
+
+          const currentPaid = Number(freshAg?.valor_pago ?? ag.valor_pago ?? 0);
+          const novoValorPago = Math.max(0, currentPaid - Number(ag.valor_fatura));
+          const novoStatus = novoValorPago < Number(freshAg?.valor ?? ag.valor) ? "confirmado" : "concluido";
+
+          const { error: e2 } = await supabase
+            .from("agendamentos")
+            .update({ valor_pago: novoValorPago, status: novoStatus } as any)
+            .eq("id", ag.id);
           if (e2) throw e2;
 
           toast.success("Pagamento revertido com sucesso.");
@@ -466,18 +482,59 @@ Qualquer dúvida, estamos à disposição! 🙏`;
     });
 
     vendas.forEach((v) => {
-      list.push({
-        id: v.id, _faturaId: `venda-${v.id}`,
-        fatura_tipo: v.pago ? "pagamento" : "pendente",
-        valor_fatura: v.valor_total,
-        data_fatura: getPaymentDate(v),
-        status: v.pago ? "concluido" : "pendente",
-        cliente_nome: v.cliente_nome, servico: "Venda de Produtos", variacao: "Loja",
-        horario: v.created_at ? `${String(new Date(v.created_at).getHours()).padStart(2, "0")}:${String(new Date(v.created_at).getMinutes()).padStart(2, "0")}` : "00:00",
-        forma_pagamento: v.forma_pagamento,
-        _is_saida: false, _is_venda: true, _desc_pagamento: "Venda de Produtos",
-        user_id: v.cliente_id || "admin",
-      });
+      const vTotal = Number(v.valor_total || 0);
+      const vPago = Number(v.valor_pago || 0);
+      const vRestante = Math.max(0, vTotal - vPago);
+
+      if (v.pago || vRestante <= 0.01) {
+        list.push({
+          id: v.id, _faturaId: `venda-${v.id}`,
+          fatura_tipo: "pagamento",
+          valor_fatura: vTotal,
+          valor: vTotal,
+          valor_pago: vPago || vTotal,
+          data_fatura: getPaymentDate(v),
+          status: "concluido",
+          cliente_nome: v.cliente_nome, servico: "Venda de Produtos", variacao: "Loja",
+          horario: v.created_at ? `${String(new Date(v.created_at).getHours()).padStart(2, "0")}:${String(new Date(v.created_at).getMinutes()).padStart(2, "0")}` : "00:00",
+          forma_pagamento: v.forma_pagamento,
+          _is_saida: false, _is_venda: true, _desc_pagamento: "Venda de Produtos",
+          user_id: v.cliente_id || "admin",
+        });
+      } else {
+        if (vPago > 0) {
+          list.push({
+            id: v.id, _faturaId: `venda-${v.id}-pago`,
+            fatura_tipo: "pagamento",
+            valor_fatura: vPago,
+            valor: vTotal,
+            valor_pago: vPago,
+            data_fatura: getPaymentDate(v),
+            status: "concluido",
+            cliente_nome: v.cliente_nome, servico: "Venda de Produtos", variacao: "Loja",
+            horario: v.created_at ? `${String(new Date(v.created_at).getHours()).padStart(2, "0")}:${String(new Date(v.created_at).getMinutes()).padStart(2, "0")}` : "00:00",
+            forma_pagamento: v.forma_pagamento,
+            _is_saida: false, _is_venda: true, _desc_pagamento: "Venda Paga (Parcial)",
+            _is_partial: true,
+            user_id: v.cliente_id || "admin",
+          });
+        }
+        list.push({
+          id: v.id, _faturaId: `venda-${v.id}-restante`,
+          fatura_tipo: "pendente",
+          valor_fatura: vRestante,
+          valor: vTotal,
+          valor_pago: vPago,
+          data_fatura: v.data_venda || v.created_at?.split("T")[0] || getPaymentDate(v),
+          status: "pendente",
+          cliente_nome: v.cliente_nome, servico: "Venda de Produtos", variacao: "Loja",
+          horario: v.created_at ? `${String(new Date(v.created_at).getHours()).padStart(2, "0")}:${String(new Date(v.created_at).getMinutes()).padStart(2, "0")}` : "00:00",
+          forma_pagamento: v.forma_pagamento,
+          _is_saida: false, _is_venda: true, _desc_pagamento: "Restante Pendente (Loja)",
+          _is_partial: vPago > 0,
+          user_id: v.cliente_id || "admin",
+        });
+      }
     });
 
     return list;
@@ -489,7 +546,9 @@ Qualquer dúvida, estamos à disposição! 🙏`;
   }, [faturas, dateFilter]);
 
   const filtered = useMemo(() => {
-    let list = [...dateFilteredFaturas];
+    // Quando buscando por texto ou filtrando por pendências, não corta dívidas criadas em datas anteriores
+    const baseList = (debouncedSearch.trim() || statusFilter === "pendente") ? faturas : dateFilteredFaturas;
+    let list = [...baseList];
 
     if (statusFilter !== "todos") {
       if (statusFilter === "pendente") list = list.filter((a) => a.fatura_tipo === "pendente" && !["cancelado", "falta"].includes(a.status));
@@ -551,16 +610,18 @@ Qualquer dúvida, estamos à disposição! 🙏`;
     const pendentesMap = new Map<string, FaturaPendente>();
 
     filtered.forEach(f => {
-      if (f._is_saida || f._is_venda) return;
+      if (f._is_saida) return;
       if (!clienteNome) clienteNome = getClientName(f.user_id, f.cliente_nome);
       if (f.fatura_tipo === "pendente" && !["cancelado", "falta"].includes(f.status)) {
         totalPendSum += Number(f.valor_fatura);
         if (!pendentesMap.has(f.id)) {
           pendentesMap.set(f.id, {
             id: f.id, servico: f.servico, variacao: f.variacao || "",
-            valor: Number(f.valor),
+            valor: Number(f.valor ?? f.valor_fatura ?? 0),
             valorPago: Number(f.valor_pago || 0) + Number(f.valor_desconto_credito || 0),
             restante: Number(f.valor_fatura), data: f.data_fatura,
+            isVenda: !!f._is_venda,
+            userId: f.user_id,
           });
         } else {
           pendentesMap.get(f.id)!.restante += Number(f.valor_fatura);
@@ -661,6 +722,14 @@ Qualquer dúvida, estamos à disposição! 🙏`;
     return result;
   }, [payMode, payValor, smartPayModal]);
 
+  const paySobraPreview = useMemo(() => {
+    if (payMode !== "livre" || !smartPayModal || !payValor.trim()) return 0;
+    const valor = parseCurrencyInput(payValor);
+    if (valor <= 0) return 0;
+    const totalDevendo = smartPayModal.pendentes.reduce((s, p) => s + p.restante, 0);
+    return Math.max(0, valor - totalDevendo);
+  }, [payMode, payValor, smartPayModal]);
+
   // ── Smart payment handler ──────────────────────────────────────────────
   const handleSmartPayment = async () => {
     if (!smartPayModal) return;
@@ -684,33 +753,48 @@ Qualquer dúvida, estamos à disposição! 🙏`;
         for (const fatura of faturasSelecionadas) {
           const valorPagar = Math.min(valor / faturasSelecionadas.length, fatura.restante);
           const novoValorPago = fatura.valorPago + valorPagar;
-          const novoStatus = novoValorPago >= fatura.valor ? "concluido" : undefined;
-          
-          const updateData: any = {
-            valor_pago: novoValorPago,
-            forma_pagamento: payForma,
-            paid_at: new Date().toISOString(),
-          };
-          if (novoStatus) updateData.status = novoStatus;
+          const quitada = novoValorPago >= fatura.valor - 0.01;
 
-          const { error: err1 } = await supabase.from("agendamentos").update(updateData).eq("id", fatura.id);
-          if (err1) throw err1;
+          if (fatura.isVenda) {
+            const { error: errV } = await supabase.from("vendas").update({
+              valor_pago: novoValorPago,
+              pago: quitada,
+              forma_pagamento: payForma,
+              paid_at: new Date().toISOString(),
+            }).eq("id", fatura.id);
+            if (errV) throw errV;
 
-          // Atualiza local imediatamente para UI refletir
-          setLocalAgendamentos(prev => prev.map(a =>
-            a.id === fatura.id ? { ...a, valor_pago: novoValorPago, forma_pagamento: payForma, ...(novoStatus ? { status: novoStatus } : {}) } : a
-          ));
+            setVendas(prev => prev.map(v =>
+              v.id === fatura.id ? { ...v, valor_pago: novoValorPago, pago: quitada, forma_pagamento: payForma } : v
+            ));
+          } else {
+            const novoStatus = quitada ? "concluido" : undefined;
+            const updateData: any = {
+              valor_pago: novoValorPago,
+              forma_pagamento: payForma,
+              paid_at: new Date().toISOString(),
+            };
+            if (novoStatus) updateData.status = novoStatus;
 
-          // Histórico: tenta inserir mas não bloqueia se falhar
-          const { error: err2 } = await supabase.from("pagamento_historico").insert({
-            agendamento_id: fatura.id,
-            status_anterior: statusFromValor(fatura.valorPago, fatura.valor),
-            status_novo: statusFromValor(novoValorPago, fatura.valor),
-            valor_anterior: fatura.valorPago, valor_novo: novoValorPago,
-            valor_delta: valorPagar, total: fatura.valor, acao: "registro",
-            autor_id: autorId, autor_nome: autorNome, observacao: payObs || "",
-          });
-          if (err2) console.warn("[pagamento_historico] insert failed:", err2.message);
+            const { error: err1 } = await supabase.from("agendamentos").update(updateData).eq("id", fatura.id);
+            if (err1) throw err1;
+
+            // Atualiza local imediatamente para UI refletir
+            setLocalAgendamentos(prev => prev.map(a =>
+              a.id === fatura.id ? { ...a, valor_pago: novoValorPago, forma_pagamento: payForma, ...(novoStatus ? { status: novoStatus } : {}) } : a
+            ));
+
+            // Histórico: tenta inserir mas não bloqueia se falhar
+            const { error: err2 } = await supabase.from("pagamento_historico").insert({
+              agendamento_id: fatura.id,
+              status_anterior: statusFromValor(fatura.valorPago, fatura.valor),
+              status_novo: statusFromValor(novoValorPago, fatura.valor),
+              valor_anterior: fatura.valorPago, valor_novo: novoValorPago,
+              valor_delta: valorPagar, total: fatura.valor, acao: "registro",
+              autor_id: autorId, autor_nome: autorNome, observacao: payObs || "",
+            });
+            if (err2) console.warn("[pagamento_historico] insert failed:", err2.message);
+          }
 
           totalPago += valorPagar;
         }
@@ -720,42 +804,65 @@ Qualquer dúvida, estamos à disposição! 🙏`;
         const pendentes = [...smartPayModal.pendentes].sort((a, b) => a.restante - b.restante);
         let saldo = valor;
         let count = 0;
+        let totalAbatido = 0;
+
         for (const fatura of pendentes) {
           if (saldo <= 0.01) break;
           const aPagar = Math.min(saldo, fatura.restante);
           const novoValorPago = fatura.valorPago + aPagar;
-          const novoStatus = novoValorPago >= fatura.valor ? "concluido" : undefined;
-          
-          const updateData: any = {
-            valor_pago: novoValorPago,
-            forma_pagamento: payForma,
-            paid_at: new Date().toISOString(),
-          };
-          if (novoStatus) updateData.status = novoStatus;
+          const quitada = novoValorPago >= fatura.valor - 0.01;
 
-          const { error: err1 } = await supabase.from("agendamentos").update(updateData).eq("id", fatura.id);
-          if (err1) throw err1;
+          if (fatura.isVenda) {
+            const { error: errV } = await supabase.from("vendas").update({
+              valor_pago: novoValorPago,
+              pago: quitada,
+              forma_pagamento: payForma,
+              paid_at: new Date().toISOString(),
+            }).eq("id", fatura.id);
+            if (errV) throw errV;
 
-          // Atualiza local imediatamente para UI refletir
-          setLocalAgendamentos(prev => prev.map(a =>
-            a.id === fatura.id ? { ...a, valor_pago: novoValorPago, forma_pagamento: payForma, ...(novoStatus ? { status: novoStatus } : {}) } : a
-          ));
+            setVendas(prev => prev.map(v =>
+              v.id === fatura.id ? { ...v, valor_pago: novoValorPago, pago: quitada, forma_pagamento: payForma } : v
+            ));
+          } else {
+            const novoStatus = quitada ? "concluido" : undefined;
+            const updateData: any = {
+              valor_pago: novoValorPago,
+              forma_pagamento: payForma,
+              paid_at: new Date().toISOString(),
+            };
+            if (novoStatus) updateData.status = novoStatus;
 
-          // Histórico: tenta inserir mas não bloqueia se falhar
-          const { error: err2 } = await supabase.from("pagamento_historico").insert({
-            agendamento_id: fatura.id,
-            status_anterior: statusFromValor(fatura.valorPago, fatura.valor),
-            status_novo: statusFromValor(novoValorPago, fatura.valor),
-            valor_anterior: fatura.valorPago, valor_novo: novoValorPago,
-            valor_delta: aPagar, total: fatura.valor, acao: "registro",
-            autor_id: autorId, autor_nome: autorNome, observacao: payObs || "",
-          });
-          if (err2) console.warn("[pagamento_historico] insert failed:", err2.message);
+            const { error: err1 } = await supabase.from("agendamentos").update(updateData).eq("id", fatura.id);
+            if (err1) throw err1;
+
+            // Atualiza local imediatamente para UI refletir
+            setLocalAgendamentos(prev => prev.map(a =>
+              a.id === fatura.id ? { ...a, valor_pago: novoValorPago, forma_pagamento: payForma, ...(novoStatus ? { status: novoStatus } : {}) } : a
+            ));
+
+            // Histórico: tenta inserir mas não bloqueia se falhar
+            const { error: err2 } = await supabase.from("pagamento_historico").insert({
+              agendamento_id: fatura.id,
+              status_anterior: statusFromValor(fatura.valorPago, fatura.valor),
+              status_novo: statusFromValor(novoValorPago, fatura.valor),
+              valor_anterior: fatura.valorPago, valor_novo: novoValorPago,
+              valor_delta: aPagar, total: fatura.valor, acao: "registro",
+              autor_id: autorId, autor_nome: autorNome, observacao: payObs || "",
+            });
+            if (err2) console.warn("[pagamento_historico] insert failed:", err2.message);
+          }
 
           saldo -= aPagar;
+          totalAbatido += aPagar;
           count++;
         }
-        toast.success(`✅ ${formatCurrency(valor)} distribuído em ${count} fatura(s) de ${smartPayModal.clienteNome}`);
+
+        if (saldo > 0.01) {
+          toast.success(`✅ ${formatCurrency(totalAbatido)} quitou ${count} débito(s). Troco/Sobra: ${formatCurrency(saldo)}`, { duration: 6000 });
+        } else {
+          toast.success(`✅ ${formatCurrency(totalAbatido)} distribuído em ${count} fatura(s) de ${smartPayModal.clienteNome}`);
+        }
       }
 
       setSmartPayModal(null);
@@ -1097,17 +1204,25 @@ Qualquer dúvida, estamos à disposição! 🙏`;
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          const pendentes: FaturaPendente[] = group.faturas
-                            .filter(f => f.fatura_tipo === "pendente" && !["cancelado", "falta"].includes(f.status))
-                            .map(f => ({
-                              id: f.id,
-                              servico: f.servico,
-                              variacao: f.variacao || "",
-                              valor: Number(f.valor),
-                              valorPago: Number(f.valor_pago || 0) + Number(f.valor_desconto_credito || 0),
-                              restante: Number(f.valor_fatura),
-                              data: f.data_fatura,
-                            }));
+                          // Puxa TODAS as faturas pendentes deste cliente em todo o histórico (faturas), não apenas as da data filtrada
+                          const todasPendentesDoCliente = faturas.filter(f =>
+                            !f._is_saida &&
+                            (f.user_id === group.userId || (f.cliente_nome && group.clienteNome && f.cliente_nome.toLowerCase() === group.clienteNome.toLowerCase())) &&
+                            f.fatura_tipo === "pendente" &&
+                            !["cancelado", "falta"].includes(f.status)
+                          );
+
+                          const pendentes: FaturaPendente[] = todasPendentesDoCliente.map(f => ({
+                            id: f.id,
+                            servico: f.servico,
+                            variacao: f.variacao || "",
+                            valor: Number(f.valor ?? f.valor_fatura ?? 0),
+                            valorPago: Number(f.valor_pago || 0) + Number(f.valor_desconto_credito || 0),
+                            restante: Number(f.valor_fatura),
+                            data: f.data_fatura,
+                            isVenda: !!f._is_venda,
+                            userId: f.user_id,
+                          }));
                           setSmartPayModal({ clienteNome: group.clienteNome, pendentes });
                           setPayMode("livre"); setPayValor(""); setPayForma("pix"); setPayObs(""); setPaySelectedIds([]);
                         }}
@@ -1388,6 +1503,16 @@ Qualquer dúvida, estamos à disposição! 🙏`;
                       </div>
                     </div>
                   ))}
+                  {paySobraPreview > 0 && (
+                    <div className="pt-2 border-t border-gold/20 flex items-center justify-between gap-2 text-amber-300">
+                      <span className="font-body text-[11px] font-medium flex items-center gap-1.5">
+                        💰 Troco / Sobra a devolver:
+                      </span>
+                      <span className="font-heading text-[13px] font-bold text-amber-200">
+                        {formatCurrency(paySobraPreview)}
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
 
