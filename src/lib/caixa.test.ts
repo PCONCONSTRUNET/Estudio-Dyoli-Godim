@@ -6,6 +6,8 @@ import {
   calculateDailyClosing,
   normalizePaymentMethod,
   sumMovementsForPeriod,
+  getCommissionRateForDate,
+  saveNewCommissionRate,
 } from "./caixa";
 import { getPaymentDate } from "./utils";
 
@@ -64,6 +66,21 @@ describe("caixa por data real de pagamento", () => {
 
   it("calcula a comissão apenas sobre o que entrou no dia", () => {
     expect(calculateCommission([movements[0]], 40)).toEqual({ base: 65, tips: 0, total: 26 });
+  });
+
+  it("aplica taxas de comissão por vigência sem alterar comissões antigas", () => {
+    const history = [
+      { startDate: "0000-01-01", rate: 40 },
+      { startDate: "2026-10-27", rate: 50 },
+    ];
+    // Pagamento anterior a 27/10 continua a 40%
+    const movOld = movement("m-old", "old", 100, "2026-10-20");
+    // Pagamento a partir de 27/10 usa 50%
+    const movNew = movement("m-new", "new", 100, "2026-10-27");
+
+    expect(calculateCommission([movOld], 50, history).total).toBe(40);
+    expect(calculateCommission([movNew], 50, history).total).toBe(50);
+    expect(calculateCommission([movOld, movNew], 50, history).total).toBe(90);
   });
 
   it("considera estornos no período", () => {

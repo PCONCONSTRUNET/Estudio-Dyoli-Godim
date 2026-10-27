@@ -36,6 +36,10 @@ import {
  calculateDailyClosing,
  CaixaMovimentacao,
  normalizePaymentMethod,
+ getCommissionHistory,
+ saveNewCommissionRate,
+ getCommissionRateForDate,
+ CommissionHistoryEntry,
 } from "@/lib/caixa";
 
 interface Agendamento {
@@ -86,14 +90,19 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  const saved = localStorage.getItem("dyoli_comissao_pct");
  return saved ? Number(saved) : 40;
  });
+ const [comissaoHistory, setComissaoHistory] = useState<CommissionHistoryEntry[]>(() => {
+   return getCommissionHistory(Number(localStorage.getItem("dyoli_comissao_pct")) || 40);
+ });
  const [editingComissao, setEditingComissao] = useState(false);
  const [tempComissao, setTempComissao] = useState(comissaoPct.toString());
 
  const saveComissao = () => {
  const v = Math.min(100, Math.max(0, Number(tempComissao) || 0));
  setComissaoPct(v);
- localStorage.setItem("dyoli_comissao_pct", String(v));
+ const updatedHistory = saveNewCommissionRate(v, caixaDate, comissaoHistory);
+ setComissaoHistory(updatedHistory);
  setEditingComissao(false);
+ toast.success(`Comissão atualizada para ${v}% a partir de hoje!`);
  };
 
  // Dia de corte do ciclo mensal (1-28)
@@ -381,8 +390,8 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  }, [allAgendamentos, movimentacoes, caixaDate]);
 
  const comissaoDia = useMemo(
-   () => calculateCommission(caixaData.pagamentos, comissaoPct),
-   [caixaData.pagamentos, comissaoPct],
+   () => calculateCommission(caixaData.pagamentos, comissaoPct, comissaoHistory),
+   [caixaData.pagamentos, comissaoPct, comissaoHistory],
  );
 
  // Lista de pagamentos por período
@@ -429,7 +438,12 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
     if (f.observacao === "SEM_COMISSAO" || f.servico === "Gorjeta") return s;
     return s + Number(f.valor_pago || 0);
   }, 0);
-  const comissaoGerada = (baseComissao * (comissaoPct / 100)) + gorjetas;
+  const comissaoGerada = faturasFinanceiras.reduce((acc, f) => {
+    if (f.observacao === "SEM_COMISSAO") return acc;
+    if (f.servico === "Gorjeta") return acc + Number(f.valor_pago || 0);
+    const rate = getCommissionRateForDate(f.data_fatura, comissaoHistory, comissaoPct);
+    return acc + Number(f.valor_pago || 0) * (rate / 100);
+  }, 0);
   
   const lucro = recebido - desp - comissaoGerada;
   const comissao = comissaoGerada - despPessoal;
@@ -441,21 +455,23 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
   const progress = cicloOffset === 0 ? Math.round((elapsedDays / totalDays) * 100) : (cicloOffset < 0 ? 100 : 0);
   const qtd = cicloAgs.filter((a) => a.servico !== "Adição de Crédito").length;
   return { recebido, total, pagoComCredito, gorjetas, trocos, desp, despPessoal, lucro, comissao, comissaoGerada, baseComissao, totalDays, elapsedDays, progress, qtd, items: cicloAgs, saldoEmCaixa };
- }, [allAgendamentos, ciclo, despesas, comissaoPct, cicloOffset]);
+ }, [allAgendamentos, ciclo, despesas, comissaoPct, comissaoHistory, cicloOffset]);
 
  // ── Comissão ACUMULADA (all-time, nunca zera) ─────────────────────────────
  const comissaoAcumulada = useMemo(() => {
-   const baseTotal = allTimeMovimentacoes
-     .filter((m) => m.tipo !== "gorjeta" && m.contabiliza_comissao)
-     .reduce((s, m) => s + Number(m.valor), 0);
    const gorjetasTotal = allTimeMovimentacoes
      .filter((m) => m.tipo === "gorjeta")
      .reduce((s, m) => s + Number(m.valor), 0);
    const retiradaTotal = allTimeDespesasComissao
      .reduce((s, d) => s + Number(d.valor), 0);
-   const gerada = baseTotal * (comissaoPct / 100) + gorjetasTotal;
+   const gerada = allTimeMovimentacoes
+     .filter((m) => m.tipo !== "gorjeta" && m.contabiliza_comissao)
+     .reduce((acc, m) => {
+       const rate = getCommissionRateForDate(m.data_pagamento, comissaoHistory, comissaoPct);
+       return acc + Number(m.valor) * (rate / 100);
+     }, 0) + gorjetasTotal;
    return { gerada, retirada: retiradaTotal, disponivel: gerada - retiradaTotal };
- }, [allTimeMovimentacoes, allTimeDespesasComissao, comissaoPct]);
+ }, [allTimeMovimentacoes, allTimeDespesasComissao, comissaoPct, comissaoHistory]);
 
  // ── Breakdown por forma de pagamento (ciclo) ──
  const paymentMethodStats = useMemo(() => {
@@ -1230,7 +1246,8 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
  const dayGorjetas = movimentosDoDia
    .filter((f) => f.servico === "Gorjeta")
    .reduce((s, f) => s + Number(f.valor_pago || 0), 0);
- const dayComm = dayBase * (comissaoPct / 100) + dayGorjetas;
+ const dayRate = getCommissionRateForDate(d.date, comissaoHistory, comissaoPct);
+ const dayComm = dayBase * (dayRate / 100) + dayGorjetas;
  return (
  <div key={d.date} className="flex items-center justify-between p-2.5 rounded-xl bg-primary-foreground/[0.03] border border-primary-foreground/[0.05] hover:border-purple-500/20 transition-all">
  <div className="flex items-center gap-2 min-w-0">

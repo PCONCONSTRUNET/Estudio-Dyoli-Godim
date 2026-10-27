@@ -121,9 +121,56 @@ export const calculateDailyClosing = (
   };
 };
 
+export interface CommissionHistoryEntry {
+  startDate: string; // ISO date YYYY-MM-DD
+  rate: number;      // 0 to 100
+}
+
+export const getCommissionRateForDate = (
+  dateStr: string,
+  history: CommissionHistoryEntry[],
+  currentRate: number,
+): number => {
+  if (!history || history.length === 0) return currentRate;
+  // Ordena por data decrescente para pegar a taxa que vigora a partir de cada data
+  const sorted = [...history].sort((a, b) => b.startDate.localeCompare(a.startDate));
+  const entry = sorted.find((e) => (dateStr || "") >= e.startDate);
+  return entry !== undefined ? entry.rate : (sorted[sorted.length - 1]?.rate ?? currentRate);
+};
+
+export const getCommissionHistory = (currentRate: number): CommissionHistoryEntry[] => {
+  try {
+    const raw = localStorage.getItem("dyoli_comissao_history");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.error("Erro ao ler dyoli_comissao_history:", e);
+  }
+  return [{ startDate: "0000-01-01", rate: currentRate }];
+};
+
+export const saveNewCommissionRate = (
+  newRate: number,
+  effectiveDate: string,
+  currentHistory: CommissionHistoryEntry[],
+): CommissionHistoryEntry[] => {
+  const filtered = currentHistory.filter((e) => e.startDate !== effectiveDate);
+  const updated = [...filtered, { startDate: effectiveDate, rate: newRate }].sort(
+    (a, b) => a.startDate.localeCompare(b.startDate),
+  );
+  localStorage.setItem("dyoli_comissao_history", JSON.stringify(updated));
+  localStorage.setItem("dyoli_comissao_pct", String(newRate));
+  return updated;
+};
+
 export const calculateCommission = (
   movements: CaixaMovimentacao[],
   commissionPercent: number,
+  history?: CommissionHistoryEntry[],
 ) => {
   const tips = movements
     .filter((movement) => movement.tipo === "gorjeta")
@@ -132,7 +179,19 @@ export const calculateCommission = (
     .filter((movement) => movement.tipo !== "gorjeta" && movement.contabiliza_comissao)
     .reduce((sum, movement) => sum + Number(movement.valor), 0);
 
-  return { base, tips, total: base * (commissionPercent / 100) + tips };
+  let totalCommission = 0;
+  if (!history || history.length === 0) {
+    totalCommission = base * (commissionPercent / 100);
+  } else {
+    totalCommission = movements
+      .filter((m) => m.tipo !== "gorjeta" && m.contabiliza_comissao)
+      .reduce((acc, m) => {
+        const rate = getCommissionRateForDate(m.data_pagamento, history, commissionPercent);
+        return acc + Number(m.valor) * (rate / 100);
+      }, 0);
+  }
+
+  return { base, tips, total: totalCommission + tips };
 };
 
 export const sumMovementsForPeriod = (

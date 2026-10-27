@@ -5,6 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 import AnaliseCancelamentosModal from "@/components/AnaliseCancelamentosModal";
 import NovaTransacaoModal from "@/components/NovaTransacaoModal";
 import { getPaymentDate } from "@/lib/utils";
+import {
+  getCommissionHistory,
+  saveNewCommissionRate,
+  getCommissionRateForDate,
+  CommissionHistoryEntry,
+} from "@/lib/caixa";
 
 interface Agendamento {
   id: string; servico: string; variacao: string | null; data_agendamento: string;
@@ -45,6 +51,9 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const [comissaoPct, setComissaoPct] = useState(() => {
     const saved = localStorage.getItem("dyoli_comissao_pct");
     return saved ? Number(saved) : 40;
+  });
+  const [comissaoHistory, setComissaoHistory] = useState<CommissionHistoryEntry[]>(() => {
+    return getCommissionHistory(Number(localStorage.getItem("dyoli_comissao_pct")) || 40);
   });
   const [showComissaoConfig, setShowComissaoConfig] = useState(false);
   const [tempComissao, setTempComissao] = useState(comissaoPct.toString());
@@ -258,7 +267,12 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
   const totalGorjetas = faturasPeriodo.reduce((s, f) => {
     return f.is_gorjeta ? s + Number(f.valor_fatura || 0) : s;
   }, 0);
-  const comissaoValor = baseComissao * (comissaoPct / 100) + totalGorjetas;
+  const comissaoValor = faturasPeriodo.reduce((acc, f) => {
+    if (f.observacao === "SEM_COMISSAO") return acc;
+    if (f.is_gorjeta) return acc + Number(f.valor_fatura || 0);
+    const rate = getCommissionRateForDate(f.data_fatura, comissaoHistory, comissaoPct);
+    return acc + Number(f.valor_fatura || 0) * (rate / 100);
+  }, 0);
 
   const totalDespesas = despesas
     .filter(d => (d.tipo || "estudio") === "estudio" && d.pago && d.data_vencimento >= periodRange.start && d.data_vencimento <= periodRange.end)
@@ -936,7 +950,9 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
                 onClick={() => {
                   const val = Math.min(100, Math.max(0, Number(tempComissao) || 0));
                   setComissaoPct(val);
-                  localStorage.setItem("dyoli_comissao_pct", val.toString());
+                  const todayISO = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0];
+                  const updatedHistory = saveNewCommissionRate(val, todayISO, comissaoHistory);
+                  setComissaoHistory(updatedHistory);
                   setShowComissaoConfig(false);
                 }}
                 className="px-4 py-2 rounded-xl bg-purple-500/10 text-purple-400 font-body text-[12px] font-medium hover:bg-purple-500/20 transition-all"
