@@ -222,6 +222,7 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
   // ── Dados ALL-TIME para comissão acumulada (sem filtro de ciclo) ──────────
   const [allTimeMovimentacoes, setAllTimeMovimentacoes] = useState<CaixaMovimentacao[]>([]);
   const [allTimeDespesasComissao, setAllTimeDespesasComissao] = useState<{ valor: number; pago: boolean }[]>([]);
+  const [comissaoAjusteSaldo, setComissaoAjusteSaldo] = useState<number>(0);
 
   // ── Busca despesas e vendas previstas do ciclo ──────────────────────────────
   useEffect(() => {
@@ -263,6 +264,14 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
         .eq("tipo", "comissao")
         .eq("pago", true);
       if (!cancelled && desp) setAllTimeDespesasComissao(desp);
+
+      const { data: configAjuste } = await (supabase.from as any)("caixa_config")
+        .select("saldo_fisico_manual")
+        .eq("id", "comissao_ajuste_saldo")
+        .maybeSingle();
+      if (!cancelled && configAjuste?.saldo_fisico_manual != null) {
+        setComissaoAjusteSaldo(Number(configAjuste.saldo_fisico_manual));
+      }
     })();
     return () => { cancelled = true; };
   }, []);
@@ -469,9 +478,9 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
      .reduce((acc, m) => {
        const rate = getCommissionRateForDate(m.data_pagamento, comissaoHistory, comissaoPct);
        return acc + Number(m.valor) * (rate / 100);
-     }, 0) + gorjetasTotal;
+     }, 0) + gorjetasTotal + comissaoAjusteSaldo;
    return { gerada, retirada: retiradaTotal, disponivel: gerada - retiradaTotal };
- }, [allTimeMovimentacoes, allTimeDespesasComissao, comissaoPct, comissaoHistory]);
+ }, [allTimeMovimentacoes, allTimeDespesasComissao, comissaoPct, comissaoHistory, comissaoAjusteSaldo]);
 
  // ── Breakdown por forma de pagamento (ciclo) ──
  const paymentMethodStats = useMemo(() => {

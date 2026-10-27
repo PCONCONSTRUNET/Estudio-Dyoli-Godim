@@ -357,6 +357,12 @@ const GastosTab = () => {
     toast.success("Gasto removido");
   };
 
+  const openNewForm = () => {
+    resetForm();
+    setResponsavelForm(responsavelFilter);
+    setShowForm(true);
+  };
+
   const resetForm = () => {
     setEditingId(null);
     setDescricao("");
@@ -393,7 +399,7 @@ const GastosTab = () => {
               Controle independente · Não afeta caixa ou comissão
             </p>
           </div>
-          <PlusButton size={32} title="Novo gasto" onClick={() => setShowForm(true)} />
+          <PlusButton size={32} title="Novo gasto" onClick={openNewForm} />
         </div>
 
         {/* Cards de totais */}
