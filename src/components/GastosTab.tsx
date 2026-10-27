@@ -15,7 +15,20 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
-interface Gasto {
+export type ResponsavelType = "Dona" | "Zelia" | "Studio";
+
+export interface GastoItem {
+  id: string;
+  descricao: string;
+  valor: number;
+  categoria: string;
+  responsavel: ResponsavelType;
+  data_gasto: string;
+  observacao: string | null;
+  created_at: string;
+}
+
+interface RawGasto {
   id: string;
   descricao: string;
   valor: number;
@@ -81,7 +94,7 @@ const MONTHS_FULL = [
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 const GastosTab = () => {
-  const [gastos, setGastos] = useState<Gasto[]>([]);
+  const [gastos, setGastos] = useState<GastoItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -90,7 +103,7 @@ const GastosTab = () => {
   // Filtros
   const [catFilter, setCatFilter] = useState("Todas");
   const [monthOffset, setMonthOffset] = useState(0);
-  const [responsavelFilter, setResponsavelFilter] = useState<"Dona" | "Zelia">("Dona");
+  const [responsavelFilter, setResponsavelFilter] = useState<ResponsavelType>("Dona");
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(100);
 
@@ -109,7 +122,7 @@ const GastosTab = () => {
   const [valor, setValor] = useState("");
   const [categoria, setCategoria] = useState("Outros");
   const [categoriaPersonalizada, setCategoriaPersonalizada] = useState("");
-  const [responsavelForm, setResponsavelForm] = useState<"Dona" | "Zelia">("Dona");
+  const [responsavelForm, setResponsavelForm] = useState<ResponsavelType>("Dona");
   const [dataGasto, setDataGasto] = useState(() => new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]);
   const [observacao, setObservacao] = useState("");
 
@@ -131,8 +144,8 @@ const GastosTab = () => {
       toast.error("Erro ao carregar gastos");
     }
     if (data) {
-      const allData = data as Gasto[];
-      const configRow = allData.find(g => g.descricao === "CONFIG_CARTEIRA_MARCELO" && g.responsavel === "Zelia");
+      const rawData = data as RawGasto[];
+      const configRow = rawData.find(g => g.descricao === "CONFIG_CARTEIRA_MARCELO" && g.responsavel === "Zelia");
       if (configRow) {
         setVerbaMarceloStr(configRow.valor.toString());
         setWalletStartDate(configRow.data_gasto);
@@ -142,8 +155,30 @@ const GastosTab = () => {
         setWalletStartDate("9999-12-31");
         setConfigId(null);
       }
-      // Oculta a linha de configuração da lista principal
-      setGastos(allData.filter(g => g.descricao !== "CONFIG_CARTEIRA_MARCELO"));
+
+      // Converte itens no formato de UI (identificando se é Studio pelo marcador no início de observacao ou descricao)
+      const mappedItems: GastoItem[] = rawData
+        .filter(g => g.descricao !== "CONFIG_CARTEIRA_MARCELO")
+        .map(g => {
+          const isStudio = (g.observacao?.startsWith("[STUDIO]") || g.descricao?.startsWith("[STUDIO]"));
+          let cleanedDesc = g.descricao;
+          if (cleanedDesc.startsWith("[STUDIO]")) {
+            cleanedDesc = cleanedDesc.replace("[STUDIO]", "").trim();
+          }
+          let cleanedObs = g.observacao;
+          if (cleanedObs?.startsWith("[STUDIO]")) {
+            cleanedObs = cleanedObs.replace("[STUDIO]", "").trim() || null;
+          }
+
+          return {
+            ...g,
+            descricao: cleanedDesc,
+            observacao: cleanedObs,
+            responsavel: (isStudio ? "Studio" : g.responsavel) as ResponsavelType,
+          };
+        });
+
+      setGastos(mappedItems);
     }
     setLoading(false);
   };
@@ -174,7 +209,7 @@ const GastosTab = () => {
 
   // Agrupamento detalhado por dia
   const gastosPorDia = useMemo(() => {
-    const map = new Map<string, Gasto[]>();
+    const map = new Map<string, GastoItem[]>();
 
     // Ordena do dia mais recente para o mais antigo, e por horário de criação
     const sorted = [...gastosFiltrados].sort((a, b) => {
@@ -195,7 +230,7 @@ const GastosTab = () => {
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayISO = new Date(yesterday.getTime() - yesterday.getTimezoneOffset() * 60000).toISOString().split("T")[0];
 
-    const groups: { data: string; label: string; totalDia: number; itens: Gasto[] }[] = [];
+    const groups: { data: string; label: string; totalDia: number; itens: GastoItem[] }[] = [];
 
     map.forEach((itens, data) => {
       const totalDia = itens.reduce((s, it) => s + Number(it.valor), 0);
@@ -264,13 +299,19 @@ const GastosTab = () => {
     }
     setSaving(true);
     
+    const dbResponsavel = responsavelForm === "Studio" ? "Dona" : responsavelForm;
+    let obsPayload = observacao.trim();
+    if (responsavelForm === "Studio") {
+      obsPayload = obsPayload ? `[STUDIO] ${obsPayload}` : "[STUDIO]";
+    }
+
     const payload = {
       descricao: descricao.trim(),
       valor: valorNum,
       categoria: categoriaFinal,
-      responsavel: responsavelForm,
+      responsavel: dbResponsavel,
       data_gasto: dataGasto,
-      observacao: observacao.trim() || null,
+      observacao: obsPayload || null,
     };
 
     const request = editingId 
@@ -291,7 +332,7 @@ const GastosTab = () => {
     setSaving(false);
   };
 
-  const handleEdit = (g: Gasto) => {
+  const handleEdit = (g: GastoItem) => {
     setEditingId(g.id);
     setDescricao(g.descricao);
     setValor(g.valor.toString());
@@ -378,9 +419,9 @@ const GastosTab = () => {
         </div>
       </div>
 
-      {/* ── Filtro de Responsável (Dona / Zélia) ── */}
+      {/* ── Filtro de Responsável / Aba (Dyoli, Marcelo, Studio) ── */}
       <div className="flex gap-2 p-1 rounded-[16px] bg-[#1c1c1e] border border-white/10">
-        {(["Dona", "Zelia"] as const).map(resp => (
+        {(["Dona", "Zelia", "Studio"] as const).map(resp => (
           <button
             key={resp}
             onClick={() => setResponsavelFilter(resp)}
@@ -390,7 +431,11 @@ const GastosTab = () => {
                 : "text-white/40 hover:text-white/80"
             }`}
           >
-            {resp === "Dona" ? "Gastos da Dyoli" : "Gastos do Marcelo"}
+            {resp === "Dona"
+              ? "Gastos da Dyoli"
+              : resp === "Zelia"
+              ? "Gastos do Marcelo"
+              : "Gastos (Studio)"}
           </button>
         ))}
       </div>
@@ -834,7 +879,7 @@ const GastosTab = () => {
 
             {/* Responsável — toggle compacto */}
             <div className="flex gap-1.5 p-1 bg-[#2c2c2e] rounded-[16px] border border-white/5">
-              {(["Dona", "Zelia"] as const).map(resp => (
+              {(["Dona", "Zelia", "Studio"] as const).map(resp => (
                 <button
                   key={resp}
                   type="button"
@@ -845,7 +890,7 @@ const GastosTab = () => {
                       : "text-white/40 hover:text-white/80"
                   }`}
                 >
-                  {resp === "Dona" ? "Dyoli" : "Marcelo"}
+                  {resp === "Dona" ? "Dyoli" : resp === "Zelia" ? "Marcelo" : "Studio"}
                 </button>
               ))}
             </div>
