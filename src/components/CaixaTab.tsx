@@ -218,6 +218,8 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
 
   const [movimentacoes, setMovimentacoes] = useState<CaixaMovimentacao[]>([]);
   const [missingAgendamentos, setMissingAgendamentos] = useState<any[]>([]);
+  // FIX: contador para forçar re-fetch de movimentos quando o Realtime dispara
+  const [movimentacoesRefreshTick, setMovimentacoesRefreshTick] = useState(0);
 
   // ── Dados ALL-TIME para comissão acumulada (sem filtro de ciclo) ──────────
   const [allTimeMovimentacoes, setAllTimeMovimentacoes] = useState<CaixaMovimentacao[]>([]);
@@ -249,12 +251,14 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
   }, [ciclo.startISO, ciclo.endISO]);
 
   // Busca ALL-TIME para comissão acumulada — roda uma vez na montagem
+  // LIMITE: 20.000 registros para evitar full scan no Nano (cresce ~1/agendamento)
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const { data: movs } = await (supabase.from as any)("caixa_movimentacoes")
         .select("valor,tipo,contabiliza_comissao,forma_pagamento,referencia_tipo,referencia_id,data_pagamento,ocorrido_em,origem,cliente_nome,inferido")
-        .order("ocorrido_em", { ascending: false });
+        .order("ocorrido_em", { ascending: false })
+        .limit(20000); // FIX: sem limit = full scan; 20k cobre anos de histórico
       if (!cancelled && movs) {
         setAllTimeMovimentacoes(movs.map((m: any) => ({ ...m, valor: Number(m.valor) })));
       }
@@ -301,22 +305,33 @@ const CaixaTab = ({ agendamentos, getClientName }: Props) => {
 
     loadMovimentos();
 
-    // CRÍTICO: nome fixo evita criar nova conexão a cada mudança de período.
-    // O filtro de data é feito na query, não no canal Realtime.
+    // FIX: O canal usa nome FIXO ('caixa-movimentos-realtime') para não recriar
+    // conexão a cada mudança de data — mas como as dependências do useEffect incluem
+    // as datas, o canal ainda era recriado. Separamos: o Realtime fica num useEffect
+    // próprio sem dependências de data (ver abaixo), e aqui só fazemos cleanup do cancelled.
+    return () => {
+      cancelled = true;
+    };
+  }, [ciclo.startISO, ciclo.endISO, caixaDate, movimentacoesRefreshTick]);
+
+  // FIX: Canal Realtime em useEffect separado, SEM dependências de data.
+  // Assim é criado UMA VEZ e não recriado ao navegar entre períodos.
+  useEffect(() => {
     const channel = supabase
       .channel('caixa-movimentos-realtime')
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "caixa_movimentacoes" },
-        () => { loadMovimentos(); },
+        () => {
+          // Incrementa o tick para re-disparar o useEffect de dados sem recriar o canal
+          setMovimentacoesRefreshTick(t => t + 1);
+        },
       )
       .subscribe();
-
     return () => {
-      cancelled = true;
       supabase.removeChannel(channel);
     };
-  }, [ciclo.startISO, ciclo.endISO, caixaDate]);
+  }, []); // ← sem dependências: cria UMA VEZ, nunca recria
 
   // ── Busca agendamentos faltantes ligados a movimentos do ciclo ──────────────
   // Roda em separado para não bloquear o fetch dos movimentos

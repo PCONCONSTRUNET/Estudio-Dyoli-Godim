@@ -877,8 +877,12 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setLoading(true);
     try {
       const [agRes, clRes] = await Promise.all([
-        // Limite reduzido para 1500 para evitar sobrecarga no banco (plano Nano Supabase)
-        supabase.from("agendamentos").select("*").neq("status", "aguardando_pagamento").order("data_agendamento", { ascending: false }).limit(1500),
+        // FIX: SELECT de colunas necessárias em vez de wildcard para otimizar transferência e memória no Nano
+        supabase.from("agendamentos")
+          .select("id,servico,variacao,data_agendamento,horario,valor,valor_pago,valor_troco,valor_gorjeta,valor_credito,valor_desconto_credito,status,forma_pagamento,cliente_nome,user_id,origem,created_at,observacao,duracao_minutos,paid_at,payment_id,payer_name,receipt_url")
+          .neq("status", "aguardando_pagamento")
+          .order("data_agendamento", { ascending: false })
+          .limit(1500),
         // Profiles: seleciona só as colunas necessárias para reduzir I/O
         supabase.from("profiles").select("id, nome, whatsapp, cpf, created_at, credito_saldo").order("created_at", { ascending: false }).limit(1000),
       ]);

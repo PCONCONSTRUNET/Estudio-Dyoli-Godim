@@ -111,7 +111,8 @@ const FinanceiroTab = ({ agendamentos, getClientName }: Props) => {
       if (data) setVendas(data);
     });
     // pagamento_historico para regime de caixa
-    (supabase.from as any)("pagamento_historico").select("*").order("created_at", { ascending: false }).limit(2000).then(({ data }: any) => {
+    // FIX: de SELECT * / 2000 linhas → colunas necessárias / 1000 linhas (reduz I/O no Nano)
+    (supabase.from as any)("pagamento_historico").select("agendamento_id,valor,forma_pagamento,created_at,paid_at,descricao,valor_delta,acao").order("created_at", { ascending: false }).limit(1000).then(({ data }: any) => {
       if (data) setHistorico(data);
     });
   };
