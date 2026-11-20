@@ -85,72 +85,88 @@ Deno.serve(async (req) => {
           .upsert({ id: userId, nome, whatsapp: wa }, { onConflict: "id" });
       }
     } else {
-      // Perfil existe — mantém o nome cadastrado, mas garante whatsapp
-      await admin
-        .from("profiles")
-        .update({ whatsapp: wa })
-        .eq("id", userId);
+      // Perfil existe — mantém o nome cadastrado, e só atualiza whatsapp se mudou (evita write desnecessário no Nano)
+      if (existingProfile.whatsapp !== wa) {
+        await admin
+          .from("profiles")
+          .update({ whatsapp: wa })
+          .eq("id", userId);
+      }
     }
 
     if (!userId) {
       return json({ error: "Falha ao identificar cliente" }, 500);
     }
 
-    // 3) Sincroniza conta auth legada e faz signin para devolver tokens
-    const { data: authUserData, error: authUserErr } = await admin.auth.admin.getUserById(userId);
-    if (authUserErr) {
-      console.error("getUserById error", authUserErr);
-    }
-
-    const existingAuthEmail = authUserData?.user?.email?.trim().toLowerCase() || null;
+    // 3) Tenta login direto quando conta já existe para evitar getUserById + updateUserById + bcrypt duplo
+    let signin = null;
     let preferredEmail = email;
 
-    const syncPayload: {
-      email?: string;
-      password: string;
-      email_confirm: true;
-      user_metadata: { nome: string; whatsapp: string; source: string };
-    } = {
-      password: DEFAULT_PASSWORD,
-      email_confirm: true,
-      user_metadata: { nome: existingProfile?.nome || nome, whatsapp: wa, source: "public_booking" },
-    };
-
-    if (!existingAuthEmail || existingAuthEmail !== email) {
-      syncPayload.email = email;
-    } else {
-      preferredEmail = existingAuthEmail;
-    }
-
-    const { error: syncErr } = await admin.auth.admin.updateUserById(userId, syncPayload);
-    if (syncErr) {
-      console.error("admin sync user error", syncErr);
-      preferredEmail = existingAuthEmail || email;
-    } else if (syncPayload.email) {
-      preferredEmail = email;
-    }
-
-    const candidateEmails = Array.from(new Set([preferredEmail, existingAuthEmail, email].filter(Boolean)));
-
-    let signin = null;
-    let lastSigninError = null;
-
-    for (const candidateEmail of candidateEmails) {
-      await new Promise((r) => setTimeout(r, 250));
-      const result = await anon.auth.signInWithPassword({
-        email: candidateEmail as string,
+    if (!isNew) {
+      const directSignin = await anon.auth.signInWithPassword({
+        email,
         password: DEFAULT_PASSWORD,
       });
-      if (!result.error && result.data.session) {
-        signin = result;
-        break;
+      if (!directSignin.error && directSignin.data.session) {
+        signin = directSignin;
       }
-      lastSigninError = result.error;
     }
 
     if (!signin?.data?.session) {
-      console.error("signin error", lastSigninError, "userId:", userId, "canonicalEmail:", email, "existingAuthEmail:", existingAuthEmail);
-      return json({ error: "Não foi possível iniciar a sessão. Tente novamente em instantes." }, 500);
+      // Fallback / conta nova: sincroniza conta auth legada e faz signin para devolver tokens
+      const { data: authUserData, error: authUserErr } = await admin.auth.admin.getUserById(userId);
+      if (authUserErr) {
+        console.error("getUserById error", authUserErr);
+      }
+
+      const existingAuthEmail = authUserData?.user?.email?.trim().toLowerCase() || null;
+
+      const syncPayload: {
+        email?: string;
+        password: string;
+        email_confirm: true;
+        user_metadata: { nome: string; whatsapp: string; source: string };
+      } = {
+        password: DEFAULT_PASSWORD,
+        email_confirm: true,
+        user_metadata: { nome: existingProfile?.nome || nome, whatsapp: wa, source: "public_booking" },
+      };
+
+      if (!existingAuthEmail || existingAuthEmail !== email) {
+        syncPayload.email = email;
+      } else {
+        preferredEmail = existingAuthEmail;
+      }
+
+      const { error: syncErr } = await admin.auth.admin.updateUserById(userId, syncPayload);
+      if (syncErr) {
+        console.error("admin sync user error", syncErr);
+        preferredEmail = existingAuthEmail || email;
+      } else if (syncPayload.email) {
+        preferredEmail = email;
+      }
+
+      const candidateEmails = Array.from(new Set([preferredEmail, existingAuthEmail, email].filter(Boolean)));
+
+      let lastSigninError = null;
+
+      for (const candidateEmail of candidateEmails) {
+        await new Promise((r) => setTimeout(r, 250));
+        const result = await anon.auth.signInWithPassword({
+          email: candidateEmail as string,
+          password: DEFAULT_PASSWORD,
+        });
+        if (!result.error && result.data.session) {
+          signin = result;
+          break;
+        }
+        lastSigninError = result.error;
+      }
+
+      if (!signin?.data?.session) {
+        console.error("signin error", lastSigninError, "userId:", userId, "canonicalEmail:", email, "existingAuthEmail:", existingAuthEmail);
+        return json({ error: "Não foi possível iniciar a sessão. Tente novamente em instantes." }, 500);
+      }
     }
 
     return json({

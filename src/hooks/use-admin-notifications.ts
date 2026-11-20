@@ -19,7 +19,8 @@ export function useAdminNotifications(
   onNewAgendamento?: (agendamento: Agendamento) => void,
   onAgendamentoChange?: () => void,
   onAgendamentoUpdate?: (updated: Agendamento) => void,
-  onAgendamentoDelete?: (id: string) => void
+  onAgendamentoDelete?: (id: string) => void,
+  existingAgendamentos?: { id: string; status: string }[]
 ) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
     const stored = localStorage.getItem("admin-notifications");
@@ -58,6 +59,17 @@ export function useAdminNotifications(
   }, []);
 
   useEffect(() => {
+    if (existingAgendamentos && existingAgendamentos.length > 0) {
+      existingAgendamentos.forEach((a) => {
+        if (a.status !== "aguardando_pagamento") {
+          knownIdsRef.current.add(a.id);
+        }
+      });
+      initialLoadDone.current = true;
+    }
+  }, [existingAgendamentos]);
+
+  useEffect(() => {
     if (!enabled) return;
 
     const loadExisting = async () => {
@@ -76,7 +88,9 @@ export function useAdminNotifications(
       initialLoadDone.current = true;
     };
 
-    loadExisting();
+    if (existingAgendamentos === undefined) {
+      loadExisting();
+    }
 
     const channel = supabase
       .channel("admin-agendamentos-notifications")

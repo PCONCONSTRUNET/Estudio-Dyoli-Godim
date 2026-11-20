@@ -306,8 +306,8 @@ Qualquer dúvida, estamos à disposição! 🙏`;
   const [historico, setHistorico] = useState<any[]>([]);
   const [despesas, setDespesas] = useState<any[]>([]);
   const [vendas, setVendas] = useState<any[]>([]);
-  const [despesasLimit, setDespesasLimit] = useState(1000);
-  const [vendasLimit, setVendasLimit] = useState(1000);
+  const [despesasLimit, setDespesasLimit] = useState(500);
+  const [vendasLimit, setVendasLimit] = useState(500);
   const [hasMoreDespesas, setHasMoreDespesas] = useState(false);
   const [hasMoreVendas, setHasMoreVendas] = useState(false);
 
@@ -364,7 +364,7 @@ Qualquer dúvida, estamos à disposição! 🙏`;
         else { setHasMoreVendas(false); setVendas(vd); }
       } else { setVendas([]); }
 
-      let currentAgendamentos = agendamentos;
+      let currentAgendamentos = agendamentos || [];
       if (debouncedSearch.trim()) {
         const term = `%${debouncedSearch.trim()}%`;
         const { data: matchedAgs } = await supabase
@@ -375,15 +375,6 @@ Qualquer dúvida, estamos à disposição! 🙏`;
           .order("data_agendamento", { ascending: false })
           .limit(200);
         if (matchedAgs) currentAgendamentos = matchedAgs as any[];
-      } else if (!currentAgendamentos || currentAgendamentos.length === 0) {
-        // Fallback rápido apenas se o componente pai ainda não carregou os agendamentos
-        const { data: freshAgs } = await supabase
-          .from("agendamentos")
-          .select("*")
-          .neq("status", "aguardando_pagamento")
-          .order("data_agendamento", { ascending: false })
-          .limit(500);
-        if (freshAgs) currentAgendamentos = freshAgs as any[];
       }
 
       if (isCancelled) return;
@@ -399,9 +390,9 @@ Qualquer dúvida, estamos à disposição! 🙏`;
       // Substitui as rajadas de N requisições paralelas concorrentes por uma única consulta leve
       const { data: histData } = await supabase
         .from("pagamento_historico")
-        .select("*")
+        .select("id,agendamento_id,valor_delta,acao,observacao,created_at")
         .order("created_at", { ascending: false })
-        .limit(1000);
+        .limit(500);
 
       if (isCancelled) return;
 

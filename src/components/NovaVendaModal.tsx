@@ -91,13 +91,15 @@ export default function NovaVendaModal({ open, onOpenChange, produtosDisponiveis
     const { data: fromClientes } = await supabase
       .from("clientes")
       .select("id, nome, telefone")
-      .order("nome");
+      .order("nome")
+      .limit(500);
 
     // Busca de profiles (clientes com conta)
     const { data: fromProfiles } = await supabase
       .from("profiles")
       .select("id, nome")
-      .order("nome");
+      .order("nome")
+      .limit(500);
 
     const map = new Map<string, { id: string; nome: string; telefone?: string; isProfileOnly?: boolean }>();
     (fromClientes || []).forEach(c => {

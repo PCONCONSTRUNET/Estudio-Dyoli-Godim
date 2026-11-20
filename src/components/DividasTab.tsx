@@ -67,7 +67,7 @@ const DividasTab = () => {
  setLoading(true);
  try {
  const [dividasRes, profilesRes] = await Promise.all([
- supabase.from("dividas").select("*").order("data_criacao", { ascending: false }),
+ supabase.from("dividas").select("*").order("data_criacao", { ascending: false }).limit(500),
  supabase.from("profiles").select("id, nome, whatsapp").limit(500)
  ]);
  

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ClipboardList, Search, FileText, CheckCircle2, XCircle, Clock, Download, ExternalLink, User, Calendar, RotateCcw, Trash2 } from "lucide-react";
@@ -48,12 +48,15 @@ const AnamneseTab = () => {
  const [live, setLive] = useState(false);
  const [toDelete, setToDelete] = useState<Anamnese | null>(null);
  const [deleting, setDeleting] = useState(false);
+ const lastFetchRef = useRef<number>(0);
 
  const load = async () => {
+ lastFetchRef.current = Date.now();
  const { data, error } = await supabase
  .from("anamneses")
  .select("*")
- .order("created_at", { ascending: false });
+ .order("created_at", { ascending: false })
+ .limit(300);
  if (error) toast.error("Erro ao carregar fichas");
  setItems((data as any) || []);
  setLoading(false);
@@ -102,18 +105,16 @@ const AnamneseTab = () => {
  setLive(status === "SUBSCRIBED");
  });
 
- // Resync ao voltar foco/online (websocket pode dormir em mobile)
- // Sem polling — o canal Realtime já cuida de INSERT/UPDATE/DELETE.
- // Só recarrega se a aba ganhar foco depois de longo período ou ao ficar online.
- const resync = () => load();
- const onVisibility = () => { if (document.visibilityState === "visible") load(); };
- window.addEventListener("focus", resync);
+ // Resync ao voltar visibilidade/online com cooldown de 60s (evita disparo duplo e excesso de leitura no Nano)
+ const resync = () => {
+   if (Date.now() - lastFetchRef.current >= 60_000) load();
+ };
+ const onVisibility = () => { if (document.visibilityState === "visible") resync(); };
  window.addEventListener("online", resync);
  document.addEventListener("visibilitychange", onVisibility);
 
  return () => {
  supabase.removeChannel(ch);
- window.removeEventListener("focus", resync);
  window.removeEventListener("online", resync);
  document.removeEventListener("visibilitychange", onVisibility);
  };

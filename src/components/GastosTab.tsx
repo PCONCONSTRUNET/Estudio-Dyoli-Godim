@@ -138,7 +138,8 @@ const GastosTab = () => {
     setLoading(true);
     const { data, error } = await (supabase.from as any)("gastos")
       .select("*")
-      .order("data_gasto", { ascending: false });
+      .order("data_gasto", { ascending: false })
+      .limit(1000);
     if (error) {
       console.error("Erro gastos:", error);
       toast.error("Erro ao carregar gastos");

@@ -852,7 +852,8 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     handleNewAgendamento,
     handleAgendamentoChange,
     handleAgendamentoPontualUpdate,
-    handleAgendamentoPontualDelete
+    handleAgendamentoPontualDelete,
+    agendamentos
   );
 
   useEffect(() => {
