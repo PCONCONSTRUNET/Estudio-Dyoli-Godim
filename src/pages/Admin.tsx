@@ -3,13 +3,13 @@ import { parseCurrencyStr } from "@/lib/utils";
 import { motion, useAnimation } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { notifyAgendamentoConfirmadoById, notifyLembreteById } from "@/lib/notify-webhook";
+import { notifyAgendamentoConfirmadoById, notifyLembreteById, normalizeWhatsappNumber } from "@/lib/notify-webhook";
 import { sendPush } from "@/lib/push-notify";
 import {
   BarChart3, Calendar, Users, Clock, Settings, LogOut, Search,
   X, Edit2, Trash2, Plus, Minus, Save, CheckCircle, Bell, MessageSquare,
   UserX, DollarSign, CreditCard, ShoppingBag, Download, ChevronLeft, ChevronRight, Receipt, ClipboardList, Wallet, Timer, PlusCircle, Menu,
-  Sparkles, Folder, Filter, TrendingUp, Power, Eye, EyeOff, ChevronUp, ChevronDown, FileText
+  Sparkles, Folder, Filter, TrendingUp, Power, Eye, EyeOff, ChevronUp, ChevronDown, FileText, Loader2
 } from "lucide-react";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription
@@ -584,6 +584,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   // Manual registration state
   const [showManualRegister, setShowManualRegister] = useState(false);
   const [detalheAgendamento, setDetalheAgendamento] = useState<Agendamento | null>(null);
+  const [sendingConfirmacaoId, setSendingConfirmacaoId] = useState<string | null>(null);
   const [manualServicos, setManualServicos] = useState<{ id: string; nome: string; preco: number; duracao_minutos: number; categoria: string }[]>([]);
   const [manualProdutos, setManualProdutos] = useState<{ id: string; nome: string; preco: number; estoque: number; imagens: string[] }[]>([]);
 
@@ -904,7 +905,11 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     setAgendamentos((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
     const ag = agendamentos.find((a) => a.id === id);
     if (status === "confirmado") {
-      notifyAgendamentoConfirmadoById(id);
+      void notifyAgendamentoConfirmadoById(id).then((res) => {
+        if (res && !res.ok && !res.skipped) {
+          toast.error(`Falha ao enviar confirmação via WhatsApp: ${res.error || "tente reenviar nos detalhes"}`);
+        }
+      });
       if (ag?.user_id) {
         sendPush({
           role: "cliente",
@@ -972,7 +977,14 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     return clientes.find((c) => c.id === userId)?.nome || "Presencial";
   };
   const formatDate = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
-  const formatWhatsapp = (w: string) => (w ? `(${w.slice(0, 2)}) ${w.slice(2, 7)}-${w.slice(7)}` : "—");
+  const formatWhatsapp = (w: string) => {
+    if (!w) return "—";
+    let d = w.replace(/\D/g, "");
+    if ((d.length === 12 || d.length === 13) && d.startsWith("55")) d = d.slice(2);
+    if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+    if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+    return w;
+  };
 
   const handleExcluirCliente = async () => {
     if (!clienteParaExcluir) return;
@@ -1206,11 +1218,14 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
       // Auto-registrar o cliente caso seja inserido apenas o nome
       if (!userId && clienteNome) {
         let existingClient = null;
-        if (manualClienteTelefone) {
-          const cleanPhone = manualClienteTelefone.replace(/\D/g, "");
-          if (cleanPhone) {
-            existingClient = clientes.find(c => c.whatsapp === cleanPhone);
-          }
+        const cleanManualPhone = manualClienteTelefone.replace(/\D/g, "");
+        if (cleanManualPhone) {
+          const normalizedManualPhone = normalizeWhatsappNumber(cleanManualPhone);
+          existingClient = clientes.find((c) => {
+            const cClean = (c.whatsapp || "").replace(/\D/g, "");
+            if (!cClean) return false;
+            return cClean === cleanManualPhone || normalizeWhatsappNumber(cClean) === normalizedManualPhone;
+          });
         }
         
         if (existingClient) {
@@ -1233,7 +1248,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                 password: `Manual@${Date.now()}!XyZ`,
                 data: {
                   nome: clienteNome,
-                  whatsapp: manualClienteTelefone.trim()
+                  whatsapp: cleanManualPhone
                 }
               })
             });
@@ -1246,7 +1261,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                 setClientes(prev => [{
                   id: newId,
                   nome: clienteNome,
-                  whatsapp: manualClienteTelefone.trim(),
+                  whatsapp: cleanManualPhone,
                   created_at: new Date().toISOString()
                 }, ...prev]);
               }
@@ -1351,7 +1366,14 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
         toast.success("Atendimento registrado com sucesso!");
         setShowManualRegister(false);
-        notifyAgendamentoConfirmadoById((data as Agendamento).id);
+        void notifyAgendamentoConfirmadoById((data as Agendamento).id).then((res) => {
+          if (!res) return;
+          if (res.ok) {
+            toast.success("Confirmação enviada para a cliente via WhatsApp!");
+          } else if (!res.skipped) {
+            toast.error(`Atendimento salvo, mas o WhatsApp via API falhou: ${res.error || "use o botão nos detalhes do agendamento"}`);
+          }
+        });
         sendPush({
           role: "admin",
           title: "🔔 Novo Agendamento!",
@@ -1363,6 +1385,24 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
       toast.error("Erro ao registrar: " + (err.message || "Tente novamente"));
     }
     setManualSaving(false);
+  };
+
+  const handleEnviarConfirmacaoWpp = async (ag: Agendamento) => {
+    setSendingConfirmacaoId(ag.id);
+    try {
+      const res = await notifyAgendamentoConfirmadoById(ag.id, { force: true });
+      if (res.ok) {
+        toast.success("Mensagem de confirmação enviada via WhatsApp!");
+      } else if (res.reason === "NO_NUMBER") {
+        toast.error("Cliente não possui número de WhatsApp cadastrado.");
+      } else {
+        toast.error(res.error || "Não foi possível enviar a confirmação via API.");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Erro ao enviar confirmação via API.");
+    } finally {
+      setSendingConfirmacaoId(null);
+    }
   };
 
 
@@ -1988,7 +2028,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                           <p className="font-heading text-[16px] font-semibold text-primary-foreground">{getClientName(a.user_id, a.cliente_nome)}</p>
                           {cliente?.whatsapp && (
                             <a
-                              href={`https://wa.me/55${cliente.whatsapp.replace(/\D/g, "")}`}
+                              href={`https://wa.me/${normalizeWhatsappNumber(cliente.whatsapp)}`}
                               target="_blank"
                               rel="noreferrer"
                               className="mt-1 inline-flex items-center gap-1.5 font-body text-[12px] text-green-400 hover:text-green-300"
@@ -2114,6 +2154,25 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
                             <p className="font-body text-[10px] text-primary-foreground/40 font-mono">{a.id.slice(0, 8)}</p>
                           </div>
                         </div>
+
+                        {a.status !== "cancelado" && a.status !== "falta" && (
+                          <button
+                            type="button"
+                            onClick={() => handleEnviarConfirmacaoWpp(a)}
+                            disabled={sendingConfirmacaoId === a.id}
+                            className="w-full flex items-center justify-center gap-2 rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-2.5 font-body text-[12px] font-medium text-green-400 hover:bg-green-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {sendingConfirmacaoId === a.id ? (
+                              <>
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Enviando confirmação...
+                              </>
+                            ) : (
+                              <>
+                                <WhatsAppIcon className="h-3.5 w-3.5" /> Enviar confirmação via WhatsApp (API)
+                              </>
+                            )}
+                          </button>
+                        )}
 
                         <div className="flex gap-2">
                           <button

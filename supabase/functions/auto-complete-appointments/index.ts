@@ -108,7 +108,10 @@ Deno.serve(async (req) => {
           .eq("id", a.user_id)
           .maybeSingle();
 
-        const numero = prof?.whatsapp || "";
+        let numero = (prof?.whatsapp || "").replace(/\D/g, "").replace(/^0+/, "");
+        if (numero.length === 10 || numero.length === 11) {
+          numero = `55${numero}`;
+        }
         if (!numero) continue;
 
         const nome = a.cliente_nome || prof?.nome || "";

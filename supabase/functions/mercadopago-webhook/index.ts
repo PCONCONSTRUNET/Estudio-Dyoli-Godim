@@ -115,6 +115,10 @@ Deno.serve(async (req) => {
                   .eq("id", ag.user_id)
                   .maybeSingle();
                 if (prof?.whatsapp) {
+                  let numero = prof.whatsapp.replace(/\D/g, "").replace(/^0+/, "");
+                  if (numero.length === 10 || numero.length === 11) {
+                    numero = `55${numero}`;
+                  }
                   const [y, mo, d] = String(ag.data_agendamento).split("-");
                   const dataFmt = `${d}/${mo}/${y}`;
                   const nome = prof.nome || ag.cliente_nome || "";
@@ -122,7 +126,7 @@ Deno.serve(async (req) => {
                   fetch("http://217.76.50.145:3001/webhook/notificacao", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ numero: prof.whatsapp, mensagem, token: "dyoli123" }),
+                    body: JSON.stringify({ numero, mensagem, token: "dyoli123" }),
                   }).catch((e) => console.log("notify webhook failed", e));
                 }
               } catch (e) {

@@ -10,6 +10,7 @@ import pixIcon from "@/assets/pix-icon.png";
 import { useConfirm } from "@/contexts/ConfirmContext";
 import { Button } from "@/components/ui/button";
 import { getPaymentDate } from "@/lib/utils";
+import { sendWhatsAppViaApi } from "@/lib/notify-webhook";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 
 interface Agendamento {
@@ -148,11 +149,8 @@ Qualquer dúvida, estamos à disposição! 🙏`;
 
     setWppLoadingKey(group.key);
     try {
-      const { data, error } = await supabase.functions.invoke("send-whatsapp-notification", {
-        body: { numero, mensagem },
-      });
-      if (error) throw error;
-      if (data?.ok === false && !data?.fallback) throw new Error(data?.error || "Erro ao enviar");
+      const result = await sendWhatsAppViaApi(numero, mensagem);
+      if (!result.ok) throw new Error(result.error || "Erro ao enviar");
       toast.success(`✅ Cobrança enviada para ${group.clienteNome} via WhatsApp!`);
     } catch (err: any) {
       toast.error(err.message || "Erro ao enviar WhatsApp");

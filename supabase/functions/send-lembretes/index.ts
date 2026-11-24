@@ -1,4 +1,4 @@
-﻿// Envia lembretes pre-atendimento (X horas antes) via webhook do WhatsApp.
+// Envia lembretes pre-atendimento (X horas antes) via webhook do WhatsApp.
 // - Le configuracoes_lembretes WHERE tipo='lembrete' AND ativo=true
 // - Busca agendamentos confirmados que caem na janela
 //   [horas_antes - 30min, horas_antes + 30min] a partir de agora (Brasilia)
@@ -176,6 +176,10 @@ Deno.serve(async (req) => {
       }
 
       if (!numero) continue;
+      numero = numero.replace(/^0+/, "");
+      if (numero.length === 10 || numero.length === 11) {
+        numero = `55${numero}`;
+      }
 
       const mensagem = interpolate(template, {
         nome: nomeFinal,
